@@ -10,7 +10,7 @@ import time
 import unittest
 from unittest.mock import MagicMock, patch
 
-from spiderfoot.cache_service import (
+from spiderfoot.services.cache_service import (
     CacheBackend,
     CacheConfig,
     CacheService,

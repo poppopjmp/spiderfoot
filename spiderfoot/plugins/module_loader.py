@@ -8,7 +8,7 @@ transparently if the registry infrastructure fails.
 
 Usage::
 
-    from spiderfoot.module_loader import ModuleLoader
+    from spiderfoot.plugins.module_loader import ModuleLoader
 
     loader = ModuleLoader.create()
     result = loader.load_modules(
@@ -39,8 +39,8 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from spiderfoot.module_graph import ModuleGraph
-    from spiderfoot.module_registry import ModuleRegistry
+    from spiderfoot.plugins.module_graph import ModuleGraph
+    from spiderfoot.plugins.module_registry import ModuleRegistry
 
 log = logging.getLogger("spiderfoot.module_loader")
 
@@ -153,8 +153,12 @@ class ModuleLoader:
             Configured ``ModuleLoader`` instance.
         """
         if modules_dir is None:
+            # __file__ is spiderfoot/plugins/module_loader.py
+            # Go up 3 levels: plugins/ -> spiderfoot/ -> project_root/
             project_root = os.path.dirname(
-                os.path.dirname(os.path.abspath(__file__))
+                os.path.dirname(
+                    os.path.dirname(os.path.abspath(__file__))
+                )
             )
             modules_dir = os.path.join(project_root, "modules")
 
@@ -163,7 +167,7 @@ class ModuleLoader:
 
         # Try to build registry
         try:
-            from spiderfoot.module_registry import ModuleRegistry
+            from spiderfoot.plugins.module_registry import ModuleRegistry
             registry = ModuleRegistry()
             result = registry.discover(modules_dir)
             log.info(
@@ -177,7 +181,7 @@ class ModuleLoader:
 
         # Try to build graph
         try:
-            from spiderfoot.module_graph import ModuleGraph
+            from spiderfoot.plugins.module_graph import ModuleGraph
             graph = ModuleGraph()
             count = graph.load_modules(modules_dir)
             log.info("ModuleLoader graph: %d modules", count)

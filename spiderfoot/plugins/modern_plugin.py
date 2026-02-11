@@ -21,7 +21,7 @@ Extends SpiderFootPlugin with direct service access and metrics instrumentation.
 
 Usage (new-style module)::
 
-    from spiderfoot.modern_plugin import SpiderFootModernPlugin
+    from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
     class sfp_example(SpiderFootModernPlugin):
         meta = { ... }
@@ -356,7 +356,7 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
         if not self._enable_metrics:
             return
         try:
-            from spiderfoot.metrics import HTTP_REQUESTS, HTTP_DURATION
+            from spiderfoot.observability.metrics import HTTP_REQUESTS, HTTP_DURATION
             HTTP_REQUESTS.labels(
                 method=method, status_code=str(status_code)
             ).inc()
@@ -369,7 +369,7 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
         if not self._enable_metrics:
             return
         try:
-            from spiderfoot.metrics import EVENTS_PRODUCED
+            from spiderfoot.observability.metrics import EVENTS_PRODUCED
             EVENTS_PRODUCED.labels(event_type=event_type).inc()
         except ImportError:
             pass
@@ -379,7 +379,7 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
         if not self._enable_metrics:
             return
         try:
-            from spiderfoot.metrics import MODULE_DURATION, EVENTS_PROCESSED
+            from spiderfoot.observability.metrics import MODULE_DURATION, EVENTS_PROCESSED
             MODULE_DURATION.observe(duration)
             EVENTS_PROCESSED.labels(module=self.__name__).inc()
         except ImportError:
@@ -390,7 +390,7 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
         if not self._enable_metrics:
             return
         try:
-            from spiderfoot.metrics import MODULE_ERRORS
+            from spiderfoot.observability.metrics import MODULE_ERRORS
             MODULE_ERRORS.labels(
                 module=self.__name__, error_type=error_type
             ).inc()

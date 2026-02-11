@@ -3,7 +3,7 @@ from __future__ import annotations
 """SpiderFoot plug-in module: xiaohongshu."""
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 class sfp_xiaohongshu(SpiderFootModernPlugin):
     """Monitors Xiaohongshu for new posts and emits events."""

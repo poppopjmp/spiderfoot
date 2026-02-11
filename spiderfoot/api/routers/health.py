@@ -135,7 +135,7 @@ def _check_vector() -> dict[str, Any]:
 def _check_modules() -> dict[str, Any]:
     """Module health aggregation from ModuleHealthMonitor."""
     try:
-        from spiderfoot.module_health import get_health_monitor
+        from spiderfoot.plugins.module_health import get_health_monitor
         monitor = get_health_monitor()
         report = monitor.get_report()
         summary = report.get("summary", {})
@@ -171,7 +171,7 @@ def _check_modules() -> dict[str, Any]:
 def _check_report_storage() -> dict[str, Any]:
     """Report storage backend health."""
     try:
-        from spiderfoot.report_storage import ReportStore, StoreConfig
+        from spiderfoot.reporting.report_storage import ReportStore, StoreConfig
         store = ReportStore(StoreConfig())
         # Quick count to verify backend
         count = store.count()
@@ -189,7 +189,7 @@ def _check_report_storage() -> dict[str, Any]:
 def _check_app_config() -> dict[str, Any]:
     """Application config validation."""
     try:
-        from spiderfoot.app_config import AppConfig
+        from spiderfoot.config.app_config import AppConfig
         cfg = AppConfig()  # defaults
         errors = cfg.validate()
         if errors:
@@ -266,7 +266,7 @@ def _check_data_service() -> dict[str, Any]:
 def _check_service_auth() -> dict[str, Any]:
     """Inter-service authentication health."""
     try:
-        from spiderfoot.service_auth import ServiceTokenIssuer
+        from spiderfoot.security.service_auth import ServiceTokenIssuer
         issuer = ServiceTokenIssuer()
         if not issuer.enabled:
             return {"status": "unknown", "message": "Service auth not configured"}
@@ -287,7 +287,7 @@ def _check_service_auth() -> dict[str, Any]:
 def _check_scan_hooks() -> dict[str, Any]:
     """Scan lifecycle hooks health and statistics."""
     try:
-        from spiderfoot.scan_hooks import get_scan_hooks
+        from spiderfoot.scan.scan_hooks import get_scan_hooks
         hooks = get_scan_hooks()
         stats = hooks.stats()
         return {
@@ -305,7 +305,7 @@ def _check_scan_hooks() -> dict[str, Any]:
 def _check_module_timeout() -> dict[str, Any]:
     """Module timeout guard health and statistics."""
     try:
-        from spiderfoot.module_timeout import get_timeout_guard
+        from spiderfoot.plugins.module_timeout import get_timeout_guard
         guard = get_timeout_guard()
         stats = guard.stats()
         return {
@@ -324,7 +324,7 @@ def _check_module_timeout() -> dict[str, Any]:
 def _check_output_validator() -> dict[str, Any]:
     """Module output validator health and statistics."""
     try:
-        from spiderfoot.module_output_validator import get_output_validator
+        from spiderfoot.plugins.module_output_validator import get_output_validator
         validator = get_output_validator()
         if validator.mode == "off":
             return {"status": "unknown", "message": "Output validation disabled"}
@@ -348,7 +348,7 @@ def _check_output_validator() -> dict[str, Any]:
 def _get_metrics_text() -> str:
     """Return Prometheus exposition text."""
     try:
-        from spiderfoot.metrics import get_registry
+        from spiderfoot.observability.metrics import get_registry
         registry = get_registry()
         return registry.expose()
     except ImportError:

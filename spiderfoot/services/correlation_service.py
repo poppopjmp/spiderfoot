@@ -28,7 +28,7 @@ correlation engine, adding:
 
 Usage (in-process)::
 
-    from spiderfoot.correlation_service import CorrelationService
+    from spiderfoot.services.correlation_service import CorrelationService
     svc = CorrelationService.from_config(sf_config)
     svc.start()
     # Trigger correlation for a scan
@@ -540,7 +540,7 @@ class CorrelationService:
                         results: list[CorrelationResult]) -> None:
         """Record Prometheus metrics."""
         try:
-            from spiderfoot.metrics import Counter, get_registry
+            from spiderfoot.observability.metrics import Counter, get_registry
 
             registry = get_registry()
 

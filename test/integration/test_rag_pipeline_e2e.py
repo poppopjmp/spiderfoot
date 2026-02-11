@@ -14,10 +14,10 @@ from unittest.mock import MagicMock
 from spiderfoot.qdrant_client import (
     QdrantBackend, QdrantClient, QdrantConfig,
 )
-from spiderfoot.embedding_service import (
+from spiderfoot.services.embedding_service import (
     EmbeddingConfig, EmbeddingProvider, EmbeddingService, MockEmbeddingBackend,
 )
-from spiderfoot.reranker_service import (
+from spiderfoot.services.reranker_service import (
     MockRerankerBackend, RerankerConfig, RerankerProvider, RerankerService,
 )
 from spiderfoot.rag_pipeline import (
@@ -33,7 +33,7 @@ from spiderfoot.multidim_correlation import (
 from spiderfoot.hybrid_correlation import (
     CorrelationSource, HybridConfig, HybridCorrelator,
 )
-from spiderfoot.event_indexer import (
+from spiderfoot.events.event_indexer import (
     BatchWriter, EventIndexer, IndexerConfig, IndexerMetrics,
 )
 

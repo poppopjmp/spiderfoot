@@ -3,7 +3,7 @@ from __future__ import annotations
 """SpiderFoot plug-in module: rubika."""
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 class sfp_rubika(SpiderFootModernPlugin):
     """Monitors Rubika for new messages and emits events."""

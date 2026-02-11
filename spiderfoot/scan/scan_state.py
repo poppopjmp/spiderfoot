@@ -10,7 +10,7 @@ Provides a formal state machine for scan lifecycle management:
 
 Usage::
 
-    from spiderfoot.scan_state import ScanStateMachine, ScanState
+    from spiderfoot.scan.scan_state import ScanStateMachine, ScanState
 
     sm = ScanStateMachine(scan_id="scan-001")
     sm.on_transition(lambda old, new, sid: print(f"{old} -> {new}"))

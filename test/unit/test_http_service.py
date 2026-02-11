@@ -7,7 +7,7 @@ import json
 import unittest
 from unittest.mock import MagicMock, patch, PropertyMock
 
-from spiderfoot.http_service import HttpService, HttpServiceConfig
+from spiderfoot.services.http_service import HttpService, HttpServiceConfig
 
 
 class TestHttpServiceConfig(unittest.TestCase):

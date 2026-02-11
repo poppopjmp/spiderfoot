@@ -6,7 +6,7 @@ import time
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
-from spiderfoot.event_indexer import (
+from spiderfoot.events.event_indexer import (
     BatchWriter,
     EventIndexer,
     INDEXABLE_TYPES,

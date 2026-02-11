@@ -17,12 +17,12 @@ Environment variables:
     SF_SERVICE_AUTH_ENABLED — Enable/disable inter-service auth (default: true in microservice mode)
 
 Usage — Token issuer (scanner/webui side):
-    from spiderfoot.service_auth import ServiceTokenIssuer
+    from spiderfoot.security.service_auth import ServiceTokenIssuer
     issuer = ServiceTokenIssuer()
     headers = issuer.auth_headers()  # {"Authorization": "Bearer ..."}
 
 Usage — Token validator (API side):
-    from spiderfoot.service_auth import ServiceTokenValidator
+    from spiderfoot.security.service_auth import ServiceTokenValidator
     validator = ServiceTokenValidator()
     if validator.validate(token):
         ...
@@ -36,7 +36,7 @@ import os
 import secrets
 import time
 from dataclasses import dataclass
-from spiderfoot.constants import DEFAULT_TTL_ONE_HOUR
+from spiderfoot.config.constants import DEFAULT_TTL_ONE_HOUR
 
 log = logging.getLogger(__name__)
 

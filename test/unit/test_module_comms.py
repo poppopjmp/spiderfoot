@@ -5,7 +5,7 @@ import threading
 import time
 import unittest
 
-from spiderfoot.module_comms import (
+from spiderfoot.plugins.module_comms import (
     ChannelStats,
     Message,
     MessageBus,

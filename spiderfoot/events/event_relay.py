@@ -16,7 +16,7 @@ Architecture::
 
 Usage::
 
-    from spiderfoot.event_relay import get_event_relay
+    from spiderfoot.events.event_relay import get_event_relay
 
     relay = get_event_relay()
 

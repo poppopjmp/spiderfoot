@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import unittest
 from test.unit.utils.test_module_base import TestModuleBase
-from spiderfoot.event import SpiderFootEvent
+from spiderfoot.events.event import SpiderFootEvent
 from test.unit.utils.test_base import TestModuleBase
 from test.unit.utils.resource_manager import get_test_resource_manager
 from test.unit.utils.thread_registry import get_test_thread_registry

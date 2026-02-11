@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import pytest
 
-from spiderfoot.scan_diff import (
+from spiderfoot.scan.scan_diff import (
     Change,
     ChangeType,
     DiffResult,

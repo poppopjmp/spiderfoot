@@ -6,7 +6,7 @@ from __future__ import annotations
 import unittest
 from unittest.mock import MagicMock, patch
 
-from spiderfoot.dns_service import DnsService, DnsServiceConfig
+from spiderfoot.services.dns_service import DnsService, DnsServiceConfig
 
 
 class TestDnsServiceConfig(unittest.TestCase):

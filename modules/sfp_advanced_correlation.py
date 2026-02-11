@@ -34,7 +34,7 @@ import hashlib
 import logging
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
 class AdvancedCorrelationEngine:

@@ -8,7 +8,7 @@ from scripts.validate_modules import validate_module, ValidationResult, validate
 
 VALID_MODULE = textwrap.dedent("""\
     from spiderfoot import SpiderFootEvent
-    from spiderfoot.modern_plugin import SpiderFootModernPlugin
+    from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
     class sfp_test(SpiderFootModernPlugin):
         meta = {'name': 'Test', 'summary': 'Test module'}
@@ -74,7 +74,7 @@ class TestValidateModule:
 
     def test_missing_methods(self, tmp_path):
         src = textwrap.dedent("""\
-            from spiderfoot.modern_plugin import SpiderFootModernPlugin
+            from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
             class sfp_incomplete(SpiderFootModernPlugin):
                 meta = {}
@@ -91,7 +91,7 @@ class TestValidateModule:
 
     def test_mutable_default_fails(self, tmp_path):
         src = textwrap.dedent("""\
-            from spiderfoot.modern_plugin import SpiderFootModernPlugin
+            from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
             class sfp_mutable(SpiderFootModernPlugin):
                 meta = {}
@@ -117,7 +117,7 @@ class TestValidateModule:
 
     def test_no_super_setup_fails(self, tmp_path):
         src = textwrap.dedent("""\
-            from spiderfoot.modern_plugin import SpiderFootModernPlugin
+            from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
             class sfp_nosuper(SpiderFootModernPlugin):
                 meta = {}

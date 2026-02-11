@@ -6,7 +6,7 @@ import time
 import threading
 import unittest
 
-from spiderfoot.module_profiler import (
+from spiderfoot.plugins.module_profiler import (
     MethodProfile,
     ModuleProfile,
     ModuleProfiler,

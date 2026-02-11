@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import unittest
 
-from spiderfoot.scan_orchestrator import (
+from spiderfoot.scan.scan_orchestrator import (
     ScanOrchestrator,
     ScanPhase,
 )

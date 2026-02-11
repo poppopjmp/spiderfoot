@@ -10,21 +10,21 @@ from __future__ import annotations
 import time
 import pytest
 
-from spiderfoot.event_taxonomy import EventCategory, RiskLevel, EventTaxonomy
-from spiderfoot.scan_templates import TemplateCategory, ScanTemplate, TemplateRegistry
+from spiderfoot.events.event_taxonomy import EventCategory, RiskLevel, EventTaxonomy
+from spiderfoot.scan.scan_templates import TemplateCategory, ScanTemplate, TemplateRegistry
 from spiderfoot.result_cache import ResultCache, ScanResultCache, EvictionPolicy
-from spiderfoot.module_api_client import ModuleApiClient, RateLimiter, RequestConfig
+from spiderfoot.plugins.module_api_client import ModuleApiClient, RateLimiter, RequestConfig
 from spiderfoot.alert_rules import (
     AlertSeverity, AlertConditionType, AlertCondition, AlertRule, AlertEngine,
 )
-from spiderfoot.scan_workflow import (
+from spiderfoot.scan.scan_workflow import (
     StepStatus, ModuleStep, SequenceStep, ParallelStep,
     ConditionalStep, ScanWorkflow,
 )
-from spiderfoot.module_versioning import (
+from spiderfoot.plugins.module_versioning import (
     SemanticVersion, VersionBump, ModuleVersionInfo, ModuleVersionRegistry,
 )
-from spiderfoot.event_store import (
+from spiderfoot.events.event_store import (
     EventPriority, StoredEvent, EventQuery, RetentionPolicy, EventStore,
 )
 

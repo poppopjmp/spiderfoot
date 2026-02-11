@@ -19,7 +19,7 @@ from .routers import (
 from spiderfoot import __version__
 
 # Security imports
-from spiderfoot.security_middleware import install_fastapi_security
+from spiderfoot.security.security_middleware import install_fastapi_security
 
 # Request tracing
 from spiderfoot.request_tracing import install_tracing_middleware

@@ -17,7 +17,7 @@ from __future__ import annotations
 from elasticsearch import Elasticsearch
 import threading
 import time
-from spiderfoot.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
 class sfp__stor_elasticsearch(SpiderFootModernPlugin):

@@ -11,7 +11,7 @@ import hashlib
 import hmac
 from typing import Any
 import redis
-from spiderfoot.constants import DEFAULT_TTL_ONE_HOUR
+from spiderfoot.config.constants import DEFAULT_TTL_ONE_HOUR
 
 
 class SecureSessionManager:

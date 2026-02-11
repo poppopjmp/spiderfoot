@@ -46,7 +46,7 @@ if InputValidator.validate_domain(domain):
 
 **2. Security Logging**
 ```python
-from spiderfoot.security_logging import SecurityLogger, SecurityEventType
+from spiderfoot.security.security_logging import SecurityLogger, SecurityEventType
 
 logger = SecurityLogger()
 
@@ -78,7 +78,7 @@ def web_endpoint():
 
 **4. Session Security**
 ```python
-from spiderfoot.session_security import SessionManager
+from spiderfoot.security.session_security import SessionManager
 
 session_manager = SessionManager()
 

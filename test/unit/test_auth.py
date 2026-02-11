@@ -5,7 +5,7 @@ import base64
 import time
 import unittest
 
-from spiderfoot.auth import (
+from spiderfoot.security.auth import (
     AuthConfig,
     AuthGuard,
     AuthMethod,

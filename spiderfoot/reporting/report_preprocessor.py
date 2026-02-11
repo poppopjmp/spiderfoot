@@ -16,7 +16,7 @@ The preprocessor:
 
 Usage::
 
-    from spiderfoot.report_preprocessor import ReportPreprocessor, PreprocessorConfig
+    from spiderfoot.reporting.report_preprocessor import ReportPreprocessor, PreprocessorConfig
 
     preprocessor = ReportPreprocessor(PreprocessorConfig())
     context = preprocessor.process(scan_events, scan_metadata)

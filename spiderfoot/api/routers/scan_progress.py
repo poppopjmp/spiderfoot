@@ -34,7 +34,7 @@ except ImportError:
     HAS_FASTAPI = False
 
 try:
-    from spiderfoot.scan_progress import (
+    from spiderfoot.scan.scan_progress import (
         ModuleProgress,
         ModuleStatus,
         ProgressSnapshot,

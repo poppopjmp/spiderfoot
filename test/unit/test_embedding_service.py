@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import math
 import pytest
-from spiderfoot.embedding_service import (
+from spiderfoot.services.embedding_service import (
     EmbeddingConfig,
     EmbeddingProvider,
     EmbeddingResult,

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import unittest
 
-from spiderfoot.module_resolver import (
+from spiderfoot.plugins.module_resolver import (
     DepKind,
     ModuleDescriptor,
     ModuleResolver,

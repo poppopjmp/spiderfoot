@@ -6,7 +6,7 @@ import time
 import unittest
 from unittest.mock import MagicMock, patch
 
-from spiderfoot.async_plugin import (
+from spiderfoot.plugins.async_plugin import (
     SpiderFootAsyncPlugin,
     AsyncResult,
     get_event_loop,

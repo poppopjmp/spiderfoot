@@ -19,7 +19,7 @@ SpiderFoot Scan Templates and Profiles
 
 Provides reusable scan configurations::
 
-    from spiderfoot.scan_profile import ProfileManager
+    from spiderfoot.scan.scan_profile import ProfileManager
 
     pm = ProfileManager()
     profile = pm.get("quick-recon")

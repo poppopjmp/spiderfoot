@@ -4,7 +4,7 @@ from __future__ import annotations
 import time
 import unittest
 
-from spiderfoot.module_metrics import (
+from spiderfoot.plugins.module_metrics import (
     MetricType,
     MetricValue,
     MetricsCollector,

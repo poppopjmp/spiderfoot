@@ -19,7 +19,7 @@ single, thread-safe facade with:
 
 Usage::
 
-    from spiderfoot.module_registry import ModuleRegistry
+    from spiderfoot.plugins.module_registry import ModuleRegistry
 
     registry = ModuleRegistry()
     registry.discover()  # scan modules/ directory
@@ -233,8 +233,12 @@ class ModuleRegistry:
             A :class:`DiscoveryResult` summarising what was found.
         """
         if modules_dir is None:
+            # __file__ is spiderfoot/plugins/module_registry.py
+            # Go up 3 levels: plugins/ -> spiderfoot/ -> project_root/
             project_root = os.path.dirname(
-                os.path.dirname(os.path.abspath(__file__))
+                os.path.dirname(
+                    os.path.dirname(os.path.abspath(__file__))
+                )
             )
             modules_dir = os.path.join(project_root, "modules")
 
@@ -302,7 +306,7 @@ class ModuleRegistry:
             # ── Contract validation (non-blocking) ──
             contract_warnings = 0
             try:
-                from spiderfoot.module_contract import validate_module
+                from spiderfoot.plugins.module_contract import validate_module
                 for mod_name, mod_class in self._classes.items():
                     vr = validate_module(mod_class, name=mod_name)
                     if not vr.is_valid:

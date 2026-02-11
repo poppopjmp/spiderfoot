@@ -4,7 +4,7 @@ from __future__ import annotations
 import time
 import threading
 import pytest
-from spiderfoot.module_sandbox import (
+from spiderfoot.plugins.module_sandbox import (
     SandboxState,
     ResourceLimits,
     SandboxResult,

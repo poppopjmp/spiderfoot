@@ -22,7 +22,7 @@ from pydantic import BaseModel, Field
 
 from spiderfoot import SpiderFootHelpers
 from spiderfoot.scan_service.scanner import startSpiderFootScanner
-from spiderfoot.scan_service_facade import ScanService, ScanServiceError
+from spiderfoot.scan.scan_service_facade import ScanService, ScanServiceError
 from spiderfoot.sflib.core import SpiderFoot
 
 from ..dependencies import get_app_config, get_api_key, optional_auth, get_scan_service
@@ -41,7 +41,7 @@ from ..schemas import (
 
 # Scan lifecycle hooks — best-effort, non-blocking
 try:
-    from spiderfoot.scan_hooks import get_scan_hooks
+    from spiderfoot.scan.scan_hooks import get_scan_hooks
     _hooks = get_scan_hooks()
 except Exception as e:
     _hooks = None  # type: ignore[assignment]
@@ -1640,7 +1640,7 @@ async def remove_scan_tags(
         scan_id=scan_id, tags=remaining,
         message=f"Removed {len(removed)} tag(s)" if removed else "No matching tags found",
     )
-from spiderfoot.scan_state_map import (
+from spiderfoot.scan.scan_state_map import (
     DB_STATUS_ABORTED,
     DB_STATUS_ERROR_FAILED,
     DB_STATUS_FINISHED,

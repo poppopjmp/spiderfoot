@@ -12,7 +12,7 @@ import time
 from functools import wraps
 from typing import Any, Callable
 import cherrypy
-from spiderfoot.constants import DEFAULT_TTL_ONE_HOUR
+from spiderfoot.config.constants import DEFAULT_TTL_ONE_HOUR
 
 
 class CSRFProtection:

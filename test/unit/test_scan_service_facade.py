@@ -16,14 +16,14 @@ from dataclasses import dataclass
 
 import pytest
 
-from spiderfoot.scan_state import (
+from spiderfoot.scan.scan_state import (
     ScanState,
     ScanStateMachine,
     InvalidTransitionError,
     VALID_TRANSITIONS,
     StateTransition,
 )
-from spiderfoot.scan_service_facade import (
+from spiderfoot.scan.scan_service_facade import (
     ScanService,
     ScanServiceError,
 )

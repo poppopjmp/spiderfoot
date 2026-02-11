@@ -19,7 +19,7 @@ import pytest
 # -----------------------------------------------------------------------
 # CorrelationService imports
 # -----------------------------------------------------------------------
-from spiderfoot.correlation_service import (
+from spiderfoot.services.correlation_service import (
     CorrelationService,
     CorrelationServiceConfig,
     CorrelationResult,

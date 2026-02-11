@@ -3,7 +3,7 @@ from __future__ import annotations
 """SpiderFoot plug-in module: ai_summary."""
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 import openai
 
 class sfp_ai_summary(SpiderFootModernPlugin):

@@ -22,7 +22,7 @@ class WorkspaceEndpoints:
         try:
             # Try to get CSRF token from security middleware
             if hasattr(cherrypy, 'session') and hasattr(cherrypy.tools, 'csrf'):
-                from spiderfoot.csrf_protection import csrf_token as get_csrf_token
+                from spiderfoot.security.csrf_protection import csrf_token as get_csrf_token
                 csrf_token = get_csrf_token()
         except Exception as e:
             self.log.warning("Could not generate CSRF token: %s", e)
@@ -256,7 +256,7 @@ class WorkspaceEndpoints:
             try:
                 # Try to get CSRF token from security middleware
                 if hasattr(cherrypy, 'session') and hasattr(cherrypy.tools, 'csrf'):
-                    from spiderfoot.csrf_protection import csrf_token as get_csrf_token
+                    from spiderfoot.security.csrf_protection import csrf_token as get_csrf_token
                     csrf_token = get_csrf_token()
             except Exception as e:
                 self.log.warning("Could not generate CSRF token: %s", e)

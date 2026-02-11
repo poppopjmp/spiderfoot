@@ -10,7 +10,7 @@ import time
 
 from modules.sfp__stor_db import sfp__stor_db
 from spiderfoot.sflib import SpiderFoot
-from spiderfoot.event import SpiderFootEvent
+from spiderfoot.events.event import SpiderFootEvent
 from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 

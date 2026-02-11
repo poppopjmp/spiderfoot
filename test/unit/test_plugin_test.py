@@ -5,7 +5,7 @@ from __future__ import annotations
 import unittest
 from unittest.mock import MagicMock, patch
 
-from spiderfoot.plugin_test import (
+from spiderfoot.plugins.plugin_test import (
     EventCapture,
     FakeSpiderFoot,
     FakeTarget,

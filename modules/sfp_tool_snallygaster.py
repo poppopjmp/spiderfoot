@@ -21,7 +21,7 @@ import os.path
 from subprocess import PIPE, Popen, TimeoutExpired
 
 from spiderfoot import SpiderFootEvent, SpiderFootHelpers
-from spiderfoot.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
 class sfp_tool_snallygaster(SpiderFootModernPlugin):

@@ -18,7 +18,7 @@ Configuration:
 
 Usage::
 
-    from spiderfoot.module_output_validator import get_output_validator
+    from spiderfoot.plugins.module_output_validator import get_output_validator
     validator = get_output_validator()
     validator.check(module, event)
 """

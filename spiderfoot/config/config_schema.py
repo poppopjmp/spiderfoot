@@ -9,7 +9,7 @@ Provides JSON Schema-like validation for module options, enabling:
 
 Usage::
 
-    from spiderfoot.config_schema import ConfigSchema, validate_module_config
+    from spiderfoot.config.config_schema import ConfigSchema, validate_module_config
 
     schema = ConfigSchema()
     schema.add_field("api_key", type="str", required=True,

@@ -2,11 +2,47 @@
 
 ## Overview
 
-SpiderFoot v5.21+ implements a modular microservices architecture that can run
+SpiderFoot v5.245+ implements a modular microservices architecture that can run
 in two modes:
 
 - **Monolith mode**: All services run in a single process (default, backward-compatible)
 - **Microservices mode**: Services run as separate containers behind an Nginx gateway
+
+## Package Structure (v5.245.0+)
+
+The `spiderfoot/` package is organized into **8 domain sub-packages**:
+
+| Sub-package | Purpose | Key modules |
+|---|---|---|
+| `spiderfoot/config/` | Configuration management | `constants`, `app_config`, `config_schema` |
+| `spiderfoot/events/` | Event types and processing | `event`, `event_relay`, `event_dedup`, `event_pipeline`, `event_taxonomy` |
+| `spiderfoot/scan/` | Scan lifecycle and orchestration | `scan_state`, `scan_coordinator`, `scan_scheduler`, `scan_queue`, `scan_workflow` |
+| `spiderfoot/plugins/` | Module loading and management | `plugin`, `modern_plugin`, `module_loader`, `module_registry`, `module_resolver` |
+| `spiderfoot/security/` | Authentication, CSRF, middleware | `auth`, `csrf_protection`, `security_middleware`, `security_logging` |
+| `spiderfoot/observability/` | Logging, metrics, auditing | `logger`, `metrics`, `structured_logging`, `audit_log`, `health` |
+| `spiderfoot/services/` | External service integrations | `cache_service`, `dns_service`, `http_service`, `grpc_service`, `websocket_service` |
+| `spiderfoot/reporting/` | Report generation and export | `report_generator`, `export_service`, `report_formatter`, `visualization_service` |
+
+### Import Patterns
+
+```python
+# Preferred: import from subpackage init
+from spiderfoot.events import SpiderFootEvent
+from spiderfoot.plugins import SpiderFootPlugin
+from spiderfoot.config import SF_DATA_TYPES
+
+# Also valid: import from specific module
+from spiderfoot.events.event import SpiderFootEvent
+from spiderfoot.scan.scan_state import SpiderFootScanState
+
+# Top-level re-exports still work
+from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+```
+
+> **Note (v5.245.0):** All backward-compatibility shim files in the
+> `spiderfoot/` root were removed. Code that used old paths like
+> `from spiderfoot.event import ...` or `from spiderfoot.plugin import ...`
+> must update to the subpackage paths shown above.
 
 ## Architecture Diagram
 
@@ -96,7 +132,7 @@ Extracted DNS resolver with built-in TTL cache:
 - Zone transfer checks
 - Configurable resolvers
 
-### CacheService (`spiderfoot/cache_service.py`)
+### CacheService (`spiderfoot/services/cache_service.py`)
 
 Three-tier caching:
 
@@ -104,7 +140,7 @@ Three-tier caching:
 - **File**: SHA-224 hashed filenames, persistent
 - **Redis**: Distributed cache for microservices
 
-### ConfigService (`spiderfoot/config_service.py`)
+### ConfigService (`spiderfoot/services/config_service.py`)
 
 Centralized configuration management:
 
@@ -132,7 +168,7 @@ Module execution infrastructure:
 - Health monitoring with automatic restart
 - Graceful shutdown with drain
 
-### ScanScheduler (`spiderfoot/scan_scheduler.py`)
+### ScanScheduler (`spiderfoot/scan/scan_scheduler.py`)
 
 Scan lifecycle management:
 
@@ -142,7 +178,7 @@ Scan lifecycle management:
 - Timeout detection
 - Progress tracking
 
-### CorrelationService (`spiderfoot/correlation_service.py`)
+### CorrelationService (`spiderfoot/services/correlation_service.py`)
 
 Standalone correlation engine:
 
@@ -162,7 +198,7 @@ Unified request routing:
 - FastAPI router integration
 - System status aggregation
 
-### Metrics (`spiderfoot/metrics.py`)
+### Metrics (`spiderfoot/observability/metrics.py`)
 
 Zero-dependency Prometheus-compatible instrumentation:
 
@@ -180,7 +216,7 @@ Data pipeline to external systems:
 - Configurable transforms and routing
 - Elasticsearch/S3/file sinks via Vector config
 
-### gRPC/HTTP RPC (`spiderfoot/grpc_service.py`)
+### gRPC/HTTP RPC (`spiderfoot/services/grpc_service.py`)
 
 Inter-service communication:
 
@@ -223,7 +259,7 @@ All 200+ existing modules continue to work unchanged. They use `self.sf`
 New modules can extend `SpiderFootModernPlugin` to access services directly:
 
 ```python
-from spiderfoot.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 class sfp_example(SpiderFootModernPlugin):
     def handleEvent(self, event):
@@ -240,10 +276,13 @@ class sfp_example(SpiderFootModernPlugin):
 See [MODULE_MIGRATION_GUIDE.md](MODULE_MIGRATION_GUIDE.md) for step-by-step
 migration instructions.
 
-## Version History (v5.4.0 – v5.21.0)
+## Version History (v5.4.0 – v5.245.0)
 
 | Version | Change |
 |---|---|
+| 5.245.0 | Complete shim removal — 79 backward-compat files deleted, 470 imports rewritten to 8 domain sub-packages |
+| 5.244.0 | Fix circular imports across all 8 sub-packages (relative imports) |
+| 5.243.0 | Populate 8 domain sub-packages (events, scan, plugins, config, security, observability, services, reporting) |
 | 5.4.0 | EventBus abstraction (Memory/Redis/NATS) |
 | 5.4.1 | Structured JSON logging |
 | 5.4.2 | Vector.dev integration |
@@ -395,19 +434,19 @@ migration instructions.
 
 ### Additional Services (v5.10.1 – v5.21.0)
 
-#### Auth Middleware (`spiderfoot/auth.py`)
+#### Auth Middleware (`spiderfoot/security/auth.py`)
 JWT, API key, and Basic authentication with role-based access control
 (ADMIN, ANALYST, VIEWER, API roles). Pluggable into any ASGI/WSGI app.
 
-#### Export Service (`spiderfoot/export_service.py`)
+#### Export Service (`spiderfoot/reporting/export_service.py`)
 Multi-format scan result export: JSON, CSV, STIX 2.1 bundles, and
 SARIF for integration with CI/CD security tooling.
 
-#### WebSocket Service (`spiderfoot/websocket_service.py`)
+#### WebSocket Service (`spiderfoot/services/websocket_service.py`)
 Real-time scan event streaming over WebSocket with channel-based
 subscriptions per scan, module, or event type.
 
-#### Notification Service (`spiderfoot/notification_service.py`)
+#### Notification Service (`spiderfoot/services/notification_service.py`)
 Multi-channel alerting with wildcard topic subscriptions, supporting
 Slack webhooks, generic webhooks, SMTP email, and log output.
 
@@ -421,12 +460,12 @@ Centralised error capture with fingerprint-based deduplication,
 automatic classification (network/auth/parse/timeout/etc.), sliding-window
 rate tracking, and configurable alert thresholds with callbacks.
 
-#### Scan Queue (`spiderfoot/scan_queue.py`)
+#### Scan Queue (`spiderfoot/scan/scan_queue.py`)
 Bounded priority queue (HIGH/NORMAL/LOW) with backpressure support.
 Three overflow strategies (BLOCK/REJECT/DROP_OLDEST), batch dequeue,
 retry tracking with dead-letter queue.
 
-#### Module Resolver (`spiderfoot/module_resolver.py`)
+#### Module Resolver (`spiderfoot/plugins/module_resolver.py`)
 Runtime dependency resolution for modules.  Given desired output event
 types, walks backwards through the event dependency chain to compute the
 minimal module set and topological load order.
@@ -438,7 +477,7 @@ Supports SQLite and PostgreSQL dialects.
 
 ### Module Loading & Dependency Resolution (v5.25.0)
 
-#### Module Loader (`spiderfoot/module_loader.py`)
+#### Module Loader (`spiderfoot/plugins/module_loader.py`)
 Registry-driven module loading adapter that replaces the scanner’s
 legacy `__import__` loop with `ModuleRegistry` for discovery/instantiation
 and `ModuleGraph` for topological dependency ordering. Features:
@@ -534,7 +573,7 @@ service layer and Cycle 25 pagination.
 
 ### Scan Service Facade (v5.30.0)
 
-#### Scan Service (`spiderfoot/scan_service_facade.py`)
+#### Scan Service (`spiderfoot/scan/scan_service_facade.py`)
 Unified scan lifecycle management combining `ScanRepository` (Cycle 23)
 with `ScanStateMachine` for formal state-transition enforcement.
 
@@ -636,13 +675,13 @@ Dedicated service layer for scan data visualization, removing raw
 
 ### Real-Time Event Infrastructure (v5.22.0 – v5.24.0)
 
-#### Event Relay (`spiderfoot/event_relay.py`)
+#### Event Relay (`spiderfoot/events/event_relay.py`)
 Central fan-out hub bridging the EventBus to WebSocket/SSE consumers.
 Per-scan consumer queues with bounded overflow (drop-oldest policy),
 EventBus subscription management, and lifecycle helpers for
 `scan_started` / `scan_completed` / `status_update` events.
 
-#### Scan Event Bridge (`spiderfoot/scan_event_bridge.py`)
+#### Scan Event Bridge (`spiderfoot/scan/scan_event_bridge.py`)
 Lightweight synchronous adapter that sits in the scanner's
 `waitForThreads()` dispatch loop. Forwards each `SpiderFootEvent`
 to the EventRelay for real-time WebSocket delivery. Features:
@@ -669,7 +708,7 @@ with the Task Queue and Alert Engine for automated notifications.
 machine (PENDING → RUNNING → COMPLETED/FAILED/CANCELLED), progress
 tracking, completion callbacks, and a singleton task manager.
 
-#### Typed AppConfig (`spiderfoot/app_config.py`)
+#### Typed AppConfig (`spiderfoot/config/app_config.py`)
 11-section typed dataclass configuration replacing the legacy flat
 dict. Sections: Core, Network, Database, Web, API, Cache, EventBus,
 Vector, Worker, Redis, Elasticsearch. Features: `from_dict()` /

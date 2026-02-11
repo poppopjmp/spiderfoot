@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 import pytest
-from spiderfoot.reranker_service import (
+from spiderfoot.services.reranker_service import (
     MockRerankerBackend,
     RerankerConfig,
     RerankerProvider,

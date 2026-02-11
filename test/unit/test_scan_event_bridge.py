@@ -12,7 +12,7 @@ import threading
 from unittest.mock import MagicMock, patch, PropertyMock
 import pytest
 
-from spiderfoot.scan_event_bridge import (
+from spiderfoot.scan.scan_event_bridge import (
     ScanEventBridge,
     create_scan_bridge,
     get_scan_bridge,
@@ -20,7 +20,7 @@ from spiderfoot.scan_event_bridge import (
     list_active_bridges,
     reset_bridges,
 )
-from spiderfoot.event_relay import EventRelay, reset_event_relay
+from spiderfoot.events.event_relay import EventRelay, reset_event_relay
 
 
 # -----------------------------------------------------------------------

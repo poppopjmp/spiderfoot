@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import pytest
-from spiderfoot.scan_workflow import (
+from spiderfoot.scan.scan_workflow import (
     StepType,
     StepStatus,
     StepResult,

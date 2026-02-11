@@ -11,7 +11,7 @@ import from this module instead of doing ad-hoc string comparisons.
 
 Usage::
 
-    from spiderfoot.scan_state_map import (
+    from spiderfoot.scan.scan_state_map import (
         db_status_to_state,
         state_to_db_status,
         proto_to_state,

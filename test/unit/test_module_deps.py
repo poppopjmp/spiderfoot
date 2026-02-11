@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import unittest
 
-from spiderfoot.module_deps import (
+from spiderfoot.plugins.module_deps import (
     DepStatus,
     ModuleDependencyResolver,
     ModuleNode,

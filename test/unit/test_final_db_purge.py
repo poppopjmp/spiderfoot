@@ -225,7 +225,7 @@ class TestReportsGetScanEvents:
     """Unit tests for _get_scan_events() using ScanService."""
 
     def _make_service(self, scan_record=None, events=None):
-        from spiderfoot.scan_service_facade import ScanService
+        from spiderfoot.scan.scan_service_facade import ScanService
 
         dbh = FakeScanDbh()
         repo = FakeRepo(dbh=dbh)

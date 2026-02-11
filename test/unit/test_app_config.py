@@ -14,7 +14,7 @@ from unittest.mock import patch
 
 import pytest
 
-from spiderfoot.app_config import (
+from spiderfoot.config.app_config import (
     ApiConfig,
     AppConfig,
     CacheBackend,

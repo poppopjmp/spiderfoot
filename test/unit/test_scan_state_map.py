@@ -3,8 +3,8 @@ from __future__ import annotations
 
 import pytest
 
-from spiderfoot.scan_state import ScanState
-from spiderfoot.scan_state_map import (
+from spiderfoot.scan.scan_state import ScanState
+from spiderfoot.scan.scan_state_map import (
     db_status_to_state,
     state_to_db_status,
     proto_to_state,

@@ -49,7 +49,7 @@ class ApiClient:
 
         # Set up inter-service auth if available
         try:
-            from spiderfoot.service_auth import ServiceTokenIssuer
+            from spiderfoot.security.service_auth import ServiceTokenIssuer
             issuer = ServiceTokenIssuer()
             if issuer.get_token():
                 self._service_issuer = issuer

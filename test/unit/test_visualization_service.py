@@ -16,7 +16,7 @@ from dataclasses import dataclass, field
 import pytest
 from starlette.testclient import TestClient
 
-from spiderfoot.visualization_service import (
+from spiderfoot.reporting.visualization_service import (
     VisualizationService,
     VisualizationServiceError,
 )

@@ -3,7 +3,7 @@ from __future__ import annotations
 """SpiderFoot plug-in module: aparat."""
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 class sfp_aparat(SpiderFootModernPlugin):
     """Monitors Aparat for new videos and emits events."""

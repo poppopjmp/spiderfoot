@@ -18,7 +18,7 @@ import time
 from threading import RLock
 from typing import Any
 from .db_utils import get_placeholder, is_transient_error
-from spiderfoot.constants import DB_RETRY_BACKOFF_BASE
+from spiderfoot.config.constants import DB_RETRY_BACKOFF_BASE
 
 log = logging.getLogger(__name__)
 

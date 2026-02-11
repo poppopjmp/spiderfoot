@@ -14,7 +14,7 @@ Features:
 
 Usage::
 
-    from spiderfoot.app_config import AppConfig
+    from spiderfoot.config.app_config import AppConfig
 
     # From scratch with defaults
     cfg = AppConfig()

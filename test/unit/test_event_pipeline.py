@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import unittest
 
-from spiderfoot.event_pipeline import (
+from spiderfoot.events.event_pipeline import (
     EventPipeline,
     FunctionStage,
     PipelineEvent,

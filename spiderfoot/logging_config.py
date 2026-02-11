@@ -36,7 +36,7 @@ import sys
 import warnings
 from typing import Any, Final
 
-from spiderfoot.structured_logging import StructuredFormatter
+from spiderfoot.observability.structured_logging import StructuredFormatter
 
 __all__ = [
     "DEFAULT_LOG_LEVEL",
@@ -297,7 +297,7 @@ def _add_sqlite_handler(
 ) -> None:
     """Add the deprecated SQLite log handler."""
     try:
-        from spiderfoot.logger import SpiderFootSqliteLogHandler
+        from spiderfoot.observability.logger import SpiderFootSqliteLogHandler
 
         sqlite_handler = SpiderFootSqliteLogHandler(config)
         sqlite_handler.setLevel(level)

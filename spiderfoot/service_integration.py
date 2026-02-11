@@ -109,7 +109,7 @@ def wire_module_services(module: Any, sf_config: dict[str, Any]) -> None:
         sf_config: SpiderFoot configuration dict.
     """
     try:
-        from spiderfoot.modern_plugin import SpiderFootModernPlugin
+        from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
         if isinstance(module, SpiderFootModernPlugin):
             # Service access is already available via properties
             log.debug("Module %s is modern, services auto-available",
@@ -136,7 +136,7 @@ def complete_scan_services(scan_id: str, status: str = "FINISHED",
     """
     # Tear down the scan event bridge (pushes completion + stats)
     try:
-        from spiderfoot.scan_event_bridge import teardown_scan_bridge
+        from spiderfoot.scan.scan_event_bridge import teardown_scan_bridge
         teardown_scan_bridge(scan_id, status=status)
     except ImportError:
         log.debug("ScanEventBridge not available — teardown skipped")
@@ -144,7 +144,7 @@ def complete_scan_services(scan_id: str, status: str = "FINISHED",
         log.warning("Failed to teardown scan event bridge for %s: %s", scan_id, e)
 
     try:
-        from spiderfoot.metrics import SCANS_TOTAL, ACTIVE_SCANS, SCAN_DURATION
+        from spiderfoot.observability.metrics import SCANS_TOTAL, ACTIVE_SCANS, SCAN_DURATION
         SCANS_TOTAL.labels(status=status.lower()).inc()
         ACTIVE_SCANS.dec()
         if duration > 0:
@@ -189,7 +189,7 @@ def complete_scan_services(scan_id: str, status: str = "FINISHED",
 def _wire_scan_metrics(scan_id: str) -> None:
     """Initialize scan-level metrics."""
     try:
-        from spiderfoot.metrics import SCANS_TOTAL, ACTIVE_SCANS
+        from spiderfoot.observability.metrics import SCANS_TOTAL, ACTIVE_SCANS
         SCANS_TOTAL.labels(status="started").inc()
         ACTIVE_SCANS.inc()
     except ImportError:
@@ -235,7 +235,7 @@ def _inject_legacy_metrics(module) -> None:
     isinstance checks and makes debugging opaque.
     """
     try:
-        from spiderfoot.metrics import MODULE_DURATION, EVENTS_PROCESSED, MODULE_ERRORS
+        from spiderfoot.observability.metrics import MODULE_DURATION, EVENTS_PROCESSED, MODULE_ERRORS
     except ImportError:
         return
 
@@ -275,7 +275,7 @@ def _wire_scan_event_bridge(scanner, scan_id: str) -> None:
     call ``bridge.forward(sfEvent)`` for each dispatched event.
     """
     try:
-        from spiderfoot.scan_event_bridge import create_scan_bridge
+        from spiderfoot.scan.scan_event_bridge import create_scan_bridge
         bridge = create_scan_bridge(scan_id)
         # Attach to scanner for easy access in waitForThreads
         scanner._event_bridge = bridge
@@ -293,7 +293,7 @@ def _wire_module_loader(scanner) -> None:
     to the legacy ``__import__`` loop.
     """
     try:
-        from spiderfoot.module_loader import init_module_loader
+        from spiderfoot.plugins.module_loader import init_module_loader
         loader = init_module_loader()
         scanner._module_loader = loader
         log.debug("ModuleLoader attached to scanner")

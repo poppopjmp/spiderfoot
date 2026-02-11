@@ -22,7 +22,7 @@ import urllib.parse
 import urllib.request
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
 class sfp_koodous(SpiderFootModernPlugin):

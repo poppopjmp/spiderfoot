@@ -27,7 +27,7 @@ import ipaddress
 import re
 from dataclasses import dataclass
 import json
-from spiderfoot.constants import DEFAULT_TTL_ONE_HOUR
+from spiderfoot.config.constants import DEFAULT_TTL_ONE_HOUR
 
 
 @dataclass

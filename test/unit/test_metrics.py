@@ -6,7 +6,7 @@ from __future__ import annotations
 import time
 import unittest
 
-from spiderfoot.metrics import (
+from spiderfoot.observability.metrics import (
     Counter,
     Gauge,
     Histogram,

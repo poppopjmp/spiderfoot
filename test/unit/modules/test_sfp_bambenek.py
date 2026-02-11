@@ -5,7 +5,7 @@ from __future__ import annotations
 # filepath: spiderfoot/test/unit/modules/test_sfp_bambenek.py
 import unittest
 from spiderfoot.sflib import SpiderFoot
-from spiderfoot.event import SpiderFootEvent
+from spiderfoot.events.event import SpiderFootEvent
 from modules.sfp_bambenek import sfp_bambenek
 from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion

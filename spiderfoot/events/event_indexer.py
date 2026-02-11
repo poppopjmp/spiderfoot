@@ -6,7 +6,7 @@ correlation during and after scans.
 
 Usage::
 
-    from spiderfoot.event_indexer import EventIndexer
+    from spiderfoot.events.event_indexer import EventIndexer
 
     indexer = EventIndexer()
     indexer.start()          # subscribe to EventBus

@@ -12,7 +12,7 @@ recently accessed reports.
 
 Usage::
 
-    from spiderfoot.report_storage import ReportStore, StoreConfig
+    from spiderfoot.reporting.report_storage import ReportStore, StoreConfig
 
     store = ReportStore(StoreConfig(db_path="reports.db"))
     store.save(report_data)
@@ -32,7 +32,7 @@ from collections import OrderedDict
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
-from spiderfoot.constants import DEFAULT_TTL_ONE_HOUR
+from spiderfoot.config.constants import DEFAULT_TTL_ONE_HOUR
 
 log = logging.getLogger("spiderfoot.report_storage")
 

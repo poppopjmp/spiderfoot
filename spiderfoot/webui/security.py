@@ -23,7 +23,7 @@ except ImportError:
 
 # Import security modules if available
 try:
-    from spiderfoot.security_middleware import install_cherrypy_security
+    from spiderfoot.security.security_middleware import install_cherrypy_security
     from spiderfoot.secure_config import SecureConfigManager
     SECURITY_MODULES_AVAILABLE = True
 except ImportError:

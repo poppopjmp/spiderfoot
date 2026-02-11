@@ -7,7 +7,7 @@ import time
 import unittest
 from unittest.mock import MagicMock, patch
 
-from spiderfoot.scan_scheduler import (
+from spiderfoot.scan.scan_scheduler import (
     ScanScheduler,
     SchedulerConfig,
     ScanRequest,

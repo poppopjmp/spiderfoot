@@ -5,7 +5,7 @@ import threading
 import time
 import unittest
 
-from spiderfoot.event_dedup import (
+from spiderfoot.events.event_dedup import (
     ContentNormalizer,
     DedupAction,
     DedupRecord,

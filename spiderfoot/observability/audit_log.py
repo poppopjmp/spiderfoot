@@ -19,7 +19,7 @@ SpiderFoot Audit Log
 
 Immutable audit trail for security-relevant actions::
 
-    from spiderfoot.audit_log import AuditLogger, AuditEvent, AuditCategory
+    from spiderfoot.observability.audit_log import AuditLogger, AuditEvent, AuditCategory
 
     audit = AuditLogger()
 

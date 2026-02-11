@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import unittest
 
-from spiderfoot.config_schema import (
+from spiderfoot.config.config_schema import (
     ConfigSchema,
     FieldSchema,
     infer_schema_from_module,

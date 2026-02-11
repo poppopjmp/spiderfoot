@@ -6,7 +6,7 @@ import threading
 import time
 import unittest
 
-from spiderfoot.scan_queue import (
+from spiderfoot.scan.scan_queue import (
     BackpressureAction,
     PressureLevel,
     Priority,

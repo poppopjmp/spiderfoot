@@ -6,7 +6,7 @@ import os
 import tempfile
 import unittest
 
-from spiderfoot.export_service import (
+from spiderfoot.reporting.export_service import (
     ExportConfig,
     ExportFormat,
     ExportService,

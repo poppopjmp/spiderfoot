@@ -9,7 +9,7 @@ import unittest
 from http.client import HTTPConnection
 from unittest.mock import MagicMock, patch
 
-from spiderfoot.grpc_service import (
+from spiderfoot.services.grpc_service import (
     ServiceClient,
     ServiceServer,
     ServiceCallError,

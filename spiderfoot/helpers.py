@@ -264,7 +264,7 @@ class SpiderFootHelpers():
                         # Detect if this is a modern plugin
                         is_modern = False
                         try:
-                            from spiderfoot.modern_plugin import SpiderFootModernPlugin
+                            from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
                             is_modern = issubclass(mod_class, SpiderFootModernPlugin)
                         except ImportError:
                             pass

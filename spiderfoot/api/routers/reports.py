@@ -22,7 +22,7 @@ from enum import Enum
 from typing import Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from spiderfoot.scan_service_facade import ScanService
+    from spiderfoot.scan.scan_service_facade import ScanService
 
 from pydantic import BaseModel, Field
 
@@ -33,7 +33,7 @@ log = logging.getLogger("spiderfoot.api.reports")
 # ---------------------------------------------------------------------------
 
 try:
-    from spiderfoot.report_storage import ReportStore, StoreConfig
+    from spiderfoot.reporting.report_storage import ReportStore, StoreConfig
     _persistent_store: ReportStore | None = None
 except ImportError:
     _persistent_store = None
@@ -48,7 +48,7 @@ def _get_store() -> ReportStore | None:
     if _persistent_store is not None:
         return _persistent_store
     try:
-        from spiderfoot.report_storage import ReportStore, StoreConfig
+        from spiderfoot.reporting.report_storage import ReportStore, StoreConfig
         store = ReportStore(StoreConfig())
         log.info("Persistent ReportStore initialised (backend=%s)",
                  store.config.backend.value)
@@ -265,7 +265,7 @@ def _generate_report_background(
 
     Updates the report store with progress and final result.
     """
-    from spiderfoot.report_generator import (
+    from spiderfoot.reporting.report_generator import (
         GeneratedReport,
         ReportGenerator,
         ReportGeneratorConfig,
@@ -369,7 +369,7 @@ def _get_scan_events(scan_id: str, scan_service=None) -> tuple:
                 get_repository_factory,
                 RepositoryFactory,
             )
-            from spiderfoot.scan_service_facade import ScanService
+            from spiderfoot.scan.scan_service_facade import ScanService
             from spiderfoot.config import get_app_config
 
             config = get_app_config()
@@ -527,7 +527,7 @@ else:
     async def preview_report(request: ReportPreviewRequest,
                             scan_service: ScanService = Depends(get_scan_service)) -> dict[str, Any]:
         """Generate a quick executive summary preview synchronously."""
-        from spiderfoot.report_generator import ReportGenerator, ReportGeneratorConfig
+        from spiderfoot.reporting.report_generator import ReportGenerator, ReportGeneratorConfig
 
         events, scan_metadata = _get_scan_events(request.scan_id, scan_service=scan_service)
 
@@ -556,8 +556,8 @@ else:
         ),
     ) -> StreamingResponse:
         """Export a completed report in the specified format."""
-        from spiderfoot.report_formatter import ReportFormatter
-        from spiderfoot.report_generator import (
+        from spiderfoot.reporting.report_formatter import ReportFormatter
+        from spiderfoot.reporting.report_generator import (
             GeneratedReport,
             GeneratedSection,
             ReportFormat,

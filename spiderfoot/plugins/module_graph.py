@@ -31,7 +31,7 @@ This graph supports:
 
 Usage::
 
-    from spiderfoot.module_graph import ModuleGraph
+    from spiderfoot.plugins.module_graph import ModuleGraph
 
     graph = ModuleGraph()
     graph.load_modules("/path/to/modules")

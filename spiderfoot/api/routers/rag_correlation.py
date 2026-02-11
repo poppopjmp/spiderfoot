@@ -399,7 +399,7 @@ async def semantic_search(req: SearchRequest,
     t0 = time.perf_counter()
 
     try:
-        from spiderfoot.embedding_service import get_embedding_service
+        from spiderfoot.services.embedding_service import get_embedding_service
         from spiderfoot.qdrant_client import get_qdrant_client, Filter
 
         emb = get_embedding_service()
@@ -465,7 +465,7 @@ async def stats(_auth: str = optional_auth_dep) -> StatsResponse:
         log.debug("Qdrant client unavailable for stats: %s", e)
 
     try:
-        from spiderfoot.embedding_service import get_embedding_service
+        from spiderfoot.services.embedding_service import get_embedding_service
         emb = get_embedding_service()
         emb_ok = True
         extra["embedding_cache"] = emb.cache_stats()

@@ -3,7 +3,7 @@ from __future__ import annotations
 """SpiderFoot plug-in module: 4chan."""
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 import requests
 import time
 

@@ -20,7 +20,7 @@ import urllib.parse
 import urllib.request
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 sites = {
     # Search string to use, domain name the profile will sit on within

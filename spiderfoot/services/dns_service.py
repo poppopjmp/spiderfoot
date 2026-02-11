@@ -17,7 +17,7 @@ import time
 from dataclasses import dataclass, field
 from typing import Any
 
-from spiderfoot.constants import DEFAULT_DOH_URL
+from spiderfoot.config.constants import DEFAULT_DOH_URL
 
 try:
     import dns.resolver

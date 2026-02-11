@@ -33,9 +33,9 @@ try:
 except ImportError:
     _THREADREAPER_AVAILABLE = False
 from spiderfoot import SpiderFootEvent, SpiderFootPlugin, SpiderFootTarget, SpiderFootHelpers, SpiderFootThreadPool
-from spiderfoot.logger import logWorkerSetup
+from spiderfoot.observability.logger import logWorkerSetup
 from spiderfoot import SpiderFootDb
-from spiderfoot.scan_state_map import (
+from spiderfoot.scan.scan_state_map import (
     DB_STATUS_ABORT_REQUESTED,
     DB_STATUS_ABORTED,
     DB_STATUS_ERROR_FAILED,
@@ -598,13 +598,17 @@ class SpiderFootScanner():
 
     def runCorrelations(self) -> None:
         """Execute correlation rules against the completed scan results."""
+        rules = self.__config.get('__correlationrules__')
+        if not rules:
+            log.info("No correlation rules configured for scan %s, skipping.", self.__scanId)
+            return
+
         from spiderfoot.correlation.rule_executor import RuleExecutor
         from spiderfoot.correlation.event_enricher import EventEnricher
         from spiderfoot.correlation.result_aggregator import ResultAggregator
 
         self.__sf.status(
-            f"Running {len(self.__config['__correlationrules__'])} correlation rules on scan {self.__scanId}.")
-        rules = self.__config['__correlationrules__']
+            f"Running {len(rules)} correlation rules on scan {self.__scanId}.")
         executor = RuleExecutor(self.__dbh, rules, scan_ids=[self.__scanId])
         results = executor.run()
         enricher = EventEnricher(self.__dbh)

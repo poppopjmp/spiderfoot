@@ -7,7 +7,7 @@ import asyncio
 import json
 import unittest
 
-from spiderfoot.websocket_service import (
+from spiderfoot.services.websocket_service import (
     ChannelType,
     WebSocketClient,
     WebSocketHub,

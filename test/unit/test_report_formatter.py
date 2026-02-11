@@ -12,14 +12,14 @@ import json
 
 import pytest
 
-from spiderfoot.report_formatter import (
+from spiderfoot.reporting.report_formatter import (
     FormatterConfig,
     ReportFormatter,
     Theme,
     _esc,
     _slugify,
 )
-from spiderfoot.report_generator import (
+from spiderfoot.reporting.report_generator import (
     GeneratedReport,
     GeneratedSection,
     ReportFormat,

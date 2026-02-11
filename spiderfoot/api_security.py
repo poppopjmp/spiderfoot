@@ -15,7 +15,7 @@ from typing import Any, Callable
 from functools import wraps
 from flask import request, jsonify, g
 from werkzeug.security import check_password_hash, generate_password_hash
-from spiderfoot.constants import DEFAULT_TTL_ONE_HOUR
+from spiderfoot.config.constants import DEFAULT_TTL_ONE_HOUR
 
 log = logging.getLogger(__name__)
 

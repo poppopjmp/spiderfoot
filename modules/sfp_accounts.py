@@ -23,7 +23,7 @@ from queue import Empty as QueueEmpty
 from queue import Queue
 
 from spiderfoot import SpiderFootEvent, SpiderFootHelpers
-from spiderfoot.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
 class sfp_accounts(SpiderFootModernPlugin):

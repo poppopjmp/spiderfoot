@@ -26,7 +26,7 @@ from .sflib import SpiderFoot
 
 # Logger import - assuming it exists in the package
 try:
-    from .logger import logger
+    from .observability.logger import logger
 except ImportError:
     # Fallback if logger module doesn't exist
     import logging

@@ -20,7 +20,7 @@ import dns.query
 import dns.zone
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
 class sfp_dnszonexfer(SpiderFootModernPlugin):

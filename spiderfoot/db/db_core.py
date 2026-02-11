@@ -734,7 +734,7 @@ class DbCore:
         if self.db_type == 'sqlite':
             Path(database_path).parent.mkdir(exist_ok=True, parents=True)
             try:
-                dbh = sqlite3.connect(database_path)
+                dbh = sqlite3.connect(database_path, check_same_thread=False)
             except Exception as e:
                 self._log_db_error(f"Error connecting to internal database {database_path}", e)
                 raise OSError(f"Error connecting to internal database {database_path}") from e

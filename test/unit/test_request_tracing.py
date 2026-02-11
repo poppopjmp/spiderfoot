@@ -142,7 +142,7 @@ class TestStructuredFormatterRequestId(unittest.TestCase):
         _request_id_var.set(None)
 
     def test_formatter_includes_request_id_from_extra(self):
-        from spiderfoot.structured_logging import StructuredFormatter
+        from spiderfoot.observability.structured_logging import StructuredFormatter
 
         fmt = StructuredFormatter(include_timestamp=False, include_hostname=False)
         record = logging.LogRecord(
@@ -154,7 +154,7 @@ class TestStructuredFormatterRequestId(unittest.TestCase):
         self.assertEqual(data["request_id"], "extra-id-456")
 
     def test_formatter_includes_request_id_from_contextvar(self):
-        from spiderfoot.structured_logging import StructuredFormatter
+        from spiderfoot.observability.structured_logging import StructuredFormatter
 
         fmt = StructuredFormatter(include_timestamp=False, include_hostname=False)
         set_request_id("ctxvar-789")
@@ -167,7 +167,7 @@ class TestStructuredFormatterRequestId(unittest.TestCase):
         self.assertEqual(data["request_id"], "ctxvar-789")
 
     def test_formatter_no_request_id_when_absent(self):
-        from spiderfoot.structured_logging import StructuredFormatter
+        from spiderfoot.observability.structured_logging import StructuredFormatter
 
         fmt = StructuredFormatter(include_timestamp=False, include_hostname=False)
         record = logging.LogRecord(
@@ -178,7 +178,7 @@ class TestStructuredFormatterRequestId(unittest.TestCase):
         self.assertNotIn("request_id", data)
 
     def test_formatter_includes_method_and_path(self):
-        from spiderfoot.structured_logging import StructuredFormatter
+        from spiderfoot.observability.structured_logging import StructuredFormatter
 
         fmt = StructuredFormatter(include_timestamp=False, include_hostname=False)
         record = logging.LogRecord(

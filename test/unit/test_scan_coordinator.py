@@ -5,7 +5,7 @@ import time
 import unittest
 from unittest.mock import MagicMock
 
-from spiderfoot.scan_coordinator import (
+from spiderfoot.scan.scan_coordinator import (
     DistributionStrategy,
     NodeState,
     ScanCoordinator,

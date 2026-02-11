@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import unittest
 
-from spiderfoot.event_filter import (
+from spiderfoot.events.event_filter import (
     EventFilterChain,
     FilterAction,
     FilterResult,

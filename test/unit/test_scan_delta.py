@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import unittest
 
-from spiderfoot.scan_delta import (
+from spiderfoot.scan.scan_delta import (
     Delta,
     DeltaKind,
     DeltaResult,

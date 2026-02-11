@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import unittest
 
-from spiderfoot.module_graph import ModuleGraph, ModuleInfo
+from spiderfoot.plugins.module_graph import ModuleGraph, ModuleInfo
 
 
 class TestModuleInfo(unittest.TestCase):

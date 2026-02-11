@@ -16,7 +16,7 @@ from typing import Any
 import pytest
 from starlette.testclient import TestClient
 
-from spiderfoot.scan_service_facade import ScanService, ScanServiceError
+from spiderfoot.scan.scan_service_facade import ScanService, ScanServiceError
 from spiderfoot.db.repositories.scan_repository import ScanRecord
 
 

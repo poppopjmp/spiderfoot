@@ -6,7 +6,7 @@ synchronous scan engine.
 
 Usage::
 
-    from spiderfoot.async_plugin import SpiderFootAsyncPlugin
+    from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
     class sfp_example_async(SpiderFootAsyncPlugin):
         async def handleEvent(self, event):

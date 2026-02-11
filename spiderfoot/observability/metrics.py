@@ -22,7 +22,7 @@ health server.
 
 Usage::
 
-    from spiderfoot.metrics import metrics, Counter, Gauge, Histogram
+    from spiderfoot.observability.metrics import metrics, Counter, Gauge, Histogram
 
     SCANS_TOTAL = Counter("sf_scans_total", "Total scans started", ["status"])
     SCANS_TOTAL.labels(status="completed").inc()

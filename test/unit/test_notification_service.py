@@ -7,7 +7,7 @@ import threading
 
 import pytest
 
-from spiderfoot.notification_service import (
+from spiderfoot.services.notification_service import (
     EmailChannel,
     LogChannel,
     Notification,

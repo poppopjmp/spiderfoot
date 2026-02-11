@@ -36,7 +36,7 @@ Architecture::
 
 Usage (client)::
 
-    from spiderfoot.grpc_service import ServiceClient
+    from spiderfoot.services.grpc_service import ServiceClient
 
     # Auto-detects gRPC or HTTP
     scanner = ServiceClient("scanner", "sf-scanner:5003")
@@ -47,7 +47,7 @@ Usage (client)::
 
 Usage (server)::
 
-    from spiderfoot.grpc_service import ServiceServer
+    from spiderfoot.services.grpc_service import ServiceServer
 
     server = ServiceServer("scanner", port=5003)
     server.register("SubmitScan", handle_submit_scan)

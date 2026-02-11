@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import unittest
 
-from spiderfoot.scan_policy import (
+from spiderfoot.scan.scan_policy import (
     PolicyAction,
     PolicyCheckResult,
     PolicyEngine,

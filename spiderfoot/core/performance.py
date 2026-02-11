@@ -27,7 +27,7 @@ import asyncio
 import aiohttp
 import weakref
 
-from spiderfoot.constants import DEFAULT_TTL_ONE_HOUR
+from spiderfoot.config.constants import DEFAULT_TTL_ONE_HOUR
 
 
 class PerformanceProfiler:

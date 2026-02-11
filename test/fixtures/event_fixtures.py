@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import pytest
 import time
-from spiderfoot.event import SpiderFootEvent
+from spiderfoot.events.event import SpiderFootEvent
 
 
 @pytest.fixture

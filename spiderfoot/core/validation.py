@@ -12,7 +12,7 @@ import sys
 import logging
 import re
 from typing import Any
-from spiderfoot.constants import DEFAULT_WEB_PORT
+from spiderfoot.config.constants import DEFAULT_WEB_PORT
 
 
 class ValidationUtils:

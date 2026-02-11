@@ -101,7 +101,7 @@ def cmd_version(args: argparse.Namespace) -> None:
 def cmd_status(args: argparse.Namespace) -> None:
     """Show service health status."""
     try:
-        from spiderfoot.health import (
+        from spiderfoot.observability.health import (
             HealthAggregator, register_default_checks,
         )
 
@@ -138,7 +138,7 @@ def cmd_status(args: argparse.Namespace) -> None:
 def cmd_metrics(args: argparse.Namespace) -> None:
     """Show Prometheus metrics."""
     try:
-        from spiderfoot.metrics import get_registry
+        from spiderfoot.observability.metrics import get_registry
 
         registry = get_registry()
 
@@ -161,7 +161,7 @@ def cmd_metrics(args: argparse.Namespace) -> None:
 def cmd_config_get(args: argparse.Namespace) -> None:
     """Get a configuration value."""
     try:
-        from spiderfoot.config_service import get_config_service
+        from spiderfoot.services.config_service import get_config_service
 
         config = get_config_service()
         value = config.get(args.key)
@@ -183,7 +183,7 @@ def cmd_config_get(args: argparse.Namespace) -> None:
 def cmd_config_set(args: argparse.Namespace) -> None:
     """Set a configuration value."""
     try:
-        from spiderfoot.config_service import get_config_service
+        from spiderfoot.services.config_service import get_config_service
 
         config = get_config_service()
         config.set(args.key, args.value)
@@ -197,7 +197,7 @@ def cmd_config_set(args: argparse.Namespace) -> None:
 def cmd_config_list(args: argparse.Namespace) -> None:
     """List all configuration keys."""
     try:
-        from spiderfoot.config_service import get_config_service
+        from spiderfoot.services.config_service import get_config_service
 
         config = get_config_service()
         all_config = config._config
@@ -230,7 +230,7 @@ def cmd_config_list(args: argparse.Namespace) -> None:
 def cmd_scan_submit(args: argparse.Namespace) -> None:
     """Submit a new scan."""
     try:
-        from spiderfoot.scan_scheduler import (
+        from spiderfoot.scan.scan_scheduler import (
             ScanScheduler, ScanRequest, ScanPriority,
         )
 
@@ -271,7 +271,7 @@ def cmd_scan_submit(args: argparse.Namespace) -> None:
 def cmd_scan_list(args: argparse.Namespace) -> None:
     """List scans."""
     try:
-        from spiderfoot.scan_scheduler import ScanScheduler
+        from spiderfoot.scan.scan_scheduler import ScanScheduler
 
         scheduler = ScanScheduler.from_config({})
         statuses = scheduler.all_status()
@@ -303,7 +303,7 @@ def cmd_scan_list(args: argparse.Namespace) -> None:
 def cmd_correlate(args: argparse.Namespace) -> None:
     """Run correlations for a scan."""
     try:
-        from spiderfoot.correlation_service import get_correlation_service
+        from spiderfoot.services.correlation_service import get_correlation_service
 
         svc = get_correlation_service({})
         svc.start()

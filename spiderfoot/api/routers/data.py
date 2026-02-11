@@ -385,7 +385,7 @@ async def get_module_stats(api_key: str = optional_auth_dep) -> dict:
 
     # 1. Timeout statistics
     try:
-        from spiderfoot.module_timeout import get_timeout_guard
+        from spiderfoot.plugins.module_timeout import get_timeout_guard
         guard = get_timeout_guard()
         stats = guard.stats()
         result["timeout"] = {
@@ -403,7 +403,7 @@ async def get_module_stats(api_key: str = optional_auth_dep) -> dict:
 
     # 2. Output validation statistics
     try:
-        from spiderfoot.module_output_validator import get_output_validator
+        from spiderfoot.plugins.module_output_validator import get_output_validator
         validator = get_output_validator()
         all_stats = validator.get_all_stats()
         result["output_validation"] = {
@@ -420,7 +420,7 @@ async def get_module_stats(api_key: str = optional_auth_dep) -> dict:
 
     # 3. Module health
     try:
-        from spiderfoot.module_health import get_health_monitor
+        from spiderfoot.plugins.module_health import get_health_monitor
         monitor = get_health_monitor()
         report = monitor.get_report()
         result["health"] = report.get("summary", {})

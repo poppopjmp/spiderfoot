@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import unittest
 
-from spiderfoot.event_registry import (
+from spiderfoot.events.event_registry import (
     EventTypeMeta,
     EventTypeRegistry,
     ModuleNode,

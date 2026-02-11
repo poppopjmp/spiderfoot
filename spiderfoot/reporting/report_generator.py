@@ -10,7 +10,7 @@ to produce coherent, multi-section reports.
 
 Usage::
 
-    from spiderfoot.report_generator import ReportGenerator, ReportGeneratorConfig
+    from spiderfoot.reporting.report_generator import ReportGenerator, ReportGeneratorConfig
 
     generator = ReportGenerator(ReportGeneratorConfig())
     report = generator.generate(scan_events, scan_metadata)
@@ -32,7 +32,7 @@ from spiderfoot.context_window import (
     WindowConfig,
 )
 from spiderfoot.llm_client import LLMClient, LLMConfig, LLMProvider
-from spiderfoot.report_preprocessor import (
+from spiderfoot.reporting.report_preprocessor import (
     PreprocessorConfig,
     ReportContext,
     ReportPreprocessor,

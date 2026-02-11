@@ -296,7 +296,7 @@ class APIGateway:
     def _get_client(self, service: str):
         """Get or create a ServiceClient for a service."""
         if service not in self._clients:
-            from spiderfoot.grpc_service import ServiceDirectory
+            from spiderfoot.services.grpc_service import ServiceDirectory
             self._clients[service] = ServiceDirectory.get_client(service)
         return self._clients[service]
 
@@ -310,7 +310,7 @@ class APIGateway:
                        status: str) -> None:
         """Record gateway routing metric."""
         try:
-            from spiderfoot.metrics import Counter, get_registry
+            from spiderfoot.observability.metrics import Counter, get_registry
             # Lazy-create gateway metrics
             registry = get_registry()
             gate_counter = None

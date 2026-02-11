@@ -3,7 +3,7 @@ from __future__ import annotations
 """SpiderFoot plug-in module: wifimapio."""
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 class sfp_wifimapio(SpiderFootModernPlugin):
     """Queries WiFiMap.io for public WiFi hotspots and related info."""

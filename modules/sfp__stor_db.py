@@ -23,7 +23,7 @@ try:
 except ImportError:
     HAS_PSYCOPG2 = False
 
-from spiderfoot.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
 class sfp__stor_db(SpiderFootModernPlugin):
@@ -226,15 +226,24 @@ class sfp__stor_db(SpiderFootModernPlugin):
         if not self.__sfdb__:
             self.error("Database handle not available for SQLite storage")
             return
-            
-        if self.opts['maxstorage'] != 0 and len(sfEvent.data) > self.opts['maxstorage']:
-            self.debug("Storing an event: " + sfEvent.eventType)
-            self.__sfdb__.scanEventStore(
-                self.getScanId(), sfEvent, self.opts['maxstorage'])
-            return
 
-        self.debug("Storing an event: " + sfEvent.eventType)
-        self.__sfdb__.scanEventStore(self.getScanId(), sfEvent)
+        try:
+            if self.opts['maxstorage'] != 0 and len(sfEvent.data) > self.opts['maxstorage']:
+                self.debug("Storing an event: " + sfEvent.eventType)
+                self.__sfdb__.scanEventStore(
+                    self.getScanId(), sfEvent, self.opts['maxstorage'])
+                return
+
+            self.debug("Storing an event: " + sfEvent.eventType)
+            self.__sfdb__.scanEventStore(self.getScanId(), sfEvent)
+        except Exception as e:
+            import traceback
+            self.error(f"_store_sqlite failed for event type={sfEvent.eventType} "
+                       f"module={sfEvent.module} hash={sfEvent.hash} "
+                       f"generated={sfEvent.generated} data_len={len(sfEvent.data) if sfEvent.data else 0}: "
+                       f"{type(e).__name__}: {e}")
+            self.error(f"Full traceback: {traceback.format_exc()}")
+            raise
 
     def _store_postgresql(self, sfEvent):
         """Store the event in the PostgreSQL database.

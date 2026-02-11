@@ -7,7 +7,7 @@ import time
 import unittest
 from unittest.mock import MagicMock, patch
 
-from spiderfoot.correlation_service import (
+from spiderfoot.services.correlation_service import (
     CorrelationResult,
     CorrelationService,
     CorrelationServiceConfig,

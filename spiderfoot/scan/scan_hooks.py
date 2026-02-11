@@ -17,7 +17,7 @@ Events published on the ``scan.lifecycle`` topic:
     - ``scan.unarchived``   — scan restored from archive
 
 Usage:
-    from spiderfoot.scan_hooks import ScanLifecycleHooks, get_scan_hooks
+    from spiderfoot.scan.scan_hooks import ScanLifecycleHooks, get_scan_hooks
 
     hooks = get_scan_hooks()
     hooks.on_created(scan_id, name, target)

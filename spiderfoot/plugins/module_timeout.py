@@ -12,7 +12,7 @@ a flag and logs a warning.  For truly stuck modules, a hard
 on CPython (non-fatal, best-effort).
 
 Usage:
-    from spiderfoot.module_timeout import ModuleTimeoutGuard
+    from spiderfoot.plugins.module_timeout import ModuleTimeoutGuard
 
     guard = ModuleTimeoutGuard(default_timeout=300)
 

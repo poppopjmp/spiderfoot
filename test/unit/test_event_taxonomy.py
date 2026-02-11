@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import unittest
-from spiderfoot.event_taxonomy import (
+from spiderfoot.events.event_taxonomy import (
     EventCategory, RiskLevel, EventTypeInfo, EventTaxonomy,
 )
 

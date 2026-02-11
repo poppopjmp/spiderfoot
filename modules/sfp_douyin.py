@@ -3,7 +3,7 @@ from __future__ import annotations
 """SpiderFoot plug-in module: douyin."""
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 class sfp_douyin(SpiderFootModernPlugin):
     """Douyin plugin for monitoring video uploads."""

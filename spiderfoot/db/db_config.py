@@ -18,7 +18,7 @@ import logging
 import time
 from threading import RLock
 from typing import Any
-from spiderfoot.constants import DB_RETRY_BACKOFF_BASE
+from spiderfoot.config.constants import DB_RETRY_BACKOFF_BASE
 
 log = logging.getLogger(__name__)
 

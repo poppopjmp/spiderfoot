@@ -49,7 +49,7 @@ _FILE_EXTENSIONS = {
 def _get_export_service():
     """Lazy-import ExportService to avoid circular imports."""
     try:
-        from spiderfoot.export_service import ExportService, ExportFormat
+        from spiderfoot.reporting.export_service import ExportService, ExportFormat
         return ExportService(), ExportFormat
     except ImportError:
         return None, None
@@ -106,7 +106,7 @@ async def export_scan(
         raise HTTPException(status_code=400, detail=f"Unsupported format: {format.value}")
 
     # Apply config overrides
-    from spiderfoot.export_service import ExportConfig
+    from spiderfoot.reporting.export_service import ExportConfig
     svc.config = ExportConfig(
         include_raw_data=include_raw,
         max_events=max_events,

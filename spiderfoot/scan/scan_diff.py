@@ -18,7 +18,7 @@ SpiderFoot Scan Diff
 
 Compare two scan results to find changes::
 
-    from spiderfoot.scan_diff import ScanDiff, ScanSnapshot
+    from spiderfoot.scan.scan_diff import ScanDiff, ScanSnapshot
 
     snap_a = ScanSnapshot.from_events(scan_a_events)
     snap_b = ScanSnapshot.from_events(scan_b_events)

@@ -13,7 +13,7 @@ import logging
 from unittest.mock import patch, MagicMock, PropertyMock
 import pytest
 
-from spiderfoot.app_config import AppConfig, ValidationError as AppValidationError
+from spiderfoot.config.app_config import AppConfig, ValidationError as AppValidationError
 
 
 # -----------------------------------------------------------------------

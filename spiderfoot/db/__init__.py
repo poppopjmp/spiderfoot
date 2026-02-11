@@ -448,7 +448,7 @@ class SpiderFootDb:
             database_path = opts['__database']
             Path(database_path).parent.mkdir(exist_ok=True, parents=True)
             try:
-                dbh = sqlite3.connect(database_path)
+                dbh = sqlite3.connect(database_path, check_same_thread=False)
             except Exception as e:
                 raise OSError(
                     f"Error connecting to internal database {database_path}") from e
@@ -545,30 +545,15 @@ class SpiderFootDb:
         else:
             raise ValueError(f"Unsupported database type: {self.db_type}")
 
-    def connect(self) -> None:
-        """
-        Connect to the database using the provided parameters.
-        """
-        try:
-            if self.dbtype == "sqlite":
-                self.conn = sqlite3.connect(self.dbname)
-            elif self.dbtype == "postgres":
-                self.conn = psycopg2.connect(
-                    host=self.dbhost,
-                    port=self.dbport,
-                    database=self.dbname,
-                    user=self.dbuser,
-                    password=self.dbpass
-                )
-            else:
-                raise ValueError(f"Unsupported database type: {self.dbtype}")
-
-            self.cursor = self.conn.cursor()
-            self._setup_managers()
-
-        except Exception as e:
-            log.error("Error connecting to database: %s", e)
-            raise
+        # CRITICAL FIX: Re-initialize managers with the final database connection.
+        # DbCore creates an initial connection used by managers at lines 437-440,
+        # but the sqlite/postgresql init block above creates a SECOND connection
+        # that overwrites self.dbh and self.conn. Without re-init, managers would
+        # operate on the stale DbCore cursor/connection, causing SQL errors.
+        self._scan = ScanManager(self.dbh, self.conn, self.dbhLock, self.db_type)
+        self._event = EventManager(self.dbh, self.conn, self.dbhLock, self.db_type)
+        self._config = ConfigManager(self.dbh, self.conn, self.dbhLock, self.db_type)
+        self._correlation = CorrelationManager(self.dbh, self.conn, self.dbhLock, self.db_type)
 
     def _setup_managers(self) -> None:
         """

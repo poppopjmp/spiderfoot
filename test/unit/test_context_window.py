@@ -20,7 +20,7 @@ from spiderfoot.context_window import (
     _estimate_tokens,
     _truncate_to_tokens,
 )
-from spiderfoot.report_preprocessor import (
+from spiderfoot.reporting.report_preprocessor import (
     NormalizedEvent,
     PreprocessorConfig,
     ReportContext,

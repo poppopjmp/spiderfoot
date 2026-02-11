@@ -5,7 +5,7 @@ from __future__ import annotations
 # filepath: spiderfoot/test/unit/modules/test_sfp_zoomeye.py
 from unittest.mock import patch, MagicMock
 from spiderfoot.sflib import SpiderFoot
-from spiderfoot.event import SpiderFootEvent
+from spiderfoot.events.event import SpiderFootEvent
 from modules.sfp_zoomeye import sfp_zoomeye
 import unittest
 from test.unit.utils.test_module_base import TestModuleBase

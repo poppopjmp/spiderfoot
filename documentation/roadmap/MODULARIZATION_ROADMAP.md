@@ -1,5 +1,12 @@
 # SpiderFoot Modularization Roadmap
 
+> **Status (v5.245.0):** Steps 1-3 (Centralize Configuration, Extract Scan
+> Orchestration, Modularize Module Loading) are **COMPLETE**. All code has been
+> organized into 8 domain sub-packages (`config/`, `scan/`, `plugins/`, `events/`,
+> `security/`, `observability/`, `services/`, `reporting/`). The 79 backward-
+> compatibility shim files have been removed and 470 source files updated with
+> direct sub-package imports.
+
 This document provides a step-by-step, risk-aware plan to refactor the main SpiderFoot entrypoints (`sf.py`, `sfcli.py`, `sfwebui.py`, `sfapi.py`) and the core library into a modular, maintainable, and testable architecture.
 
 ---
@@ -164,13 +171,12 @@ For each modularization step, review the actual methods, classes, and file conte
 - Use this roadmap as a checklist for the modularization process.
 
 
-## 1. Centralize Configuration (`spiderfoot/config.py`)
+## 1. Centralize Configuration (`spiderfoot/config/`) ✅ COMPLETE
 
 ### **Current State**
-- Config logic is spread across:
-  - `spiderfoot/sflib/config.py` (functions: `configSerialize`, `configUnserialize`)
-  - Entry points (`sf.py`, `sfcli.py`, `sfwebui.py`, `sfapi.py`) have their own config loading/merging/validation logic.
-  - Some config logic may be in `spiderfoot/sflib/core.py` and `spiderfoot/helpers.py`.
+- Config logic consolidated into `spiderfoot/config/` sub-package.
+- Contains: `constants.py`, `app_config.py`, `config_schema.py`.
+- All entry points and modules import from `spiderfoot.config.*`.
 
 ### **What to Move**
 - All config serialization/deserialization, default config dicts, merging, and validation.
@@ -369,49 +375,21 @@ For each modularization step, review the actual methods, classes, and file conte
 
 ---
 
-## 2. **Extract Scan Orchestration**
+## 2. **Extract Scan Orchestration** ✅ COMPLETE
 
 ### **Current State**
-- Scan orchestration logic is in:
-  - sf.py (functions like `start_scan`, `validate_arguments`, `process_target`, `prepare_modules`, `execute_scan`)
-  - `scan_service/scanner.py` (core scan logic)
-  - Possibly duplicated in sfwebui.py and sfapi.py
-
-### **Critical Steps**
-- **Move all scan orchestration logic** to `scan_service.py` (or expand `scan_service/scanner.py`).
-- **Unify process/thread management**: Ensure all scan launching, monitoring, and aborting is handled in one place.
-- **Update entrypoints** to use the new scan service.
-
-### **Risks**
-- **Tight coupling**: Scan logic may be tightly coupled to CLI or web UI code.
-- **Process/thread safety**: Moving process management may introduce subtle bugs if not carefully tested.
-- **API/CLI divergence**: Ensure both API and CLI use the same scan orchestration logic.
-
-### **Mitigation**
-- Write integration tests for scan start/stop/status.
-- Refactor in small steps, keeping old and new logic side-by-side until stable.
+- Scan orchestration consolidated into `spiderfoot/scan/` sub-package.
+- Contains: `scan_state.py`, `scan_state_map.py`, `scan_coordinator.py`, `scan_scheduler.py`, `scan_queue.py`, `scan_workflow.py`, and 11 more modules.
+- All entry points import from `spiderfoot.scan.*`.
 
 ---
 
-## 3. **Modularize Module Loading**
+## 3. **Modularize Module Loading** ✅ COMPLETE
 
 ### **Current State**
-- Module loading logic is in:
-  - sf.py (custom loader, dynamic import)
-  - Possibly in core.py or helpers.py
-
-### **Critical Steps**
-- **Move all module loading logic** to `module_loader.py`.
-- **Standardize dynamic import**: Use a single function for module discovery and import.
-- **Update all code** to use the new loader.
-
-### **Risks**
-- **Dynamic import edge cases**: Some modules may have special requirements or side effects.
-- **Test coverage**: Module loading is hard to test; ensure all modules are still discoverable.
-
-### **Mitigation**
-- Add a test that loads all modules and checks for import errors.
-- Document the expected module interface.
+- Module loading consolidated into `spiderfoot/plugins/` sub-package.
+- Contains: `plugin.py`, `modern_plugin.py`, `module_loader.py`, `module_registry.py`, `module_resolver.py`, and 16 more modules.
+- All module imports use `spiderfoot.plugins.*`.
 
 ---
 

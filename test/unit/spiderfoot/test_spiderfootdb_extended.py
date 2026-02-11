@@ -21,7 +21,7 @@ from unittest.mock import Mock, patch, MagicMock, call
 from pathlib import Path
 
 from spiderfoot.db import SpiderFootDb
-from spiderfoot.event import SpiderFootEvent
+from spiderfoot.events.event import SpiderFootEvent
 
 
 class TestSpiderFootDbInitialization:

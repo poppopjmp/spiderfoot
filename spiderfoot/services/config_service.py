@@ -28,7 +28,7 @@ Features:
 
 Usage::
 
-    from spiderfoot.config_service import ConfigService, get_config_service
+    from spiderfoot.services.config_service import ConfigService, get_config_service
 
     config = get_config_service()
     config.load_defaults()

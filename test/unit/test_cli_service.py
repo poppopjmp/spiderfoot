@@ -6,7 +6,7 @@ import sys
 import unittest
 from unittest.mock import patch
 
-from spiderfoot.cli_service import (
+from spiderfoot.services.cli_service import (
     _print_table,
     build_parser,
     cmd_version,

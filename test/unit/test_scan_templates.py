@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import unittest
-from spiderfoot.scan_templates import (
+from spiderfoot.scan.scan_templates import (
     TemplateCategory, ScanTemplate, TemplateRegistry,
 )
 

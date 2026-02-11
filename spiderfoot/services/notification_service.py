@@ -18,7 +18,7 @@ SpiderFoot Notification Service
 
 Multi-channel notifications for scan events::
 
-    from spiderfoot.notification_service import (
+    from spiderfoot.services.notification_service import (
         NotificationService, NotificationChannel,
         SlackChannel, WebhookChannel, EmailChannel,
     )

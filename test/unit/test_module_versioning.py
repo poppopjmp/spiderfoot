@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import pytest
-from spiderfoot.module_versioning import (
+from spiderfoot.plugins.module_versioning import (
     VersionBump,
     SemanticVersion,
     VersionConstraint,

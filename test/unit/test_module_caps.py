@@ -4,7 +4,7 @@ from __future__ import annotations
 import threading
 import unittest
 
-from spiderfoot.module_caps import (
+from spiderfoot.plugins.module_caps import (
     Capability,
     CapabilityCategory,
     CapabilityRegistry,

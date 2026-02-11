@@ -786,7 +786,7 @@ async def get_config_sources(
     precedence in microservice deployments.
     """
     try:
-        from spiderfoot.config_service import ConfigService
+        from spiderfoot.services.config_service import ConfigService
 
         cs = ConfigService.get_instance()
         all_sources = cs.get_sources()
@@ -832,7 +832,7 @@ async def get_config_environment(api_key: str = optional_auth_dep) -> dict[str, 
     deployment mode / service role / service name.
     """
     try:
-        from spiderfoot.config_service import ConfigService
+        from spiderfoot.services.config_service import ConfigService
 
         cs = ConfigService.get_instance()
         return ConfigEnvironmentResponse(
@@ -913,7 +913,7 @@ async def validate_current_config(api_key: str = optional_auth_dep) -> dict[str,
 
     # 3. Check for unknown SF_* environment variables
     try:
-        from spiderfoot.config_service import ConfigService
+        from spiderfoot.services.config_service import ConfigService
         cs = ConfigService.get_instance()
         unknown = cs.discover_env_vars()
         for var in unknown:

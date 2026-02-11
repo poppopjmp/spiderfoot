@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import time
 import pytest
-from spiderfoot.module_api_client import (
+from spiderfoot.plugins.module_api_client import (
     HttpMethod,
     ResponseFormat,
     RequestConfig,

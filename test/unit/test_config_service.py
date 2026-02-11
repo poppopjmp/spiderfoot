@@ -9,7 +9,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from spiderfoot.config_service import (
+from spiderfoot.services.config_service import (
     ConfigService,
     ConfigValidator,
     get_config_service,

@@ -13,7 +13,7 @@ from typing import Any
 
 from spiderfoot.data_service.base import DataService, DataServiceBackend, DataServiceConfig
 from spiderfoot.data_service.local import LocalDataService
-from spiderfoot.constants import DEFAULT_DATABASE_NAME
+from spiderfoot.config.constants import DEFAULT_DATABASE_NAME
 
 log = logging.getLogger("spiderfoot.dataservice.factory")
 

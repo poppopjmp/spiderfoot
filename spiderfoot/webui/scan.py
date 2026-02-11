@@ -15,7 +15,7 @@ log = logging.getLogger("spiderfoot.webui.scan")
 from spiderfoot.scan_service.scanner import startSpiderFootScanner
 import multiprocessing as mp
 
-from spiderfoot.scan_state_map import (
+from spiderfoot.scan.scan_state_map import (
     DB_STATUS_ABORTED,
     DB_STATUS_ERROR_FAILED,
     DB_STATUS_FINISHED,

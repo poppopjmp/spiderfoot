@@ -25,7 +25,7 @@ Exports scan results in multiple formats:
 
 Usage::
 
-    from spiderfoot.export_service import ExportService, ExportFormat
+    from spiderfoot.reporting.export_service import ExportService, ExportFormat
     exporter = ExportService()
     data = exporter.export_scan("scan-id", ExportFormat.JSON)
     exporter.export_to_file("scan-id", ExportFormat.CSV, "/tmp/results.csv")

@@ -314,7 +314,7 @@ class CacheBenchmark(Benchmark):
     def setup(self) -> None:
         """Set up the in-memory cache."""
         try:
-            from spiderfoot.cache_service import MemoryCache
+            from spiderfoot.services.cache_service import MemoryCache
             self._cache = MemoryCache(max_size=100000)
         except ImportError:
             self._cache = None

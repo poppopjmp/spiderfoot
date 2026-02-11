@@ -8,26 +8,26 @@ from __future__ import annotations
 
 import time
 import unittest
-from spiderfoot.event_filter import (
+from spiderfoot.events.event_filter import (
     EventFilterChain, TypeFilter, RiskFilter,
 )
-from spiderfoot.event_pipeline import (
+from spiderfoot.events.event_pipeline import (
     EventPipeline, PipelineEvent, ValidatorStage, TransformStage,
     TaggingStage, RouterStage, FunctionStage, StageResult,
 )
-from spiderfoot.module_sandbox import (
+from spiderfoot.plugins.module_sandbox import (
     ModuleSandbox, SandboxManager, ResourceLimits, SandboxState,
 )
-from spiderfoot.module_metrics import MetricsCollector, MetricType
-from spiderfoot.scan_orchestrator import ScanOrchestrator, ScanPhase
-from spiderfoot.scan_policy import ScanPolicy, PolicyEngine, PolicyAction
+from spiderfoot.plugins.module_metrics import MetricsCollector, MetricType
+from spiderfoot.scan.scan_orchestrator import ScanOrchestrator, ScanPhase
+from spiderfoot.scan.scan_policy import ScanPolicy, PolicyEngine, PolicyAction
 from spiderfoot.correlation_rules import (
     CorrelationEngine, CorrelationRule, Condition, ConditionOp, MatchMode,
 )
 from spiderfoot.data_export import (
     ExportEvent, ExportOptions, ExportRegistry,
 )
-from spiderfoot.module_deps import ModuleDependencyResolver
+from spiderfoot.plugins.module_deps import ModuleDependencyResolver
 
 
 class TestPipelineWithFilters(unittest.TestCase):

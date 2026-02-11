@@ -16,7 +16,7 @@ from unittest.mock import MagicMock, patch, PropertyMock
 
 import pytest
 
-from spiderfoot.module_loader import (
+from spiderfoot.plugins.module_loader import (
     ModuleLoader,
     LoadResult,
     get_module_loader,

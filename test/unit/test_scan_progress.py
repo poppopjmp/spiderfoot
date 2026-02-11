@@ -5,7 +5,7 @@ import threading
 import time
 import unittest
 
-from spiderfoot.scan_progress import (
+from spiderfoot.scan.scan_progress import (
     ModuleProgress,
     ModuleStatus,
     ProgressSnapshot,

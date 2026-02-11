@@ -260,7 +260,7 @@ def initialize_services(sf_config: dict[str, Any]) -> ServiceRegistry:
 
     # --- HTTP Service ---
     def _create_http_service():
-        from spiderfoot.http_service import HttpService, HttpServiceConfig
+        from spiderfoot.services.http_service import HttpService, HttpServiceConfig
         config = HttpServiceConfig.from_sf_config(sf_config)
         return HttpService(config)
 
@@ -268,7 +268,7 @@ def initialize_services(sf_config: dict[str, Any]) -> ServiceRegistry:
 
     # --- DNS Service ---
     def _create_dns_service():
-        from spiderfoot.dns_service import DnsService, DnsServiceConfig
+        from spiderfoot.services.dns_service import DnsService, DnsServiceConfig
         config = DnsServiceConfig.from_sf_config(sf_config)
         return DnsService(config)
 
@@ -276,7 +276,7 @@ def initialize_services(sf_config: dict[str, Any]) -> ServiceRegistry:
 
     # --- Cache Service ---
     def _create_cache_service():
-        from spiderfoot.cache_service import create_cache_from_config
+        from spiderfoot.services.cache_service import create_cache_from_config
         return create_cache_from_config(sf_config)
 
     registry.register_factory(SERVICE_CACHE, _create_cache_service)

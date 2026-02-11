@@ -8,7 +8,7 @@ import shutil
 
 import pytest
 
-from spiderfoot.plugin_registry import (
+from spiderfoot.plugins.plugin_registry import (
     PluginManifest,
     PluginRegistry,
     PluginStatus,

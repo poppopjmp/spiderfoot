@@ -22,7 +22,7 @@ from spiderfoot.api.routers.scan_progress import (
     register_tracker,
     unregister_tracker,
 )
-from spiderfoot.scan_progress import (
+from spiderfoot.scan.scan_progress import (
     ModuleProgress,
     ModuleStatus,
     ProgressSnapshot,

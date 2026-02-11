@@ -3,7 +3,7 @@ from __future__ import annotations
 """SpiderFoot plug-in module: whatsapp."""
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 class sfp_whatsapp(SpiderFootModernPlugin):
     """Monitors WhatsApp for new messages and emits events."""

@@ -3,7 +3,7 @@ from __future__ import annotations
 """SpiderFoot plug-in module: matrix."""
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 class sfp_matrix(SpiderFootModernPlugin):
     """Monitors Matrix servers for messages and emits events."""

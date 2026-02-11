@@ -36,7 +36,7 @@ from spiderfoot.core.validation import ValidationUtils
 
 # Import SpiderFoot core
 from spiderfoot import __version__, SpiderFootDb
-from spiderfoot.logger import logListenerSetup, logWorkerSetup
+from spiderfoot.observability.logger import logListenerSetup, logWorkerSetup
 
 
 class SpiderFootOrchestrator:

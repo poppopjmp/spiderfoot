@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import pytest
 from spiderfoot.qdrant_client import QdrantClient, QdrantConfig, QdrantBackend
-from spiderfoot.embedding_service import EmbeddingConfig, EmbeddingProvider, EmbeddingService
+from spiderfoot.services.embedding_service import EmbeddingConfig, EmbeddingProvider, EmbeddingService
 from spiderfoot.rag_pipeline import RAGConfig, LLMProvider, RAGPipeline
-from spiderfoot.reranker_service import RerankerConfig, RerankerProvider, RerankerService
+from spiderfoot.services.reranker_service import RerankerConfig, RerankerProvider, RerankerService
 from spiderfoot.vector_correlation import (
     CorrelationHit,
     CorrelationStrategy,

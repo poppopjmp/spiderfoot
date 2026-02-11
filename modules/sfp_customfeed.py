@@ -20,7 +20,7 @@ import re
 from netaddr import IPAddress, IPNetwork
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 malchecks = {
     'Custom Threat Data': {

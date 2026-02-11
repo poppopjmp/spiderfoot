@@ -3,7 +3,7 @@ from __future__ import annotations
 """SpiderFoot plug-in module: rocketchat."""
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 class sfp_rocketchat(SpiderFootModernPlugin):
     """Monitors Rocket.Chat servers for messages and emits events."""

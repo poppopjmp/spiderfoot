@@ -21,7 +21,7 @@ import time
 from datetime import datetime
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
 class sfp_greynoise_community(SpiderFootModernPlugin):

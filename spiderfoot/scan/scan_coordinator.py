@@ -17,7 +17,7 @@ Distributed Scan Coordination
 Distributes scan workloads across multiple scanner nodes with automatic
 health monitoring and failover::
 
-    from spiderfoot.scan_coordinator import ScanCoordinator, ScannerNode
+    from spiderfoot.scan.scan_coordinator import ScanCoordinator, ScannerNode
 
     coord = ScanCoordinator()
     coord.register_node(ScannerNode("scanner-1", "http://scanner1:8001"))

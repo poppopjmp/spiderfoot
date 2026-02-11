@@ -27,11 +27,11 @@ Provides real-time event delivery to web clients over WebSocket:
 Integration::
 
     # In FastAPI app
-    from spiderfoot.websocket_service import ws_router
+    from spiderfoot.services.websocket_service import ws_router
     app.include_router(ws_router)
 
     # Standalone
-    from spiderfoot.websocket_service import WebSocketHub
+    from spiderfoot.services.websocket_service import WebSocketHub
     hub = WebSocketHub.get_instance()
     await hub.broadcast({"type": "scan.started", "scan_id": "abc"})
 """

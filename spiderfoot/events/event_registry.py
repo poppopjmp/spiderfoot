@@ -12,7 +12,7 @@ Features:
 
 Usage::
 
-    from spiderfoot.event_registry import EventTypeRegistry
+    from spiderfoot.events.event_registry import EventTypeRegistry
 
     registry = EventTypeRegistry()
     registry.load_from_db_class()  # auto-load from SpiderFootDb

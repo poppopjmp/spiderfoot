@@ -15,7 +15,7 @@ from datetime import datetime
 
 from ..dependencies import optional_auth, get_correlation_svc
 from ..pagination import PaginationParams, paginate
-from spiderfoot.correlation_service import CorrelationService, CorrelationResult
+from spiderfoot.services.correlation_service import CorrelationService, CorrelationResult
 from pydantic import BaseModel, Field
 
 router = APIRouter()

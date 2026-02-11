@@ -32,7 +32,7 @@ if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
 from spiderfoot.db import SpiderFootDb
-from spiderfoot.event import SpiderFootEvent
+from spiderfoot.events.event import SpiderFootEvent
 from spiderfoot.helpers import SpiderFootHelpers
 
 

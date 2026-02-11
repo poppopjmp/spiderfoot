@@ -79,7 +79,7 @@ class TestConfigureLogging:
 
     def test_json_format_console(self):
         from spiderfoot.logging_config import configure_logging
-        from spiderfoot.structured_logging import StructuredFormatter
+        from spiderfoot.observability.structured_logging import StructuredFormatter
         logger = configure_logging(force_json=True, log_dir=tempfile.mkdtemp())
         console_handlers = [
             h for h in logger.handlers
@@ -90,7 +90,7 @@ class TestConfigureLogging:
 
     def test_json_auto_in_production(self):
         from spiderfoot.logging_config import configure_logging
-        from spiderfoot.structured_logging import StructuredFormatter
+        from spiderfoot.observability.structured_logging import StructuredFormatter
         logger = configure_logging(
             {"_production": True},
             log_dir=tempfile.mkdtemp()
@@ -103,7 +103,7 @@ class TestConfigureLogging:
 
     def test_json_via_env_var(self):
         from spiderfoot.logging_config import configure_logging
-        from spiderfoot.structured_logging import StructuredFormatter
+        from spiderfoot.observability.structured_logging import StructuredFormatter
         with mock.patch.dict(os.environ, {"SF_LOG_FORMAT": "json"}):
             logger = configure_logging(log_dir=tempfile.mkdtemp())
         console_handlers = [
@@ -216,7 +216,7 @@ class TestResetLogging:
         l2 = configure_logging(force_json=True, log_dir=tempfile.mkdtemp())
         assert l1 is l2  # Same logger object
         # But reconfigured
-        from spiderfoot.structured_logging import StructuredFormatter
+        from spiderfoot.observability.structured_logging import StructuredFormatter
         console = [
             h for h in l2.handlers
             if isinstance(h, logging.StreamHandler) and h.stream is sys.stderr
@@ -254,7 +254,7 @@ class TestStructuredJsonOutput:
         reset_logging()
 
         # Create a custom handler with our buffer
-        from spiderfoot.structured_logging import StructuredFormatter, StructuredLogHandler
+        from spiderfoot.observability.structured_logging import StructuredFormatter, StructuredLogHandler
         logger = logging.getLogger("spiderfoot")
         logger.handlers.clear()
         handler = StructuredLogHandler(stream=buf)
@@ -274,7 +274,7 @@ class TestStructuredJsonOutput:
 
     def test_json_scan_context(self):
         import io
-        from spiderfoot.structured_logging import StructuredLogHandler
+        from spiderfoot.observability.structured_logging import StructuredLogHandler
         buf = io.StringIO()
         logger = logging.getLogger("spiderfoot.test.scan_ctx")
         logger.handlers.clear()
@@ -291,7 +291,7 @@ class TestStructuredJsonOutput:
 
     def test_json_exception_info(self):
         import io
-        from spiderfoot.structured_logging import StructuredLogHandler
+        from spiderfoot.observability.structured_logging import StructuredLogHandler
         buf = io.StringIO()
         logger = logging.getLogger("spiderfoot.test.exc")
         logger.handlers.clear()

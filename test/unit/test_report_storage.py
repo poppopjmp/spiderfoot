@@ -12,7 +12,7 @@ import threading
 
 import pytest
 
-from spiderfoot.report_storage import (
+from spiderfoot.reporting.report_storage import (
     LRUCache,
     MemoryBackend,
     ReportStore,

@@ -21,7 +21,7 @@ from cherrypy.lib import auth_digest
 
 from spiderfoot import SpiderFootHelpers
 from sfwebui import SpiderFootWebUi
-from spiderfoot.constants import DEFAULT_API_PORT
+from spiderfoot.config.constants import DEFAULT_API_PORT
 
 
 class ServerManager:

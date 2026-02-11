@@ -263,7 +263,7 @@ class TestInitializeServices(unittest.TestCase):
         self.assertIsNotNone(http)
         
         # Should have the expected type
-        from spiderfoot.http_service import HttpService
+        from spiderfoot.services.http_service import HttpService
         self.assertIsInstance(http, HttpService)
     
     def test_dns_service_lazy_creation(self):
@@ -273,7 +273,7 @@ class TestInitializeServices(unittest.TestCase):
         dns = registry.get(SERVICE_DNS)
         self.assertIsNotNone(dns)
         
-        from spiderfoot.dns_service import DnsService
+        from spiderfoot.services.dns_service import DnsService
         self.assertIsInstance(dns, DnsService)
     
     def test_cache_service_lazy_creation(self):

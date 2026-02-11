@@ -6,7 +6,7 @@ import unittest
 from unittest.mock import patch
 from modules.sfp_netlas import sfp_netlas
 from spiderfoot.sflib import SpiderFoot
-from spiderfoot.event import SpiderFootEvent
+from spiderfoot.events.event import SpiderFootEvent
 from spiderfoot.target import SpiderFootTarget
 from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion

@@ -20,7 +20,7 @@ import threading
 import unittest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from spiderfoot.event_relay import (
+from spiderfoot.events.event_relay import (
     EventRelay,
     RelayEvent,
     get_event_relay,

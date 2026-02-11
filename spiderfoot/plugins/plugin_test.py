@@ -19,7 +19,7 @@ Provides :class:`PluginTestHarness` – a drop-in test fixture that wires up
 a module (legacy or modern) with mock services, feeds it events, and
 captures everything it emits::
 
-    from spiderfoot.plugin_test import PluginTestHarness
+    from spiderfoot.plugins.plugin_test import PluginTestHarness
 
     harness = PluginTestHarness.for_module("sfp_dnsresolve")
     harness.set_options({"_internettlds": "com,net"})
@@ -190,7 +190,8 @@ class FakeSpiderFoot:
     def myPath(self) -> str:  # noqa: N802
         """Return the SpiderFoot installation directory path."""
         import os
-        return os.path.dirname(os.path.dirname(__file__))
+        # Go up 3 levels: plugins/ -> spiderfoot/ -> project_root/
+        return os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 
     def __getattr__(self, name: str) -> Any:
         """Delegate attribute access to the internal mock."""
@@ -204,7 +205,7 @@ class FakeSpiderFoot:
 def _get_event_class() -> type:
     """Lazily import SpiderFootEvent."""
     try:
-        from spiderfoot.event import SpiderFootEvent
+        from spiderfoot.events.event import SpiderFootEvent
         return SpiderFootEvent
     except ImportError:
         pass
@@ -375,7 +376,7 @@ class PluginTestHarness:
 
         # Detect modern plugin
         try:
-            from spiderfoot.modern_plugin import SpiderFootModernPlugin
+            from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
             self._is_modern = isinstance(self._module, SpiderFootModernPlugin)
         except ImportError:
             pass

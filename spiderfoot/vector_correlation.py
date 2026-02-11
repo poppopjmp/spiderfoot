@@ -173,9 +173,9 @@ class VectorCorrelationEngine:
     Usage::
 
         from spiderfoot.qdrant_client import QdrantClient
-        from spiderfoot.embedding_service import EmbeddingService
+        from spiderfoot.services.embedding_service import EmbeddingService
         from spiderfoot.rag_pipeline import RAGPipeline
-        from spiderfoot.reranker_service import RerankerService
+        from spiderfoot.services.reranker_service import RerankerService
 
         engine = VectorCorrelationEngine(
             qdrant=QdrantClient(),
@@ -526,7 +526,7 @@ class VectorCorrelationEngine:
     def _rerank_hits(self, query: str,
                      hits: list[CorrelationHit]) -> list[CorrelationHit]:
         """Rerank correlation hits using the reranker service."""
-        from spiderfoot.reranker_service import RerankItem
+        from spiderfoot.services.reranker_service import RerankItem
         items = [
             RerankItem(
                 id=h.event.event_id,

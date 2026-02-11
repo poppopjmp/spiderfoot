@@ -10,13 +10,13 @@ import time
 from typing import Any
 
 # Import our security modules
-from .csrf_protection import CSRFProtection
+from .security.csrf_protection import CSRFProtection
 from .input_validation import SecurityHeaders
 from .rate_limiting import RateLimiter
 from .secure_config import SecureConfigManager
 from .session_security import SecureSessionManager
 from .api_security import APISecurityManager, APIKeyManager
-from .security_logging import SecurityLogger, SecurityEventType, SecurityMonitor
+from .security.security_logging import SecurityLogger, SecurityEventType, SecurityMonitor
 
 
 class SpiderFootSecurityManager:

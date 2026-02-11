@@ -8,7 +8,7 @@ import os
 import tempfile
 import unittest
 
-from spiderfoot.scan_profile import (
+from spiderfoot.scan.scan_profile import (
     ProfileCategory,
     ProfileManager,
     ScanProfile,

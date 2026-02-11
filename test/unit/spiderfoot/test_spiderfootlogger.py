@@ -8,7 +8,7 @@ import logging
 import tempfile
 import os
 from queue import Queue
-from spiderfoot.logger import (
+from spiderfoot.observability.logger import (
     SpiderFootSqliteLogHandler,
     logListenerSetup,
     logWorkerSetup,

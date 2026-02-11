@@ -6,7 +6,7 @@ from __future__ import annotations
 import unittest
 from unittest.mock import MagicMock, patch, PropertyMock
 
-from spiderfoot.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
 class FakeModule(SpiderFootModernPlugin):
@@ -41,7 +41,7 @@ class TestModernPluginInit(unittest.TestCase):
     """Test initialization and setup."""
 
     def test_inheritance(self):
-        from spiderfoot.plugin import SpiderFootPlugin
+        from spiderfoot.plugins.plugin import SpiderFootPlugin
         mod = FakeModule()
         self.assertIsInstance(mod, SpiderFootPlugin)
         self.assertIsInstance(mod, SpiderFootModernPlugin)

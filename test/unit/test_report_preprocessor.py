@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
-from spiderfoot.report_preprocessor import (
+from spiderfoot.reporting.report_preprocessor import (
     NormalizedEvent,
     PreprocessorConfig,
     ReportContext,

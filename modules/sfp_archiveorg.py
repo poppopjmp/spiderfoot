@@ -19,7 +19,7 @@ import datetime
 import json
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
 class sfp_archiveorg(SpiderFootModernPlugin):

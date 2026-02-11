@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import time
 import pytest
-from spiderfoot.event_store import (
+from spiderfoot.events.event_store import (
     EventPriority,
     StoredEvent,
     EventQuery,

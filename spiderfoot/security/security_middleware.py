@@ -496,7 +496,7 @@ class CherryPySecurityTool(cherrypy.Tool):
         """Add security headers to response."""
         try:
             # Import SecurityHeaders from input_validation module
-            from .input_validation import SecurityHeaders
+            from ..input_validation import SecurityHeaders
 
             # Add default security headers
             for header, value in SecurityHeaders.DEFAULT_HEADERS.items():
@@ -745,7 +745,7 @@ class FastAPISecurityMiddleware:
         """Add security headers to FastAPI response."""
         try:
             # Import SecurityHeaders from input_validation module
-            from .input_validation import SecurityHeaders
+            from ..input_validation import SecurityHeaders
 
             # Add default security headers
             for header, value in SecurityHeaders.DEFAULT_HEADERS.items():

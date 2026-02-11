@@ -26,7 +26,7 @@ Components register health checks via the ``HealthAggregator``.
 
 Usage::
 
-    from spiderfoot.health import HealthAggregator, HealthStatus
+    from spiderfoot.observability.health import HealthAggregator, HealthStatus
 
     health = HealthAggregator.get_instance()
     health.register("database", lambda: HealthStatus.UP)

@@ -10,8 +10,8 @@ Renders GeneratedReport objects into multiple output formats:
 
 Usage::
 
-    from spiderfoot.report_formatter import ReportFormatter
-    from spiderfoot.report_generator import GeneratedReport
+    from spiderfoot.reporting.report_formatter import ReportFormatter
+    from spiderfoot.reporting.report_generator import GeneratedReport
 
     formatter = ReportFormatter()
     html = formatter.to_html(report)
@@ -32,7 +32,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
-from spiderfoot.report_generator import GeneratedReport, GeneratedSection
+from spiderfoot.reporting.report_generator import GeneratedReport, GeneratedSection
 
 log = logging.getLogger("spiderfoot.report_formatter")
 

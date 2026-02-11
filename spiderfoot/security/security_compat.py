@@ -9,7 +9,7 @@ Security modules should use these abstractions instead of importing
 
 Usage::
 
-    from spiderfoot.security_compat import get_request_context
+    from spiderfoot.security.security_compat import get_request_context
 
     ctx = get_request_context(request)  # works with Flask or Starlette
     client_ip = ctx.client_ip

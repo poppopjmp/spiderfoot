@@ -19,7 +19,7 @@ import logging
 from datetime import datetime
 import asyncio
 
-from spiderfoot.scan_state_map import (
+from spiderfoot.scan.scan_state_map import (
     DB_STATUS_ABORTED,
     DB_STATUS_ERROR_FAILED,
     DB_STATUS_FINISHED,
@@ -123,7 +123,7 @@ async def _relay_mode(websocket: WebSocket, scan_id: str) -> None:
     Registers a consumer queue with the EventRelay and forwards
     events to the WebSocket client.
     """
-    from spiderfoot.event_relay import get_event_relay
+    from spiderfoot.events.event_relay import get_event_relay
 
     relay = get_event_relay()
     queue = relay.register_consumer(scan_id)
@@ -188,7 +188,7 @@ async def _polling_mode(websocket: WebSocket, scan_id: str) -> None:
             get_repository_factory,
             RepositoryFactory,
         )
-        from spiderfoot.scan_service_facade import ScanService
+        from spiderfoot.scan.scan_service_facade import ScanService
 
         config = get_app_config()
         factory = get_repository_factory()
@@ -287,7 +287,7 @@ async def websocket_scan_stream(websocket: WebSocket, scan_id: str) -> None:
         # Decide mode: relay (push) vs polling
         use_relay = False
         try:
-            from spiderfoot.event_relay import get_event_relay
+            from spiderfoot.events.event_relay import get_event_relay
             relay = get_event_relay()
 
             # Use relay mode if EventBus is wired, or if there are

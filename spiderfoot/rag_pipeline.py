@@ -29,7 +29,7 @@ import json
 import logging
 import time
 
-from spiderfoot.constants import DEFAULT_OLLAMA_BASE_URL, DEFAULT_OPENAI_BASE_URL
+from spiderfoot.config.constants import DEFAULT_OLLAMA_BASE_URL, DEFAULT_OPENAI_BASE_URL
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum

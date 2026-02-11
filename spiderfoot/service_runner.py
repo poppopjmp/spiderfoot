@@ -90,7 +90,7 @@ class _HealthHandler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(payload)
         elif self.path == "/metrics":
-            from spiderfoot.metrics import get_registry
+            from spiderfoot.observability.metrics import get_registry
             payload = get_registry().expose().encode()
             self.send_response(200)
             self.send_header("Content-Type",
@@ -159,7 +159,7 @@ def _run_scanner(port: int, config: dict) -> None:
     """Run the Scanner service (ScanScheduler + WorkerPool)."""
     _health.service_name = "scanner"
 
-    from spiderfoot.scan_scheduler import ScanScheduler, SchedulerConfig
+    from spiderfoot.scan.scan_scheduler import ScanScheduler, SchedulerConfig
     from spiderfoot.worker_pool import WorkerPool, WorkerPoolConfig
     from spiderfoot.service_registry import initialize_services
 

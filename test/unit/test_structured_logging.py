@@ -6,7 +6,7 @@ import logging
 import io
 import pytest
 
-from spiderfoot.structured_logging import (
+from spiderfoot.observability.structured_logging import (
     StructuredFormatter,
     StructuredLogHandler,
     EventLogEmitter,

@@ -5,7 +5,7 @@ import time
 import threading
 import unittest
 
-from spiderfoot.scan_state import (
+from spiderfoot.scan.scan_state import (
     InvalidTransitionError,
     ScanState,
     ScanStateMachine,

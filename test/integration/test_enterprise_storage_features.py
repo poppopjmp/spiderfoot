@@ -30,7 +30,7 @@ import psycopg2
 from elasticsearch import Elasticsearch, ConnectionError
 
 from spiderfoot.sflib import SpiderFoot
-from spiderfoot.event import SpiderFootEvent
+from spiderfoot.events.event import SpiderFootEvent
 from modules.sfp__stor_db import sfp__stor_db
 from modules.sfp__stor_elasticsearch import sfp__stor_elasticsearch
 from modules.sfp__stor_stdout import sfp__stor_stdout

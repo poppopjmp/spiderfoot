@@ -25,14 +25,14 @@ Provides authentication mechanisms for the REST API and WebUI:
 
 Usage (FastAPI)::
 
-    from spiderfoot.auth import create_auth_middleware, AuthConfig
+    from spiderfoot.security.auth import create_auth_middleware, AuthConfig
     config = AuthConfig(api_keys=["secret-key-1"])
     middleware = create_auth_middleware(config)
     app.middleware("http")(middleware)
 
 Usage (CherryPy)::
 
-    from spiderfoot.auth import AuthGuard
+    from spiderfoot.security.auth import AuthGuard
     guard = AuthGuard(config)
     if not guard.check_request(headers, path):
         raise cherrypy.HTTPError(401)
@@ -49,7 +49,7 @@ import time
 from dataclasses import dataclass, field
 from enum import Enum
 
-from spiderfoot.constants import DEFAULT_TTL_ONE_HOUR
+from spiderfoot.config.constants import DEFAULT_TTL_ONE_HOUR
 
 log = logging.getLogger("spiderfoot.auth")
 

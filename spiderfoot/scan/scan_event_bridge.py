@@ -20,7 +20,7 @@ Architecture::
 
 Usage::
 
-    from spiderfoot.scan_event_bridge import ScanEventBridge
+    from spiderfoot.scan.scan_event_bridge import ScanEventBridge
 
     bridge = ScanEventBridge(scan_id)
     bridge.start()          # push scan_started via relay
@@ -88,7 +88,7 @@ class ScanEventBridge:
     def relay(self) -> EventRelay:
         """Return the event relay instance, creating it lazily if needed."""
         if self._relay is None:
-            from spiderfoot.event_relay import get_event_relay
+            from spiderfoot.events.event_relay import get_event_relay
             self._relay = get_event_relay()
         return self._relay
 

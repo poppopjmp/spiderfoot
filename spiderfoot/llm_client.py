@@ -38,7 +38,7 @@ from typing import Any, Callable
 
 from collections.abc import Generator
 
-from spiderfoot.constants import (
+from spiderfoot.config.constants import (
     DEFAULT_OLLAMA_BASE_URL,
     DEFAULT_OPENAI_BASE_URL,
     DEFAULT_VLLM_BASE_URL,

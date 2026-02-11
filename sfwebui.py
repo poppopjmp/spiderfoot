@@ -16,12 +16,12 @@ from __future__ import annotations
 # Core SpiderFoot imports
 from spiderfoot.webui.routes import WebUiRoutes
 from spiderfoot import SpiderFootDb, SpiderFoot
-from spiderfoot.logger import logListenerSetup, logWorkerSetup
+from spiderfoot.observability.logger import logListenerSetup, logWorkerSetup
 from spiderfoot.workspace import SpiderFootWorkspace
 from spiderfoot.helpers import SpiderFootHelpers
 
 # Security imports
-from spiderfoot.security_middleware import install_cherrypy_security
+from spiderfoot.security.security_middleware import install_cherrypy_security
 from spiderfoot.secure_config import SecureConfigManager
 
 # Template and UI imports

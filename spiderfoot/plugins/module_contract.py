@@ -15,7 +15,7 @@ individual ``sfp_*.py`` files.
 
 Usage (in module loader)::
 
-    from spiderfoot.module_contract import validate_module
+    from spiderfoot.plugins.module_contract import validate_module
     errors = validate_module(module_class)
     if errors:
         log.warning("Module %s does not satisfy contract: %s", name, errors)

@@ -7,7 +7,7 @@ from __future__ import annotations
 import json
 import time
 from spiderfoot import SpiderFootEvent
-from spiderfoot.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 class sfp_tool_phoneinfoga(SpiderFootModernPlugin):
     """Gather phone number intelligence using PhoneInfoga."""

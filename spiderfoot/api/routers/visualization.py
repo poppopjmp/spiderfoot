@@ -14,7 +14,7 @@ import logging
 
 from ..dependencies import get_visualization_service, optional_auth
 from spiderfoot import SpiderFootHelpers
-from spiderfoot.visualization_service import VisualizationService, VisualizationServiceError
+from spiderfoot.reporting.visualization_service import VisualizationService, VisualizationServiceError
 
 router = APIRouter()
 log = logging.getLogger(__name__)

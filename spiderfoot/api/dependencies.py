@@ -14,7 +14,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from spiderfoot.db import SpiderFootDb
 from spiderfoot.sflib.core import SpiderFoot
 from spiderfoot.helpers import SpiderFootHelpers
-from spiderfoot.app_config import AppConfig
+from spiderfoot.config.app_config import AppConfig
 import multiprocessing as mp
 import logging
 from typing import Any, Generator
@@ -381,7 +381,7 @@ def get_correlation_svc() -> Any:
     Returns the module-level singleton.  The service is lazily
     created from the current app config if it doesn't exist yet.
     """
-    from spiderfoot.correlation_service import (
+    from spiderfoot.services.correlation_service import (
         get_correlation_service as _get_svc,
     )
     config = get_app_config().get_config()
@@ -402,7 +402,7 @@ def get_scan_service() -> Generator:
         get_repository_factory,
         RepositoryFactory,
     )
-    from spiderfoot.scan_service_facade import ScanService
+    from spiderfoot.scan.scan_service_facade import ScanService
 
     factory = get_repository_factory()
     if factory is None:
@@ -432,7 +432,7 @@ def get_visualization_service() -> Generator:
         get_repository_factory,
         RepositoryFactory,
     )
-    from spiderfoot.visualization_service import VisualizationService
+    from spiderfoot.reporting.visualization_service import VisualizationService
 
     factory = get_repository_factory()
     if factory is None:

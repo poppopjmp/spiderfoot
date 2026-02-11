@@ -16,12 +16,12 @@ import cherrypy
 import secure
 from copy import deepcopy
 from spiderfoot import SpiderFootDb, SpiderFootHelpers, __version__
-from spiderfoot.constants import DEFAULT_DATABASE_NAME
+from spiderfoot.config.constants import DEFAULT_DATABASE_NAME
 try:
     from spiderfoot.sflib import SpiderFoot
 except ImportError:
     pass
-from spiderfoot.logger import logListenerSetup, logWorkerSetup
+from spiderfoot.observability.logger import logListenerSetup, logWorkerSetup
 
 
 class WebUiRoutes(

@@ -18,7 +18,7 @@ SpiderFoot Plugin Marketplace Registry
 
 Manages module installation and discovery::
 
-    from spiderfoot.plugin_registry import PluginRegistry
+    from spiderfoot.plugins.plugin_registry import PluginRegistry
 
     registry = PluginRegistry(modules_dir="modules")
 

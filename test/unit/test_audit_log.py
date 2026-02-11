@@ -8,7 +8,7 @@ import time
 
 import pytest
 
-from spiderfoot.audit_log import (
+from spiderfoot.observability.audit_log import (
     AuditCategory,
     AuditEvent,
     AuditLogger,

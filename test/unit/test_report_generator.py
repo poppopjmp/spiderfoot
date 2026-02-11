@@ -11,7 +11,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from spiderfoot.report_generator import (
+from spiderfoot.reporting.report_generator import (
     GeneratedReport,
     GeneratedSection,
     ReportFormat,

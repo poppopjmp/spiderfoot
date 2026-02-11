@@ -367,7 +367,7 @@ class SpiderFootPlugin:
 
         # Validate that this event type is declared in producedEvents()
         try:
-            from spiderfoot.module_output_validator import get_output_validator
+            from spiderfoot.plugins.module_output_validator import get_output_validator
             get_output_validator().check(self, sfEvent)
         except Exception as e:
             pass  # Best-effort — never block event flow

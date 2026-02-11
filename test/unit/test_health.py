@@ -5,7 +5,7 @@ import time
 import unittest
 from unittest.mock import MagicMock
 
-from spiderfoot.health import (
+from spiderfoot.observability.health import (
     ComponentHealth,
     HealthAggregator,
     HealthStatus,

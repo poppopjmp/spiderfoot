@@ -14,7 +14,7 @@ from typing import Any
 from copy import deepcopy
 
 from spiderfoot import SpiderFootHelpers
-from spiderfoot.constants import DEFAULT_WEB_PORT, DEFAULT_API_PORT
+from spiderfoot.config.constants import DEFAULT_WEB_PORT, DEFAULT_API_PORT
 
 
 class ConfigManager:
