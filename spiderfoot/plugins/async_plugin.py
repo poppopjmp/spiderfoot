@@ -23,7 +23,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Callable, TypeVar
 
-from spiderfoot.modern_plugin import SpiderFootModernPlugin
+from .modern_plugin import SpiderFootModernPlugin
 
 
 log = logging.getLogger("spiderfoot.async_plugin")

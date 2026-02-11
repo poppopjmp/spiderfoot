@@ -19,9 +19,9 @@ import time
 import sqlite3
 import psycopg2
 from typing import Any
-from ..event import SpiderFootEvent
+from ..events.event import SpiderFootEvent
 from .db_utils import get_placeholder, is_transient_error
-from spiderfoot.constants import DB_RETRY_BACKOFF_BASE
+from ..config.constants import DB_RETRY_BACKOFF_BASE
 
 log = logging.getLogger(__name__)
 

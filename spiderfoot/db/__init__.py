@@ -29,13 +29,13 @@ import psycopg2
 import psycopg2.extras
 from typing import Any
 
-from spiderfoot.db.db_core import DbCore
-from spiderfoot.db.db_scan import ScanManager
-from spiderfoot.db.db_event import EventManager
-from spiderfoot.db.db_config import ConfigManager
+from .db_core import DbCore
+from .db_scan import ScanManager
+from .db_event import EventManager
+from .db_config import ConfigManager
 
 log = logging.getLogger(__name__)
-from spiderfoot.db.db_correlation import CorrelationManager
+from .db_correlation import CorrelationManager
 
 
 def get_schema_queries(db_type: str) -> list[str]:

@@ -24,12 +24,18 @@ from typing import Any
 import json
 
 from .csrf_protection import CSRFProtection
-from .input_validation import InputValidator
-from .rate_limiting import RateLimiter
-from .session_security import SessionManager
-from .api_security import APIKeyManager, JWTManager
+from ..input_validation import InputValidator
+from ..rate_limiting import RateLimiter
+from ..session_security import SessionManager
 from .security_logging import SecurityLogger, SecurityEventType
-from .secure_config import SecureConfigManager
+from ..secure_config import SecureConfigManager
+
+# Optional Flask-dependent imports
+try:
+    from ..api_security import APIKeyManager, JWTManager
+except ImportError:
+    APIKeyManager = None  # type: ignore
+    JWTManager = None  # type: ignore
 
 
 class SecurityConfigDefaults:

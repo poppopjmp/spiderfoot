@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 # Import security modules
-from .secure_config import SecureConfigManager
+from ..secure_config import SecureConfigManager
 from .security_logging import SecurityLogger, SecurityEventType
 
 

@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from spiderfoot.scan_state_map import (
+from .scan_state_map import (
     DB_STATUS_ABORTED,
     DB_STATUS_ERROR_FAILED,
     DB_STATUS_FINISHED,

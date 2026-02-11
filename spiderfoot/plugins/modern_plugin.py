@@ -51,8 +51,8 @@ import queue
 import time
 from typing import Any
 
-from spiderfoot.plugin import SpiderFootPlugin
-from spiderfoot.constants import DEFAULT_TTL_ONE_HOUR
+from .plugin import SpiderFootPlugin
+from ..config.constants import DEFAULT_TTL_ONE_HOUR
 
 
 log = logging.getLogger("spiderfoot.modern_plugin")

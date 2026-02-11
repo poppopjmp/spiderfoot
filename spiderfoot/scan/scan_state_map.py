@@ -27,7 +27,7 @@ from __future__ import annotations
 import logging
 from typing import Final
 
-from spiderfoot.scan_state import ScanState
+from .scan_state import ScanState
 
 log = logging.getLogger("spiderfoot.scan_state_map")
 

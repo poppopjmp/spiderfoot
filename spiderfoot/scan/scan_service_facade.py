@@ -18,13 +18,13 @@ from typing import Any
 
 from spiderfoot.db.repositories.scan_repository import ScanRecord, ScanRepository
 from spiderfoot.db.repositories.event_repository import EventRepository
-from spiderfoot.scan_state import (
+from .scan_state import (
     InvalidTransitionError,
     ScanState,
     ScanStateMachine,
 )
-from spiderfoot.scan_state_map import db_status_to_state, state_to_db_status
-from spiderfoot.scan_metadata_service import ScanMetadataService
+from .scan_state_map import db_status_to_state, state_to_db_status
+from .scan_metadata_service import ScanMetadataService
 
 log = logging.getLogger("spiderfoot.scan_service_facade")
 

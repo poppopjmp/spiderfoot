@@ -44,7 +44,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
-from spiderfoot.scan_state_map import (
+from ..scan.scan_state_map import (
     DB_STATUS_FINISHED,
     DB_STATUS_STARTED,
 )

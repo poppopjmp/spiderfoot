@@ -34,7 +34,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Callable
 
-from spiderfoot.scan_state_map import (
+from .scan_state_map import (
     DB_STATUS_ABORTED,
     DB_STATUS_ERROR_FAILED,
     DB_STATUS_FINISHED,

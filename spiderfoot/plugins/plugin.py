@@ -28,10 +28,10 @@ from time import sleep
 import traceback
 from typing import Any, Callable
 
-from spiderfoot import SpiderFootEvent
-from .threadpool import SpiderFootThreadPool
+from ..events.event import SpiderFootEvent
+from ..threadpool import SpiderFootThreadPool
 
-from spiderfoot.scan_state_map import (
+from ..scan.scan_state_map import (
     DB_STATUS_ABORT_REQUESTED,
     DB_STATUS_FINISHED,
 )

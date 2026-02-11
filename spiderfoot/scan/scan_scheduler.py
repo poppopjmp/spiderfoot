@@ -16,7 +16,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Callable
 
-from spiderfoot.scan_state import ScanState
+from .scan_state import ScanState
 
 log = logging.getLogger("spiderfoot.scan_scheduler")
 
