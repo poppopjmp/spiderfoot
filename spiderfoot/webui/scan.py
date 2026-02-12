@@ -335,13 +335,27 @@ class ScanEndpoints:
         dbh = self._get_dbh()
         cfg = deepcopy(self.config)
         sf = SpiderFoot(cfg)
-        modlist = []
-        if modulelist:
-            modlist = modulelist.split(',')
-        if len(modlist) == 0 and typelist:
-            modlist = typelist.split(',')
-        if len(modlist) == 0 and usecase:
-            modlist = usecase.split(',')
+        modlist = [m for m in modulelist.split(',') if m] if modulelist else []
+
+        if not modlist and typelist:
+            # Resolve requested event types → modules that produce them
+            requested_types = [t for t in typelist.split(',') if t]
+            if requested_types:
+                for mod_name, mod_meta in cfg.get('__modules__', {}).items():
+                    provides = mod_meta.get('provides', []) or mod_meta.get('meta', {}).get('provides', [])
+                    if set(requested_types) & set(provides):
+                        modlist.append(mod_name)
+
+        if not modlist and usecase:
+            # Resolve use case name → modules belonging to that use case
+            for mod_name, mod_meta in cfg.get('__modules__', {}).items():
+                if usecase == 'all':
+                    modlist.append(mod_name)
+                else:
+                    use_cases = mod_meta.get('group', []) or mod_meta.get('meta', {}).get('useCases', [])
+                    if usecase in use_cases:
+                        modlist.append(mod_name)
+
         if not modlist:
             return self.error("No modules selected")
         if "sfp__stor_db" not in modlist:

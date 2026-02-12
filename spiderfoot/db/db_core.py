@@ -30,11 +30,12 @@ log = logging.getLogger(__name__)
 class DbCore:
     """
     Core database connection and management class for SpiderFootDb.
+    
+    NOTE: dbh, conn, and dbhLock are instance-level attributes (set in
+    __init__) to ensure microservice isolation — each SpiderFootDb
+    instance owns its own connection and lock.  Former class-level
+    shared state was removed in RC190 (Cycle 28).
     """
-    # Shared resources
-    dbh = None
-    conn = None
-    dbhLock = threading.RLock()
     # Add schema and event details as class attributes for use in schema creation
     createSchemaQueries = [
         "PRAGMA journal_mode=WAL",
@@ -721,6 +722,11 @@ class DbCore:
             opts (dict): Options for the database connection.
             init (bool, optional): Flag to initialize the database. Defaults to False.
         """
+        # Instance-level connection state (not shared across instances)
+        self.dbh = None
+        self.conn = None
+        self.dbhLock = threading.RLock()
+
         if not isinstance(opts, dict):
             raise TypeError(f"opts is {type(opts)}; expected dict()")
         if not opts:

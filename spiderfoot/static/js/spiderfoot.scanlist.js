@@ -301,6 +301,23 @@ function showlisttable(types, filter, data) {
         if (filter == null) {
             filter = "None";
         }
+
+        // Compute summary stats
+        var countRunning = 0, countFinished = 0, countFailed = 0;
+        for (var s = 0; s < data.length; s++) {
+            var st = data[s][6];
+            if (st == "RUNNING" || st == "STARTING" || st == "STARTED" || st == "INITIALIZING") countRunning++;
+            else if (st == "FINISHED") countFinished++;
+            else if (st.indexOf("ABORT") >= 0 || st.indexOf("FAILED") >= 0) countFailed++;
+        }
+
+        var stats = "<div class='sf-stats-grid' style='grid-template-columns: repeat(4, 1fr); margin-bottom:12px'>";
+        stats += "<div class='sf-stat-card'><div class='sf-stat-label'>Total Scans</div><div class='sf-stat-value'>" + sf.formatNumber(data.length) + "</div></div>";
+        stats += "<div class='sf-stat-card stat-info'><div class='sf-stat-label'>Running</div><div class='sf-stat-value val-info'>" + countRunning + "</div></div>";
+        stats += "<div class='sf-stat-card stat-success'><div class='sf-stat-label'>Finished</div><div class='sf-stat-value val-success'>" + countFinished + "</div></div>";
+        stats += "<div class='sf-stat-card stat-danger'><div class='sf-stat-label'>Failed / Aborted</div><div class='sf-stat-value val-danger'>" + countFailed + "</div></div>";
+        stats += "</div>";
+
         var buttons = "<div class='btn-toolbar'>";
         buttons += "<div class='btn-group'>";
         buttons += "<button id='btn-filter' class='btn btn-default'><i class='glyphicon glyphicon-filter'></i>&nbsp;Filter: " + filter + "</button>";
@@ -333,49 +350,59 @@ function showlisttable(types, filter, data) {
         buttons += "<i class='glyphicon glyphicon-stop glyphicon-white'></i></button>";
         buttons += "</div>";
 
-        buttons += "</div>";        var table = "<table id='scanlist' class='table table-bordered table-striped'>";
-        table += "<thead><tr><th class='sorter-false text-center'><input id='checkall' type='checkbox'></th> <th>Scan ID</th> <th>Name</th> <th>Target</th> <th>Started</th> <th >Finished</th> <th class='text-center'>Status</th> <th class='text-center'>Elements</th><th class='text-center'>Correlations</th><th class='sorter-false text-center'>Action</th> </tr></thead><tbody>";
+        buttons += "</div>";
+
+        var table = "<div class='sf-card' style='margin-top:12px'><div class='sf-card-body' style='padding:0'>";
+        table += "<table id='scanlist' class='sf-table'>";
+        table += "<thead><tr><th class='sorter-false text-center' style='width:36px'><input id='checkall' type='checkbox'></th><th>Scan ID</th><th>Name</th><th>Target</th><th>Started</th><th>Finished</th><th class='text-center'>Status</th><th class='text-center'>Elements</th><th class='text-center'>Correlations</th><th class='sorter-false text-center' style='width:90px'>Action</th></tr></thead><tbody>";
         filtered = 0;
         for (var i = 0; i < data.length; i++) {
             if (types != null && $.inArray(data[i][6], types) === -1) {
                 filtered++;
                 continue;
-            }            table += "<tr><td class='text-center'><input type='checkbox' id='cb_" + data[i][0] + "'></td>"
-            table += "<td><code style='font-size: 11px; background: #f5f5f5; padding: 2px 4px; cursor: pointer; border: 1px solid #ddd; border-radius: 3px;' onclick='copyToClipboard(\"" + data[i][0] + "\")' title='Click to copy scan ID'>" + data[i][0] + " <i class='glyphicon glyphicon-copy' style='font-size: 10px; margin-left: 2px;'></i></code></td>";
-            table += "<td><a href=" + docroot + "/scaninfo?id=" + data[i][0] + ">" + data[i][1] + "</a></td>";
-            table += "<td>" + data[i][2] + "</td>";
-            table += "<td>" + data[i][3] + "</td>";
-            table += "<td>" + data[i][5] + "</td>";
-
-            var statusy = "";
-
-            if (data[i][6] == "FINISHED") {
-                statusy = "alert-success";
-            } else if (data[i][6].indexOf("ABORT") >= 0) {
-                statusy = "alert-warning";
-            } else if (data[i][6] == "CREATED" || data[i][6] == "RUNNING" || data[i][6] == "STARTED" || data[i][6] == "STARTING" || data[i][6] == "INITIALIZING") {
-                statusy = "alert-info";
-            } else if (data[i][6].indexOf("FAILED") >= 0) {
-                statusy = "alert-danger";
-            } else {
-                statusy = "alert-info";
             }
-            table += "<td class='text-center'><span class='badge " + statusy + "'>" + data[i][6] + "</span></td>";
-            table += "<td class='text-center'>" + data[i][7] + "</td>";
-            table += "<td class='text-center'>";
-            table += "<span class='badge alert-danger'>" + data[i][8]['HIGH'] + "</span>";
-            table += "<span class='badge alert-warning'>" + data[i][8]['MEDIUM'] + "</span>";
-            table += "<span class='badge alert-info'>" + data[i][8]['LOW'] + "</span>";
-            table += "<span class='badge alert-success'>" + data[i][8]['INFO'] + "</span>";
-            table += "</td>";
+
+            table += "<tr class='sf-scanlist-row'>";
+            table += "<td class='text-center'><input type='checkbox' id='cb_" + data[i][0] + "'></td>";
+            table += "<td><span class='sf-scan-id' onclick='copyToClipboard(\"" + data[i][0] + "\")' title='Click to copy'>" + data[i][0].substring(0, 8) + "… <i class='glyphicon glyphicon-copy' style='font-size:10px'></i></span></td>";
+            table += "<td><a href='" + docroot + "/scaninfo?id=" + data[i][0] + "' style='color:var(--sf-primary);font-weight:500'>" + data[i][1] + "</a></td>";
+            table += "<td>" + data[i][2] + "</td>";
+            table += "<td style='font-size:12px'>" + data[i][3] + "</td>";
+            table += "<td style='font-size:12px'>" + data[i][5] + "</td>";
+
+            // Modern status badge
+            var statusCls = "sf-status-running";
+            if (data[i][6] == "FINISHED") {
+                statusCls = "sf-status-finished";
+            } else if (data[i][6].indexOf("ABORT") >= 0) {
+                statusCls = "sf-status-aborted";
+            } else if (data[i][6].indexOf("FAILED") >= 0) {
+                statusCls = "sf-status-failed";
+            }
+            table += "<td class='text-center'><span class='sf-status " + statusCls + "'>" + data[i][6] + "</span></td>";
+
+            table += "<td class='text-center' style='font-weight:600'>" + sf.formatNumber(data[i][7]) + "</td>";
+
+            // Correlation risk pills
+            table += "<td class='text-center'><div class='sf-risk-matrix'>";
+            if (data[i][8]['HIGH'] > 0) table += "<span class='sf-risk-pill sf-risk-high'>" + data[i][8]['HIGH'] + "</span>";
+            if (data[i][8]['MEDIUM'] > 0) table += "<span class='sf-risk-pill sf-risk-medium'>" + data[i][8]['MEDIUM'] + "</span>";
+            if (data[i][8]['LOW'] > 0) table += "<span class='sf-risk-pill sf-risk-low'>" + data[i][8]['LOW'] + "</span>";
+            if (data[i][8]['INFO'] > 0) table += "<span class='sf-risk-pill sf-risk-info'>" + data[i][8]['INFO'] + "</span>";
+            if (data[i][8]['HIGH'] == 0 && data[i][8]['MEDIUM'] == 0 && data[i][8]['LOW'] == 0 && data[i][8]['INFO'] == 0) {
+                table += "<span style='color:var(--sf-text-secondary);font-size:11px'>—</span>";
+            }
+            table += "</div></td>";
+
+            // Action icons
             table += "<td class='text-center'>";
             if (data[i][6] == "RUNNING" || data[i][6] == "STARTING" || data[i][6] == "STARTED" || data[i][6] == "INITIALIZING") {
-                table += "<a rel='tooltip' title='Stop Scan' href='javascript:stopScan(\"" + data[i][0] + "\");'><i class='glyphicon glyphicon-stop text-muted'></i></a>";
+                table += "<a class='sf-action-icon action-danger' rel='tooltip' title='Stop Scan' href='javascript:stopScan(\"" + data[i][0] + "\");'><i class='glyphicon glyphicon-stop'></i></a>";
             } else {
-                table += "<a rel='tooltip' title='Delete Scan' href='javascript:deleteScan(\"" + data[i][0] + "\");'><i class='glyphicon glyphicon-trash text-muted'></i></a>";
-                table += "&nbsp;&nbsp;<a rel='tooltip' title='Re-run Scan' href=" + docroot + "/rerunscan?id=" + data[i][0] + "><i class='glyphicon glyphicon-repeat text-muted'></i></a>";
+                table += "<a class='sf-action-icon action-danger' rel='tooltip' title='Delete Scan' href='javascript:deleteScan(\"" + data[i][0] + "\");'><i class='glyphicon glyphicon-trash'></i></a>";
+                table += "<a class='sf-action-icon' rel='tooltip' title='Re-run Scan' href='" + docroot + "/rerunscan?id=" + data[i][0] + "'><i class='glyphicon glyphicon-repeat'></i></a>";
             }
-            table += "&nbsp;&nbsp;<a rel='tooltip' title='Clone Scan' href=" + docroot + "/clonescan?id=" + data[i][0] + "><i class='glyphicon glyphicon-plus-sign text-muted'></i></a>";
+            table += "<a class='sf-action-icon' rel='tooltip' title='Clone Scan' href='" + docroot + "/clonescan?id=" + data[i][0] + "'><i class='glyphicon glyphicon-plus-sign'></i></a>";
             table += "</td></tr>";
         }
 
@@ -397,11 +424,11 @@ function showlisttable(types, filter, data) {
         table += '<select class="form-control input-sm pagenum" title="Select page number"></select>';
         table += '<span class="pagedisplay pull-right"></span>';
         table += '</th></tr></tfoot>';
-        table += "</table>";
+        table += "</table></div></div>"; // close sf-card-body, sf-card
 
         $("#loader").fadeOut(500);
         $("#scancontent-wrapper").remove();
-        $("#scancontent").append("<div id='scancontent-wrapper'> " + buttons + table + "</div>");
+        $("#scancontent").append("<div id='scancontent-wrapper'>" + stats + buttons + table + "</div>");
         sf.updateTooltips();
         
         // Add error handling around tablesorter initialization

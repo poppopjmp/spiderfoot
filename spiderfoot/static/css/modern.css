@@ -1,0 +1,775 @@
+/* ============================================================
+   SpiderFoot Modern UI - v6.0
+   Modern card-based layout, improved typography, data viz styles
+   ============================================================ */
+
+/* ---------- CSS Variables / Design Tokens ---------- */
+:root {
+  --sf-primary: #1a73e8;
+  --sf-primary-dark: #1557b0;
+  --sf-primary-light: #e8f0fe;
+  --sf-success: #0d904f;
+  --sf-success-light: #e6f4ea;
+  --sf-warning: #e37400;
+  --sf-warning-light: #fef7e0;
+  --sf-danger: #d93025;
+  --sf-danger-light: #fce8e6;
+  --sf-info: #1a73e8;
+  --sf-info-light: #e8f0fe;
+  --sf-text: #202124;
+  --sf-text-secondary: #5f6368;
+  --sf-border: #dadce0;
+  --sf-bg: #f8f9fa;
+  --sf-bg-card: #ffffff;
+  --sf-shadow-sm: 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15);
+  --sf-shadow-md: 0 1px 3px 0 rgba(60,64,67,.3), 0 4px 8px 3px rgba(60,64,67,.15);
+  --sf-shadow-lg: 0 1px 4px 0 rgba(60,64,67,.3), 0 6px 12px 4px rgba(60,64,67,.15);
+  --sf-radius: 8px;
+  --sf-radius-sm: 4px;
+  --sf-radius-lg: 12px;
+  --sf-transition: 0.2s cubic-bezier(.4,0,.2,1);
+  --sf-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --sf-font-mono: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+}
+
+/* ---------- Dark Theme Overrides ---------- */
+body.dark-theme {
+  --sf-text: #e8eaed;
+  --sf-text-secondary: #9aa0a6;
+  --sf-border: #3c4043;
+  --sf-bg: #202124;
+  --sf-bg-card: #292a2d;
+  --sf-primary-light: #1a3a5c;
+  --sf-success-light: #1a3a2a;
+  --sf-warning-light: #3a2a1a;
+  --sf-danger-light: #3a1a1a;
+  --sf-info-light: #1a2a3a;
+}
+
+/* ---------- Base ---------- */
+body {
+  font-family: var(--sf-font) !important;
+  color: var(--sf-text);
+  background-color: var(--sf-bg);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#mainbody {
+  padding-top: 10px;
+}
+
+/* ---------- Modern Cards (replacing Bootstrap 3 panels) ---------- */
+.sf-card {
+  background: var(--sf-bg-card);
+  border: 1px solid var(--sf-border);
+  border-radius: var(--sf-radius);
+  box-shadow: var(--sf-shadow-sm);
+  margin-bottom: 16px;
+  transition: box-shadow var(--sf-transition);
+  overflow: hidden;
+}
+
+.sf-card:hover {
+  box-shadow: var(--sf-shadow-md);
+}
+
+.sf-card-header {
+  padding: 12px 16px;
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--sf-text);
+  border-bottom: 1px solid var(--sf-border);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sf-card-header i {
+  color: var(--sf-primary);
+  font-size: 16px;
+}
+
+.sf-card-body {
+  padding: 16px;
+}
+
+/* ---------- Dashboard Stat Cards ---------- */
+.sf-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.sf-stat-card {
+  background: var(--sf-bg-card);
+  border: 1px solid var(--sf-border);
+  border-radius: var(--sf-radius);
+  padding: 16px;
+  text-align: center;
+  transition: all var(--sf-transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.sf-stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--sf-primary);
+}
+
+.sf-stat-card.stat-danger::before { background: var(--sf-danger); }
+.sf-stat-card.stat-warning::before { background: var(--sf-warning); }
+.sf-stat-card.stat-info::before { background: var(--sf-info); }
+.sf-stat-card.stat-success::before { background: var(--sf-success); }
+
+.sf-stat-card:hover {
+  box-shadow: var(--sf-shadow-md);
+  transform: translateY(-1px);
+}
+
+.sf-stat-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--sf-text-secondary);
+  margin-bottom: 4px;
+}
+
+.sf-stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--sf-text);
+  line-height: 1.2;
+}
+
+.sf-stat-value.val-danger { color: var(--sf-danger); }
+.sf-stat-value.val-warning { color: var(--sf-warning); }
+.sf-stat-value.val-info { color: var(--sf-info); }
+.sf-stat-value.val-success { color: var(--sf-success); }
+
+/* ---------- Risk Badges (modern) ---------- */
+.sf-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.sf-badge-danger {
+  background: var(--sf-danger-light);
+  color: var(--sf-danger);
+}
+
+.sf-badge-warning {
+  background: var(--sf-warning-light);
+  color: var(--sf-warning);
+}
+
+.sf-badge-info {
+  background: var(--sf-info-light);
+  color: var(--sf-info);
+}
+
+.sf-badge-success {
+  background: var(--sf-success-light);
+  color: var(--sf-success);
+}
+
+/* ---------- Status Badges ---------- */
+.sf-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.sf-status::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.sf-status-running {
+  background: var(--sf-info-light);
+  color: var(--sf-info);
+}
+.sf-status-running::before {
+  background: var(--sf-info);
+  animation: sf-pulse 1.5s infinite;
+}
+
+.sf-status-finished {
+  background: var(--sf-success-light);
+  color: var(--sf-success);
+}
+.sf-status-finished::before {
+  background: var(--sf-success);
+}
+
+.sf-status-failed {
+  background: var(--sf-danger-light);
+  color: var(--sf-danger);
+}
+.sf-status-failed::before {
+  background: var(--sf-danger);
+}
+
+.sf-status-aborted {
+  background: var(--sf-warning-light);
+  color: var(--sf-warning);
+}
+.sf-status-aborted::before {
+  background: var(--sf-warning);
+}
+
+@keyframes sf-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ---------- Modern Tables ---------- */
+.sf-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--sf-border);
+  border-radius: var(--sf-radius);
+  overflow: hidden;
+  background: var(--sf-bg-card);
+  font-size: 13px;
+}
+
+.sf-table thead th {
+  background: var(--sf-bg);
+  color: var(--sf-text-secondary);
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 10px 12px;
+  border-bottom: 2px solid var(--sf-border);
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.sf-table tbody td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--sf-border);
+  color: var(--sf-text);
+  vertical-align: middle;
+  word-break: break-word;
+}
+
+.sf-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.sf-table tbody tr:hover {
+  background: var(--sf-primary-light);
+}
+
+.sf-table tbody tr.danger td {
+  background: var(--sf-danger-light);
+}
+
+/* ---------- Chart Containers ---------- */
+.sf-chart-container {
+  position: relative;
+  padding: 16px;
+  min-height: 200px;
+}
+
+.sf-chart-container canvas {
+  max-width: 100%;
+}
+
+.sf-chart-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 768px) {
+  .sf-chart-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- Search & Toolbar Modern ---------- */
+.sf-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 0;
+  margin-bottom: 12px;
+}
+
+.sf-toolbar .btn {
+  border-radius: var(--sf-radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  transition: all var(--sf-transition);
+}
+
+.sf-toolbar .btn.active {
+  background: var(--sf-primary);
+  color: #fff;
+  border-color: var(--sf-primary);
+  box-shadow: 0 1px 3px rgba(26,115,232,.3);
+}
+
+.sf-toolbar .btn:not(.active):hover {
+  background: var(--sf-primary-light);
+  border-color: var(--sf-primary);
+  color: var(--sf-primary);
+}
+
+/* ---------- Breadcrumbs Modern ---------- */
+.sf-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  background: var(--sf-bg);
+  border-radius: var(--sf-radius-sm);
+  font-size: 13px;
+  list-style: none;
+}
+
+.sf-breadcrumb li + li::before {
+  content: '›';
+  color: var(--sf-text-secondary);
+  margin-right: 4px;
+}
+
+.sf-breadcrumb a {
+  color: var(--sf-primary);
+  text-decoration: none;
+}
+
+.sf-breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+/* ---------- Correlation Cards ---------- */
+.sf-correlation-item {
+  border: 1px solid var(--sf-border);
+  border-radius: var(--sf-radius);
+  margin-bottom: 8px;
+  overflow: hidden;
+  transition: all var(--sf-transition);
+}
+
+.sf-correlation-item:hover {
+  box-shadow: var(--sf-shadow-sm);
+}
+
+.sf-correlation-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  cursor: pointer;
+  background: var(--sf-bg-card);
+}
+
+.sf-correlation-header:hover {
+  background: var(--sf-primary-light);
+}
+
+.sf-correlation-body {
+  padding: 0 16px 12px;
+  border-top: 1px solid var(--sf-border);
+}
+
+/* ---------- Scan Page Title ---------- */
+.sf-scan-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.sf-scan-title {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--sf-text);
+  margin: 0;
+}
+
+/* ---------- Empty States ---------- */
+.sf-empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--sf-text-secondary);
+}
+
+.sf-empty-state i {
+  font-size: 48px;
+  color: var(--sf-border);
+  margin-bottom: 16px;
+  display: block;
+}
+
+.sf-empty-state h4 {
+  color: var(--sf-text);
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.sf-empty-state p {
+  max-width: 400px;
+  margin: 0 auto;
+  font-size: 14px;
+}
+
+/* ---------- Loading Spinner ---------- */
+.sf-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  color: var(--sf-text-secondary);
+}
+
+.sf-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--sf-border);
+  border-top-color: var(--sf-primary);
+  border-radius: 50%;
+  animation: sf-spin 0.8s linear infinite;
+  margin-bottom: 12px;
+}
+
+@keyframes sf-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ---------- Log Table Enhancements ---------- */
+.sf-log-error {
+  border-left: 3px solid var(--sf-danger) !important;
+}
+
+.sf-log-warning {
+  border-left: 3px solid var(--sf-warning) !important;
+}
+
+/* ---------- Code/Pre Blocks ---------- */
+pre.sf-code {
+  font-family: var(--sf-font-mono);
+  font-size: 12px;
+  background: var(--sf-bg);
+  border: 1px solid var(--sf-border);
+  border-radius: var(--sf-radius-sm);
+  padding: 8px 12px;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* ---------- Scan List Enhancements ---------- */
+.sf-scanlist-row {
+  transition: background var(--sf-transition);
+}
+
+.sf-scanlist-row:hover {
+  background: var(--sf-primary-light) !important;
+}
+
+.sf-risk-matrix {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.sf-risk-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 22px;
+  border-radius: 11px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 0 6px;
+}
+
+.sf-risk-high { background: var(--sf-danger-light); color: var(--sf-danger); }
+.sf-risk-medium { background: var(--sf-warning-light); color: var(--sf-warning); }
+.sf-risk-low { background: var(--sf-info-light); color: var(--sf-info); }
+.sf-risk-info { background: var(--sf-success-light); color: var(--sf-success); }
+
+/* ---------- Scan ID Copy ---------- */
+.sf-scan-id {
+  font-family: var(--sf-font-mono);
+  font-size: 11px;
+  background: var(--sf-bg);
+  padding: 2px 8px;
+  border: 1px solid var(--sf-border);
+  border-radius: var(--sf-radius-sm);
+  cursor: pointer;
+  transition: all var(--sf-transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sf-scan-id:hover {
+  background: var(--sf-primary-light);
+  border-color: var(--sf-primary);
+}
+
+/* ---------- Action Icons ---------- */
+.sf-action-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--sf-radius-sm);
+  color: var(--sf-text-secondary);
+  transition: all var(--sf-transition);
+  text-decoration: none;
+}
+
+.sf-action-icon:hover {
+  background: var(--sf-primary-light);
+  color: var(--sf-primary);
+}
+
+.sf-action-icon.action-danger:hover {
+  background: var(--sf-danger-light);
+  color: var(--sf-danger);
+}
+
+/* ---------- Tooltip Improvements ---------- */
+.tooltip-inner {
+  background: var(--sf-text);
+  border-radius: var(--sf-radius-sm);
+  font-size: 12px;
+  padding: 6px 10px;
+  max-width: 300px;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 768px) {
+  .sf-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .sf-scan-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .sf-toolbar {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .sf-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- Legacy Bootstrap 3 Compatibility Overrides ---------- */
+/* Make existing panels look like modern cards */
+.panel {
+  border-radius: var(--sf-radius);
+  border-color: var(--sf-border);
+  box-shadow: var(--sf-shadow-sm);
+}
+
+.panel-heading {
+  border-radius: var(--sf-radius) var(--sf-radius) 0 0;
+  font-weight: 500;
+}
+
+.panel-default > .panel-heading {
+  background: var(--sf-bg);
+  color: var(--sf-text);
+  border-color: var(--sf-border);
+}
+
+/* Improve existing table styles */
+.table {
+  font-size: 13px;
+}
+
+.table > thead > tr > th {
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--sf-text-secondary);
+  border-bottom-width: 2px;
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) {
+  background-color: rgba(0,0,0,.02);
+}
+
+.table > tbody > tr:hover {
+  background-color: var(--sf-primary-light);
+}
+
+/* Modern button overrides */
+.btn-default {
+  border-color: var(--sf-border);
+  color: var(--sf-text);
+  transition: all var(--sf-transition);
+}
+
+.btn-default:hover,
+.btn-default:focus {
+  border-color: var(--sf-primary);
+  color: var(--sf-primary);
+  background: var(--sf-primary-light);
+}
+
+.btn-default.active {
+  background: var(--sf-primary) !important;
+  color: #fff !important;
+  border-color: var(--sf-primary) !important;
+}
+
+.btn-primary {
+  background: var(--sf-primary);
+  border-color: var(--sf-primary);
+}
+
+.btn-primary:hover {
+  background: var(--sf-primary-dark);
+  border-color: var(--sf-primary-dark);
+}
+
+/* Badge overrides */
+.badge {
+  font-weight: 600;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 10px;
+}
+
+/* Alert overrides for better styling */
+.alert {
+  border-radius: var(--sf-radius);
+  border: none;
+  font-size: 14px;
+}
+
+.alert-success { background: var(--sf-success-light); color: var(--sf-success); border-left: 4px solid var(--sf-success); }
+.alert-warning { background: var(--sf-warning-light); color: var(--sf-warning); border-left: 4px solid var(--sf-warning); }
+.alert-danger  { background: var(--sf-danger-light);  color: var(--sf-danger);  border-left: 4px solid var(--sf-danger);  }
+.alert-info    { background: var(--sf-info-light);    color: var(--sf-info);    border-left: 4px solid var(--sf-info);    }
+
+/* Graph container */
+.graph-container {
+  border: 1px solid var(--sf-border);
+  border-radius: var(--sf-radius);
+  background: var(--sf-bg-card);
+  min-height: 500px;
+}
+
+/* Pre-wrap in tables */
+pre.table-border-bg-inherit {
+  font-family: var(--sf-font-mono);
+  font-size: 12px;
+  background: transparent;
+  border: none;
+  padding: 4px 0;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* Form controls */
+.form-control {
+  border-radius: var(--sf-radius-sm);
+  border-color: var(--sf-border);
+  transition: border-color var(--sf-transition), box-shadow var(--sf-transition);
+}
+
+.form-control:focus {
+  border-color: var(--sf-primary);
+  box-shadow: 0 0 0 3px rgba(26,115,232,.15);
+}
+
+/* Navbar modernization */
+.navbar-default {
+  border: none;
+  box-shadow: var(--sf-shadow-sm);
+}
+
+/* Dropdown modernization */
+.dropdown-menu {
+  border-radius: var(--sf-radius);
+  border-color: var(--sf-border);
+  box-shadow: var(--sf-shadow-md);
+  padding: 4px;
+}
+
+.dropdown-menu > li > a {
+  border-radius: var(--sf-radius-sm);
+  padding: 6px 12px;
+  transition: background var(--sf-transition);
+}
+
+.dropdown-menu > li > a:hover {
+  background: var(--sf-primary-light);
+  color: var(--sf-primary);
+}
+
+/* Footer improvements */
+.footer {
+  font-size: 12px;
+  color: var(--sf-text-secondary);
+}
+
+/* Modal improvements */
+.modal-content {
+  border-radius: var(--sf-radius-lg);
+  border: none;
+  box-shadow: var(--sf-shadow-lg);
+}
+
+.modal-header {
+  border-bottom-color: var(--sf-border);
+  padding: 16px 20px;
+}
+
+.modal-footer {
+  border-top-color: var(--sf-border);
+  padding: 12px 20px;
+}
+
+/* Pagination modern */
+.ts-pager .btn {
+  border-radius: var(--sf-radius-sm) !important;
+}

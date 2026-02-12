@@ -245,7 +245,13 @@ class ModuleLoader:
         pruned: list[str] = []
 
         # Optional pruning
-        effective_list = list(module_list)
+        effective_list = [m for m in module_list if m and m.strip()]
+        if not effective_list:
+            log.warning(
+                "ModuleLoader: module_list is empty or contains only "
+                "blank entries (received %d items). No modules to load.",
+                len(module_list),
+            )
         if (
             self._enable_pruning
             and desired_output_types

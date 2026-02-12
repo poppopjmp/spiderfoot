@@ -148,6 +148,11 @@ class SpiderFootScanner():
         if not moduleList:
             raise ValueError("moduleList is empty")
 
+        # Filter out empty/whitespace-only entries
+        moduleList = [m.strip() for m in moduleList if m and m.strip()]
+        if not moduleList:
+            raise ValueError("moduleList contains no valid module names")
+
         self.__moduleList = moduleList
         self.__sf = SpiderFoot(self.__config)
         self.__sf.dbh = self.__dbh

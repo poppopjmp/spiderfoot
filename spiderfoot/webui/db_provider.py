@@ -58,7 +58,7 @@ class DbProvider:
     # Cached ApiClient singleton (shared across requests in proxy mode)
     _api_client_instance = None
 
-    def _get_dbh(self, config: dict[str, Any] | None = None) -> Any:
+    def _get_dbh(self, config: dict[str, Any] | None = None, *, init: bool = False) -> Any:
         """Create and return a data access handle.
 
         In local mode: returns a ``SpiderFootDb`` instance.
@@ -67,6 +67,8 @@ class DbProvider:
         Args:
             config: Optional config dict override.  When ``None``
                     (the common case), ``self.config`` is used.
+            init:   If ``True``, passes ``init=True`` to SpiderFootDb
+                    so it creates/migrates the schema on first use.
 
         Returns:
             A data access handle ready for queries.
@@ -75,7 +77,7 @@ class DbProvider:
             return self._get_api_client()
 
         from spiderfoot import SpiderFootDb
-        return SpiderFootDb(config if config is not None else self.config)
+        return SpiderFootDb(config if config is not None else self.config, init=init)
 
     def _get_api_client(self) -> Any:
         """Get or create a shared ApiClient for proxy mode."""

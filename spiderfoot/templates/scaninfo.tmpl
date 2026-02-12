@@ -280,41 +280,47 @@
             }
         }
 
-        // Scan status
+        var sfTypeChart = null;
+
+        // Scan status — modern card-based dashboard
         function scanSummaryView(instanceId) {
-            grid = "<div id='scansummary-content'>";
-            grid += "<div class='row'>";
-            grid += "<div class='col-sm-7'>";
-            grid += "<div class='panel panel-default'>";
-            grid += "<div class='panel-heading'><i class='glyphicon glyphicon-eye-open'></i>&nbsp;&nbsp;Scan Status</div><div class='panel-body' style='padding: 5px'>";
-            grid += "<div class='btn-toolbar text-center'>";
-            grid += "<div class='btn-group' style='float: unset; padding: 5px'><button class='btn disabled btn-md btn-secondary' style='cursor: default;'>Total</span></button>";
-            grid += "<button class='btn disabled btn-md btn-default' id='tcounter' style='cursor: default;'>?</button></div>";
-            grid += "<div class='btn-group' style='float: unset; padding: 5px'><button class='btn disabled btn-md btn-secondary' style='cursor: default;'>Unique</button>";
-            grid += "<button class='btn disabled btn-md btn-default' id='ucounter' style='cursor: default;'>?</button></div>";
-            grid += "<div class='btn-group' style='float: unset; padding: 5px'><button class='btn disabled btn-md btn-secondary' style='cursor: default;'>Status</button>";
-            grid += "<button class='btn disabled btn-md btn-default' id='status' style='cursor: default;'>?</button></div>";
-            grid += "<div class='btn-group' style='float: unset; padding: 5px'><button class='btn disabled btn-md btn-secondary' style='cursor: default;'>Errors</button>";
-            grid += "<button class='btn disabled btn-md btn-default' id='errors' style='cursor: default;'>?</button></div>";
-            grid += "</div></div></div></div>";
-            grid += "<div class='col-sm-5'>";
-            grid += "<div class='panel panel-default'>";
-            grid += "<div class='panel-heading'><i class='glyphicon glyphicon-exclamation-sign'></i>&nbsp;&nbsp;Correlations</div><div class='panel-body' style='padding: 5px'>";
-            grid += "<div class='btn-toolbar text-center'>";
-            grid += "<div class='btn-group' style='float: unset; padding: 5px'><button class='btn disabled btn-md btn-danger' style='cursor: default;'>High</span></button>";
-            grid += "<button class='btn disabled btn-md btn-default' id='corr-high' style='cursor: default;'>?</button></div>";
-            grid += "<div class='btn-group' style='float: unset; padding: 5px'><button class='btn disabled btn-md btn-warning' style='cursor: default;'>Medium</button>";
-            grid += "<button class='btn disabled btn-md btn-default' id='corr-medium' style='cursor: default;'>?</button></div>";
-            grid += "<div class='btn-group' style='float: unset; padding: 5px'><button class='btn disabled btn-md btn-primary' style='cursor: default;'>Low</button>";
-            grid += "<button class='btn disabled btn-md btn-default' id='corr-low' style='cursor: default;'>?</button></div>";
-            grid += "<div class='btn-group' style='float: unset; padding: 5px'><button class='btn disabled btn-md btn-success' style='cursor: default;'>Info</button>";
-            grid += "<button class='btn disabled btn-md btn-default' id='corr-info' style='cursor: default;'>?</button></div>";
-            grid += "</div></div></div></div></div>";
-            grid += "<div class='row'><div class='col-sm-12'>";
-            grid += "<div class='panel panel-default'>";
-            grid += "<div class='panel-heading'><i class='glyphicon glyphicon-stats'></i>&nbsp;&nbsp;Data Types</div><div class='panel-body'>";
-            grid += "<div id='vbarsummary'></div>";
-            grid += "</div></div></div></div>";
+            var grid = "<div id='scansummary-content'>";
+
+            // — Stat cards row —
+            grid += "<div class='sf-stats-grid' style='grid-template-columns: repeat(4, 1fr)'>";
+            grid += "<div class='sf-stat-card stat-info'><div class='sf-stat-label'>Total Elements</div><div class='sf-stat-value' id='tcounter'>—</div></div>";
+            grid += "<div class='sf-stat-card stat-info'><div class='sf-stat-label'>Unique Elements</div><div class='sf-stat-value' id='ucounter'>—</div></div>";
+            grid += "<div class='sf-stat-card'><div class='sf-stat-label'>Status</div><div id='status-wrap' style='margin-top:8px'><span class='sf-status sf-status-running' id='status'>—</span></div></div>";
+            grid += "<div class='sf-stat-card stat-danger'><div class='sf-stat-label'>Errors</div><div class='sf-stat-value val-danger' id='errors'>0</div></div>";
+            grid += "</div>";
+
+            // — Chart row —
+            grid += "<div class='sf-chart-row'>";
+
+            // Correlations card
+            grid += "<div class='sf-card'>";
+            grid += "<div class='sf-card-header'><i class='glyphicon glyphicon-exclamation-sign'></i>&nbsp;Correlations</div>";
+            grid += "<div class='sf-card-body' style='display:flex; justify-content:space-around; text-align:center; flex-wrap:wrap; gap:12px; padding:20px 16px'>";
+            grid += "<div><div class='sf-risk-pill sf-risk-high' id='corr-high' style='min-width:40px; height:32px; font-size:15px; font-weight:700'>—</div><div class='sf-stat-label' style='margin-top:6px'>HIGH</div></div>";
+            grid += "<div><div class='sf-risk-pill sf-risk-medium' id='corr-medium' style='min-width:40px; height:32px; font-size:15px; font-weight:700'>—</div><div class='sf-stat-label' style='margin-top:6px'>MEDIUM</div></div>";
+            grid += "<div><div class='sf-risk-pill sf-risk-low' id='corr-low' style='min-width:40px; height:32px; font-size:15px; font-weight:700'>—</div><div class='sf-stat-label' style='margin-top:6px'>LOW</div></div>";
+            grid += "<div><div class='sf-risk-pill sf-risk-info' id='corr-info' style='min-width:40px; height:32px; font-size:15px; font-weight:700'>—</div><div class='sf-stat-label' style='margin-top:6px'>INFO</div></div>";
+            grid += "</div></div>";
+
+            // Data Type Distribution chart
+            grid += "<div class='sf-card'>";
+            grid += "<div class='sf-card-header'><i class='glyphicon glyphicon-stats'></i>&nbsp;Data Type Distribution</div>";
+            grid += "<div class='sf-card-body sf-chart-container' style='height:240px'><canvas id='sf-type-chart'></canvas></div>";
+            grid += "</div>";
+            grid += "</div>"; // close sf-chart-row
+
+            // — Data Types table —
+            grid += "<div class='sf-card'>";
+            grid += "<div class='sf-card-header'><i class='glyphicon glyphicon-th-list'></i>&nbsp;Data Types</div>";
+            grid += "<div class='sf-card-body' style='padding:0'><div id='sf-types-table'><div class='sf-empty-state' style='padding:24px'><p>Loading data types…</p></div></div></div>";
+            grid += "</div>";
+
+            grid += "</div>"; // close scansummary-content
 
             $("#scansummary-content").remove();
             $("#scanlogs-content").remove();
@@ -378,30 +384,78 @@
                             scanSummary[x].pct = scanSummary[x].counter / uniqueCount;
                         }
 
-                        $('#ucounter').html(uniqueCount);
-                        $('#tcounter').html(totalCount);
+                        $('#ucounter').html(sf.formatNumber(uniqueCount));
+                        $('#tcounter').html(sf.formatNumber(totalCount));
                         $('#scanstatusbadge').html(scanStatus);
 
+                        // Update status badge style
                         var statusy = "";
+                        var statusCls = "sf-status-running";
                         if (scanStatus == "FINISHED") {
                             statusy = "alert-success";
+                            statusCls = "sf-status-finished";
                         } else if (scanStatus.indexOf("ABORT") >= 0) {
                             statusy = "alert-warning";
+                            statusCls = "sf-status-aborted";
                         } else if (scanStatus == "CREATED" || scanStatus == "RUNNING" || scanStatus == "STARTED" || scanStatus == "STARTING" || scanStatus == "INITIALIZING") {
                             statusy = "alert-info";
+                            statusCls = "sf-status-running";
                         } else if (scanStatus.indexOf("FAILED") >= 0) {
                             statusy = "alert-danger";
+                            statusCls = "sf-status-failed";
                         } else {
                             statusy = "alert-info";
+                            statusCls = "sf-status-running";
                         }
-                        $('#scanstatusbadge').removeClass(["alert-info", "alert-warning", "alert-danger"]).addClass(statusy);
-                        $('#status').html(scanStatus);
-                        $("#vbarsummary").empty();
+                        $('#scanstatusbadge').removeClass("alert-info alert-warning alert-danger alert-success").addClass(statusy);
+                        $('#status').html(scanStatus).removeClass("sf-status-running sf-status-finished sf-status-aborted sf-status-failed").addClass(statusCls);
+
+                        // — Build Data Types table —
                         if (scanSummary.length == 0) {
-                          $("#vbarsummary").append("<div id='scansummary-content' class='alert alert-warning'><h4>No data.</h4>If the scan is still running this section will update shortly.</div>");
+                            $("#sf-types-table").html("<div class='sf-empty-state' style='padding:24px'><i class='glyphicon glyphicon-info-sign'></i><h4>No data yet</h4><p>If the scan is still running this section will update shortly.</p></div>");
                         } else {
-                          sf_viz_vbar("#vbarsummary", scanSummary);
+                            var tbl = "<table class='sf-table tablesorter'><thead><tr><th>Type</th><th style='width:90px'>Unique</th><th style='width:90px'>Total</th><th style='width:120px'>Share</th></tr></thead><tbody>";
+                            for (var x = 0; x < scanSummary.length; x++) {
+                                var pctVal = Math.round(scanSummary[x].pct * 100);
+                                tbl += "<tr class='sf-scanlist-row'>";
+                                tbl += "<td><a class='link' style='cursor:pointer;color:var(--sf-primary)' onClick='browseEventData(\"" + scanSummary[x].scanId + "\",\"" + escape(scanSummary[x].name) + "\",\"" + scanSummary[x].id + "\",\"full\")'>" + scanSummary[x].name + "</a></td>";
+                                tbl += "<td>" + sf.formatNumber(scanSummary[x].counter) + "</td>";
+                                tbl += "<td>" + sf.formatNumber(scanSummary[x].total) + "</td>";
+                                tbl += "<td><div style='display:flex;align-items:center;gap:8px'><div style='flex:1;height:6px;background:var(--sf-border);border-radius:3px;overflow:hidden'><div style='height:100%;width:" + pctVal + "%;background:var(--sf-primary);border-radius:3px'></div></div><span style='font-size:11px;color:var(--sf-text-secondary);min-width:32px;text-align:right'>" + pctVal + "%</span></div></td>";
+                                tbl += "</tr>";
+                            }
+                            tbl += "</tbody></table>";
+                            $("#sf-types-table").html(tbl);
+                            $("#sf-types-table .tablesorter").tablesorter();
                         }
+
+                        // — Chart.js doughnut chart —
+                        if (sfTypeChart) { sfTypeChart.destroy(); sfTypeChart = null; }
+                        var ctx = document.getElementById('sf-type-chart');
+                        if (ctx && scanSummary.length > 0) {
+                            var chartData = scanSummary.slice().sort(function(a,b){ return b.counter - a.counter; });
+                            var topN = chartData.slice(0, 10);
+                            var otherCount = 0;
+                            for (var oi = 10; oi < chartData.length; oi++) { otherCount += chartData[oi].counter; }
+                            var labels = topN.map(function(d){ return d.name; });
+                            var values = topN.map(function(d){ return d.counter; });
+                            if (otherCount > 0) { labels.push('Other (' + (chartData.length - 10) + ')'); values.push(otherCount); }
+                            var colors = ['#1a73e8','#0d904f','#e37400','#d93025','#9334e6','#e8710a','#1e8e3e','#185abc','#c5221f','#a142f4','#80868b'];
+                            sfTypeChart = new Chart(ctx, {
+                                type: 'doughnut',
+                                data: { labels: labels, datasets: [{ data: values, backgroundColor: colors.slice(0, values.length), borderWidth: 0, hoverOffset: 6 }] },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    cutout: '60%',
+                                    plugins: {
+                                        legend: { position: 'right', labels: { boxWidth: 10, padding: 6, font: { size: 11 }, color: getComputedStyle(document.body).getPropertyValue('--sf-text') || '#202124' } },
+                                        tooltip: { callbacks: { label: function(c) { return c.label + ': ' + sf.formatNumber(c.raw) + ' (' + Math.round(c.raw / uniqueCount * 100) + '%)'; } } }
+                                    }
+                                }
+                            });
+                        }
+
                         $("#loader").fadeOut(500);
                     });
                 }
@@ -657,9 +711,8 @@
                             $("#scanlogs-content").tablesorter({widgets: ["filter"], widgetOptions : { filter_searchDelay : 300, filter_hideFilters : false }});
             });
         }
-        }
 
-        // Summary of event types and counts for a scan
+        // Summary of event types and counts for a scan — modern card layout
         function browseEventList(instanceId) {
             currentType = "ALL";
             currentTypeName = "All";
@@ -676,25 +729,52 @@
             $("#scanreminder").hide();
             refresh = function() { browseEventList(instanceId); }
             sf.fetchData('${docroot}/scansummary', {'id': instanceId, 'by': 'type'}, function(data) {
-                            var table = "<table id='scansummary-content' class='table table-bordered table-striped tablesorter'>";
-                            table += "<thead><tr> <th>Type</th><th>Unique Data Elements</th> <th>Total Data Elements</th><th>Last Data Element</th></tr></thead><tbody>";
-                            for (var i = 0; i < data.length; i++) {
-                                table += "<tr><td><a class='link' onClick='";
-                                table += "browseEventData(\"${id}\", \"" + escape(data[i][1]) + "\", \"" + data[i][0] + "\", \"full\");'>";
-                                table += data[i][1] + "</a></td>";
-                                table += "<td>" + data[i][4] + "</td>";
-                                table += "<td>" + data[i][3] + "</td>";
-                                table += "<td>" + data[i][2] + "</td>";
-                            }
-                            table += "</tbody></table>"
-
                             if (data.length < 1) {
-                                table = "<div id='scansummary-content' class='alert alert-warning'><h4>No data.</h4>If the scan is still running please try again soon.</div>";
+                                var table = "<div id='scansummary-content'><div class='sf-empty-state'><i class='glyphicon glyphicon-info-sign'></i><h4>No data</h4><p>If the scan is still running please try again soon.</p></div></div>";
+                                $("#loader").fadeOut(500);
+                                $("#mainbody").append(table);
+                                return;
                             }
+
+                            // Compute summary stats
+                            var totalUnique = 0, totalAll = 0, maxType = '', maxCount = 0;
+                            for (var s = 0; s < data.length; s++) {
+                                totalUnique += data[s][4];
+                                totalAll += data[s][3];
+                                if (data[s][4] > maxCount) { maxCount = data[s][4]; maxType = data[s][1]; }
+                            }
+
+                            var html = "<div id='scansummary-content'>";
+
+                            // Stats bar
+                            html += "<div class='sf-stats-grid' style='grid-template-columns: repeat(3, 1fr)'>";
+                            html += "<div class='sf-stat-card stat-info'><div class='sf-stat-label'>Data Types</div><div class='sf-stat-value'>" + sf.formatNumber(data.length) + "</div></div>";
+                            html += "<div class='sf-stat-card stat-success'><div class='sf-stat-label'>Unique Elements</div><div class='sf-stat-value'>" + sf.formatNumber(totalUnique) + "</div></div>";
+                            html += "<div class='sf-stat-card'><div class='sf-stat-label'>Total Elements</div><div class='sf-stat-value'>" + sf.formatNumber(totalAll) + "</div></div>";
+                            html += "</div>";
+
+                            // Data types table
+                            html += "<div class='sf-card'>";
+                            html += "<div class='sf-card-header'><i class='glyphicon glyphicon-th-list'></i>&nbsp;Event Types</div>";
+                            html += "<div class='sf-card-body' style='padding:0'>";
+                            html += "<table class='sf-table tablesorter'>";
+                            html += "<thead><tr><th>Type</th><th style='width:110px'>Unique</th><th style='width:110px'>Total</th><th style='width:130px'>Share</th><th style='width:140px'>Last Seen</th></tr></thead><tbody>";
+                            for (var i = 0; i < data.length; i++) {
+                                var pct = totalUnique > 0 ? Math.round(data[i][4] / totalUnique * 100) : 0;
+                                html += "<tr class='sf-scanlist-row'>";
+                                html += "<td><a class='link' style='cursor:pointer;color:var(--sf-primary)' onClick='browseEventData(\"${id}\", \"" + escape(data[i][1]) + "\", \"" + data[i][0] + "\", \"full\");'>" + data[i][1] + "</a></td>";
+                                html += "<td>" + sf.formatNumber(data[i][4]) + "</td>";
+                                html += "<td>" + sf.formatNumber(data[i][3]) + "</td>";
+                                html += "<td><div style='display:flex;align-items:center;gap:8px'><div style='flex:1;height:6px;background:var(--sf-border);border-radius:3px;overflow:hidden'><div style='height:100%;width:" + pct + "%;background:var(--sf-primary);border-radius:3px'></div></div><span style='font-size:11px;color:var(--sf-text-secondary);min-width:32px;text-align:right'>" + pct + "%</span></div></td>";
+                                html += "<td style='font-size:12px;color:var(--sf-text-secondary)'>" + (data[i][2] || '—') + "</td>";
+                                html += "</tr>";
+                            }
+                            html += "</tbody></table>";
+                            html += "</div></div></div>"; // card-body, card, scansummary-content
 
                             $("#loader").fadeOut(500);
-                            $("#mainbody").append(table);
-                            $("#scansummary-content").tablesorter();
+                            $("#mainbody").append(html);
+                            $("#scansummary-content .tablesorter").tablesorter();
             });
         }
 

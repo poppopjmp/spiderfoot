@@ -15,7 +15,7 @@ import multiprocessing as mp
 import cherrypy
 import secure
 from copy import deepcopy
-from spiderfoot import SpiderFootDb, SpiderFootHelpers, __version__
+from spiderfoot import SpiderFootHelpers, __version__
 from spiderfoot.config.constants import DEFAULT_DATABASE_NAME
 try:
     from spiderfoot.sflib import SpiderFoot
@@ -56,7 +56,9 @@ class WebUiRoutes(
 
         self.docroot = web_config.get('root', '/').rstrip('/')
         self.defaultConfig = deepcopy(config)
-        dbh = SpiderFootDb(self.defaultConfig, init=True)
+        # Use DbProvider._get_dbh() for microservice-safe DB access
+        # (routes through ApiClient in proxy mode, SpiderFootDb locally)
+        dbh = self._get_dbh(self.defaultConfig, init=True)
         sf = SpiderFoot(self.defaultConfig)
         self.config = sf.configUnserialize(dbh.configGet(), self.defaultConfig)
 
@@ -531,10 +533,11 @@ class WebUiRoutes(
             return self.error(f"Processing one or more of your inputs failed. {str(e)}")
 
     @cherrypy.expose
-    def startscan(self, scanname: str, scantarget: str, modulelist: str, typelist: str, usecase: str) -> str:
+    def startscan(self, scanname: str, scantarget: str, modulelist: str = '', typelist: str = '', usecase: str = 'all') -> str:
         """Start a new scan with the given parameters."""
         try:
             from sfwebui import SpiderFootHelpers
+            from copy import deepcopy
 
             # Generate scan ID
             scanId = SpiderFootHelpers.genScanInstanceId()
@@ -544,6 +547,41 @@ class WebUiRoutes(
             if not targetType:
                 return self.error("Invalid target type")
 
+            cfg = deepcopy(self.config)
+
+            # ── Resolve module list from modulelist, typelist, or usecase ──
+            modlist = [m for m in modulelist.split(',') if m] if modulelist else []
+
+            if not modlist and typelist:
+                # Resolve requested event types → modules that produce them
+                requested_types = [t for t in typelist.split(',') if t]
+                if requested_types:
+                    for mod_name, mod_meta in cfg.get('__modules__', {}).items():
+                        provides = mod_meta.get('provides', []) or mod_meta.get('meta', {}).get('provides', [])
+                        if set(requested_types) & set(provides):
+                            modlist.append(mod_name)
+
+            if not modlist and usecase:
+                # Resolve use case name → modules belonging to that use case
+                for mod_name, mod_meta in cfg.get('__modules__', {}).items():
+                    if usecase == 'all':
+                        modlist.append(mod_name)
+                    else:
+                        use_cases = mod_meta.get('group', []) or mod_meta.get('meta', {}).get('useCases', [])
+                        if usecase in use_cases:
+                            modlist.append(mod_name)
+
+            if not modlist:
+                return self.error("No modules selected")
+
+            # Ensure storage module is present
+            if 'sfp__stor_db' not in modlist:
+                modlist.append('sfp__stor_db')
+            if 'sfp__stor_stdout' in modlist:
+                modlist.remove('sfp__stor_stdout')
+
+            modlist.sort()
+
             # Start the scan process
             from sfwebui import mp
             from spiderfoot.scan_service.scanner import startSpiderFootScanner
@@ -551,7 +589,7 @@ class WebUiRoutes(
             process = mp.Process(
                 target=startSpiderFootScanner,
                 args=(self.loggingQueue, scanname, scanId, scantarget, targetType,
-                      modulelist.split(','), self.config)
+                      modlist, cfg)
             )
             process.daemon = True
             process.start()
