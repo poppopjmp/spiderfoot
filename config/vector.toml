@@ -30,11 +30,7 @@ data_dir = "/var/lib/vector"
 # Collect container logs from all SpiderFoot services
 [sources.sf_docker_logs]
 type = "docker_logs"
-include_containers = ["spiderfoot-*"]
-multiline.mode = "halt_before"
-multiline.start_pattern = '^\{' # JSON lines start with {
-multiline.condition_pattern = '^\{' 
-multiline.timeout_ms = 1000
+include_labels = ["com.docker.compose.project=spiderfoot"]
 
 # HTTP source for scan events (SpiderFoot pushes events here)
 [sources.sf_events_http]
@@ -67,10 +63,15 @@ source = '''
   # Try to parse the message as JSON
   parsed, err = parse_json(.message)
   if err == null {
-    ., err = merge(., parsed)
+    . = merge!(., parsed)
     .log_format = "structured"
   } else {
     .log_format = "plain"
+  }
+  
+  # Ensure level label is always set (Loki rejects empty labels)
+  if !exists(.level) {
+    .level = "INFO"
   }
   
   # Add source info
@@ -181,7 +182,7 @@ encoding.codec = "json"
 # Loki for log aggregation
 [sinks.loki_logs]
 type = "loki"
-inputs = ["route_logs.errors", "route_logs.warnings", "route_logs.info", "route_events.logs"]
+inputs = ["route_logs.errors", "route_logs.warnings", "route_logs.info", "route_logs._unmatched", "route_events.logs"]
 endpoint = "${SF_LOKI_ENDPOINT:-http://loki:3100}"
 encoding.codec = "json"
 healthcheck.enabled = true
