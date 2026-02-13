@@ -96,7 +96,7 @@ class MiscEndpoints:
         import requests
         import json
 
-        enrichment_url = self.config.get('_enrichment_url', 'http://enrichment:8600')
+        enrichment_url = self.config.get('_enrichment_url', 'http://enrichment:8200')
 
         cl = cherrypy.request.headers.get('Content-Length', 0)
         if int(cl) > 100 * 1024 * 1024:  # 100MB

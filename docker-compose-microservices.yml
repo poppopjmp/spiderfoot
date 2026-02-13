@@ -60,6 +60,7 @@ services:
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-spiderfoot}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-changeme123}
+      MINIO_PROMETHEUS_AUTH_TYPE: public
     volumes:
       - minio-data:/data
     command: server /data --console-address ":9001"
@@ -697,6 +698,7 @@ services:
       LITELLM_DATABASE_URL: postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-spiderfoot}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-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}
       OLLAMA_API_BASE: ${OLLAMA_API_BASE:-http://host.docker.internal:11434}
       # OTEL tracing to Vector
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://vector:4317"
@@ -736,11 +738,13 @@ services:
       - sf-backend
     ports:
       - "${SF_JAEGER_UI_PORT:-16686}:16686"    # Jaeger UI
-    environment:
-      COLLECTOR_OTLP_ENABLED: "true"
-      QUERY_BASE_PATH: "/jaeger"
+      - "4317"    # OTLP gRPC (internal, for Vector)
+      - "4318"    # OTLP HTTP (internal, for Vector)
+    volumes:
+      - ./infra/jaeger/config.yaml:/etc/jaeger/config.yaml:ro
+    command: ["--config", "/etc/jaeger/config.yaml"]
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:13133/status || exit 1"]
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:16686/jaeger/ || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 5

@@ -19,15 +19,6 @@ scrape_configs:
           service: "spiderfoot"
           component: "api"
 
-  # SpiderFoot Scanner service metrics
-  - job_name: "spiderfoot-scanner"
-    metrics_path: "/metrics"
-    static_configs:
-      - targets: ["scanner:5003"]
-        labels:
-          service: "spiderfoot"
-          component: "scanner"
-
   # SpiderFoot Agents service metrics
   - job_name: "spiderfoot-agents"
     metrics_path: "/metrics"
@@ -72,7 +63,7 @@ scrape_configs:
   #   static_configs:
   #     - targets: ["redis-exporter:9121"]
 
-  # MinIO metrics
+  # MinIO metrics (auth disabled via MINIO_PROMETHEUS_AUTH_TYPE=public)
   - job_name: "minio"
     metrics_path: "/minio/v2/metrics/cluster"
     static_configs:
@@ -80,11 +71,11 @@ scrape_configs:
         labels:
           service: "minio"
 
-  # Jaeger metrics
+  # Jaeger metrics (v2 exposes on port 8888)
   - job_name: "jaeger"
     metrics_path: "/metrics"
     static_configs:
-      - targets: ["jaeger:14269"]
+      - targets: ["jaeger:8888"]
         labels:
           service: "jaeger"
 
@@ -98,5 +89,6 @@ scrape_configs:
 
   # Prometheus self-monitoring
   - job_name: "prometheus"
+    metrics_path: "/prometheus/metrics"
     static_configs:
       - targets: ["localhost:9090"]

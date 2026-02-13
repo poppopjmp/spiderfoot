@@ -207,7 +207,7 @@ $(document).ready(function() {
     function refreshStatus() {
         // Check orchestrator health
         $.ajax({
-            url: '/agents/health',
+            url: '/api/agents/health',
             type: 'GET',
             timeout: 5000,
             success: function(data) {
@@ -248,7 +248,7 @@ $(document).ready(function() {
 
         // Check LiteLLM
         $.ajax({
-            url: '/litellm/health',
+            url: '/litellm/health/liveliness',
             type: 'GET',
             timeout: 5000,
             success: function(data) {
@@ -263,7 +263,7 @@ $(document).ready(function() {
 
         // Load activity log
         $.ajax({
-            url: '/agents/activity',
+            url: '/api/agents/activity',
             type: 'GET',
             dataType: 'json',
             timeout: 5000,

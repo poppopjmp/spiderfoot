@@ -12,35 +12,48 @@
 # =============================================================================
 
 model_list:
-  # --- OpenAI Models ---
+  # --- OpenRouter Models (multi-provider gateway) ---
   - model_name: "gpt-4o"
+    litellm_params:
+      model: "openrouter/openai/gpt-4o"
+      api_key: "os.environ/OPENROUTER_API_KEY"
+      max_tokens: 4096
+
+  - model_name: "gpt-4o-mini"
+    litellm_params:
+      model: "openrouter/openai/gpt-4o-mini"
+      api_key: "os.environ/OPENROUTER_API_KEY"
+      max_tokens: 4096
+
+  - model_name: "gpt-3.5-turbo"
+    litellm_params:
+      model: "openrouter/openai/gpt-3.5-turbo"
+      api_key: "os.environ/OPENROUTER_API_KEY"
+      max_tokens: 4096
+
+  - model_name: "claude-sonnet"
+    litellm_params:
+      model: "openrouter/anthropic/claude-sonnet-4-20250514"
+      api_key: "os.environ/OPENROUTER_API_KEY"
+      max_tokens: 4096
+
+  - model_name: "claude-haiku"
+    litellm_params:
+      model: "openrouter/anthropic/claude-3-5-haiku-20241022"
+      api_key: "os.environ/OPENROUTER_API_KEY"
+      max_tokens: 4096
+
+  # --- Direct OpenAI Models (optional, if OPENAI_API_KEY set) ---
+  - model_name: "openai/gpt-4o"
     litellm_params:
       model: "openai/gpt-4o"
       api_key: "os.environ/OPENAI_API_KEY"
       max_tokens: 4096
 
-  - model_name: "gpt-4o-mini"
-    litellm_params:
-      model: "openai/gpt-4o-mini"
-      api_key: "os.environ/OPENAI_API_KEY"
-      max_tokens: 4096
-
-  - model_name: "gpt-3.5-turbo"
-    litellm_params:
-      model: "openai/gpt-3.5-turbo"
-      api_key: "os.environ/OPENAI_API_KEY"
-      max_tokens: 4096
-
-  # --- Anthropic Models ---
-  - model_name: "claude-sonnet"
+  # --- Direct Anthropic Models (optional, if ANTHROPIC_API_KEY set) ---
+  - model_name: "anthropic/claude-sonnet"
     litellm_params:
       model: "anthropic/claude-sonnet-4-20250514"
-      api_key: "os.environ/ANTHROPIC_API_KEY"
-      max_tokens: 4096
-
-  - model_name: "claude-haiku"
-    litellm_params:
-      model: "anthropic/claude-3-5-haiku-20241022"
       api_key: "os.environ/ANTHROPIC_API_KEY"
       max_tokens: 4096
 
@@ -97,8 +110,8 @@ router_settings:
   # Fallback chain: try cheaper model on failure
   model_group_alias:
     "default": "gpt-4o-mini"
-    "fast": "gpt-3.5-turbo"
-    "smart": "gpt-4o"
+    "fast": "gpt-4o-mini"
+    "smart": "claude-sonnet"
     "local": "ollama/llama3"
 
 # --- General Proxy Settings ---
