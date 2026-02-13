@@ -63,6 +63,7 @@ class ScanRequest(BaseModel):
     target: str = Field(..., description="Target for the scan")
     modules: list[str] | None = Field(None, description="List of module names to run")
     type_filter: list[str] | None = Field(None, description="List of event types to include")
+    engine: str | None = Field(None, description="Scan engine profile name (from /api/engines)")
 
 
 class ScheduleCreateRequest(BaseModel):
@@ -660,8 +661,23 @@ async def create_scan(
             raise HTTPException(status_code=422, detail="Invalid target")
 
         sf = SpiderFoot(config.get_config())
-        all_modules = sf.modulesProducing(["*"])
-        modules = scan_request.modules if scan_request.modules else all_modules
+        sf_config = config.get_config()
+
+        # If an engine profile is specified, load it and merge settings
+        if scan_request.engine:
+            try:
+                from spiderfoot.scan_engine import ScanEngineLoader
+                loader = ScanEngineLoader()
+                engine = loader.load(scan_request.engine)
+                modules = engine.get_enabled_modules()
+                sf_config = engine.to_sf_config(sf_config)
+                log.info("Using scan engine '%s' for scan %s", scan_request.engine, scan_id)
+            except Exception as e:
+                raise HTTPException(status_code=422, detail=f"Invalid engine: {e}")
+        else:
+            all_modules = sf.modulesProducing(["*"])
+            modules = scan_request.modules if scan_request.modules else all_modules
+
         if not modules:
             modules = ["sfp__stor_db"]
 
@@ -688,7 +704,7 @@ async def create_scan(
             target_type,
             modules,
             scan_request.type_filter,
-            config.get_config(),
+            sf_config,
         )
         return ScanCreateResponse(
             id=scan_id,
