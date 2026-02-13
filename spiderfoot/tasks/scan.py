@@ -140,6 +140,18 @@ def run_scan(
             },
         )
 
+        # Send completion notification
+        try:
+            from spiderfoot.notifications import notify, NotificationEvent
+            notify(
+                event=NotificationEvent.SCAN_COMPLETED,
+                title=f"Scan Complete: {scan_name}",
+                message=f"Scan '{scan_name}' targeting {target_value} completed in {round(duration, 1)}s.",
+                data={"scan_id": scan_id, "target": target_value, "duration": round(duration, 1)},
+            )
+        except Exception as ne:
+            logger.debug("Notification send failed: %s", ne)
+
         return result
 
     except SoftTimeLimitExceeded:
@@ -173,6 +185,18 @@ def run_scan(
 
         # Mark failed in DB
         _update_scan_status(scan_id, global_opts, "ERROR-FAILED", error_msg)
+
+        # Send failure notification
+        try:
+            from spiderfoot.notifications import notify, NotificationEvent
+            notify(
+                event=NotificationEvent.SCAN_FAILED,
+                title=f"Scan Failed: {scan_name}",
+                message=f"Scan '{scan_name}' targeting {target_value} failed: {error_msg}",
+                data={"scan_id": scan_id, "target": target_value, "error": error_msg},
+            )
+        except Exception as ne:
+            logger.debug("Notification send failed: %s", ne)
 
         # Raise so Celery marks the task as FAILURE
         raise
