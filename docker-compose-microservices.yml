@@ -503,6 +503,58 @@ services:
           memory: "${PROMETHEUS_MEMORY:-512M}"
 
   # ---------------------------------------------------------------------------
+  # SpiderFoot Enrichment Service (Document Processing Pipeline)
+  # ---------------------------------------------------------------------------
+  # Processes uploaded documents and scan artifacts through:
+  #   - Text extraction (PDF, DOCX, XLSX, HTML, etc.)
+  #   - Entity/IOC extraction (IPs, domains, hashes, CVEs, etc.)
+  #   - MinIO storage for original + extracted content
+  #   - Dispatch to agents for LLM-powered analysis
+  # ---------------------------------------------------------------------------
+
+  enrichment:
+    <<: *sf-build
+    image: spiderfoot-micro:latest
+    container_name: sf-enrichment
+    restart: unless-stopped
+    networks:
+      - sf-frontend
+      - sf-backend
+    ports:
+      - "${SF_ENRICHMENT_PORT:-8200}:8200"
+    environment:
+      SF_SERVICE: enrichment
+      SF_ENRICHMENT_HOST: "0.0.0.0"
+      SF_ENRICHMENT_PORT: "8200"
+      SF_ENRICHMENT_WORKERS: ${SF_ENRICHMENT_WORKERS:-2}
+      SF_LOG_LEVEL: ${SF_LOG_LEVEL:-INFO}
+      # MinIO storage
+      SF_MINIO_ENDPOINT: "minio:9000"
+      SF_MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-spiderfoot}
+      SF_MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-changeme123}
+      # Optional Apache Tika for complex document formats
+      SF_TIKA_ENDPOINT: ${SF_TIKA_ENDPOINT:-}
+      # OTEL tracing
+      SF_OTEL_ENDPOINT: "http://vector:4317"
+      SF_SERVICE_NAME: "spiderfoot-enrichment"
+    entrypoint: ["/usr/local/bin/docker-entrypoint.sh"]
+    command: ["python", "-m", "spiderfoot.enrichment.service"]
+    depends_on:
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8200/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: "${ENRICHMENT_CPUS:-2.0}"
+          memory: "${ENRICHMENT_MEMORY:-2G}"
+
+  # ---------------------------------------------------------------------------
   # SpiderFoot Agents Service (AI analysis agents)
   # ---------------------------------------------------------------------------
   # Hosts AI-powered analysis agents that process scan events:
