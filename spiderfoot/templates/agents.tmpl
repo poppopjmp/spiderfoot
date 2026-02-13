@@ -1,0 +1,300 @@
+<%include file="HEADER.tmpl"/>
+
+<h2><i class="glyphicon glyphicon-cog"></i>&nbsp;AI Agents Dashboard</h2>
+
+<div style="padding-top: 10px">
+  <div class="row">
+    <div class="col-sm-12">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h3 class="panel-title">
+            <span id="agents-svc-status" class="service-status offline"></span>
+            Agent Orchestrator
+            <button id="btn-refresh" class="btn btn-xs btn-default pull-right" type="button">
+              <i class="glyphicon glyphicon-refresh"></i> Refresh
+            </button>
+          </h3>
+        </div>
+        <div class="panel-body">
+          <p id="agents-svc-text" class="text-muted">Checking service...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row" id="agents-grid">
+    <!-- Recon Agent -->
+    <div class="col-sm-4">
+      <div class="panel panel-default sf-service-card">
+        <div class="panel-heading">
+          <h3 class="panel-title">
+            <i class="glyphicon glyphicon-search"></i>&nbsp;Recon Agent
+          </h3>
+        </div>
+        <div class="panel-body">
+          <p>Passive reconnaissance — OSINT data gathering, domain intel, network mapping.</p>
+          <table class="table table-condensed" style="font-size: 12px;">
+            <tr><td><strong>Status</strong></td><td><span class="agent-status" data-agent="recon">—</span></td></tr>
+            <tr><td><strong>Tasks</strong></td><td><span class="agent-tasks" data-agent="recon">0</span></td></tr>
+            <tr><td><strong>Model</strong></td><td><span class="agent-model" data-agent="recon">—</span></td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vuln Agent -->
+    <div class="col-sm-4">
+      <div class="panel panel-default sf-service-card">
+        <div class="panel-heading">
+          <h3 class="panel-title">
+            <i class="glyphicon glyphicon-alert"></i>&nbsp;Vulnerability Agent
+          </h3>
+        </div>
+        <div class="panel-body">
+          <p>CVE analysis, exploit assessment, risk scoring, patch prioritization.</p>
+          <table class="table table-condensed" style="font-size: 12px;">
+            <tr><td><strong>Status</strong></td><td><span class="agent-status" data-agent="vuln">—</span></td></tr>
+            <tr><td><strong>Tasks</strong></td><td><span class="agent-tasks" data-agent="vuln">0</span></td></tr>
+            <tr><td><strong>Model</strong></td><td><span class="agent-model" data-agent="vuln">—</span></td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Threat Intel Agent -->
+    <div class="col-sm-4">
+      <div class="panel panel-default sf-service-card">
+        <div class="panel-heading">
+          <h3 class="panel-title">
+            <i class="glyphicon glyphicon-eye-open"></i>&nbsp;Threat Intel Agent
+          </h3>
+        </div>
+        <div class="panel-body">
+          <p>IOC correlation, threat context enrichment, campaign attribution.</p>
+          <table class="table table-condensed" style="font-size: 12px;">
+            <tr><td><strong>Status</strong></td><td><span class="agent-status" data-agent="threat_intel">—</span></td></tr>
+            <tr><td><strong>Tasks</strong></td><td><span class="agent-tasks" data-agent="threat_intel">0</span></td></tr>
+            <tr><td><strong>Model</strong></td><td><span class="agent-model" data-agent="threat_intel">—</span></td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Reporting Agent -->
+    <div class="col-sm-4">
+      <div class="panel panel-default sf-service-card">
+        <div class="panel-heading">
+          <h3 class="panel-title">
+            <i class="glyphicon glyphicon-file"></i>&nbsp;Reporting Agent
+          </h3>
+        </div>
+        <div class="panel-body">
+          <p>Automated report generation, finding summarization, executive briefs.</p>
+          <table class="table table-condensed" style="font-size: 12px;">
+            <tr><td><strong>Status</strong></td><td><span class="agent-status" data-agent="reporting">—</span></td></tr>
+            <tr><td><strong>Tasks</strong></td><td><span class="agent-tasks" data-agent="reporting">0</span></td></tr>
+            <tr><td><strong>Model</strong></td><td><span class="agent-model" data-agent="reporting">—</span></td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Correlation Agent -->
+    <div class="col-sm-4">
+      <div class="panel panel-default sf-service-card">
+        <div class="panel-heading">
+          <h3 class="panel-title">
+            <i class="glyphicon glyphicon-transfer"></i>&nbsp;Correlation Agent
+          </h3>
+        </div>
+        <div class="panel-body">
+          <p>Cross-source correlation, pattern detection, anomaly identification.</p>
+          <table class="table table-condensed" style="font-size: 12px;">
+            <tr><td><strong>Status</strong></td><td><span class="agent-status" data-agent="correlation">—</span></td></tr>
+            <tr><td><strong>Tasks</strong></td><td><span class="agent-tasks" data-agent="correlation">0</span></td></tr>
+            <tr><td><strong>Model</strong></td><td><span class="agent-model" data-agent="correlation">—</span></td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Triage Agent -->
+    <div class="col-sm-4">
+      <div class="panel panel-default sf-service-card">
+        <div class="panel-heading">
+          <h3 class="panel-title">
+            <i class="glyphicon glyphicon-sort-by-attributes-alt"></i>&nbsp;Triage Agent
+          </h3>
+        </div>
+        <div class="panel-body">
+          <p>Priority assessment, severity classification, response recommendations.</p>
+          <table class="table table-condensed" style="font-size: 12px;">
+            <tr><td><strong>Status</strong></td><td><span class="agent-status" data-agent="triage">—</span></td></tr>
+            <tr><td><strong>Tasks</strong></td><td><span class="agent-tasks" data-agent="triage">0</span></td></tr>
+            <tr><td><strong>Model</strong></td><td><span class="agent-model" data-agent="triage">—</span></td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Agent Activity Log -->
+  <div class="row">
+    <div class="col-sm-12">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h3 class="panel-title"><i class="glyphicon glyphicon-list-alt"></i>&nbsp;Recent Agent Activity</h3>
+        </div>
+        <div class="panel-body">
+          <table id="activity-table" class="table table-striped table-condensed">
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Agent</th>
+                <th>Task</th>
+                <th>Status</th>
+                <th>Duration</th>
+              </tr>
+            </thead>
+            <tbody id="activity-tbody">
+              <tr><td colspan="5" class="text-muted text-center">No recent activity</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LLM Configuration -->
+  <div class="row">
+    <div class="col-sm-6">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h3 class="panel-title"><i class="glyphicon glyphicon-wrench"></i>&nbsp;LLM Configuration</h3>
+        </div>
+        <div class="panel-body">
+          <table class="table table-condensed" style="font-size: 12px;">
+            <tr><td><strong>LiteLLM Proxy</strong></td><td><span id="litellm-status">Checking...</span></td></tr>
+            <tr><td><strong>Default Model</strong></td><td><span id="litellm-model">—</span></td></tr>
+            <tr><td><strong>Available Models</strong></td><td><span id="litellm-models-count">—</span></td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h3 class="panel-title"><i class="glyphicon glyphicon-stats"></i>&nbsp;Usage Statistics</h3>
+        </div>
+        <div class="panel-body">
+          <table class="table table-condensed" style="font-size: 12px;">
+            <tr><td><strong>Total Tasks</strong></td><td><span id="stats-total">—</span></td></tr>
+            <tr><td><strong>Success Rate</strong></td><td><span id="stats-success">—</span></td></tr>
+            <tr><td><strong>Avg Duration</strong></td><td><span id="stats-duration">—</span></td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    var agents = ['recon', 'vuln', 'threat_intel', 'reporting', 'correlation', 'triage'];
+
+    function refreshStatus() {
+        // Check orchestrator health
+        $.ajax({
+            url: '/agents/health',
+            type: 'GET',
+            timeout: 5000,
+            success: function(data) {
+                $('#agents-svc-status').removeClass('offline').addClass('online');
+                $('#agents-svc-text').text('Online — ' + (data.agent_count || 6) + ' agents registered')
+                    .removeClass('text-muted text-danger').addClass('text-success');
+
+                // Update individual agents
+                if (data.agents) {
+                    for (var name in data.agents) {
+                        var a = data.agents[name];
+                        var $status = $('.agent-status[data-agent="' + name + '"]');
+                        var $tasks = $('.agent-tasks[data-agent="' + name + '"]');
+                        var $model = $('.agent-model[data-agent="' + name + '"]');
+
+                        $status.html(
+                            a.status === 'ready'
+                                ? '<span class="label label-success">Ready</span>'
+                                : '<span class="label label-warning">' + (a.status || 'Unknown') + '</span>'
+                        );
+                        $tasks.text(a.tasks_completed || 0);
+                        $model.text(a.model || '—');
+                    }
+                }
+            },
+            error: function() {
+                $('#agents-svc-status').removeClass('online').addClass('offline');
+                $('#agents-svc-text').text('Offline or unreachable')
+                    .removeClass('text-muted text-success').addClass('text-danger');
+
+                agents.forEach(function(name) {
+                    $('.agent-status[data-agent="' + name + '"]').html(
+                        '<span class="label label-default">Offline</span>'
+                    );
+                });
+            }
+        });
+
+        // Check LiteLLM
+        $.ajax({
+            url: '/litellm/health',
+            type: 'GET',
+            timeout: 5000,
+            success: function(data) {
+                $('#litellm-status').html('<span class="label label-success">Online</span>');
+                $('#litellm-model').text(data.model || 'gpt-4o-mini');
+                $('#litellm-models-count').text(data.models_count || '—');
+            },
+            error: function() {
+                $('#litellm-status').html('<span class="label label-danger">Offline</span>');
+            }
+        });
+
+        // Load activity log
+        $.ajax({
+            url: '/agents/activity',
+            type: 'GET',
+            dataType: 'json',
+            timeout: 5000,
+            success: function(data) {
+                if (data && data.activities && data.activities.length > 0) {
+                    var $tbody = $('#activity-tbody');
+                    $tbody.empty();
+                    data.activities.slice(0, 20).forEach(function(a) {
+                        $tbody.append(
+                            '<tr>' +
+                            '<td>' + sf.escapeHtml(a.time || '') + '</td>' +
+                            '<td>' + sf.escapeHtml(a.agent || '') + '</td>' +
+                            '<td>' + sf.escapeHtml(a.task || '') + '</td>' +
+                            '<td>' + (a.status === 'success'
+                                ? '<span class="label label-success">Success</span>'
+                                : '<span class="label label-danger">' + sf.escapeHtml(a.status || '') + '</span>') +
+                            '</td>' +
+                            '<td>' + sf.escapeHtml(a.duration || '') + '</td>' +
+                            '</tr>'
+                        );
+                    });
+                }
+            }
+        });
+    }
+
+    refreshStatus();
+    $('#btn-refresh').click(refreshStatus);
+    // Auto-refresh every 30s
+    setInterval(refreshStatus, 30000);
+});
+</script>
+
+<%include file="FOOTER.tmpl"/>

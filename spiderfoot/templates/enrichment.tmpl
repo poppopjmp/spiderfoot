@@ -1,0 +1,417 @@
+<%include file="HEADER.tmpl"/>
+
+<h2><i class="glyphicon glyphicon-upload"></i>&nbsp;Document Upload & Enrichment</h2>
+
+<div style="padding-top: 10px">
+  <div class="row">
+    <div class="col-sm-8">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h3 class="panel-title"><i class="glyphicon glyphicon-cloud-upload"></i>&nbsp;Upload Documents</h3>
+        </div>
+        <div class="panel-body">
+          <p>Upload documents to extract entities, IOCs, and intelligence. Supported formats:
+            <strong>PDF, DOCX, XLSX, HTML, RTF, TXT, CSV, JSON, XML, MD</strong>
+          </p>
+          <p class="text-warning">
+            <i class="glyphicon glyphicon-hand-up"></i>&nbsp;
+            <strong>Interactive module:</strong> When included in a scan, this module requires
+            you to upload files for each scan run. Documents are processed through the enrichment
+            pipeline and extracted entities feed into other scan modules.
+          </p>
+
+          <div id="upload-zone" class="sf-upload-zone">
+            <i class="glyphicon glyphicon-cloud-upload"></i><br>
+            <h4>Drag &amp; drop files here</h4>
+            <p class="text-muted">or click to browse</p>
+            <input type="file" id="file-input" multiple style="display: none"
+                   accept=".pdf,.docx,.xlsx,.html,.htm,.rtf,.txt,.csv,.json,.xml,.md">
+          </div>
+
+          <ul id="file-list" class="sf-upload-file-list"></ul>
+
+          <div id="upload-actions" style="display: none; margin-top: 15px;">
+            <div class="form-group">
+              <label for="scan-id-link">Link to Scan (optional)</label>
+              <select id="scan-id-link" class="form-control">
+                <option value="">-- Standalone upload (no scan) --</option>
+              </select>
+            </div>
+            <button id="btn-upload" class="btn btn-primary btn-lg" type="button">
+              <i class="glyphicon glyphicon-upload"></i>&nbsp;Process Documents
+            </button>
+            <button id="btn-clear" class="btn btn-default" type="button">
+              <i class="glyphicon glyphicon-remove"></i>&nbsp;Clear All
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upload progress -->
+      <div id="upload-progress" style="display: none">
+        <div class="panel panel-info">
+          <div class="panel-heading">
+            <h3 class="panel-title"><i class="glyphicon glyphicon-refresh sf-spin"></i>&nbsp;Processing...</h3>
+          </div>
+          <div class="panel-body">
+            <div class="progress">
+              <div id="progress-bar" class="progress-bar progress-bar-striped active" style="width: 0%">
+                <span id="progress-text">0%</span>
+              </div>
+            </div>
+            <div id="progress-log" style="max-height: 200px; overflow-y: auto; font-family: monospace; font-size: 12px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results -->
+      <div id="upload-results" style="display: none">
+        <div class="panel panel-success">
+          <div class="panel-heading">
+            <h3 class="panel-title"><i class="glyphicon glyphicon-ok-circle"></i>&nbsp;Enrichment Results</h3>
+          </div>
+          <div class="panel-body">
+            <div id="results-summary"></div>
+            <table id="results-table" class="table table-striped table-condensed" style="display: none">
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>Value</th>
+                  <th>Source</th>
+                </tr>
+              </thead>
+              <tbody id="results-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-sm-4">
+      <div class="panel panel-default sf-service-card">
+        <div class="panel-heading">
+          <h3 class="panel-title">
+            <span id="enrichment-status" class="service-status offline"></span>
+            Enrichment Service
+          </h3>
+        </div>
+        <div class="panel-body">
+          <p id="enrichment-health-text" class="text-muted">Checking...</p>
+        </div>
+      </div>
+
+      <div class="panel panel-default sf-service-card">
+        <div class="panel-heading">
+          <h3 class="panel-title">
+            <span id="agents-status" class="service-status offline"></span>
+            AI Agents
+          </h3>
+        </div>
+        <div class="panel-body">
+          <p id="agents-health-text" class="text-muted">Checking...</p>
+        </div>
+      </div>
+
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h3 class="panel-title"><i class="glyphicon glyphicon-info-sign"></i>&nbsp;How It Works</h3>
+        </div>
+        <div class="panel-body" style="font-size: 12px;">
+          <ol>
+            <li><strong>Upload</strong> &mdash; Drop files or click to browse</li>
+            <li><strong>Convert</strong> &mdash; Documents converted to text (PDF, DOCX, etc.)</li>
+            <li><strong>Extract</strong> &mdash; IPs, domains, emails, hashes, CVEs extracted</li>
+            <li><strong>Analyze</strong> &mdash; AI agents provide deeper intelligence</li>
+            <li><strong>Link</strong> &mdash; Optionally link to a scan for cross-referencing</li>
+          </ol>
+          <hr>
+          <p><strong>Entity types extracted:</strong></p>
+          <ul>
+            <li>IP addresses (v4/v6)</li>
+            <li>Domain names &amp; hostnames</li>
+            <li>Email addresses</li>
+            <li>URLs</li>
+            <li>File hashes (MD5, SHA1, SHA256)</li>
+            <li>CVE identifiers</li>
+            <li>Bitcoin &amp; Ethereum addresses</li>
+            <li>Phone numbers</li>
+            <li>AWS access keys</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h3 class="panel-title"><i class="glyphicon glyphicon-list-alt"></i>&nbsp;Recent Uploads</h3>
+        </div>
+        <div class="panel-body">
+          <div id="recent-uploads">
+            <p class="text-muted">No recent uploads.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.sf-spin {
+  animation: sf-spin 1s linear infinite;
+}
+@keyframes sf-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+</style>
+
+<script>
+$(document).ready(function() {
+    var files = [];
+    var uploadZone = document.getElementById('upload-zone');
+    var fileInput = document.getElementById('file-input');
+    var maxSizeMB = 100;
+
+    // Drag and drop handlers
+    uploadZone.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $(this).addClass('dragover');
+    });
+
+    uploadZone.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $(this).removeClass('dragover');
+    });
+
+    uploadZone.addEventListener('drop', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $(this).removeClass('dragover');
+        handleFiles(e.dataTransfer.files);
+    });
+
+    uploadZone.addEventListener('click', function() {
+        fileInput.click();
+    });
+
+    fileInput.addEventListener('change', function() {
+        handleFiles(this.files);
+    });
+
+    function handleFiles(newFiles) {
+        for (var i = 0; i < newFiles.length; i++) {
+            var f = newFiles[i];
+            if (f.size > maxSizeMB * 1024 * 1024) {
+                alertify.error('File ' + f.name + ' exceeds ' + maxSizeMB + 'MB limit');
+                continue;
+            }
+            files.push(f);
+        }
+        renderFileList();
+    }
+
+    function renderFileList() {
+        var $list = $('#file-list');
+        $list.empty();
+        files.forEach(function(f, idx) {
+            var sizeStr = (f.size / 1024).toFixed(1) + ' KB';
+            if (f.size > 1024 * 1024) sizeStr = (f.size / (1024 * 1024)).toFixed(1) + ' MB';
+            $list.append(
+                '<li>' +
+                '<span><i class="glyphicon glyphicon-file"></i>&nbsp;' + sf.escapeHtml(f.name) + '</span>' +
+                '<span class="file-size">' + sizeStr +
+                '&nbsp;&nbsp;<button class="btn-remove" data-idx="' + idx + '">&times;</button></span>' +
+                '</li>'
+            );
+        });
+        $('#upload-actions').toggle(files.length > 0);
+    }
+
+    $(document).on('click', '.btn-remove', function() {
+        var idx = $(this).data('idx');
+        files.splice(idx, 1);
+        renderFileList();
+    });
+
+    $('#btn-clear').click(function() {
+        files = [];
+        renderFileList();
+    });
+
+    // Upload processing
+    $('#btn-upload').click(function() {
+        if (files.length === 0) return;
+        processFiles(files);
+    });
+
+    function processFiles(fileList) {
+        $('#upload-progress').show();
+        $('#upload-results').hide();
+        var results = [];
+        var processed = 0;
+        var total = fileList.length;
+
+        function processNext() {
+            if (processed >= total) {
+                showResults(results);
+                return;
+            }
+
+            var f = fileList[processed];
+            updateProgress(processed, total, 'Processing ' + f.name + '...');
+
+            var formData = new FormData();
+            formData.append('file', f);
+
+            var scanId = $('#scan-id-link').val();
+            if (scanId) formData.append('scan_id', scanId);
+
+            $.ajax({
+                url: docroot + '/upload_document',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                timeout: 120000,
+                success: function(data) {
+                    logProgress('✓ ' + f.name + ' — processed');
+                    results.push({ file: f.name, data: data, status: 'ok' });
+                    processed++;
+                    updateProgress(processed, total);
+                    processNext();
+                },
+                error: function(xhr) {
+                    logProgress('✗ ' + f.name + ' — ' + (xhr.responseText || 'error'));
+                    results.push({ file: f.name, error: xhr.responseText, status: 'error' });
+                    processed++;
+                    updateProgress(processed, total);
+                    processNext();
+                }
+            });
+        }
+
+        processNext();
+    }
+
+    function updateProgress(current, total, msg) {
+        var pct = Math.round((current / total) * 100);
+        $('#progress-bar').css('width', pct + '%');
+        $('#progress-text').text(pct + '%');
+        if (msg) logProgress(msg);
+    }
+
+    function logProgress(msg) {
+        $('#progress-log').append('<div>' + msg + '</div>');
+        $('#progress-log').scrollTop($('#progress-log')[0].scrollHeight);
+    }
+
+    function showResults(results) {
+        $('#upload-progress').hide();
+        $('#upload-results').show();
+
+        var totalEntities = 0;
+        var successCount = results.filter(function(r) { return r.status === 'ok'; }).length;
+
+        $('#results-summary').html(
+            '<p><strong>' + successCount + '</strong> of <strong>' + results.length +
+            '</strong> files processed successfully.</p>'
+        );
+
+        var $tbody = $('#results-tbody');
+        $tbody.empty();
+
+        results.forEach(function(r) {
+            if (r.data && r.data.entities) {
+                var entities = r.data.entities;
+                for (var type in entities) {
+                    var values = entities[type];
+                    if (Array.isArray(values)) {
+                        values.forEach(function(v) {
+                            $tbody.append(
+                                '<tr><td>' + sf.escapeHtml(type) + '</td>' +
+                                '<td><code>' + sf.escapeHtml(String(v)) + '</code></td>' +
+                                '<td>' + sf.escapeHtml(r.file) + '</td></tr>'
+                            );
+                            totalEntities++;
+                        });
+                    }
+                }
+            }
+        });
+
+        if (totalEntities > 0) {
+            $('#results-table').show();
+            $('#results-summary').append('<p>Found <strong>' + totalEntities + '</strong> entities.</p>');
+        }
+
+        // Reset
+        files = [];
+        renderFileList();
+        $('#progress-bar').css('width', '0%');
+        $('#progress-text').text('0%');
+        $('#progress-log').empty();
+    }
+
+    // Check service health
+    function checkHealth(url, statusEl, textEl) {
+        $.ajax({
+            url: url,
+            type: 'GET',
+            timeout: 5000,
+            success: function() {
+                $(statusEl).removeClass('offline').addClass('online');
+                $(textEl).text('Online').removeClass('text-muted text-danger').addClass('text-success');
+            },
+            error: function() {
+                $(statusEl).removeClass('online').addClass('offline');
+                $(textEl).text('Offline or unreachable').removeClass('text-muted text-success').addClass('text-danger');
+            }
+        });
+    }
+
+    checkHealth('/enrichment/health', '#enrichment-status', '#enrichment-health-text');
+    checkHealth('/agents/health', '#agents-status', '#agents-health-text');
+
+    // Load available scans for linking
+    $.ajax({
+        url: docroot + '/scanlist',
+        type: 'GET',
+        dataType: 'json',
+        success: function(data) {
+            if (data && data.length > 0) {
+                data.forEach(function(scan) {
+                    var name = scan[1] || scan[0];
+                    var id = scan[0];
+                    $('#scan-id-link').append(
+                        '<option value="' + id + '">' + sf.escapeHtml(name) + '</option>'
+                    );
+                });
+            }
+        }
+    });
+
+    // Load recent uploads
+    $.ajax({
+        url: '/input/submissions',
+        type: 'GET',
+        dataType: 'json',
+        timeout: 5000,
+        success: function(data) {
+            if (data && data.submissions && data.submissions.length > 0) {
+                var html = '<ul class="list-unstyled" style="font-size: 12px;">';
+                data.submissions.slice(0, 5).forEach(function(s) {
+                    html += '<li><i class="glyphicon glyphicon-file"></i>&nbsp;' +
+                            sf.escapeHtml(s.filename || s.id || 'Unknown') +
+                            ' <span class="text-muted">(' + (s.status || 'processed') + ')</span></li>';
+                });
+                html += '</ul>';
+                $('#recent-uploads').html(html);
+            }
+        }
+    });
+});
+</script>
+
+<%include file="FOOTER.tmpl"/>
