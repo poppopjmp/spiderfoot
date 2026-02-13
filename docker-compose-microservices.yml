@@ -503,6 +503,62 @@ services:
           memory: "${PROMETHEUS_MEMORY:-512M}"
 
   # ---------------------------------------------------------------------------
+  # SpiderFoot Agents Service (AI analysis agents)
+  # ---------------------------------------------------------------------------
+  # Hosts AI-powered analysis agents that process scan events:
+  #   - FindingValidator: Validates high-risk findings via LLM
+  #   - CredentialAnalyzer: Assesses exposed credential risk
+  #   - TextSummarizer: Summarizes large content for intelligence
+  #   - ReportGenerator: Generates comprehensive scan reports
+  #   - DocumentAnalyzer: Analyzes user-uploaded documents
+  #   - ThreatIntelAnalyzer: Cross-references findings with threat intel
+  # ---------------------------------------------------------------------------
+
+  agents:
+    <<: *sf-build
+    image: spiderfoot-micro:latest
+    container_name: sf-agents
+    restart: unless-stopped
+    networks:
+      - sf-frontend
+      - sf-backend
+    ports:
+      - "${SF_AGENTS_PORT:-8100}:8100"
+    environment:
+      SF_SERVICE: agents
+      SF_AGENTS_HOST: "0.0.0.0"
+      SF_AGENTS_PORT: "8100"
+      SF_AGENTS_WORKERS: ${SF_AGENTS_WORKERS:-1}
+      SF_LOG_LEVEL: ${SF_LOG_LEVEL:-INFO}
+      SF_REDIS_URL: redis://redis:6379/0
+      # LLM via LiteLLM proxy
+      SF_LLM_PROVIDER: ${SF_LLM_PROVIDER:-mock}
+      SF_LLM_API_BASE: ${SF_LLM_API_BASE:-http://litellm:4000}
+      SF_LLM_API_KEY: ${SF_LLM_API_KEY:-sk-sf-litellm-dev-key}
+      SF_LLM_MODEL: ${SF_LLM_MODEL:-gpt-4o-mini}
+      # OTEL tracing
+      SF_OTEL_ENDPOINT: "http://vector:4317"
+      SF_SERVICE_NAME: "spiderfoot-agents"
+    entrypoint: ["/usr/local/bin/docker-entrypoint.sh"]
+    command: ["python", "-m", "spiderfoot.agents.service"]
+    depends_on:
+      redis:
+        condition: service_healthy
+      litellm:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8100/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: "${AGENTS_CPUS:-2.0}"
+          memory: "${AGENTS_MEMORY:-2G}"
+
+  # ---------------------------------------------------------------------------
   # LiteLLM Proxy — Unified LLM Gateway
   # ---------------------------------------------------------------------------
   # Routes all LLM requests through a single API endpoint with:
