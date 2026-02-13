@@ -440,8 +440,8 @@ services:
     environment:
       GF_SECURITY_ADMIN_USER: ${GF_SECURITY_ADMIN_USER:-admin}
       GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD:-spiderfoot}
-      GF_SERVER_ROOT_URL: ${GF_SERVER_ROOT_URL:-http://localhost:3000}
-      GF_SERVER_SERVE_FROM_SUB_PATH: "false"
+      GF_SERVER_ROOT_URL: ${GF_SERVER_ROOT_URL:-http://localhost/grafana/}
+      GF_SERVER_SERVE_FROM_SUB_PATH: "true"
       GF_AUTH_ANONYMOUS_ENABLED: "true"
       GF_AUTH_ANONYMOUS_ORG_ROLE: "Viewer"
       GF_USERS_ALLOW_SIGN_UP: "false"
@@ -458,7 +458,7 @@ services:
       prometheus:
         condition: service_started
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:3000/api/health || exit 1"]
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3000/grafana/api/health || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 5
@@ -492,8 +492,9 @@ services:
       - '--storage.tsdb.path=/prometheus'
       - '--storage.tsdb.retention.time=30d'
       - '--web.enable-lifecycle'
+      - '--web.external-url=/prometheus/'
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:9090/-/healthy || exit 1"]
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:9090/prometheus/-/healthy || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 5
@@ -707,7 +708,7 @@ services:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:4000/health || exit 1"]
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:4000/health/liveliness')\" || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 5
@@ -737,6 +738,7 @@ services:
       - "${SF_JAEGER_UI_PORT:-16686}:16686"    # Jaeger UI
     environment:
       COLLECTOR_OTLP_ENABLED: "true"
+      QUERY_BASE_PATH: "/jaeger"
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://localhost:13133/status || exit 1"]
       interval: 15s
