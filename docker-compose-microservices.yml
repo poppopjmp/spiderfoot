@@ -173,6 +173,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-spiderfoot}
       POSTGRES_USER: ${POSTGRES_USER:-spiderfoot}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+    command: ["postgres", "-c", "max_connections=500"]
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -301,6 +302,8 @@ services:
     restart: unless-stopped
     networks:
       - sf-frontend
+    ports:
+      - "3000:80"
     labels:
       - "traefik.enable=true"
       # Catch-all for the SPA (lowest priority — API routes take precedence)
@@ -318,7 +321,7 @@ services:
       api:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost/healthz"]
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/healthz"]
       interval: 15s
       timeout: 5s
       retries: 3
@@ -330,6 +333,33 @@ services:
           memory: "${FRONTEND_MEMORY:-128M}"
 
   # ---------------------------------------------------------------------------
+  # Docker Socket Proxy — Secure Docker API access for Traefik
+  # ---------------------------------------------------------------------------
+  # Required on Docker Desktop (Windows/macOS) where the Docker socket may
+  # not work directly.  Also improves security by limiting API access.
+  # ---------------------------------------------------------------------------
+
+  docker-socket-proxy:
+    image: tecnativa/docker-socket-proxy:latest
+    container_name: sf-docker-proxy
+    restart: unless-stopped
+    networks:
+      - sf-backend
+    environment:
+      CONTAINERS: 1
+      NETWORKS: 1
+      SERVICES: 1
+      TASKS: 1
+      POST: 0
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: "64M"
+
+  # ---------------------------------------------------------------------------
   # Traefik Reverse Proxy / API Gateway  (replaces Nginx since v5.3.17)
   # ---------------------------------------------------------------------------
   # Routing is driven by Docker labels on each service — no separate config
@@ -338,12 +368,16 @@ services:
   # ---------------------------------------------------------------------------
 
   traefik:
-    image: traefik:v3.3
+    image: traefik:v3
     container_name: sf-traefik
     restart: unless-stopped
     networks:
       - sf-frontend
       - sf-backend
+    environment:
+      # Docker Engine v29+ requires API v1.44+; Traefik defaults to v1.24
+      DOCKER_API_VERSION: "1.44"
+      DOCKER_HOST: "tcp://docker-socket-proxy:2375"
     ports:
       - "${SF_HTTP_PORT:-80}:80"
       - "${SF_HTTPS_PORT:-443}:443"
@@ -351,11 +385,12 @@ services:
       - ./infra/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
       - ./infra/traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
       - ./infra/traefik/certs:/certs:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
       - traefik-logs:/var/log/traefik
       # Uncomment for Let's Encrypt (and remove certs volume above):
       # - traefik-acme:/letsencrypt
     depends_on:
+      docker-socket-proxy:
+        condition: service_started
       api:
         condition: service_healthy
       frontend:

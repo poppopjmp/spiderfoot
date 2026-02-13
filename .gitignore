@@ -8,6 +8,7 @@
 /spiderfoot.db*
 passwd
 spiderfoot.crt
+.env
 spiderfoot.key
 
 frontend/node_modules

@@ -35,7 +35,9 @@ api:
 # --- Docker provider ---
 providers:
   docker:
-    endpoint: "unix:///var/run/docker.sock"
+    # Use Docker socket proxy for cross-platform compatibility
+    # (required on Docker Desktop for Windows/macOS)
+    endpoint: "tcp://docker-socket-proxy:2375"
     exposedByDefault: false          # Only route containers with traefik.enable=true
     network: "sf-frontend"           # Default Docker network for routing
   file:
