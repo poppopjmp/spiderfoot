@@ -111,7 +111,7 @@ python sf.py -s crypto_addresses.txt -t FILE -m sfp_blockchain_analytics,sfp_adv
 ### Recommended Module Combinations
 ```bash
 # Complete cryptocurrency investigation
--m sfp_blockchain_analytics,sfp_advanced_correlation,sfp_ai_summary
+-m sfp_blockchain_analytics,sfp_advanced_correlation
 
 # Performance-optimized investigation
 -m sfp_blockchain_analytics,sfp_performance_optimizer

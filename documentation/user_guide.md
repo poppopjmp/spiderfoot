@@ -74,7 +74,6 @@ SpiderFoot v5.3.3 includes 277 modules organized into enhanced categories:
 - **Blockchain Analytics**: sfp_blockchain_analytics (Bitcoin, Ethereum, Litecoin analysis)
 - **Advanced Correlation**: sfp_advanced_correlation (entity resolution, pattern detection)
 - **Performance Optimization**: sfp_performance_optimizer (caching, rate limiting)
-- **AI Analysis**: sfp_ai_summary (threat intelligence summarization)
 
 **Enhanced CLI Patterns:**
 ```bash
@@ -87,14 +86,14 @@ python sf.py -s @username -t SOCIAL_MEDIA -m sfp_tiktok_osint,sfp_advanced_corre
 # Cryptocurrency investigation
 python sf.py -s 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa -t BITCOIN_ADDRESS -m sfp_blockchain_analytics,sfp_advanced_correlation
 
-# Network block analysis with AI summary
-python sf.py -s 192.168.1.0/24 -t NETBLOCK -m sfp_portscan_tcp,sfp_banner,sfp_ssl,sfp_ai_summary
+# Network block analysis
+python sf.py -s 192.168.1.0/24 -t NETBLOCK -m sfp_portscan_tcp,sfp_banner,sfp_ssl
 
 # Email investigation with enhanced correlation
 python sf.py -s user@example.com -t EMAILADDR -m sfp_hunter,sfp_haveibeen,sfp_emailrep,sfp_advanced_correlation
 
 # Multi-target investigation with performance optimization
-python sf.py -s multiple_targets.txt -t FILE -m sfp_dnsresolve,sfp_ssl,sfp_blockchain_analytics,sfp_performance_optimizer,sfp_ai_summary
+python sf.py -s multiple_targets.txt -t FILE -m sfp_dnsresolve,sfp_ssl,sfp_blockchain_analytics,sfp_performance_optimizer
 ```
 
 ---

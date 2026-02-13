@@ -53,7 +53,6 @@ Modules are plugins that collect, enrich, or analyze data from various sources. 
 - **sfp_blockchain**: General blockchain analysis
 
 ### AI & Advanced Analytics
-- **sfp_ai_summary**: AI-powered threat intelligence summarization
 - **sfp_advanced_correlation**: Cross-platform entity resolution and pattern analysis
 - **sfp_performance_optimizer**: Intelligent caching and performance optimization
 
@@ -71,7 +70,6 @@ Below is a complete list of all documented modules. Click a module name to view 
 | Module | Description |
 |--------|-------------|
 | [sfp_advanced_correlation](modules/sfp_advanced_correlation.md) | Advanced data correlation engine with cross-platform identity resolution, temporal analysis, and geospatial clustering. |
-| [sfp_ai_summary](modules/sfp_ai_summary.md) | AI-powered threat intelligence summarization using OpenAI's GPT models. |
 | [sfp_alienvault](modules/sfp_alienvault.md) | Queries AlienVault OTX for threat intelligence, indicators of compromise, and reputation data. |
 | [sfp_arin](modules/sfp_arin.md) | Queries ARIN for network, ASN, and contact information. |
 | [sfp_blockchain_analytics](modules/sfp_blockchain_analytics.md) | Advanced blockchain and cryptocurrency investigation with multi-chain support and risk assessment. |
