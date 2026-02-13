@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
 import {
@@ -29,33 +29,38 @@ export default function ScansPage() {
     title: string; message: string; action: () => void; danger?: boolean;
   } | null>(null);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['scans', { page, page_size: PAGE_SIZE, sort_by: 'created', sort_order: 'desc' }],
-    queryFn: () => scanApi.list({ page, page_size: PAGE_SIZE, sort_by: 'created', sort_order: 'desc' }),
+  /* Server-side search when query is present */
+  const { data: searchData, isLoading: searchLoading } = useQuery({
+    queryKey: ['scans-search', search, statusFilter],
+    queryFn: () => scanApi.search({
+      target: search || undefined,
+      status: statusFilter || undefined,
+      sort_by: 'created',
+      sort_order: 'desc',
+      limit: 200,
+    }),
+    enabled: !!(search || statusFilter),
     refetchInterval: 10_000,
   });
 
-  const scans = data?.data ?? [];
-  const pagination = data?.pagination;
-  const totalPages = pagination?.total_pages ?? 1;
+  /* Normal paginated list when no filters */
+  const { data: listData, isLoading: listLoading } = useQuery({
+    queryKey: ['scans', { page, page_size: PAGE_SIZE, sort_by: 'created', sort_order: 'desc' }],
+    queryFn: () => scanApi.list({ page, page_size: PAGE_SIZE, sort_by: 'created', sort_order: 'desc' }),
+    enabled: !search && !statusFilter,
+    refetchInterval: 10_000,
+  });
 
-  /* Filtered scans */
-  const filteredScans = useMemo(() => {
-    let list = scans;
-    if (search) {
-      const q = search.toLowerCase();
-      list = list.filter(
-        (s: Scan) =>
-          s.name?.toLowerCase().includes(q) ||
-          s.target?.toLowerCase().includes(q) ||
-          s.scan_id?.toLowerCase().includes(q),
-      );
-    }
-    if (statusFilter) {
-      list = list.filter((s: Scan) => s.status?.toUpperCase() === statusFilter);
-    }
-    return list;
-  }, [scans, search, statusFilter]);
+  const isSearchMode = !!(search || statusFilter);
+  const isLoading = isSearchMode ? searchLoading : listLoading;
+
+  const scans = isSearchMode ? (searchData?.scans ?? []) : (listData?.data ?? []);
+  const pagination = isSearchMode ? undefined : listData?.pagination;
+  const totalPages = pagination?.total_pages ?? 1;
+  const totalCount = isSearchMode ? (searchData?.total ?? scans.length) : (pagination?.total ?? 0);
+
+  /* No further client-side filtering needed — server handles it */
+  const filteredScans = scans;
 
   /* Mutations */
   const stopMut = useMutation({
@@ -121,7 +126,7 @@ export default function ScansPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Scans" subtitle={`${pagination?.total ?? 0} scans total`}>
+      <PageHeader title="Scans" subtitle={`${totalCount} scans total`}>
         <Link to="/scans/new" className="btn-primary">
           <PlusCircle className="h-4 w-4" /> New Scan
         </Link>
@@ -208,7 +213,7 @@ export default function ScansPage() {
                 {filteredScans.map((scan: Scan, i: number) => (
                   <tr
                     key={scan.scan_id}
-                    className="table-row animate-fade-in"
+                    className="table-row animate-fade-in group"
                     style={{ animationDelay: `${i * 25}ms` }}
                   >
                     <td className="table-cell">
@@ -303,10 +308,10 @@ export default function ScansPage() {
       </div>
 
       {/* Pagination */}
-      {totalPages > 1 && (
+      {!isSearchMode && totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-dark-500">
-            Page {page} of {totalPages} ({pagination?.total} total)
+            Page {page} of {totalPages} ({totalCount} total)
           </p>
           <div className="flex gap-2">
             <button

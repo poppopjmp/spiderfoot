@@ -252,6 +252,11 @@ export default function SettingsPage() {
                   const optKey = key as string;
                   const shortKey = optKey.includes(':') ? optKey.split(':').slice(1).join(':') : optKey;
 
+                  // Detect value type for appropriate control
+                  const rawVal = val as unknown;
+                  const isBool = rawVal === true || rawVal === false || currentVal === 'true' || currentVal === 'false' || currentVal === 'True' || currentVal === 'False';
+                  const isNumber = !isBool && !isSensitive && /^\d+(\.\d+)?$/.test(String(rawVal ?? ''));
+
                   return (
                     <div key={optKey}>
                       <div className="flex items-center gap-2 mb-1.5">
@@ -273,15 +278,42 @@ export default function SettingsPage() {
                           <span className="text-spider-400 text-[10px]">Modified</span>
                         )}
                       </div>
-                      <input
-                        type={isHidden ? 'password' : 'text'}
-                        className="input-field text-sm font-mono"
-                        value={currentVal}
-                        onChange={(e) => {
-                          setEditedValues((prev) => ({ ...prev, [optKey]: e.target.value }));
-                        }}
-                        placeholder={isSensitive ? 'Enter API key...' : ''}
-                      />
+
+                      {/* Boolean toggle */}
+                      {isBool ? (
+                        <button
+                          onClick={() => {
+                            const boolVal = currentVal === 'true' || currentVal === 'True';
+                            setEditedValues((prev) => ({ ...prev, [optKey]: boolVal ? 'false' : 'true' }));
+                          }}
+                          className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
+                            (currentVal === 'true' || currentVal === 'True') ? 'bg-spider-500' : 'bg-dark-600'
+                          }`}
+                        >
+                          <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform ${
+                            (currentVal === 'true' || currentVal === 'True') ? 'translate-x-6' : 'translate-x-1'
+                          }`} />
+                        </button>
+                      ) : isNumber ? (
+                        <input
+                          type="number"
+                          className="input-field text-sm font-mono w-40"
+                          value={currentVal}
+                          onChange={(e) => {
+                            setEditedValues((prev) => ({ ...prev, [optKey]: e.target.value }));
+                          }}
+                        />
+                      ) : (
+                        <input
+                          type={isHidden ? 'password' : 'text'}
+                          className="input-field text-sm font-mono"
+                          value={currentVal}
+                          onChange={(e) => {
+                            setEditedValues((prev) => ({ ...prev, [optKey]: e.target.value }));
+                          }}
+                          placeholder={isSensitive ? 'Enter API key...' : ''}
+                        />
+                      )}
                     </div>
                   );
                 })}

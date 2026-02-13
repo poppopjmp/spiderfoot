@@ -155,12 +155,12 @@ export default function DashboardPage() {
             </h2>
             <div className="space-y-2">
               {[
-                { to: '/scans/new', icon: PlusCircle, color: 'spider', label: 'New Scan', desc: 'Start a new reconnaissance' },
-                { to: '/modules', icon: Shield, color: 'blue', label: 'Modules', desc: 'Configure data sources' },
-                { to: '/settings', icon: Clock, color: 'purple', label: 'Settings', desc: 'API keys & configuration' },
+                { to: '/scans/new', icon: PlusCircle, iconBg: 'bg-spider-600/10 text-spider-400 group-hover:bg-spider-600/20', label: 'New Scan', desc: 'Start a new reconnaissance' },
+                { to: '/modules', icon: Shield, iconBg: 'bg-blue-600/10 text-blue-400 group-hover:bg-blue-600/20', label: 'Modules', desc: 'Configure data sources' },
+                { to: '/settings', icon: Clock, iconBg: 'bg-purple-600/10 text-purple-400 group-hover:bg-purple-600/20', label: 'Settings', desc: 'API keys & configuration' },
               ].map((a) => (
                 <Link key={a.to} to={a.to} className="flex items-center gap-3 p-3 rounded-lg hover:bg-dark-700/50 transition-colors group">
-                  <div className={`p-2 rounded-lg bg-${a.color}-600/10 text-${a.color}-400 group-hover:bg-${a.color}-600/20 transition-colors`}>
+                  <div className={`p-2 rounded-lg ${a.iconBg} transition-colors`}>
                     <a.icon className="h-4 w-4" />
                   </div>
                   <div>
