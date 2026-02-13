@@ -92,6 +92,144 @@
             display: inline-block;
         }
     </style>
+
+    <!-- Interactive Document Upload Panel (visible when scan includes sfp_doc_upload) -->
+    % if has_interactive:
+    <div id="scan-upload-panel" class="panel panel-warning" style="margin-top: 10px;">
+      <div class="panel-heading" style="cursor: pointer;" onclick="$('#scan-upload-body').toggle();">
+        <h3 class="panel-title">
+          <i class="glyphicon glyphicon-hand-up"></i>&nbsp;Document Upload
+          <small class="text-muted">(Interactive Module)</small>
+          <i class="glyphicon glyphicon-chevron-down pull-right"></i>
+        </h3>
+      </div>
+      <div id="scan-upload-body" class="panel-body" style="display: none;">
+        <p style="font-size: 12px;">
+          This scan includes the <strong>Document Upload</strong> interactive module.
+          Upload files here to feed them into the running scan. Extracted entities
+          (IPs, domains, emails, hashes, CVEs) will appear as scan results.
+        </p>
+        <div id="scan-upload-zone" class="sf-upload-zone" style="padding: 20px; text-align: center;">
+          <i class="glyphicon glyphicon-cloud-upload"></i><br>
+          <p>Drag &amp; drop files or click to browse</p>
+          <input type="file" id="scan-file-input" multiple style="display: none"
+                 accept=".pdf,.docx,.xlsx,.html,.htm,.rtf,.txt,.csv,.json,.xml,.md">
+        </div>
+        <ul id="scan-file-list" class="sf-upload-file-list"></ul>
+        <div id="scan-upload-actions" style="display: none; margin-top: 10px;">
+          <button id="btn-scan-upload" class="btn btn-warning" type="button">
+            <i class="glyphicon glyphicon-upload"></i>&nbsp;Upload to Scan
+          </button>
+          <button id="btn-scan-clear" class="btn btn-default btn-sm" type="button">Clear</button>
+        </div>
+        <div id="scan-upload-progress" style="display: none; margin-top: 10px;">
+          <div class="progress">
+            <div id="scan-progress-bar" class="progress-bar progress-bar-warning progress-bar-striped active" style="width: 0%"></div>
+          </div>
+          <div id="scan-upload-log" style="font-size: 11px; font-family: monospace; max-height: 150px; overflow-y: auto;"></div>
+        </div>
+        <div id="scan-upload-result" style="display: none; margin-top: 10px;"></div>
+      </div>
+    </div>
+
+    <script>
+    $(document).ready(function() {
+        var scanFiles = [];
+        var scanId = '${id}';
+        var zone = document.getElementById('scan-upload-zone');
+        var fileInput = document.getElementById('scan-file-input');
+
+        zone.addEventListener('dragover', function(e) { e.preventDefault(); $(this).addClass('dragover'); });
+        zone.addEventListener('dragleave', function(e) { e.preventDefault(); $(this).removeClass('dragover'); });
+        zone.addEventListener('drop', function(e) {
+            e.preventDefault(); $(this).removeClass('dragover');
+            addScanFiles(e.dataTransfer.files);
+        });
+        zone.addEventListener('click', function() { fileInput.click(); });
+        fileInput.addEventListener('change', function() { addScanFiles(this.files); });
+
+        function addScanFiles(newFiles) {
+            for (var i = 0; i < newFiles.length; i++) {
+                if (newFiles[i].size > 100 * 1024 * 1024) continue;
+                scanFiles.push(newFiles[i]);
+            }
+            renderScanFileList();
+        }
+
+        function renderScanFileList() {
+            var $list = $('#scan-file-list');
+            $list.empty();
+            scanFiles.forEach(function(f, idx) {
+                var sz = (f.size / 1024).toFixed(1) + ' KB';
+                if (f.size > 1024 * 1024) sz = (f.size / (1024 * 1024)).toFixed(1) + ' MB';
+                $list.append('<li><span><i class="glyphicon glyphicon-file"></i>&nbsp;' +
+                    sf.escapeHtml(f.name) + '</span><span class="file-size">' + sz +
+                    '&nbsp;<button class="btn-remove" data-idx="' + idx + '">&times;</button></span></li>');
+            });
+            $('#scan-upload-actions').toggle(scanFiles.length > 0);
+        }
+
+        $(document).on('click', '#scan-file-list .btn-remove', function() {
+            scanFiles.splice($(this).data('idx'), 1);
+            renderScanFileList();
+        });
+        $('#btn-scan-clear').click(function() { scanFiles = []; renderScanFileList(); });
+
+        $('#btn-scan-upload').click(function() {
+            if (scanFiles.length === 0) return;
+            $('#scan-upload-progress').show();
+            $('#scan-upload-result').hide();
+            var processed = 0;
+            var total = scanFiles.length;
+            var totalEntities = 0;
+
+            function uploadNext() {
+                if (processed >= total) {
+                    $('#scan-upload-progress').hide();
+                    $('#scan-upload-result').html(
+                        '<div class="alert alert-success"><i class="glyphicon glyphicon-ok"></i>&nbsp;' +
+                        processed + ' file(s) processed. ' + totalEntities + ' entities injected into scan.</div>'
+                    ).show();
+                    scanFiles = [];
+                    renderScanFileList();
+                    // Refresh scan view
+                    setTimeout(function() { refresh(); }, 1000);
+                    return;
+                }
+                var f = scanFiles[processed];
+                var pct = Math.round((processed / total) * 100);
+                $('#scan-progress-bar').css('width', pct + '%');
+                $('#scan-upload-log').append('<div>Processing ' + sf.escapeHtml(f.name) + '...</div>');
+
+                var fd = new FormData();
+                fd.append('file', f);
+                fd.append('scan_id', scanId);
+
+                $.ajax({
+                    url: docroot + '/scan_upload',
+                    type: 'POST', data: fd,
+                    processData: false, contentType: false,
+                    timeout: 120000,
+                    success: function(data) {
+                        totalEntities += (data.entity_count || 0);
+                        $('#scan-upload-log').append('<div>✓ ' + sf.escapeHtml(f.name) +
+                            ' — ' + (data.entity_count || 0) + ' entities</div>');
+                        processed++;
+                        uploadNext();
+                    },
+                    error: function(xhr) {
+                        $('#scan-upload-log').append('<div>✗ ' + sf.escapeHtml(f.name) + ' — error</div>');
+                        processed++;
+                        uploadNext();
+                    }
+                });
+            }
+            uploadNext();
+        });
+    });
+    </script>
+    % endif
+
     <script type='text/javascript'>
         var currentType = "ALL";
         var currentTypeName = "All";

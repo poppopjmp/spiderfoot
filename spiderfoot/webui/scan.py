@@ -181,10 +181,27 @@ class ScanEndpoints:
         res = dbh.scanInstanceGet(id)
         if res is None:
             return self.error("Scan not found")
+
+        # Check if this scan has interactive modules (e.g. sfp_doc_upload)
+        has_interactive = False
+        try:
+            scan_cfg = dbh.scanConfigGet(id)
+            if scan_cfg:
+                for key, val in scan_cfg.items():
+                    if key == '_modulesenabled' and 'sfp_doc_upload' in str(val):
+                        has_interactive = True
+                        break
+                    if key == 'sfp_doc_upload' or ('doc_upload' in key and val):
+                        has_interactive = True
+                        break
+        except Exception:
+            pass
+
         templ = Template(filename='spiderfoot/templates/scaninfo.tmpl', lookup=self.lookup, input_encoding='utf-8')
         return templ.render(
             id=id, name=res[0], status=res[5], docroot=self.docroot,
             version=__version__, pageid="SCANLIST",
+            has_interactive=has_interactive,
         )
 
     @cherrypy.expose
@@ -481,6 +498,81 @@ class ScanEndpoints:
         if errors:
             return f'["ERROR", "{errors}"]'.encode('utf-8')
         return b''
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def scan_upload(self, **kwargs) -> dict:
+        """Upload a document and inject it as a DOCUMENT_UPLOAD event into a running scan.
+
+        This endpoint is called from the scaninfo page when the scan includes
+        sfp_doc_upload (interactive module). The uploaded file is forwarded to
+        the enrichment service, and the extracted entities are stored as scan
+        results linked to the given scan ID.
+        """
+        import requests
+
+        scan_id = kwargs.get('scan_id', '')
+        upload_file = kwargs.get('file')
+
+        if not scan_id:
+            return {'status': 'error', 'message': 'No scan ID'}
+        if not upload_file:
+            return {'status': 'error', 'message': 'No file provided'}
+
+        enrichment_url = self.config.get('_enrichment_url', 'http://enrichment:8600')
+        filename = upload_file.filename
+        file_data = upload_file.file.read()
+
+        try:
+            resp = requests.post(
+                f"{enrichment_url}/process",
+                files={'file': (filename, file_data)},
+                data={'scan_id': scan_id},
+                timeout=120
+            )
+            result = resp.json() if resp.status_code == 200 else {}
+        except requests.exceptions.ConnectionError:
+            # Fallback: local extraction
+            import re
+            text = file_data.decode('utf-8', errors='ignore')
+            entities = {}
+            patterns = {
+                'IP_ADDRESS': r'\b(?:\d{1,3}\.){3}\d{1,3}\b',
+                'DOMAIN_NAME': r'\b(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}\b',
+                'EMAILADDR': r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b',
+                'HASH': r'\b[a-fA-F0-9]{32,64}\b',
+                'VULNERABILITY_CVE_CRITICAL': r'CVE-\d{4}-\d{4,}',
+            }
+            for etype, pattern in patterns.items():
+                matches = list(set(re.findall(pattern, text)))
+                if matches:
+                    entities[etype] = matches[:50]
+            result = {'status': 'ok', 'entities': entities, 'message': 'Local extraction'}
+        except Exception as e:
+            return {'status': 'error', 'message': str(e)}
+
+        # Store extracted entities as scan results
+        entity_count = 0
+        if result.get('entities'):
+            dbh = self._get_dbh()
+            for etype, values in result['entities'].items():
+                for val in values:
+                    try:
+                        dbh.scanResultEvent(
+                            scan_id, etype, val,
+                            'sfp_doc_upload', filename
+                        )
+                        entity_count += 1
+                    except Exception:
+                        pass
+
+        return {
+            'status': 'ok',
+            'scan_id': scan_id,
+            'filename': filename,
+            'entity_count': entity_count,
+            'entities': result.get('entities', {})
+        }
 
     @cherrypy.expose
     def scandelete(self, id: str) -> bytes:
