@@ -15,7 +15,7 @@ from .routers import (
     scan, workspace, config, data, websocket,
     visualization, correlations, rag_correlation, reports,
     health, scan_progress, tasks, webhooks, export, storage,
-    engines, schedules, rate_limits,
+    engines, schedules, rate_limits, rbac,
 )
 from spiderfoot import __version__
 
@@ -131,6 +131,7 @@ _VERSIONED_ROUTERS = [
     (engines.router,          "/api", ["engines"]),
     (schedules.router,        "/api", ["schedules"]),
     (rate_limits.router,      "/api", ["rate-limits"]),
+    (rbac.router,             "/api", ["rbac"]),
     (websocket.router,        "/ws",  ["websockets"]),
 ]
 
