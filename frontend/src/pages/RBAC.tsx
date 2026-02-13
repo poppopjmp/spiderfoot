@@ -45,12 +45,7 @@ export default function RBACPage() {
       {/* Roles tab */}
       {tab === 'roles' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {(roles?.roles ?? [
-            { name: 'admin', description: 'Full system access', permissions: Array(55).fill('') },
-            { name: 'operator', description: 'Manage scans and configurations', permissions: Array(30).fill('') },
-            { name: 'analyst', description: 'View scans and generate reports', permissions: Array(15).fill('') },
-            { name: 'viewer', description: 'Read-only access', permissions: Array(8).fill('') },
-          ]).map((role: { name: string; description: string; permissions: string[] }) => (
+          {(roles?.roles ?? []).map((role: { name: string; description: string; permissions: string[] }) => (
             <div key={role.name} className="card hover:border-spider-600 border border-transparent transition">
               <div className="flex items-center gap-3 mb-3">
                 <div className="p-2 bg-spider-600/20 rounded-lg">
@@ -103,14 +98,7 @@ export default function RBACPage() {
         <div className="card">
           <h2 className="text-lg font-semibold text-white mb-4">Available Permissions</h2>
           <div className="flex flex-wrap gap-2">
-            {(permissions?.permissions ?? [
-              'scan:create', 'scan:read', 'scan:delete', 'scan:abort',
-              'config:read', 'config:write', 'report:create', 'report:read',
-              'rbac:manage', 'api_key:create', 'audit:read', 'tenant:manage',
-              'webhook:create', 'webhook:read', 'schedule:create', 'schedule:read',
-              'monitor:read', 'monitor:write', 'engine:read', 'engine:write',
-              'export:csv', 'export:json', 'export:pdf', 'stix:read', 'stix:write',
-            ]).map((perm: string) => (
+            {(permissions?.permissions ?? []).map((perm: string) => (
               <span key={perm} className="badge badge-low">{perm}</span>
             ))}
           </div>

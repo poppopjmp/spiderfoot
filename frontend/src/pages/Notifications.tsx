@@ -52,11 +52,7 @@ export default function NotificationsPage() {
       {/* Rules */}
       {tab === 'rules' && (
         <div className="space-y-3">
-          {(ruleList.length > 0 ? ruleList : [
-            { id: '1', name: 'Critical Finding Alert', severity: 'critical', enabled: true, channels: [{ type: 'email' }, { type: 'slack' }], conditions: [{ field: 'severity', operator: 'equals', value: 'critical' }] },
-            { id: '2', name: 'Scan Completed', severity: 'info', enabled: true, channels: [{ type: 'webhook' }], conditions: [{ field: 'event_type', operator: 'equals', value: 'scan.finished' }] },
-            { id: '3', name: 'Data Breach Detected', severity: 'high', enabled: true, channels: [{ type: 'email' }, { type: 'pagerduty' }], conditions: [{ field: 'event_type', operator: 'contains', value: 'breach' }] },
-          ]).map((r: { id: string; name: string; severity: string; enabled: boolean; channels: { type: string }[]; conditions: { field: string; operator: string; value: string }[] }) => (
+          {ruleList.map((r: { id: string; name: string; severity: string; enabled: boolean; channels: { type: string }[]; conditions: { field: string; operator: string; value: string }[] }) => (
             <div key={r.id} className="card flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className={`p-2 rounded-lg ${r.enabled ? 'bg-green-600/20' : 'bg-dark-700'}`}>

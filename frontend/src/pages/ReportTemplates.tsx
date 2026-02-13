@@ -28,13 +28,7 @@ export default function ReportTemplatesPage() {
         <p className="text-dark-400">Loading templates...</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {(templates.length > 0 ? templates : [
-            { id: 'exec-summary', name: 'Executive Summary', category: 'executive', format: 'html', description: 'High-level overview for leadership and stakeholders', built_in: true },
-            { id: 'tech-detail', name: 'Technical Detail', category: 'technical', format: 'markdown', description: 'Comprehensive technical findings with evidence', built_in: true },
-            { id: 'vuln-report', name: 'Vulnerability Report', category: 'vulnerability', format: 'html', description: 'Prioritized vulnerability assessment with remediation', built_in: true },
-            { id: 'asset-inventory', name: 'Asset Inventory', category: 'asset', format: 'markdown', description: 'Complete discovered asset listing with metadata', built_in: true },
-            { id: 'compliance', name: 'Compliance Report', category: 'compliance', format: 'html', description: 'Regulatory compliance status and gap analysis', built_in: true },
-          ]).map((t: { id: string; name: string; category: string; format: string; description: string; built_in?: boolean }) => (
+          {templates.map((t: { id: string; name: string; category: string; format: string; description: string; built_in?: boolean }) => (
             <div key={t.id} className="card hover:border-spider-600 border border-transparent transition">
               <div className="flex items-center gap-3 mb-3">
                 <div className="p-2 bg-spider-600/20 rounded-lg">

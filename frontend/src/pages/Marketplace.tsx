@@ -13,7 +13,7 @@ export default function MarketplacePage() {
 
   const pluginList = plugins?.plugins ?? [];
   const installedIds = new Set((installed?.plugins ?? []).map((p: { id: string }) => p.id));
-  const categories = cats?.categories ?? ['all', 'osint', 'network', 'vulnerability', 'social', 'cloud', 'enrichment'];
+  const categories = cats?.categories ?? [];
 
   const filteredPlugins = pluginList.filter((p: { name: string; category: string }) =>
     (category === 'all' || p.category === category) &&
@@ -45,14 +45,7 @@ export default function MarketplacePage() {
 
       {/* Plugin grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {(filteredPlugins.length > 0 ? filteredPlugins : [
-          { id: 'nuclei', name: 'Nuclei Scanner', description: 'Template-based vulnerability scanner', category: 'vulnerability', version: '3.3.0', rating: 4.8, downloads: 1250, author: 'ProjectDiscovery' },
-          { id: 'subfinder', name: 'Subfinder', description: 'Fast passive subdomain enumeration', category: 'osint', version: '2.6.0', rating: 4.6, downloads: 980, author: 'ProjectDiscovery' },
-          { id: 'httpx', name: 'httpx', description: 'Fast HTTP probing toolkit', category: 'network', version: '1.3.7', rating: 4.7, downloads: 870, author: 'ProjectDiscovery' },
-          { id: 'shodan', name: 'Shodan Deep', description: 'Enhanced Shodan integration with CVE mapping', category: 'osint', version: '2.0.1', rating: 4.5, downloads: 650, author: 'Community' },
-          { id: 'cloud-enum', name: 'Cloud Enumerator', description: 'AWS, GCP, Azure resource discovery', category: 'cloud', version: '1.2.0', rating: 4.3, downloads: 430, author: 'Community' },
-          { id: 'social-recon', name: 'Social Recon', description: 'Social media profile correlation', category: 'social', version: '1.0.5', rating: 4.1, downloads: 320, author: 'Community' },
-        ]).map((p: { id: string; name: string; description: string; category: string; version: string; rating: number; downloads: number; author: string }) => (
+        {filteredPlugins.map((p: { id: string; name: string; description: string; category: string; version: string; rating: number; downloads: number; author: string }) => (
           <div key={p.id} className="card hover:border-spider-600 border border-transparent transition-colors">
             <div className="flex items-start justify-between mb-3">
               <div className="p-2 rounded-lg bg-spider-600/20">

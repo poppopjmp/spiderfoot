@@ -45,7 +45,7 @@ const navSections: NavSection[] = [
       { name: 'Dashboard', to: '/', icon: LayoutDashboard },
       { name: 'Scans', to: '/scans', icon: Radar },
       { name: 'New Scan', to: '/scans/new', icon: PlusCircle },
-      { name: 'Engines', to: '/engines', icon: Cpu },
+      { name: 'Modules', to: '/modules', icon: Cpu },
       { name: 'Schedules', to: '/schedules', icon: Clock },
       { name: 'Monitor', to: '/monitor', icon: Globe },
     ],
@@ -158,7 +158,7 @@ export default function Layout() {
 
         {/* Footer */}
         <div className="px-6 py-4 border-t border-dark-700">
-          <p className="text-xs text-dark-500">SpiderFoot v5.7.4</p>
+          <p className="text-xs text-dark-500">SpiderFoot v5.7.5</p>
         </div>
       </aside>
 

@@ -1,19 +1,26 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { scheduleApi } from '../lib/api';
-import { Calendar, Play, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
+import { scheduleApi, formatEpoch, type Schedule } from '../lib/api';
+import { Calendar, Pause, Play, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
 import { useState } from 'react';
 
 export default function SchedulesPage() {
   const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
 
-  const { data: schedules, isLoading } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['schedules'],
     queryFn: scheduleApi.list,
   });
 
-  const triggerSchedule = useMutation({
-    mutationFn: (id: string) => scheduleApi.trigger(id),
+  const schedules = data?.schedules ?? [];
+
+  const pauseSchedule = useMutation({
+    mutationFn: (id: string) => scheduleApi.pause(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['schedules'] }),
+  });
+
+  const resumeSchedule = useMutation({
+    mutationFn: (id: string) => scheduleApi.resume(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['schedules'] }),
   });
 
@@ -37,7 +44,7 @@ export default function SchedulesPage() {
       <div className="card">
         {isLoading ? (
           <p className="text-dark-400">Loading schedules...</p>
-        ) : schedules && schedules.length > 0 ? (
+        ) : schedules.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -47,48 +54,73 @@ export default function SchedulesPage() {
                   <th className="pb-3 font-medium">Interval</th>
                   <th className="pb-3 font-medium">Status</th>
                   <th className="pb-3 font-medium">Runs</th>
+                  <th className="pb-3 font-medium">Next Run</th>
                   <th className="pb-3 font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-dark-700">
-                {schedules.map((sched) => (
-                  <tr key={sched.id} className="hover:bg-dark-700/50">
-                    <td className="py-3 text-white">{sched.name}</td>
-                    <td className="py-3 text-dark-300">{sched.target}</td>
-                    <td className="py-3 text-dark-300">{sched.interval_hours}h</td>
-                    <td className="py-3">
-                      {sched.enabled ? (
-                        <span className="badge badge-success flex items-center gap-1 w-fit">
-                          <ToggleRight className="h-3 w-3" /> Active
-                        </span>
-                      ) : (
-                        <span className="badge badge-low flex items-center gap-1 w-fit">
-                          <ToggleLeft className="h-3 w-3" /> Paused
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-3 text-dark-300">
-                      {sched.run_count ?? 0}
-                      {sched.max_runs ? ` / ${sched.max_runs}` : ''}
-                    </td>
-                    <td className="py-3 flex gap-2">
-                      <button
-                        className="text-spider-400 hover:text-spider-300"
-                        onClick={() => triggerSchedule.mutate(sched.id)}
-                        title="Trigger now"
-                      >
-                        <Play className="h-4 w-4" />
-                      </button>
-                      <button
-                        className="text-red-400 hover:text-red-300"
-                        onClick={() => deleteSchedule.mutate(sched.id)}
-                        title="Delete"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {schedules.map((sched: Schedule) => {
+                  const isActive = sched.status !== 'paused';
+                  return (
+                    <tr key={sched.id} className="hover:bg-dark-700/50">
+                      <td className="py-3 text-white">{sched.name}</td>
+                      <td className="py-3 text-dark-300 font-mono text-xs">{sched.target}</td>
+                      <td className="py-3 text-dark-300">
+                        {sched.interval_minutes >= 60
+                          ? `${Math.floor(sched.interval_minutes / 60)}h ${sched.interval_minutes % 60 > 0 ? `${sched.interval_minutes % 60}m` : ''}`
+                          : `${sched.interval_minutes}m`}
+                      </td>
+                      <td className="py-3">
+                        {isActive ? (
+                          <span className="badge badge-success flex items-center gap-1 w-fit">
+                            <ToggleRight className="h-3 w-3" /> Active
+                          </span>
+                        ) : (
+                          <span className="badge badge-low flex items-center gap-1 w-fit">
+                            <ToggleLeft className="h-3 w-3" /> Paused
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-3 text-dark-300">
+                        {sched.run_count ?? 0}
+                        {sched.max_runs ? ` / ${sched.max_runs}` : ''}
+                      </td>
+                      <td className="py-3 text-dark-300 text-xs">
+                        {sched.next_run_at ? formatEpoch(sched.next_run_at) : '\u2014'}
+                      </td>
+                      <td className="py-3 flex gap-2">
+                        {isActive ? (
+                          <button
+                            className="text-yellow-400 hover:text-yellow-300"
+                            onClick={() => pauseSchedule.mutate(sched.id)}
+                            title="Pause"
+                          >
+                            <Pause className="h-4 w-4" />
+                          </button>
+                        ) : (
+                          <button
+                            className="text-green-400 hover:text-green-300"
+                            onClick={() => resumeSchedule.mutate(sched.id)}
+                            title="Resume"
+                          >
+                            <Play className="h-4 w-4" />
+                          </button>
+                        )}
+                        <button
+                          className="text-red-400 hover:text-red-300"
+                          onClick={() => {
+                            if (confirm(`Delete schedule "${sched.name}"?`)) {
+                              deleteSchedule.mutate(sched.id);
+                            }
+                          }}
+                          title="Delete"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -104,10 +136,10 @@ function CreateScheduleForm({ onClose }: { onClose: () => void }) {
   const queryClient = useQueryClient();
   const [name, setName] = useState('');
   const [target, setTarget] = useState('');
-  const [interval, setInterval] = useState(24);
+  const [intervalHours, setIntervalHours] = useState(24);
 
   const create = useMutation({
-    mutationFn: (payload: { name: string; target: string; interval_hours: number }) =>
+    mutationFn: (payload: { name: string; target: string; interval_minutes: number }) =>
       scheduleApi.create(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['schedules'] });
@@ -122,7 +154,7 @@ function CreateScheduleForm({ onClose }: { onClose: () => void }) {
         className="space-y-3"
         onSubmit={(e) => {
           e.preventDefault();
-          create.mutate({ name, target, interval_hours: interval });
+          create.mutate({ name, target, interval_minutes: intervalHours * 60 });
         }}
       >
         <input
@@ -145,8 +177,8 @@ function CreateScheduleForm({ onClose }: { onClose: () => void }) {
             type="number"
             className="input-field"
             min={1}
-            value={interval}
-            onChange={(e) => setInterval(Number(e.target.value))}
+            value={intervalHours}
+            onChange={(e) => setIntervalHours(Number(e.target.value))}
           />
         </div>
         <div className="flex gap-2">

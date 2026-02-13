@@ -7,7 +7,7 @@ import DashboardPage from './pages/Dashboard';
 import ScansPage from './pages/Scans';
 import ScanDetailPage from './pages/ScanDetail';
 import NewScanPage from './pages/NewScan';
-import EnginesPage from './pages/Engines';
+import ModulesPage from './pages/Modules';
 import SchedulesPage from './pages/Schedules';
 import MonitorPage from './pages/Monitor';
 import SettingsPage from './pages/Settings';
@@ -47,7 +47,7 @@ export default function App() {
         <Route path="scans" element={<ScansPage />} />
         <Route path="scans/new" element={<NewScanPage />} />
         <Route path="scans/:scanId" element={<ScanDetailPage />} />
-        <Route path="engines" element={<EnginesPage />} />
+        <Route path="modules" element={<ModulesPage />} />
         <Route path="schedules" element={<SchedulesPage />} />
         <Route path="monitor" element={<MonitorPage />} />
 

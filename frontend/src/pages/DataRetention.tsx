@@ -63,11 +63,7 @@ export default function DataRetentionPage() {
 
       {/* Rules */}
       <div className="space-y-3">
-        {(ruleList.length > 0 ? ruleList : [
-          { id: '1', name: 'Delete old scans', criteria_type: 'age', criteria_value: '90 days', action: 'delete', resource_type: 'scans', enabled: true },
-          { id: '2', name: 'Archive reports', criteria_type: 'age', criteria_value: '180 days', action: 'archive', resource_type: 'reports', enabled: true },
-          { id: '3', name: 'Limit scan count', criteria_type: 'count', criteria_value: '500 max', action: 'export_then_delete', resource_type: 'scans', enabled: false },
-        ]).map((r: { id: string; name: string; criteria_type: string; criteria_value: string; action: string; resource_type: string; enabled: boolean }) => (
+        {ruleList.map((r: { id: string; name: string; criteria_type: string; criteria_value: string; action: string; resource_type: string; enabled: boolean }) => (
           <div key={r.id} className="card flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className={`p-2 rounded-lg ${r.enabled ? 'bg-spider-600/20' : 'bg-dark-700'}`}>

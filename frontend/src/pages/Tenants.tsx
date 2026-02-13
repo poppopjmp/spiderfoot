@@ -103,11 +103,7 @@ export default function TenantsPage() {
 
       {/* Tenant list */}
       <div className="space-y-3">
-        {(tenantList.length > 0 ? tenantList : [
-          { id: '1', name: 'Default', plan: 'enterprise', user_count: 12, scan_count: 45, max_users: 50, max_scans: 100, status: 'active' },
-          { id: '2', name: 'Partner Org', plan: 'professional', user_count: 5, scan_count: 20, max_users: 20, max_scans: 50, status: 'active' },
-          { id: '3', name: 'Trial Customer', plan: 'free', user_count: 1, scan_count: 2, max_users: 3, max_scans: 5, status: 'trial' },
-        ]).map((t: { id: string; name: string; plan: string; user_count: number; scan_count: number; max_users: number; max_scans: number; status: string }) => (
+        {tenantList.map((t: { id: string; name: string; plan: string; user_count: number; scan_count: number; max_users: number; max_scans: number; status: string }) => (
           <div key={t.id} className="card flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="p-2 rounded-lg bg-spider-600/20">

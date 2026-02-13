@@ -83,21 +83,7 @@ export default function TagsGroupsPage() {
 
       {tab === 'tags' && (
         <div className="flex flex-wrap gap-3">
-          {(tagList.length > 0 ? tagList : [
-            { id: '1', name: 'Critical Vulnerability', slug: 'critical-vuln', color: 'red' },
-            { id: '2', name: 'High Vulnerability', slug: 'high-vuln', color: 'orange' },
-            { id: '3', name: 'Malicious', slug: 'malicious', color: 'red' },
-            { id: '4', name: 'Open Port', slug: 'open-port', color: 'yellow' },
-            { id: '5', name: 'SSL Issue', slug: 'ssl-issue', color: 'orange' },
-            { id: '6', name: 'Cloud Risk', slug: 'cloud-risk', color: 'blue' },
-            { id: '7', name: 'Data Exposure', slug: 'data-exposure', color: 'red' },
-            { id: '8', name: 'Breach', slug: 'breach', color: 'red' },
-            { id: '9', name: 'Reviewed', slug: 'reviewed', color: 'green' },
-            { id: '10', name: 'False Positive', slug: 'false-positive', color: 'gray' },
-            { id: '11', name: 'Priority', slug: 'priority', color: 'purple' },
-            { id: '12', name: 'External', slug: 'external', color: 'blue' },
-            { id: '13', name: 'Internal', slug: 'internal', color: 'teal' },
-          ]).map((tag: { id: string; name: string; slug?: string; color: string }) => {
+          {tagList.map((tag: { id: string; name: string; slug?: string; color: string }) => {
             const colorDot = TAG_COLORS.find(c => c.name === tag.color)?.class ?? 'bg-gray-500';
             return (
               <div key={tag.id} className="card flex items-center gap-3 min-w-[200px]">
@@ -114,11 +100,7 @@ export default function TagsGroupsPage() {
 
       {tab === 'groups' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {(groupList.length > 0 ? groupList : [
-            { id: '1', name: 'Production Assets', description: 'All production infrastructure', member_count: 0 },
-            { id: '2', name: 'External Facing', description: 'Internet-facing services and domains', member_count: 0 },
-            { id: '3', name: 'High Risk', description: 'Assets with critical/high findings', member_count: 0 },
-          ]).map((g: { id: string; name: string; description: string; member_count?: number }) => (
+          {groupList.map((g: { id: string; name: string; description: string; member_count?: number }) => (
             <div key={g.id} className="card">
               <div className="flex items-center gap-3 mb-2">
                 <FolderTree className="h-5 w-5 text-blue-400" />

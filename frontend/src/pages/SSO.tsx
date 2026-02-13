@@ -78,10 +78,7 @@ export default function SSOPage() {
       {/* Providers */}
       {tab === 'providers' && (
         <div className="space-y-3">
-          {(providerList.length > 0 ? providerList : [
-            { id: '1', name: 'Corporate SAML', protocol: 'saml', entity_id: 'https://idp.corp.com', enabled: true, allowed_domains: ['corp.com'] },
-            { id: '2', name: 'Google OIDC', protocol: 'oidc', entity_id: 'https://accounts.google.com', enabled: false, allowed_domains: [] },
-          ]).map((p: { id: string; name: string; protocol: string; entity_id: string; enabled: boolean; allowed_domains?: string[] }) => (
+          {providerList.map((p: { id: string; name: string; protocol: string; entity_id: string; enabled: boolean; allowed_domains?: string[] }) => (
             <div key={p.id} className="card flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className={`p-2 rounded-lg ${p.enabled ? 'bg-green-600/20' : 'bg-dark-700'}`}>
