@@ -64,3 +64,11 @@ strawberry-graphql[fastapi]>=0.235.0,<1.0.0
 grpcio>=1.60.0,<2.0.0
 grpcio-tools>=1.60.0,<2.0.0
 protobuf>=4.25.0,<6.0.0
+
+# Celery task queue + scheduling
+celery[redis]>=5.4.0,<6.0.0
+flower>=2.0.0,<3.0.0
+
+# PDF report generation
+weasyprint>=62.0,<64.0.0
+jinja2>=3.1.0,<4.0.0

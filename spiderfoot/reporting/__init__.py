@@ -49,6 +49,9 @@ from .report_storage import (
     StorageBackend,
 )
 
+# PDF renderer
+from .pdf_renderer import PDFBranding, PDFConfig, PDFRenderer
+
 # Visualization service
 from .visualization_service import VisualizationService, VisualizationServiceError
 
@@ -84,6 +87,10 @@ __all__ = [
     "SQLiteBackend",
     "StoreConfig",
     "StorageBackend",
+    # PDF renderer
+    "PDFBranding",
+    "PDFConfig",
+    "PDFRenderer",
     # Visualization service
     "VisualizationService",
     "VisualizationServiceError",

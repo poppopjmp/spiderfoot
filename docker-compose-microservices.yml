@@ -1,21 +1,24 @@
 # =============================================================================
 # SpiderFoot Microservices Docker Compose
 # Decomposes SpiderFoot into individual services:
-#   - api       : FastAPI REST API  (data layer, scan management)
-#   - webui     : CherryPy web UI   (proxies all data through API)
-#   - redis     : event bus + cache
-#   - postgres  : persistent data store
-#   - traefik   : reverse proxy / API gateway  (replaces nginx since v5.3.17)
-#   - tika      : Apache Tika full — document text/metadata extraction
-#   - agents    : AI-powered analysis agents  (LLM via LiteLLM)
-#   - litellm   : unified LLM gateway (OpenAI, Anthropic, Ollama, …)
-#   - vector    : telemetry pipeline  (logs → Loki, traces → Jaeger)
-#   - loki      : log aggregation
-#   - grafana   : dashboards & observability
-#   - prometheus: metrics collection
-#   - jaeger    : distributed tracing
-#   - qdrant    : vector DB for RAG / correlations
-#   - minio     : S3-compatible object storage
+#   - api           : FastAPI REST API  (data layer, scan management)
+#   - webui         : CherryPy web UI   (proxies all data through API)
+#   - redis         : event bus + cache + Celery broker
+#   - postgres      : persistent data store
+#   - traefik       : reverse proxy / API gateway  (replaces nginx since v5.3.17)
+#   - tika          : Apache Tika full — document text/metadata extraction
+#   - agents        : AI-powered analysis agents  (LLM via LiteLLM)
+#   - celery-worker : async task execution  (scans, reports, exports)
+#   - celery-beat   : periodic task scheduler
+#   - flower        : Celery monitoring dashboard
+#   - litellm       : unified LLM gateway (OpenAI, Anthropic, Ollama, …)
+#   - vector        : telemetry pipeline  (logs → Loki, traces → Jaeger)
+#   - loki          : log aggregation
+#   - grafana       : dashboards & observability
+#   - prometheus    : metrics collection
+#   - jaeger        : distributed tracing
+#   - qdrant        : vector DB for RAG / correlations
+#   - minio         : S3-compatible object storage
 #
 # Usage:
 #   cp docker/env.example .env         # customise settings
@@ -28,6 +31,7 @@
 #   Grafana          -> https://localhost/grafana/
 #   Jaeger           -> https://localhost/jaeger/
 #   Prometheus       -> https://localhost/prometheus/
+#   Flower           -> https://localhost/flower/        (basic auth)
 #   MinIO Console    -> https://localhost/minio/
 #
 # All SpiderFoot services share the same Docker image built from /Dockerfile.
@@ -681,6 +685,170 @@ services:
         limits:
           cpus: "${AGENTS_CPUS:-2.0}"
           memory: "${AGENTS_MEMORY:-2G}"
+
+  # ---------------------------------------------------------------------------
+  # Celery Worker — Async Task Execution  (new in v5.4.0)
+  # ---------------------------------------------------------------------------
+  # Processes background tasks: scan execution, report generation, exports,
+  # AI agent tasks, and monitoring jobs.  Uses the same SpiderFoot image with
+  # Celery worker entrypoint.  Redis serves as both broker and result backend.
+  # ---------------------------------------------------------------------------
+
+  celery-worker:
+    <<: *sf-build
+    image: spiderfoot-micro:latest
+    container_name: sf-celery-worker
+    restart: unless-stopped
+    networks:
+      - sf-backend
+    environment:
+      SF_SERVICE: celery-worker
+      SF_REDIS_URL: redis://redis:6379/0
+      SF_POSTGRES_DSN: postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-spiderfoot}
+      SF_LOG_LEVEL: ${SF_LOG_LEVEL:-INFO}
+      SF_TIKA_URL: "http://tika:9998"
+      SF_MINIO_ENDPOINT: "minio:9000"
+      SF_MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-spiderfoot}
+      SF_MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-changeme123}
+      SF_MINIO_SECURE: "false"
+      SF_MINIO_REPORTS_BUCKET: ${SF_MINIO_REPORTS_BUCKET:-sf-reports}
+      SF_MINIO_DATA_BUCKET: ${SF_MINIO_DATA_BUCKET:-sf-data}
+      SF_LLM_PROVIDER: ${SF_LLM_PROVIDER:-mock}
+      SF_LLM_API_BASE: ${SF_LLM_API_BASE:-http://litellm:4000}
+      SF_LLM_API_KEY: ${SF_LLM_API_KEY:-sk-sf-litellm-dev-key}
+      SF_LLM_MODEL: ${SF_LLM_MODEL:-}
+      SF_QDRANT_BACKEND: "http"
+      SF_QDRANT_HOST: "qdrant"
+      SF_QDRANT_PORT: "6333"
+      # OTEL tracing
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://vector:4317"
+      OTEL_SERVICE_NAME: "spiderfoot-celery-worker"
+      # Worker concurrency (default 4 — one per queue priority)
+      CELERY_WORKER_CONCURRENCY: ${CELERY_WORKER_CONCURRENCY:-4}
+    entrypoint: ["/usr/local/bin/docker-entrypoint.sh"]
+    command:
+      - "python"
+      - "-m"
+      - "celery"
+      - "-A"
+      - "spiderfoot.celery_app:celery_app"
+      - "worker"
+      - "--loglevel=info"
+      - "--queues=default,scan,report,export,agents,monitor"
+      - "--concurrency=${CELERY_WORKER_CONCURRENCY:-4}"
+      - "--hostname=worker@%h"
+      - "--without-heartbeat"
+      - "--without-mingle"
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-m", "celery", "-A", "spiderfoot.celery_app:celery_app", "inspect", "ping", "--timeout", "5"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: "${CELERY_WORKER_CPUS:-2.0}"
+          memory: "${CELERY_WORKER_MEMORY:-2G}"
+
+  # ---------------------------------------------------------------------------
+  # Celery Beat — Periodic Task Scheduler  (new in v5.4.0)
+  # ---------------------------------------------------------------------------
+  # Runs periodic tasks defined in celery_app.py beat_schedule:
+  #   - Cleanup expired results (hourly)
+  #   - Service health checks (every 5 min)
+  #   - Recurring scan triggers
+  # ---------------------------------------------------------------------------
+
+  celery-beat:
+    <<: *sf-build
+    image: spiderfoot-micro:latest
+    container_name: sf-celery-beat
+    restart: unless-stopped
+    networks:
+      - sf-backend
+    environment:
+      SF_SERVICE: celery-beat
+      SF_REDIS_URL: redis://redis:6379/0
+      SF_POSTGRES_DSN: postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-spiderfoot}
+      SF_LOG_LEVEL: ${SF_LOG_LEVEL:-INFO}
+    entrypoint: ["/usr/local/bin/docker-entrypoint.sh"]
+    command:
+      - "python"
+      - "-m"
+      - "celery"
+      - "-A"
+      - "spiderfoot.celery_app:celery_app"
+      - "beat"
+      - "--loglevel=info"
+      - "--schedule=/tmp/celerybeat-schedule"
+    depends_on:
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "${CELERY_BEAT_CPUS:-0.25}"
+          memory: "${CELERY_BEAT_MEMORY:-128M}"
+
+  # ---------------------------------------------------------------------------
+  # Flower — Celery Monitoring Dashboard  (new in v5.4.0)
+  # ---------------------------------------------------------------------------
+  # Real-time Celery worker/task monitoring. Accessible via Traefik at /flower/.
+  # ---------------------------------------------------------------------------
+
+  flower:
+    <<: *sf-build
+    image: spiderfoot-micro:latest
+    container_name: sf-flower
+    restart: unless-stopped
+    networks:
+      - sf-frontend
+      - sf-backend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.flower.rule=PathPrefix(`/flower`)"
+      - "traefik.http.routers.flower.entrypoints=websecure"
+      - "traefik.http.routers.flower.tls=true"
+      - "traefik.http.routers.flower.middlewares=security-headers@file"
+      - "traefik.http.services.flower.loadbalancer.server.port=5555"
+    environment:
+      SF_REDIS_URL: redis://redis:6379/0
+      FLOWER_BROKER_URL: redis://redis:6379/0
+      FLOWER_URL_PREFIX: /flower
+      FLOWER_BASIC_AUTH: ${FLOWER_BASIC_AUTH:-admin:spiderfoot}
+    entrypoint: ["/usr/local/bin/docker-entrypoint.sh"]
+    command:
+      - "python"
+      - "-m"
+      - "celery"
+      - "-A"
+      - "spiderfoot.celery_app:celery_app"
+      - "flower"
+      - "--port=5555"
+      - "--url_prefix=flower"
+      - "--broker_api=redis://redis:6379/0"
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:5555/flower/')\""]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: "${FLOWER_CPUS:-0.5}"
+          memory: "${FLOWER_MEMORY:-256M}"
 
   # ---------------------------------------------------------------------------
   # LiteLLM Proxy — Unified LLM Gateway
