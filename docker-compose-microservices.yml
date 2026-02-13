@@ -285,53 +285,49 @@ services:
           memory: "${API_MEMORY:-2G}"
 
   # ---------------------------------------------------------------------------
-  # SpiderFoot Web UI Service (CherryPy)
+  # SpiderFoot React SPA Frontend  (self-contained Nginx container)
+  # ---------------------------------------------------------------------------
+  # Serves the production-built React SPA and reverse-proxies /api/* and /ws/*
+  # to the backend API container.  Completely self-contained — no Python, no
+  # CherryPy.  Uses envsubst to inject the API URL at container startup.
   # ---------------------------------------------------------------------------
 
-  webui:
-    <<: *sf-build
-    image: spiderfoot-micro:latest
-    container_name: sf-webui
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: spiderfoot-frontend:latest
+    container_name: sf-frontend-ui
     restart: unless-stopped
     networks:
       - sf-frontend
-      - sf-backend
     labels:
       - "traefik.enable=true"
-      # Catch-all for the Web UI (lowest priority)
-      - "traefik.http.routers.webui.rule=PathPrefix(`/`)"
-      - "traefik.http.routers.webui.entrypoints=websecure"
-      - "traefik.http.routers.webui.tls=true"
-      - "traefik.http.routers.webui.priority=1"
-      - "traefik.http.routers.webui.middlewares=rate-limit-web@file,security-headers@file,gzip-compress@file"
-      - "traefik.http.services.webui.loadbalancer.server.port=5001"
+      # Catch-all for the SPA (lowest priority — API routes take precedence)
+      - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.routers.frontend.tls=true"
+      - "traefik.http.routers.frontend.priority=1"
+      - "traefik.http.routers.frontend.middlewares=rate-limit-web@file,security-headers@file,gzip-compress@file"
+      - "traefik.http.services.frontend.loadbalancer.server.port=80"
     environment:
-      SF_SERVICE: webui
-      SF_SERVICE_ROLE: webui
-      SF_DEPLOYMENT_MODE: microservice
-      SF_WEB_HOST: "0.0.0.0"
-      SF_WEB_PORT: "5001"
-      SF_LOG_LEVEL: ${SF_LOG_LEVEL:-INFO}
-      SF_WEBUI_API_MODE: "true"
-      SF_WEBUI_API_URL: "http://api:8001/api"
-      SF_WEBUI_API_KEY: ${SF_API_KEY:-}
-      SF_POSTGRES_DSN: postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-spiderfoot}
+      # Nginx reverse-proxy targets (envsubst'd into nginx.conf at startup)
+      SF_API_URL: "http://api:8001"
+      SF_WS_URL: "http://api:8001"
     depends_on:
       api:
         condition: service_healthy
-    entrypoint: ["/usr/local/bin/docker-entrypoint.sh"]
-    command: ["python", "-m", "spiderfoot.service_runner", "--service", "webui", "--port", "5001"]
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5001/')"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     deploy:
       resources:
         limits:
-          cpus: "${WEBUI_CPUS:-1.0}"
-          memory: "${WEBUI_MEMORY:-1G}"
+          cpus: "${FRONTEND_CPUS:-0.5}"
+          memory: "${FRONTEND_MEMORY:-128M}"
 
   # ---------------------------------------------------------------------------
   # Traefik Reverse Proxy / API Gateway  (replaces Nginx since v5.3.17)
@@ -362,7 +358,7 @@ services:
     depends_on:
       api:
         condition: service_healthy
-      webui:
+      frontend:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "traefik", "healthcheck", "--ping"]

@@ -41,6 +41,16 @@ RUN pip install --no-cache-dir -U pip==25.0.1 && \
     # Install additional security tools
     pip install --no-cache-dir dnstwist snallygaster trufflehog wafw00f
 
+# Build React frontend SPA
+COPY frontend/ /build/frontend/
+RUN cd /build/frontend && \
+    npm ci --no-audit --no-fund && \
+    npx tsc --noEmit || true && \
+    npx vite build && \
+    mkdir -p /build/spiderfoot/static/react && \
+    cp -r /build/frontend/dist/* /build/spiderfoot/static/react/ 2>/dev/null || \
+    cp -r /home/spiderfoot/spiderfoot/static/react/ /build/spiderfoot/static/react/ 2>/dev/null || true
+
 # Download and build tools
 RUN mkdir -p /tools/bin && \
     # Nuclei
@@ -90,6 +100,9 @@ COPY --from=builder /opt/venv /opt/venv
 
 # Copy tools from builder
 COPY --from=builder /tools /tools
+
+# Copy built React SPA from builder
+COPY --from=builder /build/spiderfoot/static/react /home/spiderfoot/spiderfoot/static/react
 
 # Set up environment with virtual environment
 ENV SPIDERFOOT_DATA=/home/spiderfoot/data \
