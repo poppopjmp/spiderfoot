@@ -503,6 +503,62 @@ services:
           memory: "${PROMETHEUS_MEMORY:-512M}"
 
   # ---------------------------------------------------------------------------
+  # SpiderFoot User Input Service
+  # ---------------------------------------------------------------------------
+  # API for user-supplied investigation data:
+  #   - Document/report uploads for enrichment
+  #   - IOC list submissions for cross-referencing
+  #   - Context data to enhance scan analysis
+  #   - Batch target lists for multi-target scanning
+  # ---------------------------------------------------------------------------
+
+  user-input:
+    <<: *sf-build
+    image: spiderfoot-micro:latest
+    container_name: sf-user-input
+    restart: unless-stopped
+    networks:
+      - sf-frontend
+      - sf-backend
+    ports:
+      - "${SF_INPUT_PORT:-8300}:8300"
+    environment:
+      SF_SERVICE: user-input
+      SF_INPUT_HOST: "0.0.0.0"
+      SF_INPUT_PORT: "8300"
+      SF_LOG_LEVEL: ${SF_LOG_LEVEL:-INFO}
+      # Internal service URLs
+      SF_ENRICHMENT_URL: "http://enrichment:8200"
+      SF_AGENTS_URL: "http://agents:8100"
+      # MinIO storage
+      SF_MINIO_ENDPOINT: "minio:9000"
+      SF_MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-spiderfoot}
+      SF_MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-changeme123}
+      # OTEL tracing
+      SF_OTEL_ENDPOINT: "http://vector:4317"
+      SF_SERVICE_NAME: "spiderfoot-user-input"
+    entrypoint: ["/usr/local/bin/docker-entrypoint.sh"]
+    command: ["python", "-m", "spiderfoot.user_input.service"]
+    depends_on:
+      enrichment:
+        condition: service_healthy
+      agents:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8300/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: "${INPUT_CPUS:-1.0}"
+          memory: "${INPUT_MEMORY:-1G}"
+
+  # ---------------------------------------------------------------------------
   # SpiderFoot Enrichment Service (Document Processing Pipeline)
   # ---------------------------------------------------------------------------
   # Processes uploaded documents and scan artifacts through:
