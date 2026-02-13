@@ -7,6 +7,7 @@ from .export import ExportEndpoints
 from .workspace import WorkspaceEndpoints
 from .info import InfoEndpoints
 from .settings import SettingsEndpoints
+from .templates import MiscEndpoints
 from .helpers import WebUiHelpers
 from .performance import PerformanceEnhancedWebUI
 from .db_provider import DbProvider
@@ -30,6 +31,7 @@ class WebUiRoutes(
     ExportEndpoints,
     WorkspaceEndpoints,
     InfoEndpoints,
+    MiscEndpoints,
     WebUiHelpers,
     PerformanceEnhancedWebUI,
     DbProvider,
