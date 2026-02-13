@@ -2,37 +2,55 @@
 
 ## Overview
 
-SpiderFoot v5.246.0 implements a modular microservices architecture that can run
+SpiderFoot v5.3.3 implements a modular microservices architecture that can run
 in two modes:
 
 - **Monolith mode**: All services run in a single process (default, backward-compatible)
-- **Microservices mode**: 10 containers behind an Nginx gateway (PostgreSQL, Redis, Qdrant, MinIO)
+- **Microservices mode**: 17 containers behind an Nginx gateway with full observability, AI agents, and document enrichment
 
-## Service Topology (v5.246.0)
+## Service Topology (v5.3.3)
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                      Nginx Gateway (:80)                           │
-│           Rate limiting · WebSocket · Reverse proxy                 │
-├──────────────────────────┬──────────────────────────────────────────┤
-│ WebUI :5001              │ REST API + GraphQL :8001                 │
-│ (CherryPy)               │ (FastAPI + Strawberry)                  │
-├──────────────────────────┴──────────────────────────────────────────┤
-│                       Data Layer                                    │
-│  ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐      │
-│  │ PostgreSQL │ │   Redis    │ │  Qdrant    │ │   MinIO    │      │
-│  │ :5432      │ │  :6379     │ │ :6333      │ │ :9000/9001 │      │
-│  │ (Primary)  │ │ (EventBus, │ │ (Vector    │ │ (S3 Object │      │
-│  │            │ │  Cache)    │ │  Search)   │ │  Storage)  │      │
-│  └────────────┘ └────────────┘ └────────────┘ └────────────┘      │
-├───────────────────────────────────────────────────────────────────┤
-│                   Sidecars & Pipelines                              │
-│  ┌────────────┐ ┌────────────┐ ┌────────────┐                      │
-│  │ Vector.dev │ │ pg-backup  │ │ minio-init │                      │
-│  │ :8686      │ │ (cron)     │ │ (one-shot) │                      │
-│  │ (Log pipe) │ │ → MinIO    │ │ 5 buckets  │                      │
-│  └────────────┘ └────────────┘ └────────────┘                      │
-└───────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                        Nginx Gateway (:80)                              │
+│         Rate limiting · WebSocket · Reverse proxy · Path routing        │
+├──────────┬──────────────┬──────────────┬──────────────┬─────────────────┤
+│ WebUI    │ REST API     │  Agents      │ Enrichment   │ User Input      │
+│ :5001    │ :8001        │  :8100       │ :8200        │ :8300           │
+├──────────┴──────────────┴──────────────┴──────────────┴─────────────────┤
+│                       Data Layer                                        │
+│  ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐          │
+│  │ PostgreSQL │ │   Redis    │ │  Qdrant    │ │   MinIO    │          │
+│  │ :5432      │ │  :6379     │ │ :6333      │ │ :9000/9001 │          │
+│  │ (Primary)  │ │ (EventBus, │ │ (Vector    │ │ (S3 Object │          │
+│  │            │ │  Cache)    │ │  Search)   │ │  Storage)  │          │
+│  └────────────┘ └────────────┘ └────────────┘ └────────────┘          │
+├───────────────────────────────────────────────────────────────────────┤
+│                     LLM Gateway                                        │
+│  ┌────────────┐                                                        │
+│  │  LiteLLM   │ Multi-provider proxy (OpenAI, Anthropic, Ollama)       │
+│  │  :4000     │ Cost tracking · Model routing · Redis cache            │
+│  └────────────┘                                                        │
+├───────────────────────────────────────────────────────────────────────┤
+│                   Observability Pipeline                                │
+│  ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐          │
+│  │ Vector.dev │ │   Loki     │ │ Prometheus │ │   Jaeger   │          │
+│  │ :8686      │ │  :3100     │ │  :9090     │ │  :16686    │          │
+│  │ :4317/4318 │ │ (Log aggr) │ │ (Metrics)  │ │ (Tracing)  │          │
+│  │ :9598      │ │            │ │            │ │            │          │
+│  │ (Telemetry │ └────────────┘ └────────────┘ └────────────┘          │
+│  │  pipeline) │ ┌────────────┐                                         │
+│  └────────────┘ │  Grafana   │ Dashboards · Alerting · Data explorer   │
+│                 │  :3000     │                                          │
+│                 └────────────┘                                          │
+├───────────────────────────────────────────────────────────────────────┤
+│                   Sidecars & Pipelines                                  │
+│  ┌────────────┐ ┌────────────┐                                         │
+│  │ pg-backup  │ │ minio-init │                                         │
+│  │ (cron)     │ │ (one-shot) │                                         │
+│  │ → MinIO    │ │ 8 buckets  │                                         │
+│  └────────────┘ └────────────┘                                         │
+└───────────────────────────────────────────────────────────────────────┘
 ```
 
 ## Package Structure (v5.245.0+)
@@ -49,6 +67,9 @@ The `spiderfoot/` package is organized into **8 domain sub-packages**:
 | `spiderfoot/observability/` | Logging, metrics, auditing | `logger`, `metrics`, `structured_logging`, `audit_log`, `health` |
 | `spiderfoot/services/` | External service integrations | `cache_service`, `dns_service`, `http_service`, `grpc_service`, `websocket_service` |
 | `spiderfoot/reporting/` | Report generation and export | `report_generator`, `export_service`, `report_formatter`, `visualization_service` |
+| `spiderfoot/agents/` | AI analysis agents (LLM-powered) | `base`, `finding_validator`, `credential_analyzer`, `text_summarizer`, `report_generator`, `document_analyzer`, `threat_intel`, `service` |
+| `spiderfoot/enrichment/` | Document enrichment pipeline | `converter`, `extractor`, `pipeline`, `service` |
+| `spiderfoot/user_input/` | User-defined input ingestion | `service` |
 
 ### Import Patterns
 
@@ -77,10 +98,10 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 ┌─────────────────────────────────────────────────────────────────────┐
 │                        Nginx Gateway (:80)                         │
 │               Rate limiting · WebSocket · Reverse proxy            │
-├──────────┬──────────────┬──────────────┬───────────────────────────┤
-│ WebUI    │ REST API     │ API Gateway  │ Prometheus Metrics        │
-│ :5001    │ :8001        │ /gateway/*   │ /metrics                  │
-├──────────┴──────────────┴──────────────┴───────────────────────────┤
+├──────────┬──────────────┬──────────────┬──────────────┬────────────┤
+│ WebUI    │ REST API     │  Agents      │ Enrichment   │ User Input │
+│ :5001    │ :8001        │  :8100       │ :8200        │ :8300      │
+├──────────┴──────────────┴──────────────┴──────────────┴────────────┤
 │                      Service Layer                                 │
 │  ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐      │
 │  │ServiceReg. │ │ConfigSvc   │ │ Metrics    │ │ Structured │      │
@@ -101,12 +122,20 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 │  │  pool)     │ │(priority Q)│ │(auto+batch)│ │  NATS)     │      │
 │  └────────────┘ └────────────┘ └────────────┘ └────────────┘      │
 ├───────────────────────────────────────────────────────────────────┤
-│                    Data Pipeline                                   │
+│                    LLM Gateway                                     │
 │  ┌────────────┐ ┌────────────┐ ┌────────────┐                      │
-│  │Vector.dev  │ │  gRPC/HTTP │ │ API Gateway│                      │
-│  │ Sink       │ │  RPC Layer │ │ (circuit   │                      │
-│  │(→ES/S3)    │ │  (fallback)│ │  breaker)  │                      │
-│  └────────────┘ └────────────┘ └────────────┘                      │
+│  │  LiteLLM   │ │  AI Agents │ │ OTel       │                      │
+│  │(multi-LLM  │ │ (6 agents) │ │ Tracing    │                      │
+│  │  proxy)    │ │            │ │ (Vector→   │                      │
+│  └────────────┘ └────────────┘ │  Jaeger)   │                      │
+│                                 └────────────┘                      │
+├───────────────────────────────────────────────────────────────────┤
+│                    Data Pipeline                                   │
+│  ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐      │
+│  │Vector.dev  │ │   Loki     │ │ Prometheus │ │  Grafana   │      │
+│  │(logs/traces│ │ (log aggr) │ │ (metrics)  │ │(dashboards)│      │
+│  │ /metrics)  │ │            │ │            │ │            │      │
+│  └────────────┘ └────────────┘ └────────────┘ └────────────┘      │
 ├───────────────────────────────────────────────────────────────────┤
 │                     Module Layer                                   │
 │  ┌──────────────────────┐ ┌──────────────────────┐                 │
@@ -254,20 +283,28 @@ Inter-service communication:
 
 ## Docker Microservices
 
-The `docker-compose-microservices.yml` defines 10 containers:
+The `docker-compose-microservices.yml` defines 17 containers:
 
 | Container | Image | Purpose |
 |---|---|---|
 | sf-api | spiderfoot-api | REST API + GraphQL (:8001) |
 | sf-webui | spiderfoot-webui | CherryPy Web UI (:5001) |
 | sf-nginx | nginx:alpine | Reverse proxy + TLS + WebSocket (:80) |
-| sf-postgres | postgres:16-alpine | Primary database (:5432) |
+| sf-postgres | postgres:15-alpine | Primary database (:5432) |
 | sf-redis | redis:7-alpine | Event bus + cache (:6379) |
-| sf-qdrant | qdrant/qdrant:latest | Vector similarity search (:6333) |
-| sf-vector | timberio/vector:latest | Log aggregation (:8686) |
-| sf-minio | minio/minio:latest | S3-compatible object storage (:9000/9001) |
-| sf-minio-init | minio/mc:latest | One-shot bucket provisioner |
-| sf-pg-backup | postgres:16-alpine | Scheduled PG backup → MinIO |
+| sf-qdrant | qdrant/qdrant:v1.12.4 | Vector similarity search (:6333) |
+| sf-vector | timberio/vector:0.39.0-alpine | Telemetry pipeline (:8686/:4317/:4318/:9598) |
+| sf-minio | minio/minio | S3-compatible object storage (:9000/9001) |
+| sf-minio-init | minio/mc | One-shot bucket provisioner (8 buckets) |
+| sf-pg-backup | postgres:15-alpine | Scheduled PG backup → MinIO |
+| sf-agents | spiderfoot-agents | AI analysis agents — 6 agents (:8100) |
+| sf-enrichment | spiderfoot-enrichment | Document conversion + entity extraction (:8200) |
+| sf-user-input | spiderfoot-user-input | User-defined data ingestion (:8300) |
+| sf-litellm | ghcr.io/berriai/litellm:main-v1.74.0 | Unified LLM gateway (:4000) |
+| sf-loki | grafana/loki:3.3.2 | Log aggregation (:3100) |
+| sf-grafana | grafana/grafana:11.4.0 | Dashboards & visualization (:3000) |
+| sf-prometheus | prom/prometheus:v2.54.1 | Metrics collection (:9090) |
+| sf-jaeger | jaegertracing/jaeger:2.4.0 | Distributed tracing (:16686) |
 
 ### Networks
 
@@ -285,6 +322,148 @@ The `docker-compose-microservices.yml` defines 10 containers:
 | sf-vector-data | sf-vector | /var/lib/vector |
 | sf-minio-data | sf-minio | /data |
 | sf-logs | sf-api, sf-webui | /app/logs |
+
+## AI Agents Service (`spiderfoot/agents/`)
+
+Six LLM-powered analysis agents that subscribe to Redis event bus
+events and produce structured intelligence. All agents extend `BaseAgent`
+with concurrency control, timeout handling, and Prometheus metrics.
+
+| Agent | Event Types | Output |
+|---|---|---|
+| **FindingValidator** | MALICIOUS_*, VULNERABILITY_*, LEAKED_* | verdict, confidence, remediation |
+| **CredentialAnalyzer** | LEAKED_CREDENTIALS, PASSWORD_*, API_KEY_* | severity, is_active, risk_factors |
+| **TextSummarizer** | RAW_*, TARGET_WEB_CONTENT, PASTE_*, DOCUMENT_* | summary, entities, sentiment |
+| **ReportGenerator** | SCAN_COMPLETE, REPORT_REQUEST | executive_summary, threat_assessment |
+| **DocumentAnalyzer** | DOCUMENT_UPLOAD, USER_DOCUMENT, REPORT_UPLOAD | entities, IOCs, classification |
+| **ThreatIntelAnalyzer** | MALICIOUS_*, BLACKLISTED_*, CVE_*, DARKNET_* | MITRE ATT&CK mapping, threat actors |
+
+All agents route LLM calls through LiteLLM (:4000) for unified
+model selection, cost tracking, and provider failover.
+
+### Agent Service API
+
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | /agents/process | Process a single event through matching agents |
+| POST | /agents/analyze | Deep analysis of a specific finding |
+| POST | /agents/report | Generate a comprehensive scan report |
+| GET | /agents/status | Status of all agents and pending tasks |
+| GET | /metrics | Prometheus metrics |
+| GET | /health | Health check |
+
+## Document Enrichment Service (`spiderfoot/enrichment/`)
+
+Converts documents to text, extracts entities and IOCs, and stores
+results in MinIO.
+
+### Supported Formats
+
+PDF (pypdf), DOCX (python-docx), XLSX (openpyxl), HTML, RTF (striprtf),
+plain text. Optional Apache Tika fallback for complex documents.
+
+### Entity Extraction
+
+Pre-compiled regex patterns for: IPv4/IPv6, emails, URLs, domains,
+MD5/SHA1/SHA256 hashes, phone numbers, CVEs, Bitcoin/Ethereum addresses,
+AWS keys, credit cards. Smart deduplication and private IP filtering.
+
+### Enrichment API
+
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | /enrichment/upload | Upload and process a document (100MB limit) |
+| POST | /enrichment/process-text | Process raw text content |
+| POST | /enrichment/batch | Batch process multiple documents |
+| GET | /enrichment/results/{id} | Fetch enrichment results |
+| GET | /enrichment/results | List all enrichment results |
+| GET | /metrics | Prometheus metrics |
+| GET | /health | Health check |
+
+## User-Defined Input Service (`spiderfoot/user_input/`)
+
+Allows users to supply their own documents, IOCs, reports, and
+context data to augment automated OSINT collection.
+
+### User Input API
+
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | /input/document | Upload document → enrichment → agent analysis |
+| POST | /input/iocs | Submit IOC list with deduplication |
+| POST | /input/report | Submit structured report → entity extraction |
+| POST | /input/context | Set scope/exclusions/threat model for a scan |
+| POST | /input/targets | Batch target list for multi-scan |
+| GET | /input/submissions | List all submissions |
+| GET | /input/submissions/{id} | Get submission details |
+
+## LLM Gateway (LiteLLM)
+
+Unified proxy supporting 100+ LLM providers through an
+OpenAI-compatible API. Configuration in `infra/litellm/config.yaml`.
+
+### Configured Models
+
+| Model Alias | Provider | Purpose |
+|---|---|---|
+| gpt-4o | OpenAI | Complex analysis (reports, threat intel) |
+| gpt-4o-mini | OpenAI | Default for most agents |
+| gpt-3.5-turbo | OpenAI | Fast, low-cost tasks |
+| claude-sonnet | Anthropic | Alternative for complex reasoning |
+| claude-haiku | Anthropic | Fast Anthropic alternative |
+| ollama/llama3 | Ollama (local) | Self-hosted, no API key needed |
+| ollama/mistral | Ollama (local) | Self-hosted coding/analysis |
+
+### Router Aliases
+
+- `default` → gpt-4o-mini
+- `fast` → gpt-3.5-turbo
+- `smart` → gpt-4o
+- `local` → ollama/llama3
+
+## Observability Stack
+
+### Telemetry Pipeline (Vector.dev)
+
+Vector.dev replaces both Promtail and OpenTelemetry Collector as a
+unified telemetry pipeline:
+
+- **Logs**: Docker container logs → JSON parse → route by level → Loki + MinIO
+- **Events**: HTTP source (:8686) → enrich with category/risk → MinIO + file
+- **Metrics**: Internal metrics → Prometheus exporter (:9598)
+- **Traces**: OTLP receiver (:4317 gRPC, :4318 HTTP) → forward to Jaeger
+
+### Grafana Dashboards
+
+Pre-provisioned 12-panel SpiderFoot Overview dashboard:
+Active Scans, Total Scans, Events Processed, High-Risk Findings,
+API Latency, LLM Token Usage, Event Rate, Risk Level distribution,
+Module Execution, Service Logs, Error Rate, Enrichment Pipeline.
+
+### Prometheus Scrape Targets
+
+spiderfoot-api, spiderfoot-scanner, spiderfoot-agents,
+spiderfoot-enrichment, vector, qdrant, minio, jaeger, litellm,
+prometheus (self-monitoring).
+
+### Distributed Tracing
+
+OpenTelemetry instrumentation via `spiderfoot/observability/tracing.py`
+with graceful no-op fallback when SDK not installed. Traces flow:
+Service → OTLP → Vector.dev :4317 → Jaeger :4317.
+
+## MinIO Buckets (8)
+
+| Bucket | Purpose |
+|---|---|
+| `sf-logs` | Vector.dev archived logs and events |
+| `sf-reports` | Generated scan reports |
+| `sf-pg-backups` | PostgreSQL backups |
+| `sf-qdrant-snapshots` | Vector DB snapshots |
+| `sf-data` | General application data |
+| `sf-loki-data` | Loki chunk/index storage |
+| `sf-loki-ruler` | Loki ruler data |
+| `sf-enrichment` | Enrichment pipeline documents |
 
 ## Qdrant Vector Search
 

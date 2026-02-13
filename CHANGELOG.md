@@ -3,6 +3,74 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.3.3] — Infrastructure Integration: Nemesis-Compatible Architecture
+
+### Added — Monitoring Stack (Phase 1)
+- **Grafana 11.4.0** dashboard service with auto-provisioned SpiderFoot Overview (12 panels)
+- **Loki 3.3.2** log aggregation with MinIO S3 backend, TSDB indexing, 30-day retention
+- **Prometheus 2.54.1** metrics collection with 10 scrape targets (api, scanner, agents, enrichment, vector, qdrant, minio, jaeger, litellm, self)
+- Pre-built Grafana datasources: Loki, Prometheus, PostgreSQL
+- Activated Vector.dev → Loki log sink with service/job/level labels
+- Activated Vector.dev → Prometheus exporter on :9598 with `spiderfoot` namespace
+
+### Added — Distributed Tracing (Phase 2)
+- **Jaeger 2.4.0** all-in-one tracing service
+- Vector.dev OTLP source (gRPC :4317, HTTP :4318) for trace ingestion
+- Vector.dev → Jaeger OTLP sink for trace forwarding
+- `spiderfoot/observability/tracing.py` — OpenTelemetry instrumentation with `get_tracer()`, `trace_span()` context manager, graceful no-op fallback
+
+### Added — LLM Gateway (Phase 3)
+- **LiteLLM v1.74.0** unified LLM proxy with OpenAI-compatible API
+- Multi-provider support: OpenAI (gpt-4o, gpt-4o-mini, gpt-3.5-turbo), Anthropic (claude-sonnet, claude-haiku), Ollama (llama3, mistral, codellama)
+- Embedding models: text-embedding-3-small, text-embedding-3-large
+- Redis-backed response caching (db:2), Prometheus callbacks for cost tracking
+- Router aliases: default→gpt-4o-mini, fast→gpt-3.5-turbo, smart→gpt-4o, local→ollama/llama3
+- API service now routes LLM calls through `SF_LLM_API_BASE=http://litellm:4000`
+
+### Added — AI Agents Service (Phase 4)
+- `spiderfoot/agents/` package with 6 analysis agents:
+  - **FindingValidator** — validates MALICIOUS_*/VULNERABILITY_*/LEAKED_* findings, produces verdict/confidence/remediation
+  - **CredentialAnalyzer** — assesses LEAKED_CREDENTIALS/API_KEY_* exposure risk
+  - **TextSummarizer** — summarizes RAW_*/TARGET_WEB_CONTENT/PASTE_* content with entity/sentiment extraction
+  - **ReportGenerator** — generates executive summaries on SCAN_COMPLETE with threat assessment
+  - **DocumentAnalyzer** — analyzes DOCUMENT_UPLOAD/USER_DOCUMENT for entities/IOCs, supports large document chunking
+  - **ThreatIntelAnalyzer** — maps MALICIOUS_*/CVE_*/DARKNET_* to MITRE ATT&CK techniques
+- `BaseAgent` ABC with concurrency semaphore, timeout handling, LLM calling (aiohttp → LiteLLM), Prometheus metrics (processed_total, errors_total, avg_processing_time_ms)
+- FastAPI agents service (:8100) with /agents/process, /agents/analyze, /agents/report, /agents/status, /metrics, /health endpoints
+- Redis pub/sub event listener for automatic agent dispatch with wildcard pattern matching
+
+### Added — Document Enrichment Pipeline (Phase 5)
+- `spiderfoot/enrichment/` package:
+  - **DocumentConverter** — PDF (pypdf), DOCX (python-docx), XLSX (openpyxl), HTML, RTF (striprtf), text; optional Tika fallback
+  - **EntityExtractor** — pre-compiled regex for IPv4/IPv6, emails, URLs, domains, MD5/SHA1/SHA256, phone numbers, CVEs, Bitcoin/Ethereum, AWS keys, credit cards; smart dedup and private IP filtering
+  - **EnrichmentPipeline** — orchestrates convert → extract → store (MinIO sf-enrichment bucket) with SHA256-based document IDs
+- FastAPI enrichment service (:8200) with /enrichment/upload (100MB limit), /enrichment/process-text, /enrichment/batch, /enrichment/results/{id}, /metrics, /health
+
+### Added — User-Defined Input Service (Phase 6)
+- `spiderfoot/user_input/` package:
+  - POST /input/document — upload → enrichment → agent analysis chain
+  - POST /input/iocs — IOC list submission with deduplication
+  - POST /input/report — structured report → entity extraction → agent analysis → MinIO
+  - POST /input/context — scope/exclusions/known_assets/threat_model per scan
+  - POST /input/targets — batch target list for multi-scan
+- Automatic forwarding to enrichment and agents services via HTTP
+- Submission tracking with GET /input/submissions and /input/submissions/{id}
+
+### Changed — Infrastructure
+- Docker Compose expanded from 10 → 17 containers
+- MinIO init now creates 8 buckets (added sf-loki-data, sf-loki-ruler, sf-enrichment)
+- Nginx config expanded with upstream blocks and location routing for Grafana (with WebSocket), Prometheus, Jaeger, LiteLLM, agents, enrichment, user-input
+- `docker/env.example` expanded with monitoring, tracing, LLM, and resource limit variables
+- `config/vector.toml` — Loki sink activated, Prometheus exporter activated, OTLP trace source + Jaeger sink added
+- New `infra/` directory with configs: `loki/local-config.yaml`, `grafana/provisioning/`, `grafana/dashboards/`, `prometheus/prometheus.yml`, `litellm/config.yaml`
+- Docker networks: sf-frontend (bridge), sf-backend (internal) — all new services on sf-backend
+- New volumes: grafana-data, prometheus-data
+
+### Changed — Documentation
+- README.md: updated Mermaid architecture diagram (17 containers), version badge (5.3.3), services table, Quick Start URLs, project structure; added Monitoring, AI Agents, Document Enrichment, User-Defined Input, LLM Gateway sections
+- ARCHITECTURE.md: updated topology diagram, service table, package listing; added AI Agents, Enrichment, User Input, LLM Gateway, Observability Stack sections
+- `docker/env.example`: comprehensive example with all new service configuration
+
 ## [5.235.0] — RC Cycle 178: Type Hints & Docstrings in modules/ — Near-Complete Coverage
 
 ### Changed
