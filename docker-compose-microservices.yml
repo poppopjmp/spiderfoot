@@ -351,6 +351,8 @@ services:
       - sf-backend
     ports:
       - "9598:9598"    # Prometheus metrics exporter
+      - "4317:4317"    # OTLP gRPC (trace ingestion)
+      - "4318:4318"    # OTLP HTTP (trace ingestion)
     volumes:
       - ./config/vector.toml:/etc/vector/vector.toml:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -375,6 +377,8 @@ services:
       minio:
         condition: service_healthy
       loki:
+        condition: service_started
+      jaeger:
         condition: service_started
     deploy:
       resources:
@@ -497,6 +501,37 @@ services:
         limits:
           cpus: "${PROMETHEUS_CPUS:-1.0}"
           memory: "${PROMETHEUS_MEMORY:-512M}"
+
+  # ---------------------------------------------------------------------------
+  # Jaeger — Distributed Tracing
+  # ---------------------------------------------------------------------------
+  # All-in-one Jaeger instance for trace collection and visualization.
+  # Services send traces via OTLP (gRPC/HTTP) through Vector.dev or directly.
+  # UI accessible via nginx /jaeger/ or direct port 16686.
+  # ---------------------------------------------------------------------------
+
+  jaeger:
+    image: jaegertracing/jaeger:2.4.0
+    container_name: sf-jaeger
+    restart: unless-stopped
+    networks:
+      - sf-frontend
+      - sf-backend
+    ports:
+      - "${SF_JAEGER_UI_PORT:-16686}:16686"    # Jaeger UI
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:14269/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "${JAEGER_CPUS:-1.0}"
+          memory: "${JAEGER_MEMORY:-512M}"
 
   # ---------------------------------------------------------------------------
   # PostgreSQL Backup Sidecar — pg_dump to MinIO

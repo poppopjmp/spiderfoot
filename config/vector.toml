@@ -48,6 +48,13 @@ headers = ["Authorization"]
 [sources.vector_metrics]
 type = "internal_metrics"
 
+# OTLP trace receiver — services send traces here; Vector forwards to Jaeger
+# This replaces OTel Collector for trace ingestion.
+[sources.otlp_traces]
+type = "opentelemetry"
+grpc.address = "0.0.0.0:4317"
+http.address = "0.0.0.0:4318"
+
 # ---------------------------------------------------------------------------
 # TRANSFORMS
 # ---------------------------------------------------------------------------
@@ -285,6 +292,13 @@ type = "prometheus_exporter"
 inputs = ["route_events.metrics", "vector_metrics"]
 address = "0.0.0.0:9598"
 default_namespace = "spiderfoot"
+
+# Jaeger trace sink — forwards OTLP traces to Jaeger collector
+[sinks.jaeger_traces]
+type = "opentelemetry"
+inputs = ["otlp_traces.traces"]
+endpoint = "http://jaeger:4317"
+compression = "gzip"
 
 # S3 for long-term archival (enable via SF_S3_BUCKET + SF_S3_REGION)
 # Uncomment for cloud deployments
