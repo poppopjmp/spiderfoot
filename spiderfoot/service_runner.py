@@ -134,7 +134,9 @@ def _build_sf_config() -> dict:
     # PostgreSQL
     pg_dsn = os.environ.get("SF_POSTGRES_DSN", "")
     if pg_dsn:
-        config["_dataservice_backend"] = "http"  # remote data service
+        config["__database"] = pg_dsn
+        config["__dbtype"] = "postgresql"
+        config["_dataservice_backend"] = "postgresql"
         config["_dataservice_url"] = pg_dsn
 
     # Vector.dev

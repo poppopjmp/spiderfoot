@@ -111,6 +111,14 @@ class ApiClient:
             return resp.json()
         return {"success": True}
 
+    def _put(self, path: str, json_data: dict | None = None) -> Any:
+        session = self._get_session()
+        resp = session.put(
+            self._url(path), json=json_data or {}, timeout=self._timeout
+        )
+        resp.raise_for_status()
+        return resp.json()
+
     def _patch(self, path: str, json_data: dict | None = None) -> Any:
         session = self._get_session()
         resp = session.patch(
@@ -123,36 +131,41 @@ class ApiClient:
     # Scan instance methods (SpiderFootDb compatibility)
     # ------------------------------------------------------------------
 
-    def scanInstanceGet(self, scan_id: str) -> list:
-        """Get scan instance as legacy tuple-in-list format.
+    def scanInstanceGet(self, scan_id: str) -> tuple | None:
+        """Get scan instance as legacy tuple format.
 
-        Returns: [(name, target, created, started, ended, status)] or []
+        Returns: (name, target, created, started, ended, status) or None
+        Matches SpiderFootDb.scanInstanceGet which unwraps fetchall()[0].
         """
         try:
             data = self._get(f"/scans/{scan_id}")
             scan = data.get("scan", data)
             if not scan:
-                return []
-            return [(
+                return None
+            return (
                 scan.get("name", ""),
                 scan.get("target", ""),
                 scan.get("created", 0),
                 scan.get("started", 0),
                 scan.get("ended", 0),
                 scan.get("status", ""),
-            )]
+            )
         except Exception as e:
             log.error("API scanInstanceGet failed: %s", e)
-            return []
+            return None
 
     def scanInstanceList(self) -> list:
         """List all scans in legacy tuple format."""
         try:
             data = self._get("/scans")
-            scans = data.get("scans", data) if isinstance(data, dict) else data
+            # API returns {"items": [...], "total": ...} or {"scans": [...]} or a plain list
+            if isinstance(data, dict):
+                scans = data.get("items", data.get("scans", data))
+            else:
+                scans = data
             return [
                 (
-                    s.get("id", ""),
+                    s.get("scan_id", s.get("id", "")),
                     s.get("name", ""),
                     s.get("target", ""),
                     s.get("created", 0),
@@ -213,11 +226,11 @@ class ApiClient:
             return {}
 
     def configSet(self, optMap: dict | None = None) -> None:
-        """Set global configuration."""
+        """Set global configuration via PUT /config."""
         if optMap is None:
             return
         try:
-            self._post("/config", {"config": optMap})
+            self._put("/config", optMap)
         except Exception as e:
             log.error("API configSet failed: %s", e)
 
@@ -226,7 +239,9 @@ class ApiClient:
     # ------------------------------------------------------------------
 
     def scanResultEvent(
-        self, scan_id: str, eventType: str = "ALL", **kwargs
+        self, scan_id: str, eventType: str = "ALL",
+        filterfp: str | bool = False, correlationId: str | None = None,
+        **kwargs,
     ) -> list:
         """Get scan results in legacy tuple format."""
         try:
@@ -256,10 +271,18 @@ class ApiClient:
     def scanResultSummary(self, scan_id: str, by: str = "type") -> list:
         """Get scan result summary."""
         try:
-            data = self._get(f"/scans/{scan_id}/summary")
+            data = self._get(f"/scans/{scan_id}/summary", params={"by": by})
+            # Prefer 'details' which has full tuple data, fall back to 'summary' dict
+            details = data.get("details", []) if isinstance(data, dict) else []
+            if details:
+                return [
+                    (d.get("key", ""), d.get("description", ""), d.get("last_in", 0),
+                     d.get("total", 0), d.get("unique_total", 0))
+                    for d in details
+                ]
             summary = data.get("summary", data) if isinstance(data, dict) else data
             if isinstance(summary, dict):
-                return [(k, "", "", v, 0) for k, v in summary.items()]
+                return [(k, "", 0, v, 0) for k, v in summary.items()]
             return summary if isinstance(summary, list) else []
         except Exception as e:
             log.error("API scanResultSummary failed: %s", e)
@@ -311,6 +334,26 @@ class ApiClient:
             return rows
         except Exception as e:
             log.error("API scanLogs failed: %s", e)
+            return []
+
+    def scanErrors(self, scan_id: str, limit: int = 0) -> list:
+        """Get scan error log entries."""
+        try:
+            params: dict[str, Any] = {"type": "ERROR"}
+            if limit:
+                params["limit"] = limit
+            data = self._get(f"/scans/{scan_id}/logs", params=params)
+            logs = data.get("logs", data) if isinstance(data, dict) else data
+            # Filter to only ERROR type and return in legacy tuple format (generated, component, message)
+            errors = []
+            for l in (logs if isinstance(logs, list) else []):
+                if isinstance(l, dict) and l.get("type", "") == "ERROR":
+                    errors.append((l.get("generated", 0), l.get("component", ""), l.get("message", "")))
+                elif isinstance(l, (list, tuple)):
+                    errors.append(l)
+            return errors
+        except Exception as e:
+            log.error("API scanErrors failed: %s", e)
             return []
 
     def scanLogEvent(
@@ -396,6 +439,164 @@ class ApiClient:
             self._post(f"/scans/{scan_id}/clear")
         except Exception as e:
             log.error("API scanResultDelete failed: %s", e)
+
+    # ------------------------------------------------------------------
+    # Scan control
+    # ------------------------------------------------------------------
+
+    def startScan(
+        self,
+        scan_name: str,
+        target: str,
+        modules: list[str] | None = None,
+        type_filter: list[str] | None = None,
+    ) -> dict:
+        """Start a new scan via the API.
+
+        Returns: {"id": scan_id, "name": ..., "status": ...} or raises.
+        """
+        payload: dict[str, Any] = {
+            "name": scan_name,
+            "target": target,
+        }
+        if modules:
+            payload["modules"] = modules
+        if type_filter:
+            payload["type_filter"] = type_filter
+        return self._post("/scans", payload)
+
+    def scanInstanceStop(self, scan_id: str) -> None:
+        """Stop / abort a running scan."""
+        try:
+            self._post(f"/scans/{scan_id}/stop")
+        except Exception as e:
+            log.error("API scanInstanceStop failed: %s", e)
+
+    # ------------------------------------------------------------------
+    # Correlation summaries
+    # ------------------------------------------------------------------
+
+    def scanCorrelationSummary(self, scan_id: str, by: str = "risk") -> list:
+        """Get scan correlation summary."""
+        try:
+            data = self._get(f"/scans/{scan_id}/correlations/summary", params={"by": by})
+            summary = data.get("summary", data) if isinstance(data, dict) else data
+            if not isinstance(summary, list):
+                return []
+            # Convert dicts to tuples matching DB format
+            result = []
+            for item in summary:
+                if isinstance(item, dict):
+                    if by == "risk":
+                        result.append((item.get("risk", ""), item.get("total", 0)))
+                    else:
+                        result.append((
+                            item.get("rule_id", ""),
+                            item.get("rule_name", ""),
+                            item.get("risk", ""),
+                            item.get("description", ""),
+                            item.get("total", 0),
+                        ))
+                else:
+                    result.append(item)
+            return result
+        except Exception as e:
+            log.debug("API scanCorrelationSummary failed: %s", e)
+            return []
+
+    def scanCorrelationList(self, scan_id: str) -> list:
+        """Get scan correlation list in legacy tuple format."""
+        try:
+            data = self._get(f"/scans/{scan_id}/correlations")
+            correlations = data.get("correlations", data) if isinstance(data, dict) else data
+            if not isinstance(correlations, list):
+                return []
+            # Convert dicts to tuples matching DB column order:
+            # (id, title, rule_id, rule_risk, rule_name, rule_descr, rule_logic, event_count)
+            result = []
+            for item in correlations:
+                if isinstance(item, dict):
+                    result.append((
+                        item.get("id", ""),
+                        item.get("title", ""),
+                        item.get("rule_id", ""),
+                        item.get("rule_risk", ""),
+                        item.get("rule_name", ""),
+                        item.get("rule_descr", ""),
+                        item.get("rule_logic", ""),
+                        item.get("event_count", 0),
+                    ))
+                else:
+                    result.append(item)
+            return result
+        except Exception as e:
+            log.debug("API scanCorrelationList failed: %s", e)
+            return []
+
+    def runCorrelations(self, scan_id: str) -> dict:
+        """Trigger correlation rule execution for a scan."""
+        try:
+            data = self._post(f"/scans/{scan_id}/correlations/run")
+            return data if isinstance(data, dict) else {"results": 0}
+        except Exception as e:
+            log.error("API runCorrelations failed: %s", e)
+            return {"error": str(e)}
+
+    def scanResultHistory(self, scan_id: str) -> list:
+        """Get scan result history in legacy tuple format."""
+        try:
+            data = self._get(f"/scans/{scan_id}/history")
+            history = data.get("history", data) if isinstance(data, dict) else data
+            if not isinstance(history, list):
+                return []
+            # Convert dicts to tuples matching DB column order: (hourmin, type, count)
+            result = []
+            for item in history:
+                if isinstance(item, dict):
+                    result.append((
+                        item.get("hourmin", ""),
+                        item.get("type", ""),
+                        item.get("count", 0),
+                    ))
+                else:
+                    result.append(item)
+            return result
+        except Exception as e:
+            log.debug("API scanResultHistory failed: %s", e)
+            return []
+
+    def scanResultEventUnique(self, scan_id: str, eventType: str, filterfp: str | bool = False) -> list:
+        """Get unique scan result events in legacy tuple format."""
+        try:
+            params: dict[str, Any] = {"event_type": eventType}
+            if filterfp:
+                params["filterfp"] = filterfp
+            data = self._get(f"/scans/{scan_id}/events/unique", params=params)
+            events = data.get("events", data) if isinstance(data, dict) else data
+            if not isinstance(events, list):
+                return []
+            # Convert dicts to tuples matching DB column order: (data, type, count)
+            result = []
+            for item in events:
+                if isinstance(item, dict):
+                    result.append((
+                        item.get("data", ""),
+                        item.get("type", ""),
+                        item.get("count", 0),
+                    ))
+                else:
+                    result.append(item)
+            return result
+        except Exception as e:
+            log.debug("API scanResultEventUnique failed: %s", e)
+            return []
+
+    def configClear(self) -> None:
+        """Clear / reset global configuration."""
+        try:
+            self._post("/config/reload")
+        except Exception as e:
+            log.error("API configClear failed: %s", e)
 
     # ------------------------------------------------------------------
     # Lifecycle

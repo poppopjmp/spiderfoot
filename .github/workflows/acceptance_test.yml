@@ -3,26 +3,31 @@ name: SpiderFoot Acceptance Tests
 
 on:
   push:
-    branches: [acc*]
+    branches: [main]
     paths:
       - 'test/acceptance/**'
       - '.github/workflows/acceptance_test.yml'
   pull_request:
-    branches: [acc*]
+    branches: [main]
     paths:
       - 'test/acceptance/**'
       - '.github/workflows/acceptance_test.yml'
+  workflow_dispatch:
 jobs:
   acceptance-tests-chrome:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
+      - name: Read version
+        id: meta
+        run: echo "version=$(cat VERSION)" >> $GITHUB_OUTPUT
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: '3.11'
 
       - name: Install Acceptance Test dependencies
         run: |
@@ -50,7 +55,7 @@ jobs:
       - name: Start SpiderFoot container
         run: |
           set -e
-          docker run -d -p 5001:5001 --name spiderfoot ghcr.io/poppopjmp/spiderfoot:v5.2.7
+          docker run -d -p 5001:5001 --name spiderfoot ghcr.io/poppopjmp/spiderfoot:v${{ steps.meta.outputs.version }}
 
       - name: Wait for SpiderFoot to start
         run: |
@@ -88,12 +93,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
+      - name: Read version
+        id: meta
+        run: echo "version=$(cat VERSION)" >> $GITHUB_OUTPUT
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: '3.11'
 
       - name: Install Acceptance Test dependencies
         run: |
@@ -133,7 +142,7 @@ jobs:
       - name: Start SpiderFoot container
         run: |
           set -e
-          docker run -d -p 5001:5001 --name spiderfoot ghcr.io/poppopjmp/spiderfoot:v5.2.7
+          docker run -d -p 5001:5001 --name spiderfoot ghcr.io/poppopjmp/spiderfoot:v${{ steps.meta.outputs.version }}
 
       - name: Wait for SpiderFoot to start
         run: |

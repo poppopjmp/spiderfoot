@@ -269,13 +269,31 @@ class SpiderFootHelpers():
                         except ImportError:
                             pass
 
+                        # Get provides/consumes from instance methods
+                        # (producedEvents/watchedEvents) which is where real
+                        # modules store their event types, falling back to meta.
+                        provides = []
+                        consumes = []
+                        try:
+                            inst = mod_class()
+                            if hasattr(inst, 'producedEvents') and callable(inst.producedEvents):
+                                provides = inst.producedEvents()
+                            if hasattr(inst, 'watchedEvents') and callable(inst.watchedEvents):
+                                consumes = inst.watchedEvents()
+                        except Exception:
+                            pass
+                        if not provides:
+                            provides = getattr(mod_class, 'meta', {}).get('provides', [])
+                        if not consumes:
+                            consumes = getattr(mod_class, 'meta', {}).get('consumes', [])
+
                         modules[module_name] = {
                             'name': getattr(mod_class, 'meta', {}).get('name', module_name),
                             'descr': getattr(mod_class, '__doc__', ''),
                             'cats': getattr(mod_class, 'meta', {}).get('categories', []),
                             'labels': getattr(mod_class, 'meta', {}).get('flags', []),
-                            'provides': getattr(mod_class, 'meta', {}).get('provides', []),
-                            'consumes': getattr(mod_class, 'meta', {}).get('consumes', []),
+                            'provides': provides,
+                            'consumes': consumes,
                             'opts': getattr(mod_class, 'opts', {}),
                             'optdescs': getattr(mod_class, 'optdescs', {}),
                             'meta': getattr(mod_class, 'meta', {}),
@@ -553,7 +571,7 @@ class SpiderFootHelpers():
 
     @staticmethod
     def buildGraphJson(root: str, data: list[str], flt: typing.list[str] | None = None) -> str:
-        """Convert supplied raw data into JSON format for SigmaJS.
+        """Convert supplied raw data into JSON format for vis-network.
 
         Args:
             root (str): TBD
@@ -567,6 +585,25 @@ class SpiderFootHelpers():
             if not flt:
                 flt = []
 
+            # Build a lookup: data_value -> (event_type, category)
+            node_type_map: dict[str, tuple[str, str]] = {}
+            for row in data:
+                if len(row) >= 12:
+                    data_val = str(row[1])
+                    event_type = str(row[4]) if row[4] else ''
+                    category = str(row[11]) if row[11] else 'DATA'
+                    if data_val and data_val not in node_type_map:
+                        node_type_map[data_val] = (event_type, category)
+
+            # Category → color map
+            category_colors = {
+                'ENTITY': '#4a90d9',        # Blue
+                'INTERNAL': '#95a5a6',      # Gray
+                'DESCRIPTOR': '#e67e22',    # Orange
+                'DATA': '#2ecc71',          # Green
+                'SUBENTITY': '#9b59b6',     # Purple
+            }
+
             mapping = SpiderFootHelpers.buildGraphData(data, flt)
             ret: _Graph = {}
             ret['nodes'] = list()
@@ -577,7 +614,7 @@ class SpiderFootHelpers():
             ncounter = 0
             for pair in mapping:
                 (dst, src) = pair
-                col = "#000"
+                col = "#7f8c8d"
 
                 # Leave out this special case
                 if dst == "ROOT" or src == "ROOT":
@@ -587,34 +624,48 @@ class SpiderFootHelpers():
                     ncounter = ncounter + 1
 
                     if dst in root:
-                        col = "#f00"
+                        col = "#e74c3c"  # Red for root
+                    else:
+                        type_info = node_type_map.get(dst, ('', 'DATA'))
+                        col = category_colors.get(type_info[1], '#7f8c8d')
 
-                    ret['nodes'].append({
+                    node = {
                         'id': str(ncounter),
                         'label': str(dst),
                         'x': random.SystemRandom().randint(1, 1000),
                         'y': random.SystemRandom().randint(1, 1000),
                         'size': "1",
                         'color': col
-                    })
+                    }
+                    type_info = node_type_map.get(dst, ('', 'DATA'))
+                    node['event_type'] = type_info[0]
+                    node['category'] = type_info[1]
 
+                    ret['nodes'].append(node)
                     nodelist[dst] = ncounter
 
                 if src not in nodelist:
                     ncounter = ncounter + 1
 
                     if src in root:
-                        col = "#f00"
+                        col = "#e74c3c"
+                    else:
+                        type_info = node_type_map.get(src, ('', 'DATA'))
+                        col = category_colors.get(type_info[1], '#7f8c8d')
 
-                    ret['nodes'].append({
+                    node = {
                         'id': str(ncounter),
                         'label': str(src),
                         'x': random.SystemRandom().randint(1, 1000),
                         'y': random.SystemRandom().randint(1, 1000),
                         'size': "1",
                         'color': col
-                    })
+                    }
+                    type_info = node_type_map.get(src, ('', 'DATA'))
+                    node['event_type'] = type_info[0]
+                    node['category'] = type_info[1]
 
+                    ret['nodes'].append(node)
                     nodelist[src] = ncounter
 
                 ecounter = ecounter + 1

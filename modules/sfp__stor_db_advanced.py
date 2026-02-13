@@ -554,9 +554,12 @@ class sfp__stor_db_advanced(SpiderFootModernPlugin):
     """Advanced enterprise storage module Advanced features."""
 
     meta = {
-        'name': "Advanced Database Storage (Enterprise)",
-        'summary': "Enterprise-grade storage with advanced features: connection pooling, load balancing, auto-scaling, and AI optimization.",
-        'flags': ["enterprise", "production"]
+        'name': "Advanced Database Storage (Enterprise) [DEPRECATED]",
+        'summary': "DEPRECATED: Core sfp__stor_db module handles all production storage needs. "
+                   "Connection pooling is managed at the database driver level. "
+                   "Enterprise features (load balancing, auto-scaling, AI optimization) are "
+                   "handled by the infrastructure layer (PostgreSQL, Vector.dev).",
+        'flags': ["deprecated", "enterprise", "production"]
     }
 
     _priority = 0

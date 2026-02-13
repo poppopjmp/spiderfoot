@@ -338,9 +338,27 @@ class CherryPySecurityTool(cherrypy.Tool):
                     self.log.warning("Input validation error: %s", e)
 
             # CSRF protection for state-changing requests
+            # Skip CSRF for read-only scan data endpoints (legacy AJAX uses POST)
+            _CSRF_EXEMPT_PATHS = (
+                '/scansummary', '/scanstatus', '/scaneventresults',
+                '/scaneventresultsunique', '/scanlog', '/scanerrors',
+                '/scancorrelations', '/scanhistory', '/scanopts',
+                '/scanelementtypediscovery', '/search', '/scanviz',
+                '/resultsetfp', '/scaninfo', '/runcorrelations',
+                # Workspace endpoints
+                '/workspacelist', '/workspacecreate', '/workspaceget',
+                '/workspaceupdate', '/workspacedelete',
+                '/workspacesummary', '/workspaceaddtarget',
+                '/workspaceremovetarget', '/workspaceimportscans',
+                '/workspacemultiscan', '/workspacemcpreport',
+                '/workspacetiming', '/workspacescanresults',
+                '/workspacescancorrelations', '/workspacedetails',
+                '/workspacereportdownload',
+            )
             if (self.middleware.security_config['csrf_enabled'] and
                 method in ['POST', 'PUT', 'DELETE', 'PATCH'] and
-                self.middleware.csrf is not None):
+                self.middleware.csrf is not None and
+                endpoint not in _CSRF_EXEMPT_PATHS):
                 try:
                     self._check_csrf_token(request)
                 except Exception as e:

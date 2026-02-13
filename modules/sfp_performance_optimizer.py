@@ -301,9 +301,11 @@ class sfp_performance_optimizer(SpiderFootModernPlugin):
     """Performance optimization and caching system for SpiderFoot."""
 
     meta = {
-        'name': "Performance Optimizer",
-        'summary': "Provides caching, rate limiting, and performance optimization for SpiderFoot scans.",
-        'flags': [],
+        'name': "Performance Optimizer [DEPRECATED]",
+        'summary': "DEPRECATED: Caching, rate limiting, and performance optimization are now "
+                   "handled at the framework level (Redis cache, scan scheduler, module throttling). "
+                   "This per-scan module is no longer needed.",
+        'flags': ["deprecated"],
         'useCases': ["Footprint", "Investigate", "Passive"],
         'categories': ["Content Analysis"],
         'dataSource': {

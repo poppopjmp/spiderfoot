@@ -119,13 +119,28 @@ class SpiderFootWebUi(WebUiRoutes):
         """Validate the configuration and fix common issues."""
         try:
             # Validate and set default values for required configuration keys
+            # Detect PostgreSQL from environment (microservice mode)
+            import os as _os
+            _pg_dsn = _os.environ.get('SF_POSTGRES_DSN', '')
+            if _pg_dsn:
+                _default_dbtype = 'postgresql'
+                _default_db = _pg_dsn
+                # FORCE override — env var takes precedence over saved config
+                self.config['__dbtype'] = _default_dbtype
+                self.config['__database'] = _default_db
+                self.log.info("Using PostgreSQL backend from SF_POSTGRES_DSN (forced)")
+            else:
+                _default_dbtype = 'sqlite'
+                _default_db = f"{SpiderFootHelpers.dataPath()}/spiderfoot.db"
+
             required_defaults = {
                 '_modulesenabled': '',           # Default to empty string (no modules enabled)
                 '_logging': 'INFO',             # Default logging level
                 '__version__': '5.3.3',         # Default version if not set
                 '_debug': False,                # Default debug mode off
                 '__correlationrules__': [],     # Default empty correlation rules
-                '__dbtype': 'sqlite'            # Default database type
+                '__dbtype': _default_dbtype,    # Database type (auto-detected)
+                '__database': _default_db       # Database path/DSN (auto-detected)
             }
             
             for key, default_value in required_defaults.items():
@@ -151,9 +166,9 @@ class SpiderFootWebUi(WebUiRoutes):
             else:
                 self.config['__modules__'] = {}
             
-            # Validate database configuration
+            # Validate database configuration (only set default if not already set by above)
             if '__database' not in self.config:
-                self.config['__database'] = f"{SpiderFootHelpers.dataPath()}/spiderfoot.db"
+                self.config['__database'] = _default_db
                     
         except Exception as e:
             self.log.error(f"Configuration validation failed: {e}")
@@ -216,8 +231,9 @@ class SpiderFootWebUi(WebUiRoutes):
             return False
             
         try:
-            workspace = SpiderFootWorkspace(self.config)
-            return workspace.getWorkspace(workspace_id) is not None
+            # Check if workspace exists via list_workspaces (class method)
+            workspaces = SpiderFootWorkspace.list_workspaces(self.config)
+            return any(ws['workspace_id'] == workspace_id for ws in workspaces)
         except Exception:
             return False
     
@@ -654,13 +670,12 @@ class SpiderFootWebUiApp:
     def mount(self) -> None:
         """Mount all endpoints with proper error handling and validation."""
         try:
-            # Mount endpoints with proper paths
-            cherrypy.tree.mount(self.scan, '/scan')
-            cherrypy.tree.mount(self.workspace, '/workspace')
-            cherrypy.tree.mount(self.info, '/info')
-            cherrypy.tree.mount(self.settings, '/settings')
-            cherrypy.tree.mount(self.export, '/export')
-            cherrypy.tree.mount(self.misc, '/')
+            # Mount self at root — SpiderFootWebUi inherits from ALL endpoint
+            # classes (via WebUiRoutes), so every CherryPy-exposed method
+            # (workspace, scan, info, settings, export, misc) is accessible
+            # at the root URL path.  Templates call e.g. /workspacescanresults
+            # (no prefix), so ALL methods must be reachable from /.
+            cherrypy.tree.mount(self, '/')
             
             # Register enhanced error handlers
             cherrypy.config.update({
@@ -871,7 +886,7 @@ if __name__ == "__main__":
             '/': {
                 'tools.response_headers.on': True,
                 'tools.response_headers.headers': [
-                    ('X-Frame-Options', 'DENY'),
+                    ('X-Frame-Options', 'SAMEORIGIN'),
                     ('X-XSS-Protection', '1; mode=block'),
                     ('X-Content-Type-Options', 'nosniff'),
                 ]

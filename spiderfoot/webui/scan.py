@@ -20,6 +20,7 @@ from spiderfoot.scan.scan_state_map import (
     DB_STATUS_ERROR_FAILED,
     DB_STATUS_FINISHED,
 )
+from spiderfoot.webui.db_provider import _API_MODE
 
 class ScanEndpoints:
     """WebUI endpoints for scan management."""
@@ -168,8 +169,13 @@ class ScanEndpoints:
                             scanname=str(scanname), scantarget=str(scantarget), version=__version__)
 
     @cherrypy.expose
-    def scaninfo(self, id: str) -> str:
+    def scaninfo(self, id: str = "", **kwargs) -> str:
         """Display detailed information for a specific scan."""
+        # Handle multiple id values (e.g., from VS Code Simple Browser adding extra params)
+        if isinstance(id, list):
+            id = id[0]
+        if not id:
+            return self.error("No scan ID provided")
         import sfwebui
         dbh = self._get_dbh()
         res = dbh.scanInstanceGet(id)
@@ -243,11 +249,37 @@ class ScanEndpoints:
             scandata = dbh.scanResultSummary(id, by)
         except Exception as e:
             return retdata
+
+        # Get current scan status to append as 6th element (JS expects data[i][5])
+        scan_status = "UNKNOWN"
+        try:
+            scan_info = dbh.scanInstanceGet(id)
+            if scan_info:
+                scan_status = scan_info[5] if len(scan_info) > 5 else "UNKNOWN"
+        except Exception:
+            pass
+
         try:
             eventtypes = dbh.eventTypes()
         except Exception as e:
             eventtypes = []
-        retdata.extend(scandata)
+
+        # Format timestamps and append scan status as 6th element
+        for row in scandata:
+            row_list = list(row)
+            # Format last_in timestamp (index 2) to human-readable
+            if len(row_list) > 2 and row_list[2]:
+                try:
+                    ts = float(row_list[2])
+                    # Handle millisecond timestamps
+                    if ts > 1e12:
+                        ts = ts / 1000.0
+                    row_list[2] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(ts))
+                except (ValueError, OSError, OverflowError):
+                    pass
+            # Append scan status as 6th element
+            row_list.append(scan_status)
+            retdata.append(row_list)
         return retdata
 
     @cherrypy.expose
@@ -258,7 +290,7 @@ class ScanEndpoints:
         dbh = self._get_dbh()
         try:
             data = dbh.scanCorrelationList(id)
-            retdata = list(data)
+            retdata = [list(row) for row in data]
         except Exception as e:
             return self.jsonify_error("500", str(e))
         return retdata
@@ -275,7 +307,7 @@ class ScanEndpoints:
         dbh = self._get_dbh()
         try:
             data = dbh.scanResultEvent(id, eventType, filterfp, correlationId)
-            retdata = list(data)
+            retdata = [list(row) for row in data]
         except Exception as e:
             return retdata
         return retdata
@@ -288,7 +320,7 @@ class ScanEndpoints:
         retdata = []
         try:
             data = dbh.scanResultEventUnique(id, eventType, filterfp)
-            retdata = list(data)
+            retdata = [list(row) for row in data]
         except Exception as e:
             return retdata
         return retdata
@@ -311,7 +343,34 @@ class ScanEndpoints:
         dbh = self._get_dbh()
         try:
             # Fixed: Use the correct method name scanResultHistory instead of scanHistory
-            return dbh.scanResultHistory(id)
+            data = dbh.scanResultHistory(id)
+            return [list(row) for row in data] if data else []
+        except Exception as e:
+            return []
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def scanlog(self, id: str, limit: int = 0, rowId: int = 0, reverse: int = 0) -> list:
+        """Return scan log entries."""
+        if not id:
+            return []
+        dbh = self._get_dbh()
+        try:
+            data = dbh.scanLogs(id, limit, rowId, reverse)
+            return [list(row) for row in data] if data else []
+        except Exception as e:
+            return []
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def scanerrors(self, id: str) -> list:
+        """Return scan error entries."""
+        if not id:
+            return []
+        dbh = self._get_dbh()
+        try:
+            data = dbh.scanErrors(id)
+            return [list(row) for row in data] if data else []
         except Exception as e:
             return []
 
@@ -363,14 +422,31 @@ class ScanEndpoints:
         modlist.sort()
         if "sfp__stor_stdout" in modlist:
             modlist.remove("sfp__stor_stdout")
-        scanId = SpiderFootHelpers.genScanInstanceId()
-        try:
-            loggingQueue = getattr(self, 'loggingQueue', None)
-            if loggingQueue is None:
-                loggingQueue = mp.Queue()
-            startSpiderFootScanner(loggingQueue, scanname, scanId, scantarget, targetType, modlist, cfg)
-        except Exception as e:
-            return self.error(str(e))
+
+        # In API proxy mode, delegate scan creation to the API service
+        # (the WebUI container has no direct database access).
+        if _API_MODE:
+            try:
+                result = dbh.startScan(
+                    scan_name=scanname,
+                    target=scantarget,
+                    modules=modlist,
+                )
+                scanId = result.get("id", "")
+                if not scanId:
+                    return self.error("API did not return a scan ID")
+            except Exception as e:
+                return self.error(f"Failed to start scan via API: {e}")
+        else:
+            scanId = SpiderFootHelpers.genScanInstanceId()
+            try:
+                loggingQueue = getattr(self, 'loggingQueue', None)
+                if loggingQueue is None:
+                    loggingQueue = mp.Queue()
+                startSpiderFootScanner(loggingQueue, scanname, scanId, scantarget, targetType, modlist, cfg)
+            except Exception as e:
+                return self.error(str(e))
+
         try:
             if max_wait is None or max_wait == '':
                 max_wait = 10
@@ -382,7 +458,8 @@ class ScanEndpoints:
         while dbh.scanInstanceGet(scanId) is None and waited < max_wait:
             time.sleep(0.1)
             waited += 0.1
-        if dbh.scanInstanceGet(scanId) is None:
+        # In API mode the scan may take a moment to register; don't block
+        if not _API_MODE and dbh.scanInstanceGet(scanId) is None:
             return self.error("Scan did not start in time. Please try again.")
         if cherrypy.request.headers.get('Accept') and 'application/json' in cherrypy.request.headers.get('Accept'):
             return {"scanId": scanId}
@@ -486,21 +563,8 @@ class ScanEndpoints:
         retdata['data'] = datamap
         return retdata
 
-    @cherrypy.expose
-    @cherrypy.tools.json_out()
-    def workspacescanresults(self, workspace: str, limit: str | None = None) -> dict:
-        """Return scan results for a given workspace with optional limit."""
-        try:
-            if limit is not None:
-                limit = int(limit)
-        except (ValueError, TypeError):
-            limit = 100
-        dbh = self._get_dbh()
-        try:
-            results = dbh.scanResultSummary(workspace, limit)
-            return {'success': True, 'results': results}
-        except Exception as e:
-            return {'success': False, 'error': str(e)}
+    # NOTE: workspacescanresults is defined in WorkspaceEndpoints (workspace.py)
+    # and accessible via MRO in WebUiRoutes.  Do NOT duplicate it here.
 
     @cherrypy.expose
     def index(self) -> str:

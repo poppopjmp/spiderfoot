@@ -208,12 +208,37 @@ class ScanService:
     def get_correlations(self, scan_id: str) -> list:
         """Return scan correlation rows."""
         dbh = self._ensure_dbh()
-        return dbh.scanCorrelations(scan_id) or []
+        try:
+            return dbh.scanCorrelationList(scan_id) or []
+        except Exception:
+            return []
 
-    def get_scan_logs(self, scan_id: str) -> list:
+    def get_scan_logs(self, scan_id: str, limit: int | None = None,
+                      from_row_id: int = 0, reverse: bool = False) -> list:
         """Return raw scan log rows."""
         dbh = self._ensure_dbh()
-        return dbh.scanLogs(scan_id) or []
+        return dbh.scanLogs(scan_id, limit, from_row_id, reverse) or []
+
+    def get_result_summary(self, scan_id: str, by: str = "type") -> list:
+        """Return scan result summary grouped by type/module/entity."""
+        dbh = self._ensure_dbh()
+        return dbh.scanResultSummary(scan_id, by) or []
+
+    def get_result_history(self, scan_id: str) -> list:
+        """Return scan result history (counts over time)."""
+        dbh = self._ensure_dbh()
+        return dbh.scanResultHistory(scan_id) or []
+
+    def get_unique_events(self, scan_id: str, event_type: str = "ALL",
+                          filter_fp: bool = False) -> list:
+        """Return unique events grouped by type and data."""
+        dbh = self._ensure_dbh()
+        return dbh.scanResultEventUnique(scan_id, event_type, filter_fp) or []
+
+    def get_correlation_summary(self, scan_id: str, by: str = "rule") -> list:
+        """Return correlation result summary."""
+        dbh = self._ensure_dbh()
+        return dbh.scanCorrelationSummary(scan_id, by) or []
 
     # ------------------------------------------------------------------
     # Metadata / notes / archive  (delegated to ScanMetadataService)

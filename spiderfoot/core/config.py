@@ -101,6 +101,14 @@ class ConfigManager:
                 default_data_path.mkdir(exist_ok=True)
                 self._config['__database'] = str(default_data_path / 'spiderfoot.db')
 
+            # Override with PostgreSQL if SF_POSTGRES_DSN is set
+            import os as _os
+            _pg_dsn = _os.environ.get('SF_POSTGRES_DSN', '')
+            if _pg_dsn:
+                self._config['__database'] = _pg_dsn
+                self._config['__dbtype'] = 'postgresql'
+                self.log.info("Using PostgreSQL backend from SF_POSTGRES_DSN")
+
             # Add configuration descriptions
             self._config['__globaloptdescs__'] = self.CONFIG_DESCRIPTIONS
 

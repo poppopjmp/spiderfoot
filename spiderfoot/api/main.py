@@ -14,7 +14,7 @@ from fastapi import FastAPI
 from .routers import (
     scan, workspace, config, data, websocket,
     visualization, correlations, rag_correlation, reports,
-    health, scan_progress, tasks, webhooks, export,
+    health, scan_progress, tasks, webhooks, export, storage,
 )
 from spiderfoot import __version__
 
@@ -95,6 +95,7 @@ app = FastAPI(
         {"name": "scan-progress", "description": "SSE scan progress streaming"},
         {"name": "tasks", "description": "Background task management"},
         {"name": "webhooks", "description": "Outbound webhook configuration"},
+        {"name": "storage", "description": "MinIO object storage management (reports, backups, snapshots)"},
         {"name": "websockets", "description": "Real-time event streaming via WebSocket"},
     ],
 )
@@ -125,8 +126,21 @@ _VERSIONED_ROUTERS = [
     (tasks.router,            "/api", ["tasks"]),
     (webhooks.router,         "/api", ["webhooks"]),
     (export.router,           "/api", ["scans"]),
+    (storage.router,          "/api/storage", ["storage"]),
     (websocket.router,        "/ws",  ["websockets"]),
 ]
+
+# Mount GraphQL endpoint at /api/graphql BEFORE versioned routers
+# (must be before scan router's /{scan_id} to avoid path capture)
+try:
+    from spiderfoot.api.graphql.router import graphql_router
+    app.include_router(graphql_router, prefix="/api", tags=["graphql"])
+    _log.info("GraphQL endpoint mounted at /api/graphql")
+except ImportError:
+    _log.warning("strawberry-graphql not installed — GraphQL endpoint disabled. "
+                 "Install with: pip install strawberry-graphql[fastapi]")
+except Exception as _gql_err:
+    _log.warning("GraphQL init failed: %s", _gql_err)
 
 # Mount versioned routers: /api/v1/... + legacy /api/...
 mount_versioned_routers(app, _VERSIONED_ROUTERS, keep_legacy=True)

@@ -358,6 +358,22 @@ def _get_metrics_text() -> str:
 
 
 # -----------------------------------------------------------------------
+# MinIO object storage check
+# -----------------------------------------------------------------------
+
+def _check_minio() -> dict[str, Any]:
+    """Check MinIO/S3 connectivity and bucket status."""
+    try:
+        from spiderfoot.storage.minio_manager import get_storage_manager
+        mgr = get_storage_manager()
+        return mgr.health_check()
+    except ImportError:
+        return {"status": "unknown", "message": "MinIO storage module not available"}
+    except Exception as e:
+        return {"status": "down", "message": str(e)}
+
+
+# -----------------------------------------------------------------------
 # Subsystem registry — run all checks
 # -----------------------------------------------------------------------
 
@@ -373,6 +389,7 @@ _SUBSYSTEM_CHECKS = {
     "scan_hooks": _check_scan_hooks,
     "module_timeout": _check_module_timeout,
     "output_validator": _check_output_validator,
+    "minio": _check_minio,
 }
 
 _startup_time = time.time()

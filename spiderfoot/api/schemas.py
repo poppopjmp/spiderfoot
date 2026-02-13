@@ -319,7 +319,7 @@ class WorkspaceCreateResponse(BaseModel):
     workspace_id: str
     name: str
     description: str = ""
-    created_time: str | None = None
+    created_time: str | float | None = None
     message: str = "Workspace created successfully"
 
 
@@ -328,8 +328,8 @@ class WorkspaceDetailResponse(BaseModel):
     workspace_id: str
     name: str
     description: str = ""
-    created_time: str | None = None
-    modified_time: str | None = None
+    created_time: str | float | None = None
+    modified_time: str | float | None = None
     targets: list = []
     scans: list = []
     metadata: dict = {}

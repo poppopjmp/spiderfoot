@@ -132,41 +132,58 @@ class HybridCorrelationResult:
 # ---------------------------------------------------------------------------
 
 def _normalize_rule_result(rule_result: dict[str, Any]) -> list[HybridFinding]:
-    """Convert a YAML rule engine result dict to HybridFindings."""
+    """Convert a YAML rule engine result dict to HybridFindings.
+
+    Handles both the native RuleExecutor format
+    (``{meta, matched, events, correlations_created}``) and a
+    hypothetical extended format with ``groups``.
+    """
     findings: list[HybridFinding] = []
-    rule_id = rule_result.get("rule_id", rule_result.get("id", "unknown"))
-    headline = rule_result.get("headline", "Rule correlation")
-    risk = rule_result.get("risk", "INFO")
+
+    # Extract metadata from the RuleExecutor output
+    meta = rule_result.get("meta", {})
+    rule_id = rule_result.get("rule_id", meta.get("name", "unknown"))
+    headline = meta.get("headline", rule_result.get("headline", "Rule correlation"))
+    risk = meta.get("risk", rule_result.get("risk", "INFO"))
+    matched = rule_result.get("matched", False)
+    events = rule_result.get("events", [])
     groups = rule_result.get("groups", [])
 
-    for idx, grp in enumerate(groups):
-        fid = f"rule_{rule_id}_{idx}"
-        event_ids = grp.get("event_ids", [])
-        count = grp.get("count", len(event_ids))
+    if groups:
+        for idx, grp in enumerate(groups):
+            fid = f"rule_{rule_id}_{idx}"
+            event_ids = grp.get("event_ids", [])
+            count = grp.get("count", len(event_ids))
+            confidence = min(1.0, 0.5 + 0.05 * count)
+            desc = grp.get("description", headline)
 
-        confidence = min(1.0, 0.5 + 0.05 * count)
-        desc = grp.get("description", headline)
+            findings.append(HybridFinding(
+                finding_id=fid,
+                headline=headline.format(**grp) if "{" in headline else headline,
+                description=desc,
+                risk_level=risk.upper(),
+                confidence=confidence,
+                sources=[CorrelationSource.RULES],
+                event_ids=event_ids,
+                metadata={"rule_id": rule_id, "group_key": grp.get("key", "")},
+            ))
+    elif matched:
+        # RuleExecutor format — create finding from matched events
+        event_ids = [getattr(e, 'event_id', str(e)) for e in events[:50]] if events else []
+        corr_count = rule_result.get("correlations_created", 0)
+        confidence = min(1.0, 0.5 + 0.05 * max(corr_count, len(event_ids)))
 
-        findings.append(HybridFinding(
-            finding_id=fid,
-            headline=headline.format(**grp) if "{" in headline else headline,
-            description=desc,
-            risk_level=risk.upper(),
-            confidence=confidence,
-            sources=[CorrelationSource.RULES],
-            event_ids=event_ids,
-            metadata={"rule_id": rule_id, "group_key": grp.get("key", "")},
-        ))
-
-    # If no groups, create a single finding for the rule match
-    if not groups and rule_result.get("matched", False):
         findings.append(HybridFinding(
             finding_id=f"rule_{rule_id}_0",
             headline=headline,
             risk_level=risk.upper(),
-            confidence=0.5,
+            confidence=confidence,
             sources=[CorrelationSource.RULES],
-            metadata={"rule_id": rule_id},
+            event_ids=event_ids,
+            metadata={
+                "rule_id": rule_id,
+                "correlations_created": corr_count,
+            },
         ))
 
     return findings
@@ -177,15 +194,15 @@ def _normalize_vector_result(vec_result: Any) -> list[HybridFinding]:
     findings: list[HybridFinding] = []
 
     hits = getattr(vec_result, "hits", [])
-    analysis = getattr(vec_result, "analysis", "")
-    risk = getattr(vec_result, "risk_level", "INFO")
+    analysis = getattr(vec_result, "rag_analysis", "")
+    risk = getattr(vec_result, "risk_assessment", "INFO")
     confidence = getattr(vec_result, "confidence", 0.0)
 
     if not hits:
         return findings
 
     # Group hits into a single finding per query
-    event_ids = [h.event_id for h in hits]
+    event_ids = [h.event.event_id if hasattr(h, 'event') else getattr(h, 'event_id', '') for h in hits]
     top_score = max(h.score for h in hits) if hits else 0.0
 
     findings.append(HybridFinding(

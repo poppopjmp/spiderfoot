@@ -82,7 +82,7 @@ class ScheduleCreateRequest(BaseModel):
 # Background task helper
 # -----------------------------------------------------------------------
 
-async def start_scan_background(
+def start_scan_background(
     scan_id: str,
     scan_name: str,
     target: str,
@@ -91,10 +91,19 @@ async def start_scan_background(
     type_filter: list,
     config: dict,
 ) -> None:
-    """Launch a SpiderFoot scan in the background for the given target and modules."""
+    """Launch a SpiderFoot scan in the background for the given target and modules.
+
+    NOTE: This is intentionally a sync function (not async) so that FastAPI's
+    BackgroundTasks runs it in a thread pool instead of blocking the event loop.
+    """
+    import multiprocessing as mp
+    from spiderfoot.observability.logger import logListenerSetup
     try:
+        # Create a proper logging queue for the scanner process
+        logging_queue = mp.Queue()
+        logListenerSetup(logging_queue, config)
         startSpiderFootScanner(
-            None, scan_name, scan_id, target, target_type, modules, config,
+            logging_queue, scan_name, scan_id, target, target_type, modules, config,
         )
     except Exception as e:
         log.error("Failed to start scan %s: %s", scan_id, e)
@@ -610,6 +619,13 @@ async def create_scan(
         if not modules:
             modules = ["sfp__stor_db"]
 
+        # Always ensure storage modules are included
+        # sfp__stor_db watches all events and stores results to the database
+        # It won't appear in modulesProducing() since it doesn't produce events
+        for storage_mod in ["sfp__stor_db"]:
+            if storage_mod not in modules:
+                modules.append(storage_mod)
+
         try:
             svc.create_scan(scan_id, scan_request.name, scan_request.target)
         except Exception as e:
@@ -664,6 +680,275 @@ async def get_scan(
     except Exception as e:
         log.debug("Failed to retrieve state machine for scan %s: %s", scan_id, e)
     return result
+
+
+# -----------------------------------------------------------------------
+# Scan result / event data endpoints (consumed by WebUI)
+# -----------------------------------------------------------------------
+
+
+@router.get("/scans/{scan_id}/events")
+async def get_scan_events(
+    scan_id: str,
+    event_type: str = Query(None, description="Filter by event type"),
+    filter_fp: bool = Query(False, description="Filter false positives"),
+    api_key: str = optional_auth_dep,
+    svc: ScanService = Depends(get_scan_service),
+) -> dict:
+    """Get scan result events as JSON."""
+    record = svc.get_scan(scan_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Scan not found")
+    rows = svc.get_events(scan_id, event_type=event_type or "ALL", filter_fp=filter_fp)
+    events = []
+    for row in rows:
+        # DB returns: (generated, data, module, hash, type, source_event_hash, confidence, visibility, risk)
+        events.append({
+            "generated": row[0] if len(row) > 0 else 0,
+            "data": row[1] if len(row) > 1 else "",
+            "module": row[2] if len(row) > 2 else "",
+            "hash": row[3] if len(row) > 3 else "",
+            "type": row[4] if len(row) > 4 else "",
+            "source_event_hash": row[5] if len(row) > 5 else "ROOT",
+            "confidence": row[6] if len(row) > 6 else 100,
+            "visibility": row[7] if len(row) > 7 else 100,
+            "risk": row[8] if len(row) > 8 else 0,
+        })
+    return {"events": events, "total": len(events)}
+
+
+@router.get("/scans/{scan_id}/summary")
+async def get_scan_summary(
+    scan_id: str,
+    by: str = Query("type", description="Group by: type, module, entity"),
+    api_key: str = optional_auth_dep,
+    svc: ScanService = Depends(get_scan_service),
+) -> dict:
+    """Get scan result summary grouped by type/module/entity."""
+    record = svc.get_scan(scan_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Scan not found")
+    rows = svc.get_result_summary(scan_id, by)
+    # DB returns: (type/module/data, event_descr, last_in, total, utotal)
+    summary = []
+    for row in rows:
+        summary.append({
+            "key": row[0] if len(row) > 0 else "",
+            "description": row[1] if len(row) > 1 else "",
+            "last_in": row[2] if len(row) > 2 else 0,
+            "total": row[3] if len(row) > 3 else 0,
+            "unique_total": row[4] if len(row) > 4 else 0,
+        })
+    # Also produce a simple dict form for the WebUI client
+    summary_dict = {row[0]: row[3] for row in rows if len(row) > 3}
+    return {"summary": summary_dict, "details": summary, "total_types": len(summary)}
+
+
+@router.get("/scans/{scan_id}/logs")
+async def get_scan_logs(
+    scan_id: str,
+    limit: int = Query(None, description="Max log entries"),
+    offset: int = Query(0, description="Offset (fromRowId)"),
+    api_key: str = optional_auth_dep,
+    svc: ScanService = Depends(get_scan_service),
+) -> dict:
+    """Get scan log entries."""
+    record = svc.get_scan(scan_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Scan not found")
+    rows = svc.get_scan_logs(scan_id, limit=limit, from_row_id=offset)
+    # DB returns: (generated, component, type, message, rowid)
+    logs = []
+    for row in rows:
+        logs.append({
+            "generated": row[0] if len(row) > 0 else 0,
+            "component": row[1] if len(row) > 1 else "",
+            "type": row[2] if len(row) > 2 else "",
+            "message": row[3] if len(row) > 3 else "",
+            "rowid": row[4] if len(row) > 4 else 0,
+        })
+    return {"logs": logs, "total": len(logs)}
+
+
+@router.get("/scans/{scan_id}/history")
+async def get_scan_history(
+    scan_id: str,
+    api_key: str = optional_auth_dep,
+    svc: ScanService = Depends(get_scan_service),
+) -> dict:
+    """Get scan result history (counts over time)."""
+    record = svc.get_scan(scan_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Scan not found")
+    rows = svc.get_result_history(scan_id)
+    # DB returns: (hourmin, type, count)
+    history = []
+    for row in rows:
+        history.append({
+            "time": row[0] if len(row) > 0 else "",
+            "type": row[1] if len(row) > 1 else "",
+            "count": row[2] if len(row) > 2 else 0,
+        })
+    return {"history": history}
+
+
+@router.get("/scans/{scan_id}/events/unique")
+async def get_scan_events_unique(
+    scan_id: str,
+    event_type: str = Query("ALL", description="Filter by event type"),
+    filterfp: bool = Query(False, description="Filter false positives"),
+    api_key: str = optional_auth_dep,
+    svc: ScanService = Depends(get_scan_service),
+) -> dict:
+    """Get unique scan result events."""
+    record = svc.get_scan(scan_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Scan not found")
+    rows = svc.get_unique_events(scan_id, event_type, filterfp)
+    # DB returns: (data, type, count)
+    events = []
+    for row in rows:
+        events.append({
+            "data": row[0] if len(row) > 0 else "",
+            "type": row[1] if len(row) > 1 else "",
+            "count": row[2] if len(row) > 2 else 0,
+        })
+    return {"events": events, "total": len(events)}
+
+
+@router.get("/scans/{scan_id}/correlations")
+async def get_scan_correlations(
+    scan_id: str,
+    api_key: str = optional_auth_dep,
+    svc: ScanService = Depends(get_scan_service),
+) -> dict:
+    """Get scan correlations."""
+    record = svc.get_scan(scan_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Scan not found")
+    rows = svc.get_correlations(scan_id)
+    correlations = []
+    for row in rows:
+        if isinstance(row, dict):
+            correlations.append(row)
+        elif isinstance(row, (list, tuple)):
+            # DB returns: id, title, rule_id, rule_risk, rule_name,
+            #             rule_descr, rule_logic, event_count
+            correlations.append({
+                "id": row[0] if len(row) > 0 else "",
+                "title": row[1] if len(row) > 1 else "",
+                "rule_id": row[2] if len(row) > 2 else "",
+                "rule_risk": row[3] if len(row) > 3 else "",
+                "rule_name": row[4] if len(row) > 4 else "",
+                "rule_descr": row[5] if len(row) > 5 else "",
+                "rule_logic": row[6] if len(row) > 6 else "",
+                "event_count": row[7] if len(row) > 7 else 0,
+            })
+    return {"correlations": correlations, "total": len(correlations)}
+
+
+@router.get("/scans/{scan_id}/correlations/summary")
+async def get_scan_correlation_summary(
+    scan_id: str,
+    by: str = Query("risk", description="Group by: rule or risk"),
+    api_key: str = optional_auth_dep,
+    svc: ScanService = Depends(get_scan_service),
+) -> dict:
+    """Get scan correlation summary."""
+    record = svc.get_scan(scan_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Scan not found")
+    try:
+        rows = svc.get_correlation_summary(scan_id, by)
+        summary = []
+        for row in rows:
+            if isinstance(row, dict):
+                summary.append(row)
+            elif isinstance(row, (list, tuple)):
+                if by == "risk":
+                    summary.append({
+                        "risk": row[0] if len(row) > 0 else "",
+                        "total": row[1] if len(row) > 1 else 0,
+                    })
+                else:
+                    summary.append({
+                        "rule_id": row[0] if len(row) > 0 else "",
+                        "rule_name": row[1] if len(row) > 1 else "",
+                        "risk": row[2] if len(row) > 2 else "",
+                        "description": row[3] if len(row) > 3 else "",
+                        "total": row[4] if len(row) > 4 else 0,
+                    })
+        return {"summary": summary, "total": len(summary)}
+    except Exception as e:
+        log.debug("Correlation summary unavailable for %s: %s", scan_id, e)
+        return {"summary": [], "total": 0}
+
+
+@router.post("/scans/{scan_id}/correlations/run")
+async def run_scan_correlations(
+    scan_id: str,
+    api_key: str = optional_auth_dep,
+    svc: ScanService = Depends(get_scan_service),
+) -> dict:
+    """Run correlation rules against a scan's results.
+
+    Loads all YAML correlation rules from the ``correlations/`` directory,
+    executes them via ``RuleExecutor``, and stores matched correlations
+    in ``tbl_scan_correlation_results``.
+    """
+    record = svc.get_scan(scan_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Scan not found")
+
+    try:
+        import os
+        from spiderfoot.correlation.rule_executor import RuleExecutor
+
+        # Load rules
+        rules_dir = os.environ.get("SF_CORRELATION_RULES_DIR", "correlations")
+        rules: list[dict] = []
+        if os.path.isdir(rules_dir):
+            try:
+                from spiderfoot.correlation.rule_loader import RuleLoader
+                loader = RuleLoader(rules_dir)
+                rules = loader.load_rules()
+            except ImportError:
+                rules = SpiderFootHelpers.loadCorrelationRulesRaw(rules_dir) or []
+
+        if not rules:
+            return {"message": "No correlation rules found", "results": 0}
+
+        # Get a DB handle for the executor
+        dbh = svc._dbh if hasattr(svc, '_dbh') else None
+        if dbh is None:
+            try:
+                from spiderfoot import SpiderFootDb
+                db_path = os.environ.get("SF_DATABASE", "spiderfoot.db")
+                dbh = SpiderFootDb({"__database": db_path}, init=True)
+            except Exception as exc:
+                log.error("Cannot get DB handle for correlations: %s", exc)
+                raise HTTPException(status_code=500, detail="DB unavailable") from exc
+
+        executor = RuleExecutor(dbh, rules, scan_ids=[scan_id])
+        raw_results = executor.run()
+
+        total = sum(
+            rule_results.get("correlations_created", 0)
+            for rule_results in raw_results.values()
+            if isinstance(rule_results, dict)
+        )
+
+        return {
+            "message": f"Correlation complete for scan {scan_id}",
+            "rules_evaluated": len(rules),
+            "results": total,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        log.error("Correlation run failed for %s: %s", scan_id, e, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Correlation failed: {e}") from e
 
 
 @router.delete("/scans/{scan_id}", response_model=ScanDeleteResponse)
@@ -1158,7 +1443,7 @@ async def export_scan_correlations(
     except Exception as e:
         raise HTTPException(status_code=404, detail="Scan ID not found")
 
-    headings = ["Rule Name", "Correlation", "Risk", "Description"]
+    headings = ["ID", "Title", "Rule ID", "Risk", "Rule Name", "Description", "Logic", "Events"]
 
     if filetype.lower() in ("xlsx", "excel"):
         wb = openpyxl.Workbook()
@@ -1166,25 +1451,31 @@ async def export_scan_correlations(
         ws.title = "Correlations"
         ws.append(headings)
         for row in data:
-            ws.append(row)
+            if isinstance(row, (list, tuple)):
+                ws.append(list(row))
+            elif isinstance(row, dict):
+                ws.append([row.get(h.lower().replace(" ", "_"), "") for h in headings])
         with BytesIO() as f:
             wb.save(f)
-            f.seek(0)
-            return StreamingResponse(
-                iter([f.read()]),
-                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                headers={
-                    "Content-Disposition": f"attachment; filename=SpiderFoot-{scan_id}-correlations.xlsx",
-                    "Pragma": "no-cache",
-                },
-            )
+            content = f.getvalue()
+        return StreamingResponse(
+            iter([content]),
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={
+                "Content-Disposition": f"attachment; filename=SpiderFoot-{scan_id}-correlations.xlsx",
+                "Pragma": "no-cache",
+            },
+        )
 
     if filetype.lower() == "csv":
         fileobj = StringIO()
         parser = csv.writer(fileobj, dialect=dialect)
         parser.writerow(headings)
         for row in data:
-            parser.writerow([str(x) for x in row])
+            if isinstance(row, dict):
+                parser.writerow([str(row.get(h.lower().replace(" ", "_"), "")) for h in headings])
+            else:
+                parser.writerow([str(x) for x in row])
         fileobj.seek(0)
         return StreamingResponse(
             iter([fileobj.getvalue()]),

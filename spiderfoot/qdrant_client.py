@@ -719,6 +719,22 @@ class QdrantClient:
         """Return metadata for a collection."""
         return self._backend.collection_info(self._cname(name))
 
+    def collection_exists(self, name: str) -> bool:
+        """Check if a collection exists."""
+        return self._backend.collection_exists(self._cname(name))
+
+    def collection_stats(self, name: str) -> dict[str, Any]:
+        """Return statistics for a collection."""
+        cname = self._cname(name)
+        info = self._backend.collection_info(cname)
+        if info is None:
+            return {"point_count": 0, "vector_dimensions": 0}
+        return {
+            "point_count": info.point_count,
+            "vector_dimensions": info.vector_size,
+            "distance": info.distance.value if info.distance else "unknown",
+        }
+
     # Points
     def upsert(self, collection: str, points: list[VectorPoint],
                batch_size: int = 100) -> int:

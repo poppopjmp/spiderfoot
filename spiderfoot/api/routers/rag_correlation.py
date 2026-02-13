@@ -186,6 +186,44 @@ class StatsResponse(BaseModel):
     stats: dict[str, Any] = Field(default_factory=dict)
 
 
+class CollectionInfoResponse(BaseModel):
+    """Information about a single Qdrant collection."""
+
+    name: str
+    total_vectors: int = 0
+    dimensions: int = 0
+    scope: str = "unknown"  # scan, workspace, global
+    scan_id: str | None = None
+    workspace_id: str | None = None
+
+
+class CollectionListResponse(BaseModel):
+    """List of managed Qdrant collections."""
+
+    collections: list[CollectionInfoResponse]
+    total: int
+
+
+class WorkspaceCollectionRequest(BaseModel):
+    """Request to create or refresh a workspace meta-collection."""
+
+    workspace_id: str = Field(..., description="Workspace ID")
+    scan_ids: list[str] = Field(..., min_length=1,
+                                description="Scan IDs to include")
+    strategy: str | None = Field(
+        None, description="Strategy: 'federated' or 'materialized'. "
+                          "Uses server default if not set.")
+
+
+class WorkspaceSearchRequest(BaseModel):
+    """Search across all scans in a workspace."""
+
+    workspace_id: str = Field(..., description="Workspace ID")
+    query: str = Field(..., description="Text to embed and search")
+    top_k: int = Field(10, ge=1, le=200)
+    event_type: str | None = None
+
+
 # ---------------------------------------------------------------------------
 # Lazy engine singletons
 # ---------------------------------------------------------------------------
@@ -222,6 +260,42 @@ def _get_multidim():
             raise HTTPException(status_code=503,
                                 detail=f"Multi-dim analyzer unavailable: {exc}")
     return _multidim_analyzer
+
+
+_collection_mgr = None
+
+
+def _get_collection_manager():
+    """Lazy-initialise VectorCollectionManager."""
+    global _collection_mgr
+    if _collection_mgr is None:
+        try:
+            from spiderfoot.correlations.vector_collection_manager import (
+                get_collection_manager,
+            )
+            _collection_mgr = get_collection_manager()
+            log.info("Collection manager initialised")
+        except Exception as exc:
+            log.error("Failed to init collection manager: %s", exc)
+            raise HTTPException(
+                status_code=503,
+                detail=f"Collection manager unavailable: {exc}",
+            )
+    return _collection_mgr
+
+
+def _get_workspace_scan_ids(workspace_id: str) -> list[str]:
+    """Retrieve scan IDs belonging to a workspace from the database."""
+    try:
+        from spiderfoot.db import SpiderFootDb
+        dbh = SpiderFootDb(SpiderFootDb.build_config_from_env())
+        rows = dbh.scanInstanceList(workspace_id=workspace_id)
+        dbh.close()
+        return [row[0] for row in rows] if rows else []
+    except Exception as e:
+        log.warning("Failed to get workspace scan IDs for %s: %s",
+                    workspace_id, e)
+        return []
 
 
 # ---------------------------------------------------------------------------
@@ -285,8 +359,7 @@ async def correlate(req: CorrelateRequest,
             query=req.query,
             strategy=strategy,
             scan_id=req.scan_id,
-            top_k=req.top_k,
-            threshold=req.threshold,
+            event_type=None,
         )
     except Exception as exc:
         log.error("Correlation failed: %s", exc)
@@ -296,12 +369,12 @@ async def correlate(req: CorrelateRequest,
     elapsed = (time.perf_counter() - t0) * 1000
     hits = [
         CorrelationHitResponse(
-            event_id=h.event_id,
-            event_type=h.event_type,
-            data=h.data,
-            scan_id=h.scan_id,
+            event_id=h.event.event_id,
+            event_type=h.event.event_type,
+            data=h.event.data,
+            scan_id=h.event.scan_id,
             score=round(h.score, 4),
-            metadata=h.metadata,
+            metadata=h.event.extra if hasattr(h.event, 'extra') else {},
         )
         for h in result.hits
     ]
@@ -311,9 +384,9 @@ async def correlate(req: CorrelateRequest,
         strategy=req.strategy,
         total_hits=len(hits),
         hits=hits,
-        analysis=result.analysis,
+        analysis=result.rag_analysis or None,
         confidence=round(result.confidence, 4),
-        risk_level=result.risk_level,
+        risk_level=result.risk_assessment or "INFO",
         elapsed_ms=round(elapsed, 2),
     )
 
@@ -394,42 +467,65 @@ async def multidim_analyze(req: MultiDimRequest,
              summary="Raw semantic search in vector store")
 async def semantic_search(req: SearchRequest,
                           _auth: str = optional_auth_dep) -> SearchResponse:
-    """Embed query text and retrieve nearest neighbours from Qdrant."""
-    engine = _get_vector_engine()
+    """Embed query text and retrieve nearest neighbours from Qdrant.
+
+    When ``scan_id`` is provided, the search is scoped to the per-scan
+    collection managed by the collection manager (``scan_{scan_id}``).
+    Otherwise falls back to the global ``osint_events`` collection.
+    """
     t0 = time.perf_counter()
 
     try:
         from spiderfoot.services.embedding_service import get_embedding_service
-        from spiderfoot.qdrant_client import get_qdrant_client, Filter
 
         emb = get_embedding_service()
         vec = emb.embed_text(req.query)
 
-        payload_filter = None
-        conditions: dict[str, Any] = {}
+        # If a scan_id is provided, route through the collection manager
         if req.scan_id:
-            conditions["scan_id"] = req.scan_id
-        if req.event_type:
-            conditions["event_type"] = req.event_type
-        if conditions:
-            payload_filter = Filter.must_match(conditions)
-
-        qd = get_qdrant_client()
-        results = qd.search(
-            collection="osint_events",
-            vector=vec.vector,
-            top_k=req.top_k,
-            payload_filter=payload_filter,
-        )
-
-        hits = [
-            SearchHitResponse(
-                event_id=r.id,
-                score=round(r.score, 4),
-                payload=r.payload,
+            mgr = _get_collection_manager()
+            points = mgr.search_scan(
+                scan_id=req.scan_id,
+                query_vector=vec,
+                top_k=req.top_k,
             )
-            for r in results
-        ]
+            hits = [
+                SearchHitResponse(
+                    event_id=str(p.id),
+                    score=round(p.score, 4),
+                    payload=p.payload,
+                )
+                for p in points
+            ]
+        else:
+            from spiderfoot.qdrant_client import get_qdrant_client, Filter
+
+            payload_filter = None
+            conditions: dict[str, Any] = {}
+            if req.event_type:
+                conditions["event_type"] = req.event_type
+            if conditions:
+                filter_conditions = [Filter.match(k, v) for k, v in conditions.items()]
+                payload_filter = Filter(must=filter_conditions)
+
+            qd = get_qdrant_client()
+            search_result = qd.search(
+                collection="osint_events",
+                query_vector=vec,
+                limit=req.top_k,
+                filter_=payload_filter,
+            )
+
+            hits = [
+                SearchHitResponse(
+                    event_id=str(p.id),
+                    score=round(p.score, 4),
+                    payload=p.payload,
+                )
+                for p in search_result.points
+            ]
+    except HTTPException:
+        raise
     except Exception as exc:
         log.error("Semantic search failed: %s", exc)
         raise HTTPException(status_code=500,
@@ -505,3 +601,191 @@ async def delete_collection(
         log.error("Collection delete failed: %s", exc)
         raise HTTPException(status_code=500,
                             detail=f"Delete failed: {exc}")
+
+
+# ---------------------------------------------------------------------------
+# Collection-aware endpoints (per-scan / per-workspace)
+# ---------------------------------------------------------------------------
+
+
+@router.get("/rag/collections", response_model=CollectionListResponse,
+            summary="List managed Qdrant collections")
+async def list_collections(
+    _auth: str = optional_auth_dep,
+) -> CollectionListResponse:
+    """List all SpiderFoot-managed Qdrant collections with stats."""
+    mgr = _get_collection_manager()
+    try:
+        from spiderfoot.qdrant_client import get_qdrant_client
+        qd = get_qdrant_client()
+        all_cols = qd.list_collections()
+    except Exception as exc:
+        raise HTTPException(status_code=503,
+                            detail=f"Qdrant unavailable: {exc}")
+
+    # The collection manager names use scan_/workspace_/global prefixes
+    # plus the Qdrant client may prepend its own prefix
+    prefix = getattr(mgr._qdrant, '_prefix', '') or ""
+    items: list[CollectionInfoResponse] = []
+    for name in all_cols:
+        info = CollectionInfoResponse(name=name)
+        try:
+            stats = qd.collection_stats(name)
+            info.total_vectors = stats.get("point_count", 0)
+            info.dimensions = stats.get("vector_dimensions", 0)
+        except Exception:
+            pass
+
+        # Identify scope from name (strip any Qdrant prefix)
+        suffix = name[len(prefix):] if prefix and name.startswith(prefix) else name
+        if suffix.startswith("scan_"):
+            info.scope = "scan"
+            info.scan_id = suffix[5:]
+        elif suffix.startswith("workspace_"):
+            info.scope = "workspace"
+            info.workspace_id = suffix[10:]
+        elif suffix == "global":
+            info.scope = "global"
+        items.append(info)
+
+    return CollectionListResponse(collections=items, total=len(items))
+
+
+@router.post("/rag/collections/workspace",
+             summary="Create or refresh workspace meta-collection")
+async def create_workspace_collection(
+    req: WorkspaceCollectionRequest,
+    _auth: str = optional_auth_dep,
+) -> dict:
+    """Create a workspace collection aggregating one or more scan collections.
+
+    Strategy ``federated`` (default): no data is copied; workspace queries
+    fan out to each scan collection and merge results.
+
+    Strategy ``materialized``: all vectors from constituent scan collections
+    are copied into a dedicated workspace collection for faster queries.
+    """
+    mgr = _get_collection_manager()
+    t0 = time.perf_counter()
+    try:
+        # Override strategy temporarily if requested
+        original_strategy = mgr._config.workspace_strategy
+        if req.strategy:
+            mgr._config.workspace_strategy = req.strategy
+        try:
+            mgr.create_workspace_collection(
+                workspace_id=req.workspace_id,
+                scan_ids=req.scan_ids,
+            )
+        finally:
+            mgr._config.workspace_strategy = original_strategy
+    except Exception as exc:
+        log.error("Workspace collection creation failed: %s", exc)
+        raise HTTPException(status_code=500,
+                            detail=f"Failed to create workspace collection: {exc}")
+
+    elapsed = (time.perf_counter() - t0) * 1000
+    return {
+        "workspace_id": req.workspace_id,
+        "scan_ids": req.scan_ids,
+        "strategy": req.strategy or mgr._config.workspace_strategy,
+        "elapsed_ms": round(elapsed, 2),
+        "status": "ok",
+    }
+
+
+@router.post("/rag/collections/workspace/search",
+             response_model=SearchResponse,
+             summary="Search across all scans in a workspace")
+async def workspace_search(
+    req: WorkspaceSearchRequest,
+    _auth: str = optional_auth_dep,
+) -> SearchResponse:
+    """Run a semantic search across all scans within a workspace.
+
+    Uses the workspace strategy (federated fan-out or materialized
+    collection) configured for this workspace.
+    """
+    mgr = _get_collection_manager()
+    t0 = time.perf_counter()
+
+    try:
+        from spiderfoot.services.embedding_service import get_embedding_service
+        emb = get_embedding_service()
+        vec = emb.embed_text(req.query)
+
+        # Get scan_ids for this workspace from DB
+        scan_ids = _get_workspace_scan_ids(req.workspace_id)
+
+        points = mgr.search_workspace(
+            workspace_id=req.workspace_id,
+            scan_ids=scan_ids,
+            query_vector=vec,
+            top_k=req.top_k,
+        )
+
+        hits = [
+            SearchHitResponse(
+                event_id=str(p.id),
+                score=round(p.score or 0.0, 4),
+                payload=p.payload,
+            )
+            for p in points
+        ]
+    except HTTPException:
+        raise
+    except Exception as exc:
+        log.error("Workspace search failed: %s", exc)
+        raise HTTPException(status_code=500,
+                            detail=f"Workspace search failed: {exc}")
+
+    elapsed = (time.perf_counter() - t0) * 1000
+    return SearchResponse(
+        query=req.query,
+        total=len(hits),
+        hits=hits,
+        elapsed_ms=round(elapsed, 2),
+    )
+
+
+@router.delete("/rag/collections/scan/{scan_id}",
+               summary="Delete a scan's vector collection")
+async def delete_scan_collection(
+    scan_id: str,
+    _auth: str = optional_auth_dep,
+) -> dict:
+    """Remove a per-scan Qdrant collection and all its vectors."""
+    mgr = _get_collection_manager()
+    try:
+        mgr.delete_scan_collection(scan_id)
+        return {"scan_id": scan_id, "status": "deleted"}
+    except Exception as exc:
+        log.error("Failed to delete scan collection %s: %s", scan_id, exc)
+        raise HTTPException(status_code=500,
+                            detail=f"Delete failed: {exc}")
+
+
+@router.get("/rag/collections/{collection_name}/stats",
+            summary="Stats for a specific collection")
+async def collection_stats(
+    collection_name: str,
+    _auth: str = optional_auth_dep,
+) -> dict:
+    """Get detailed statistics for a named Qdrant collection."""
+    try:
+        from spiderfoot.qdrant_client import get_qdrant_client
+        qd = get_qdrant_client()
+        if not qd.collection_exists(collection_name):
+            return {"exists": False, "collection": collection_name}
+        info = qd.collection_info(collection_name)
+        return {
+            "exists": True,
+            "collection": collection_name,
+            "vector_count": info.point_count if info else 0,
+            "vector_size": info.vector_size if info else 0,
+            "distance": info.distance.value if info and info.distance else "",
+        }
+    except Exception as exc:
+        log.error("Collection stats failed for %s: %s", collection_name, exc)
+        raise HTTPException(status_code=500,
+                            detail=f"Stats failed: {exc}")

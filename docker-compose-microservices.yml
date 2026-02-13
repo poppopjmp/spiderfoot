@@ -1,28 +1,34 @@
 # =============================================================================
 # SpiderFoot Microservices Docker Compose
 # Decomposes SpiderFoot into individual services:
-#   - scanner   : scan execution engine (ScanScheduler + WorkerPool)
-#   - api       : FastAPI REST API
-#   - webui     : CherryPy web interface
-#   - vector    : Vector.dev log/event pipeline
-#   - redis     : event bus + cache backend
+#   - api       : FastAPI REST API  (data layer, scan management)
+#   - webui     : CherryPy web UI   (proxies all data through API)
+#   - redis     : event bus + cache
 #   - postgres  : persistent data store
 #   - nginx     : reverse proxy / API gateway
 #
 # Usage:
-#   docker compose -f docker-compose-microservices.yml up -d
+#   cp docker/env.example .env         # customise settings
+#   docker compose -f docker-compose-microservices.yml up --build -d
 #
-# Build base image first:
-#   docker build -f docker/Dockerfile.base -t spiderfoot-base:latest .
+# Access:
+#   Web UI  -> http://localhost                (via nginx)
+#   API     -> http://localhost/api/docs       (Swagger UI)
+#
+# All services share the same Docker image built from /Dockerfile.
+# The service role is selected via SF_SERVICE env var + command override.
 # =============================================================================
+
+# Shared build definition (anchored for YAML reuse)
+x-sf-build: &sf-build
+  build:
+    context: .
+    dockerfile: Dockerfile
 
 networks:
   sf-frontend:
     driver: bridge
   sf-backend:
-    driver: bridge
-    internal: true
-  sf-events:
     driver: bridge
     internal: true
 
@@ -31,19 +37,83 @@ services:
   # Infrastructure Services
   # ---------------------------------------------------------------------------
 
+  # ---------------------------------------------------------------------------
+  # MinIO — S3-compatible Object Storage
+  # ---------------------------------------------------------------------------
+  # Central persistent storage for all SpiderFoot data:
+  #   - sf-logs       : Vector.dev log & event archive
+  #   - sf-reports    : Generated scan reports (HTML, PDF, JSON, CSV)
+  #   - sf-pg-backups : PostgreSQL WAL & pg_dump backups
+  #   - sf-qdrant     : Qdrant vector DB snapshots
+  #   - sf-data       : General application data / artefacts
+  # ---------------------------------------------------------------------------
+
+  minio:
+    image: minio/minio:RELEASE.2024-11-07T00-52-20Z
+    container_name: sf-minio
+    restart: unless-stopped
+    networks:
+      - sf-backend
+    ports:
+      - "${SF_MINIO_API_PORT:-9000}:9000"
+      - "${SF_MINIO_CONSOLE_PORT:-9001}:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-spiderfoot}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-changeme123}
+    volumes:
+      - minio-data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "${MINIO_CPUS:-1.0}"
+          memory: "${MINIO_MEMORY:-512M}"
+
+  # MinIO bucket initializer — creates required buckets on first start
+  # Also copies the mc binary to a shared volume for the pg-backup sidecar.
+  minio-init:
+    image: minio/mc:RELEASE.2024-11-17T19-35-25Z
+    container_name: sf-minio-init
+    networks:
+      - sf-backend
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-spiderfoot}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-changeme123}
+    volumes:
+      - mc-bin:/opt/mc-share
+    entrypoint: >
+      /bin/sh -c "
+        mc alias set sfminio http://minio:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD};
+        mc mb --ignore-existing sfminio/sf-logs;
+        mc mb --ignore-existing sfminio/sf-reports;
+        mc mb --ignore-existing sfminio/sf-pg-backups;
+        mc mb --ignore-existing sfminio/sf-qdrant-snapshots;
+        mc mb --ignore-existing sfminio/sf-data;
+        mc anonymous set download sfminio/sf-reports;
+        cp /usr/bin/mc /opt/mc-share/mc && chmod +x /opt/mc-share/mc;
+        echo 'MinIO buckets initialized + mc binary shared';
+      "
+
   redis:
     image: redis:7-alpine
     container_name: sf-redis
     restart: unless-stopped
     networks:
       - sf-backend
-      - sf-events
     command: >
       redis-server
         --appendonly yes
         --maxmemory 512mb
         --maxmemory-policy allkeys-lru
-        --tcp-keepalive 60
     volumes:
       - redis-data:/data
     healthcheck:
@@ -71,120 +141,82 @@ services:
       retries: 5
 
   # ---------------------------------------------------------------------------
-  # Vector.dev — unified log/event/metric pipeline
-  # ---------------------------------------------------------------------------
-
-  vector:
-    image: timberio/vector:0.40.0-alpine
-    container_name: sf-vector
-    restart: unless-stopped
-    networks:
-      - sf-events
-      - sf-backend
-    volumes:
-      - ./config/vector.toml:/etc/vector/vector.toml:ro
-      - vector-data:/var/lib/vector
-    ports:
-      - "8686:8686"    # HTTP source for SpiderFoot events
-    depends_on:
-      - redis
-    healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8686/health"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-
-  # ---------------------------------------------------------------------------
-  # SpiderFoot Scanner Service
-  # ---------------------------------------------------------------------------
-
-  scanner:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.scanner
-    image: spiderfoot-scanner:latest
-    container_name: sf-scanner
-    restart: unless-stopped
-    networks:
-      - sf-backend
-      - sf-events
-    environment:
-      SF_SERVICE: scanner
-      SF_REDIS_URL: redis://redis:6379/0
-      SF_POSTGRES_DSN: postgresql://spiderfoot:${POSTGRES_PASSWORD:-changeme}@postgres:5432/spiderfoot
-      SF_VECTOR_ENDPOINT: http://vector:8686
-      SF_SCANNER_MAX_SCANS: ${SF_SCANNER_MAX_SCANS:-3}
-      SF_WORKER_MAX: ${SF_WORKER_MAX:-8}
-      SF_WORKER_STRATEGY: thread
-      SF_LOG_LEVEL: ${SF_LOG_LEVEL:-INFO}
-      # DataService backend — access data through API service
-      SF_DATASERVICE_BACKEND: http
-      SF_DATASERVICE_API_URL: "http://api:8001/api"
-      SF_DATASERVICE_API_KEY: ${SF_API_KEY:-}
-      # Inter-service authentication
-      SF_SERVICE_SECRET: ${SF_SERVICE_SECRET:-}
-      SF_SERVICE_TOKEN: ${SF_SERVICE_TOKEN:-}
-      SF_SERVICE_NAME: scanner
-    depends_on:
-      redis:
-        condition: service_healthy
-      postgres:
-        condition: service_healthy
-    volumes:
-      - scanner-data:/app/data
-      - scanner-logs:/app/logs
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5003/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-    deploy:
-      resources:
-        limits:
-          cpus: "${SCANNER_CPUS:-4.0}"
-          memory: "${SCANNER_MEMORY:-4G}"
-
-  # ---------------------------------------------------------------------------
   # SpiderFoot API Service (FastAPI)
   # ---------------------------------------------------------------------------
 
   api:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.api
-    image: spiderfoot-api:latest
+    <<: *sf-build
+    image: spiderfoot-micro:latest
     container_name: sf-api
     restart: unless-stopped
     networks:
       - sf-frontend
       - sf-backend
-      - sf-events
     environment:
       SF_SERVICE: api
+      SF_SERVICE_ROLE: api
+      SF_DEPLOYMENT_MODE: microservice
       SF_REDIS_URL: redis://redis:6379/0
-      SF_POSTGRES_DSN: postgresql://spiderfoot:${POSTGRES_PASSWORD:-changeme}@postgres:5432/spiderfoot
-      SF_VECTOR_ENDPOINT: http://vector:8686
+      SF_POSTGRES_DSN: postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-spiderfoot}
       SF_API_HOST: "0.0.0.0"
       SF_API_PORT: "8001"
-      SF_API_WORKERS: ${SF_API_WORKERS:-4}
+      SF_API_WORKERS: ${SF_API_WORKERS:-2}
       SF_LOG_LEVEL: ${SF_LOG_LEVEL:-INFO}
       SF_API_KEY: ${SF_API_KEY:-}
-      # Inter-service authentication (validator side)
-      SF_SERVICE_SECRET: ${SF_SERVICE_SECRET:-}
-      SF_SERVICE_TOKEN: ${SF_SERVICE_TOKEN:-}
-      SF_SERVICE_NAME: api
+      SF_VECTOR_URL: "http://vector:${SF_VECTOR_HTTP_PORT:-8686}"
+      # Qdrant vector DB settings
+      SF_QDRANT_BACKEND: "http"
+      SF_QDRANT_HOST: "qdrant"
+      SF_QDRANT_PORT: "6333"
+      SF_QDRANT_GRPC_PORT: "6334"
+      SF_QDRANT_PREFIX: "sf_"
+      # Embedding model settings
+      SF_EMBEDDING_PROVIDER: ${SF_EMBEDDING_PROVIDER:-mock}
+      SF_EMBEDDING_MODEL: ${SF_EMBEDDING_MODEL:-all-MiniLM-L6-v2}
+      SF_EMBEDDING_DIMENSIONS: ${SF_EMBEDDING_DIMENSIONS:-384}
+      SF_EMBEDDING_API_KEY: ${SF_EMBEDDING_API_KEY:-}
+      SF_EMBEDDING_API_BASE: ${SF_EMBEDDING_API_BASE:-}
+      # Reranker settings
+      SF_RERANKER_PROVIDER: ${SF_RERANKER_PROVIDER:-mock}
+      SF_RERANKER_MODEL: ${SF_RERANKER_MODEL:-cross-encoder/ms-marco-MiniLM-L-6-v2}
+      SF_RERANKER_API_KEY: ${SF_RERANKER_API_KEY:-}
+      SF_RERANKER_TOP_K: ${SF_RERANKER_TOP_K:-10}
+      SF_RERANKER_SCORE_THRESHOLD: ${SF_RERANKER_SCORE_THRESHOLD:-0.3}
+      # RAG / LLM settings
+      SF_LLM_PROVIDER: ${SF_LLM_PROVIDER:-mock}
+      SF_LLM_MODEL: ${SF_LLM_MODEL:-}
+      SF_LLM_API_KEY: ${SF_LLM_API_KEY:-}
+      SF_LLM_API_BASE: ${SF_LLM_API_BASE:-}
+      # Vector correlation settings
+      SF_VECTOR_CORRELATION_ENABLED: ${SF_VECTOR_CORRELATION_ENABLED:-true}
+      SF_VECTOR_SIMILARITY_THRESHOLD: ${SF_VECTOR_SIMILARITY_THRESHOLD:-0.7}
+      SF_VECTOR_CROSS_SCAN_THRESHOLD: ${SF_VECTOR_CROSS_SCAN_THRESHOLD:-0.8}
+      SF_VECTOR_RERANK_ACCURACY: ${SF_VECTOR_RERANK_ACCURACY:-high}
+      # MinIO / S3-compatible object storage
+      SF_MINIO_ENDPOINT: "minio:9000"
+      SF_MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-spiderfoot}
+      SF_MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-changeme123}
+      SF_MINIO_SECURE: "false"
+      SF_MINIO_REPORTS_BUCKET: ${SF_MINIO_REPORTS_BUCKET:-sf-reports}
+      SF_MINIO_DATA_BUCKET: ${SF_MINIO_DATA_BUCKET:-sf-data}
+      SF_MINIO_LOGS_BUCKET: ${SF_MINIO_LOGS_BUCKET:-sf-logs}
     depends_on:
       redis:
         condition: service_healthy
       postgres:
         condition: service_healthy
+      qdrant:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    entrypoint: ["/usr/local/bin/docker-entrypoint.sh"]
+    command: ["python", "-m", "spiderfoot.service_runner", "--service", "api", "--port", "8001"]
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8001/healthz"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/api/docs')"]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 20s
+      retries: 5
+      start_period: 30s
     deploy:
       resources:
         limits:
@@ -196,35 +228,34 @@ services:
   # ---------------------------------------------------------------------------
 
   webui:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.webui
-    image: spiderfoot-webui:latest
+    <<: *sf-build
+    image: spiderfoot-micro:latest
     container_name: sf-webui
     restart: unless-stopped
     networks:
       - sf-frontend
+      - sf-backend
     environment:
       SF_SERVICE: webui
+      SF_SERVICE_ROLE: webui
+      SF_DEPLOYMENT_MODE: microservice
       SF_WEB_HOST: "0.0.0.0"
       SF_WEB_PORT: "5001"
       SF_LOG_LEVEL: ${SF_LOG_LEVEL:-INFO}
-      # API proxy mode — WebUI routes all data access through the API
       SF_WEBUI_API_MODE: "true"
       SF_WEBUI_API_URL: "http://api:8001/api"
       SF_WEBUI_API_KEY: ${SF_API_KEY:-}
-      # Inter-service authentication
-      SF_SERVICE_SECRET: ${SF_SERVICE_SECRET:-}
-      SF_SERVICE_TOKEN: ${SF_SERVICE_TOKEN:-}
-      SF_SERVICE_NAME: webui
+      SF_POSTGRES_DSN: postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-spiderfoot}
     depends_on:
       api:
         condition: service_healthy
+    entrypoint: ["/usr/local/bin/docker-entrypoint.sh"]
+    command: ["python", "-m", "spiderfoot.service_runner", "--service", "webui", "--port", "5001"]
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5001/ping"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5001/')"]
       interval: 30s
       timeout: 10s
-      retries: 3
+      retries: 5
       start_period: 30s
     deploy:
       resources:
@@ -244,21 +275,150 @@ services:
       - sf-frontend
     ports:
       - "${SF_HTTP_PORT:-80}:80"
-      - "${SF_HTTPS_PORT:-443}:443"
     volumes:
       - ./docker/nginx-microservices.conf:/etc/nginx/nginx.conf:ro
     depends_on:
-      - api
-      - webui
+      api:
+        condition: service_healthy
+      webui:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:80/nginx-health"]
       interval: 30s
       timeout: 10s
       retries: 3
 
+  # ---------------------------------------------------------------------------
+  # Qdrant — Vector Database for RAG / Rerank Correlations
+  # ---------------------------------------------------------------------------
+  # Provides per-scan and per-workspace vector collections for semantic
+  # similarity search, cross-scan correlation, and multi-hop analysis.
+  # Events are embedded and indexed during scans; workspace meta-collections
+  # aggregate multiple scan collections for cross-scan discovery.
+  # ---------------------------------------------------------------------------
+
+  qdrant:
+    image: qdrant/qdrant:v1.12.4
+    container_name: sf-qdrant
+    restart: unless-stopped
+    networks:
+      - sf-backend
+    volumes:
+      - qdrant-data:/qdrant/storage
+    environment:
+      QDRANT__SERVICE__GRPC_PORT: "6334"
+      QDRANT__SERVICE__HTTP_PORT: "6333"
+      # S3 snapshot storage via MinIO
+      QDRANT__STORAGE__SNAPSHOTS_PATH: "/qdrant/snapshots"
+    depends_on:
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/6333'"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "${QDRANT_CPUS:-1.0}"
+          memory: "${QDRANT_MEMORY:-1G}"
+
+  # ---------------------------------------------------------------------------
+  # Vector.dev — Data Pipeline (logs, events, metrics)
+  # ---------------------------------------------------------------------------
+  # Integration point for shipping scan data to external storage/analytics:
+  #   - Elasticsearch: full-text search & Kibana dashboards
+  #   - S3/Minio: long-term archival of all scan events
+  #   - Loki: centralized log aggregation
+  #   - Webhooks: real-time high-severity alerts
+  #
+  # Enable sinks via env vars — see config/vector.toml for details.
+  # ---------------------------------------------------------------------------
+
+  vector:
+    image: timberio/vector:0.39.0-alpine
+    container_name: sf-vector
+    restart: unless-stopped
+    networks:
+      - sf-backend
+    volumes:
+      - ./config/vector.toml:/etc/vector/vector.toml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - vector-data:/var/lib/vector
+      - vector-logs:/var/log/vector
+    environment:
+      VECTOR_CONFIG: /etc/vector/vector.toml
+      SF_VECTOR_HTTP_PORT: ${SF_VECTOR_HTTP_PORT:-8686}
+      SF_ES_ENDPOINT: ${SF_ES_ENDPOINT:-http://elasticsearch:9200}
+      SF_LOKI_ENDPOINT: ${SF_LOKI_ENDPOINT:-http://loki:3100}
+      SF_ALERT_WEBHOOK_URL: ${SF_ALERT_WEBHOOK_URL:-http://localhost:9999/alert}
+      SF_S3_BUCKET: ${SF_S3_BUCKET:-spiderfoot-data-archive}
+      SF_S3_REGION: ${SF_S3_REGION:-us-east-1}
+      # MinIO S3-compatible endpoint for log/event archival
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-spiderfoot}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-changeme123}
+      SF_MINIO_ENDPOINT: "http://minio:9000"
+      SF_MINIO_LOGS_BUCKET: ${SF_MINIO_LOGS_BUCKET:-sf-logs}
+    depends_on:
+      api:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "${VECTOR_CPUS:-0.5}"
+          memory: "${VECTOR_MEMORY:-256M}"
+
+  # ---------------------------------------------------------------------------
+  # PostgreSQL Backup Sidecar — pg_dump to MinIO
+  # ---------------------------------------------------------------------------
+  # Runs pg_dump on a schedule and uploads to MinIO sf-pg-backups bucket.
+  # Default: every 6 hours. Override with SF_PG_BACKUP_SCHEDULE.
+  # ---------------------------------------------------------------------------
+
+  pg-backup:
+    image: postgres:15-alpine
+    container_name: sf-pg-backup
+    restart: unless-stopped
+    networks:
+      - sf-backend
+    environment:
+      PGHOST: postgres
+      PGPORT: "5432"
+      PGUSER: ${POSTGRES_USER:-spiderfoot}
+      PGPASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      PGDATABASE: ${POSTGRES_DB:-spiderfoot}
+      MINIO_ENDPOINT: "http://minio:9000"
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-spiderfoot}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-changeme123}
+      BACKUP_BUCKET: sf-pg-backups
+      BACKUP_SCHEDULE_HOURS: ${SF_PG_BACKUP_SCHEDULE:-6}
+      BACKUP_RETENTION_DAYS: ${SF_PG_BACKUP_RETENTION:-30}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    volumes:
+      - ./scripts/pg_backup_minio.sh:/usr/local/bin/pg_backup_minio.sh:ro
+      - mc-bin:/opt/mc-share:ro
+    entrypoint: ["/bin/sh", "/usr/local/bin/pg_backup_minio.sh"]
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: "128M"
+
 volumes:
   redis-data:
   postgres-data:
+  qdrant-data:
   vector-data:
-  scanner-data:
-  scanner-logs:
+  vector-logs:
+  minio-data:
+  mc-bin:

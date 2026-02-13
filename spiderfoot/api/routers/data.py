@@ -8,6 +8,7 @@ from ..dependencies import get_app_config, optional_auth
 from ..pagination import PaginationParams, paginate
 from ..schemas import RiskLevelsResponse
 from spiderfoot.sflib.core import SpiderFoot
+from spiderfoot.db import SpiderFootDb
 import logging
 
 router = APIRouter()
@@ -24,13 +25,21 @@ async def list_entity_types(api_key: str = optional_auth_dep) -> dict:
         api_key (str): API key for authentication.
 
     Returns:
-        dict: Entity types.
+        dict: Entity types as list of [event, event_descr, event_type] tuples.
 
     Raises:
         HTTPException: On error.
     """
     try:
         config = get_app_config()
+        dbh = SpiderFootDb(config.get_config())
+        try:
+            rows = dbh.eventTypes()
+            if rows:
+                return {"entity_types": rows}
+        except Exception:
+            pass
+        # Fallback to config-based event types
         sf = SpiderFoot(config.get_config())
         types = sf.getEventTypes()
         return {"entity_types": types}

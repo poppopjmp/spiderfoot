@@ -55,6 +55,10 @@ redis>=5.0.0,<6.0.0
 openai>=1.0.0,<2.0.0
 telethon>=1.36.0,<2.0.0
 python-dateutil>=2.8.0,<3.0.0
+minio>=7.2.0,<8.0.0
+
+# GraphQL
+strawberry-graphql[fastapi]>=0.235.0,<1.0.0
 
 # gRPC inter-service communication
 grpcio>=1.60.0,<2.0.0

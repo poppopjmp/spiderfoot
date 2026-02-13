@@ -379,15 +379,19 @@ class CorrelationService:
             executor = RuleExecutor(dbh, rules, scan_ids=[scan_id])
             raw_results = executor.run()
 
-            for raw in (raw_results or []):
+            # RuleExecutor.run() returns dict[rule_id -> result_dict]
+            for rule_id, raw in (raw_results or {}).items():
+                if not isinstance(raw, dict):
+                    continue
+                meta = raw.get("meta", {})
                 cr = CorrelationResult(
-                    rule_id=raw.get("rule_id", ""),
-                    rule_name=raw.get("rule_name", ""),
-                    headline=raw.get("title", raw.get("headline", "")),
-                    risk=raw.get("risk", ""),
+                    rule_id=raw.get("rule_id", rule_id),
+                    rule_name=meta.get("name", raw.get("rule_name", "")),
+                    headline=raw.get("title", raw.get("headline", meta.get("name", ""))),
+                    risk=meta.get("risk", raw.get("risk", "")),
                     scan_id=scan_id,
-                    event_count=raw.get("event_count", 0),
-                    events=raw.get("events", []),
+                    event_count=raw.get("correlations_created", raw.get("event_count", 0)),
+                    events=[e.get("hash", "") for e in raw.get("events", []) if isinstance(e, dict)],
                 )
                 results.append(cr)
                 self._notify_callbacks(cr)
@@ -529,8 +533,10 @@ class CorrelationService:
         # Fallback: try to create a direct DB handle
         try:
             from spiderfoot import SpiderFootDb
-            opts = {"__database": os.environ.get(
-                "SF_DATABASE", "spiderfoot.db")}
+            opts = {
+                "__database": os.environ.get("SF_DATABASE", "spiderfoot.db"),
+                "__dbtype": os.environ.get("SF_DBTYPE", "sqlite"),
+            }
             return SpiderFootDb(opts)
         except Exception as e:
             log.error("Cannot obtain database handle: %s", e)
@@ -538,16 +544,18 @@ class CorrelationService:
 
     def _record_metrics(self, scan_id: str,
                         results: list[CorrelationResult]) -> None:
-        """Record Prometheus metrics."""
+        """Record Prometheus metrics (best-effort, never raises)."""
         try:
             from spiderfoot.observability.metrics import Counter, get_registry
 
             registry = get_registry()
 
-            # Find or create counter
+            # Use getattr to safely access metrics collection
+            metrics_store = getattr(registry, '_metrics', None) or {}
+
             corr_counter = None
-            for m in registry._metrics.values():
-                if m.name == "sf_correlations_total":
+            for m in metrics_store.values():
+                if getattr(m, 'name', '') == "sf_correlations_total":
                     corr_counter = m
                     break
 
@@ -555,7 +563,7 @@ class CorrelationService:
                 corr_counter = Counter(
                     "sf_correlations_total",
                     "Correlation results produced",
-                    label_names=["risk"],
+                    labelnames=["risk"],
                 )
                 registry.register(corr_counter)
 
@@ -563,7 +571,7 @@ class CorrelationService:
                 corr_counter.labels(risk=r.risk).inc()
 
         except Exception as e:
-            log.debug("Metrics update failed: %s", e)
+            log.debug("Metrics update skipped: %s", e)
 
     # ------------------------------------------------------------------
     # Status / API

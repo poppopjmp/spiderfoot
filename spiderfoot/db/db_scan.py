@@ -58,6 +58,10 @@ class ScanManager:
                     return
                 except (sqlite3.Error, psycopg2.Error) as e:
                     self._log_db_error("Unable to create scan instance in database", e)
+                    try:
+                        self.conn.rollback()
+                    except Exception:
+                        pass
                     if self._is_transient_error(e) and attempt < 2:
                         time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
@@ -93,6 +97,10 @@ class ScanManager:
                     return
                 except (sqlite3.Error, psycopg2.Error) as e:
                     self._log_db_error("Unable to set information for the scan instance.", e)
+                    try:
+                        self.conn.rollback()
+                    except Exception:
+                        pass
                     if self._is_transient_error(e) and attempt < 2:
                         time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
@@ -112,6 +120,10 @@ class ScanManager:
                     return self.dbh.fetchall()
                 except (sqlite3.Error, psycopg2.Error) as e:
                     self._log_db_error("SQL error encountered when retrieving scan instance", e)
+                    try:
+                        self.conn.rollback()
+                    except Exception:
+                        pass
                     if self._is_transient_error(e) and attempt < 2:
                         time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
@@ -119,7 +131,7 @@ class ScanManager:
 
     def scanInstanceList(self) -> list:
         """List all scan instances with result counts."""
-        qry = "SELECT i.guid, i.name, i.seed_target, ROUND(i.created/1000), ROUND(i.started)/1000 as started, ROUND(i.ended)/1000, i.status, COUNT(r.type) FROM tbl_scan_instance i, tbl_scan_results r WHERE i.guid = r.scan_instance_id AND r.type <> 'ROOT' GROUP BY i.guid UNION ALL SELECT i.guid, i.name, i.seed_target, ROUND(i.created/1000), ROUND(i.started)/1000 as started, ROUND(i.ended)/1000, i.status, '0' FROM tbl_scan_instance i  WHERE i.guid NOT IN ( SELECT distinct scan_instance_id FROM tbl_scan_results WHERE type <> 'ROOT') ORDER BY started DESC"
+        qry = "SELECT i.guid, i.name, i.seed_target, ROUND(i.created/1000), ROUND(i.started)/1000 as started, ROUND(i.ended)/1000, i.status, COUNT(r.type) FROM tbl_scan_instance i, tbl_scan_results r WHERE i.guid = r.scan_instance_id AND r.type <> 'ROOT' GROUP BY i.guid, i.name, i.seed_target, i.created, i.started, i.ended, i.status UNION ALL SELECT i.guid, i.name, i.seed_target, ROUND(i.created/1000), ROUND(i.started)/1000 as started, ROUND(i.ended)/1000, i.status, '0' FROM tbl_scan_instance i  WHERE i.guid NOT IN ( SELECT distinct scan_instance_id FROM tbl_scan_results WHERE type <> 'ROOT') ORDER BY started DESC"
         with self.dbhLock:
             for attempt in range(3):
                 try:
@@ -127,6 +139,10 @@ class ScanManager:
                     return self.dbh.fetchall()
                 except (sqlite3.Error, psycopg2.Error) as e:
                     self._log_db_error("SQL error encountered when fetching scan list", e)
+                    try:
+                        self.conn.rollback()
+                    except Exception:
+                        pass
                     if self._is_transient_error(e) and attempt < 2:
                         time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
@@ -153,6 +169,10 @@ class ScanManager:
                     return True
                 except (sqlite3.Error, psycopg2.Error) as e:
                     self._log_db_error("SQL error encountered when deleting scan", e)
+                    try:
+                        self.conn.rollback()
+                    except Exception:
+                        pass
                     if self._is_transient_error(e) and attempt < 2:
                         time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue

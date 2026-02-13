@@ -829,7 +829,12 @@ class DbCore:
                 self.dbh.execute(queries['get'])
                 row = self.dbh.fetchone()
                 return int(row[0]) if row else 0
-            except Exception as e:
+            except Exception:
+                # Rollback failed transaction for PostgreSQL
+                try:
+                    self.conn.rollback()
+                except Exception:
+                    pass
                 return 0
 
     def set_schema_version(self, version: int | None = None) -> None:
@@ -867,19 +872,26 @@ class DbCore:
                         self.set_schema_version(self.SCHEMA_VERSION)
                     self.dbh.execute("SELECT COUNT(*) FROM tbl_event_types")
                     if self.dbh.fetchone()[0] == 0:
+                        ph = get_placeholder(self.db_type)
+                        upsert = get_upsert_clause(self.db_type, 'tbl_event_types', ['event'], ['event_descr', 'event_raw', 'event_type'])
                         for row in self.eventDetails:
                             event, event_descr, event_raw, event_type = row
-                            qry = "INSERT OR IGNORE INTO tbl_event_types (event, event_descr, event_raw, event_type) VALUES (?, ?, ?, ?)"
+                            qry = f"INSERT INTO tbl_event_types (event, event_descr, event_raw, event_type) VALUES ({ph}, {ph}, {ph}, {ph}) {upsert}"
                             params = (event, event_descr, event_raw, event_type)
                             try:
                                 self.dbh.execute(qry, params)
                             except Exception as e:
                                 self._log_db_error("Failed to insert event type", e)
+                                self.conn.rollback()
                                 continue
                         self.conn.commit()
                     return
                 except (sqlite3.Error, psycopg2.Error) as e:
                     self._log_db_error("SQL error encountered when setting up database", e)
+                    try:
+                        self.conn.rollback()
+                    except Exception:
+                        pass
                     if is_transient_error(e) and attempt < 2:
                         time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue

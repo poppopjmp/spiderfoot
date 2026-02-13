@@ -29,10 +29,11 @@ class ScanRecord:
     created: float = 0.0
     started: float = 0.0
     ended: float = 0.0
+    result_count: int = 0
 
     @classmethod
     def from_row(cls, row: tuple) -> "ScanRecord":
-        """Build from a DB row tuple (guid, name, target, created, started, ended, status)."""
+        """Build from a DB row tuple (guid, name, target, created, started, ended, status[, result_count])."""
         if not row or len(row) < 7:
             raise ValueError(f"Invalid scan row: {row}")
         return cls(
@@ -43,6 +44,7 @@ class ScanRecord:
             started=float(row[4] or 0),
             ended=float(row[5] or 0),
             status=str(row[6]),
+            result_count=int(row[7]) if len(row) > 7 and row[7] is not None else 0,
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -55,6 +57,7 @@ class ScanRecord:
             "created": self.created,
             "started": self.started,
             "ended": self.ended,
+            "result_count": self.result_count,
         }
 
 
@@ -81,6 +84,11 @@ class ScanRepository(AbstractRepository):
         if not row:
             return None
         try:
+            # scanInstanceGet returns (name, target, created, started, ended, status)
+            # but ScanRecord.from_row expects (guid, name, target, created, started, ended, status)
+            # Prepend scan_id since it's not included in the query result
+            if len(row) < 7:
+                row = (scan_id, *row)
             return ScanRecord.from_row(row)
         except (ValueError, IndexError):
             return None

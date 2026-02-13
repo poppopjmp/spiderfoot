@@ -90,6 +90,27 @@ class CSRFProtection:
             if cherrypy.request.path_info.startswith('/api/') and self._has_valid_api_auth():
                 return
 
+            # Skip CSRF check for read-only scan data endpoints that use POST
+            # (legacy SpiderFoot AJAX pattern — these return JSON data, not mutating)
+            _CSRF_EXEMPT_PATHS = (
+                '/scansummary', '/scanstatus', '/scaneventresults',
+                '/scaneventresultsunique', '/scanlog', '/scanerrors',
+                '/scancorrelations', '/scanhistory', '/scanopts',
+                '/scanelementtypediscovery', '/search', '/scanviz',
+                '/resultsetfp', '/scaninfo', '/runcorrelations',
+                # Workspace endpoints
+                '/workspacelist', '/workspacecreate', '/workspaceget',
+                '/workspaceupdate', '/workspacedelete',
+                '/workspacesummary', '/workspaceaddtarget',
+                '/workspaceremovetarget', '/workspaceimportscans',
+                '/workspacemultiscan', '/workspacemcpreport',
+                '/workspacetiming', '/workspacescanresults',
+                '/workspacescancorrelations', '/workspacedetails',
+                '/workspacereportdownload',
+            )
+            if cherrypy.request.path_info in _CSRF_EXEMPT_PATHS:
+                return
+
             if not self.validate_csrf_token():
                 raise cherrypy.HTTPError(403, "CSRF token missing or invalid")
 

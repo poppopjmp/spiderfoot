@@ -207,17 +207,13 @@ For FastAPI endpoints, security middleware is automatically applied:
 Create API keys using the management interface or programmatically:
 
 ```python
-from spiderfoot.api_security import APISecurityManager
+from spiderfoot.security.auth import create_access_token
 
-# Initialize API manager
-api_manager = APISecurityManager(secret_key=config['security.api_security.jwt_secret'])
-
-# Create API key
-api_key = api_manager.generate_api_key(
-    user_id="admin",
-    scopes=["read", "write", "admin"]
+# Create JWT access token
+token = create_access_token(
+    data={"sub": "admin", "scopes": ["read", "write", "admin"]}
 )
-print(f"API Key: {api_key}")
+print(f"Access Token: {token}")
 ```
 
 #### API Authentication

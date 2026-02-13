@@ -667,7 +667,12 @@ $(document).ready(function() {
                 $('#createWorkspaceModal').modal('hide');
                 $('#createWorkspaceForm')[0].reset();
                 alertify.success('Workspace created successfully');
-                loadWorkspaces();
+                // Redirect to the new workspace details page
+                if (data.workspace_id) {
+                    window.location.href = '${docroot}/workspacedetails?workspace_id=' + data.workspace_id;
+                } else {
+                    loadWorkspaces();
+                }
             } else {
                 alertify.error('Failed to create workspace: ' + data.error);
             }

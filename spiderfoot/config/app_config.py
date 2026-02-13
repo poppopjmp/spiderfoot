@@ -203,6 +203,80 @@ class ElasticsearchConfig:
     enabled: bool = False
 
 
+@dataclass
+class QdrantVectorDBConfig:
+    """Qdrant vector database settings for RAG/Rerank correlation."""
+    enabled: bool = True
+    backend: str = "memory"
+    host: str = "localhost"
+    port: int = 6333
+    grpc_port: int = 6334
+    api_key: str = ""
+    https: bool = False
+    prefix: str = "sf_"
+
+
+@dataclass
+class EmbeddingModelConfig:
+    """Embedding model settings for vectorising OSINT events."""
+    provider: str = "mock"
+    model: str = "all-MiniLM-L6-v2"
+    dimensions: int = 384
+    api_key: str = ""
+    api_base: str = ""
+    batch_size: int = 32
+    max_tokens: int = 512
+
+
+@dataclass
+class RerankerModelConfig:
+    """Reranker / cross-encoder settings for improving correlation accuracy."""
+    provider: str = "mock"
+    model: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+    api_key: str = ""
+    top_k: int = 10
+    score_threshold: float = 0.3
+    accuracy: str = "high"
+
+
+@dataclass
+class LLMConfig:
+    """LLM settings for RAG-powered analysis."""
+    provider: str = "mock"
+    model: str = ""
+    api_key: str = ""
+    api_base: str = ""
+    temperature: float = 0.1
+    max_tokens: int = 2048
+
+
+@dataclass
+class VectorCorrelationSettings:
+    """Vector correlation engine settings."""
+    enabled: bool = True
+    similarity_threshold: float = 0.7
+    cross_scan_threshold: float = 0.8
+    workspace_strategy: str = "federated"
+    rerank_accuracy: str = "high"
+    auto_index: bool = True
+
+
+@dataclass
+class MinIOConfig:
+    """MinIO / S3-compatible object storage settings."""
+    enabled: bool = True
+    endpoint: str = "localhost:9000"
+    access_key: str = "spiderfoot"
+    secret_key: str = ""
+    secure: bool = False
+    region: str = "us-east-1"
+    reports_bucket: str = "sf-reports"
+    logs_bucket: str = "sf-logs"
+    pg_backups_bucket: str = "sf-pg-backups"
+    qdrant_snapshots_bucket: str = "sf-qdrant-snapshots"
+    data_bucket: str = "sf-data"
+
+
 # ---------------------------------------------------------------------------
 # Field-key mappings  (section_attr, field_attr) <-> legacy flat key
 # ---------------------------------------------------------------------------
@@ -283,6 +357,62 @@ _KEY_TO_FIELD: dict[str, tuple[str, str]] = {
     "_es_host": ("elasticsearch", "host"),
     "_es_port": ("elasticsearch", "port"),
     "_es_enabled": ("elasticsearch", "enabled"),
+
+    # Qdrant vector database
+    "_qdrant_enabled": ("qdrant", "enabled"),
+    "_qdrant_backend": ("qdrant", "backend"),
+    "_qdrant_host": ("qdrant", "host"),
+    "_qdrant_port": ("qdrant", "port"),
+    "_qdrant_grpc_port": ("qdrant", "grpc_port"),
+    "_qdrant_api_key": ("qdrant", "api_key"),
+    "_qdrant_https": ("qdrant", "https"),
+    "_qdrant_prefix": ("qdrant", "prefix"),
+
+    # Embedding model
+    "_embedding_provider": ("embedding", "provider"),
+    "_embedding_model": ("embedding", "model"),
+    "_embedding_dimensions": ("embedding", "dimensions"),
+    "_embedding_api_key": ("embedding", "api_key"),
+    "_embedding_api_base": ("embedding", "api_base"),
+    "_embedding_batch_size": ("embedding", "batch_size"),
+    "_embedding_max_tokens": ("embedding", "max_tokens"),
+
+    # Reranker model
+    "_reranker_provider": ("reranker", "provider"),
+    "_reranker_model": ("reranker", "model"),
+    "_reranker_api_key": ("reranker", "api_key"),
+    "_reranker_top_k": ("reranker", "top_k"),
+    "_reranker_score_threshold": ("reranker", "score_threshold"),
+    "_reranker_accuracy": ("reranker", "accuracy"),
+
+    # LLM (RAG)
+    "_llm_provider": ("llm", "provider"),
+    "_llm_model": ("llm", "model"),
+    "_llm_api_key": ("llm", "api_key"),
+    "_llm_api_base": ("llm", "api_base"),
+    "_llm_temperature": ("llm", "temperature"),
+    "_llm_max_tokens": ("llm", "max_tokens"),
+
+    # Vector correlation
+    "_vcorr_enabled": ("vector_correlation", "enabled"),
+    "_vcorr_similarity_threshold": ("vector_correlation", "similarity_threshold"),
+    "_vcorr_cross_scan_threshold": ("vector_correlation", "cross_scan_threshold"),
+    "_vcorr_workspace_strategy": ("vector_correlation", "workspace_strategy"),
+    "_vcorr_rerank_accuracy": ("vector_correlation", "rerank_accuracy"),
+    "_vcorr_auto_index": ("vector_correlation", "auto_index"),
+
+    # MinIO / S3 object storage
+    "_minio_enabled": ("minio", "enabled"),
+    "_minio_endpoint": ("minio", "endpoint"),
+    "_minio_access_key": ("minio", "access_key"),
+    "_minio_secret_key": ("minio", "secret_key"),
+    "_minio_secure": ("minio", "secure"),
+    "_minio_region": ("minio", "region"),
+    "_minio_reports_bucket": ("minio", "reports_bucket"),
+    "_minio_logs_bucket": ("minio", "logs_bucket"),
+    "_minio_pg_backups_bucket": ("minio", "pg_backups_bucket"),
+    "_minio_qdrant_bucket": ("minio", "qdrant_snapshots_bucket"),
+    "_minio_data_bucket": ("minio", "data_bucket"),
 }
 
 # Reverse mapping: (section, field) -> legacy key  (first occurrence wins)
@@ -336,6 +466,62 @@ _ENV_TO_KEY: dict[str, str] = {
     "SF_WORKER_STRATEGY": "_worker_strategy",
     "SF_SCANNER_MAX_SCANS": "_scheduler_max_scans",
     "SF_SCANNER_POLL_INTERVAL": "_scheduler_poll_interval",
+
+    # Qdrant
+    "SF_QDRANT_ENABLED": "_qdrant_enabled",
+    "SF_QDRANT_BACKEND": "_qdrant_backend",
+    "SF_QDRANT_HOST": "_qdrant_host",
+    "SF_QDRANT_PORT": "_qdrant_port",
+    "SF_QDRANT_GRPC_PORT": "_qdrant_grpc_port",
+    "SF_QDRANT_API_KEY": "_qdrant_api_key",
+    "SF_QDRANT_HTTPS": "_qdrant_https",
+    "SF_QDRANT_PREFIX": "_qdrant_prefix",
+
+    # Embedding
+    "SF_EMBEDDING_PROVIDER": "_embedding_provider",
+    "SF_EMBEDDING_MODEL": "_embedding_model",
+    "SF_EMBEDDING_DIMENSIONS": "_embedding_dimensions",
+    "SF_EMBEDDING_API_KEY": "_embedding_api_key",
+    "SF_EMBEDDING_API_BASE": "_embedding_api_base",
+    "SF_EMBEDDING_BATCH_SIZE": "_embedding_batch_size",
+    "SF_EMBEDDING_MAX_TOKENS": "_embedding_max_tokens",
+
+    # Reranker
+    "SF_RERANKER_PROVIDER": "_reranker_provider",
+    "SF_RERANKER_MODEL": "_reranker_model",
+    "SF_RERANKER_API_KEY": "_reranker_api_key",
+    "SF_RERANKER_TOP_K": "_reranker_top_k",
+    "SF_RERANKER_SCORE_THRESHOLD": "_reranker_score_threshold",
+    "SF_RERANKER_ACCURACY": "_reranker_accuracy",
+
+    # LLM
+    "SF_LLM_PROVIDER": "_llm_provider",
+    "SF_LLM_MODEL": "_llm_model",
+    "SF_LLM_API_KEY": "_llm_api_key",
+    "SF_LLM_API_BASE": "_llm_api_base",
+    "SF_LLM_TEMPERATURE": "_llm_temperature",
+    "SF_LLM_MAX_TOKENS": "_llm_max_tokens",
+
+    # Vector correlation
+    "SF_VECTOR_CORRELATION_ENABLED": "_vcorr_enabled",
+    "SF_VECTOR_SIMILARITY_THRESHOLD": "_vcorr_similarity_threshold",
+    "SF_VECTOR_CROSS_SCAN_THRESHOLD": "_vcorr_cross_scan_threshold",
+    "SF_VECTOR_WORKSPACE_STRATEGY": "_vcorr_workspace_strategy",
+    "SF_VECTOR_RERANK_ACCURACY": "_vcorr_rerank_accuracy",
+    "SF_VECTOR_AUTO_INDEX": "_vcorr_auto_index",
+
+    # MinIO / S3
+    "SF_MINIO_ENABLED": "_minio_enabled",
+    "SF_MINIO_ENDPOINT": "_minio_endpoint",
+    "SF_MINIO_ACCESS_KEY": "_minio_access_key",
+    "SF_MINIO_SECRET_KEY": "_minio_secret_key",
+    "SF_MINIO_SECURE": "_minio_secure",
+    "SF_MINIO_REGION": "_minio_region",
+    "SF_MINIO_REPORTS_BUCKET": "_minio_reports_bucket",
+    "SF_MINIO_LOGS_BUCKET": "_minio_logs_bucket",
+    "SF_MINIO_PG_BACKUPS_BUCKET": "_minio_pg_backups_bucket",
+    "SF_MINIO_QDRANT_BUCKET": "_minio_qdrant_bucket",
+    "SF_MINIO_DATA_BUCKET": "_minio_data_bucket",
 }
 
 
@@ -376,6 +562,91 @@ FIELD_DESCRIPTIONS: dict[str, str] = {
     "_socks4user": "SOCKS Username. Valid only for SOCKS4 and SOCKS5 servers.",
     "_socks5pwd": "SOCKS Password. Valid only for SOCKS5 servers.",
     "_modulesenabled": "Modules enabled for the scan.",
+
+    # Qdrant vector DB
+    "_qdrant_enabled": "Enable Qdrant vector database for RAG/Rerank correlations.",
+    "_qdrant_backend": "Qdrant backend: 'memory' (dev), 'http' (production REST), or 'grpc'.",
+    "_qdrant_host": "Qdrant server hostname.",
+    "_qdrant_port": "Qdrant REST API port (default 6333).",
+    "_qdrant_grpc_port": "Qdrant gRPC port (default 6334).",
+    "_qdrant_api_key": "Qdrant API key (if authentication is enabled).",
+    "_qdrant_https": "Use HTTPS to connect to Qdrant.",
+    "_qdrant_prefix": "Collection name prefix for all SpiderFoot collections.",
+
+    # Embedding model
+    "_embedding_provider": (
+        "Embedding provider: 'mock' (testing), 'sentence_transformer' "
+        "(local), 'openai', or 'huggingface'."
+    ),
+    "_embedding_model": "Embedding model name (e.g. 'all-MiniLM-L6-v2').",
+    "_embedding_dimensions": "Embedding vector dimensions (must match model output).",
+    "_embedding_api_key": "API key for remote embedding providers.",
+    "_embedding_api_base": "Base URL for embedding API (OpenAI-compatible).",
+    "_embedding_batch_size": "Number of texts to embed in a single batch.",
+    "_embedding_max_tokens": "Maximum token length per text for embedding.",
+
+    # Reranker
+    "_reranker_provider": (
+        "Reranker provider: 'mock', 'cross_encoder' (local), "
+        "'cohere', or 'jina'."
+    ),
+    "_reranker_model": "Cross-encoder / reranker model name.",
+    "_reranker_api_key": "API key for remote reranker providers.",
+    "_reranker_top_k": "Number of top results to return after reranking.",
+    "_reranker_score_threshold": (
+        "Minimum reranker score threshold (0.0-1.0). Results below "
+        "this score are filtered out."
+    ),
+    "_reranker_accuracy": (
+        "Rerank accuracy level: 'low' (fast, fewer candidates), "
+        "'medium', or 'high' (slow, more candidates)."
+    ),
+
+    # LLM / RAG
+    "_llm_provider": (
+        "LLM provider for RAG analysis: 'mock', 'openai', 'ollama', "
+        "or 'huggingface'."
+    ),
+    "_llm_model": "LLM model name (e.g. 'gpt-4o-mini', 'llama3').",
+    "_llm_api_key": "API key for remote LLM providers.",
+    "_llm_api_base": "Base URL for LLM API (e.g. Ollama endpoint).",
+    "_llm_temperature": "LLM generation temperature (0.0 = deterministic).",
+    "_llm_max_tokens": "Maximum tokens for LLM generation.",
+
+    # Vector correlation
+    "_vcorr_enabled": "Enable vector-based correlation engine.",
+    "_vcorr_similarity_threshold": (
+        "Minimum cosine similarity (0.0-1.0) for same-scan correlations."
+    ),
+    "_vcorr_cross_scan_threshold": (
+        "Minimum cosine similarity (0.0-1.0) for cross-scan correlations. "
+        "Higher values reduce false positives across scans."
+    ),
+    "_vcorr_workspace_strategy": (
+        "Workspace collection strategy: 'federated' (query each scan "
+        "collection independently) or 'materialized' (copy vectors into "
+        "a single workspace collection)."
+    ),
+    "_vcorr_rerank_accuracy": (
+        "Overall rerank accuracy mode: 'low', 'medium', or 'high'. "
+        "Controls candidate pool size and reranking thoroughness."
+    ),
+    "_vcorr_auto_index": (
+        "Automatically index scan events into Qdrant at scan completion."
+    ),
+
+    # MinIO / S3 object storage
+    "_minio_enabled": "Enable MinIO/S3 object storage for reports, logs, and backups.",
+    "_minio_endpoint": "MinIO server endpoint (host:port, without scheme).",
+    "_minio_access_key": "MinIO access key (username).",
+    "_minio_secret_key": "MinIO secret key (password).",
+    "_minio_secure": "Use HTTPS to connect to MinIO.",
+    "_minio_region": "S3 region for MinIO (default: us-east-1).",
+    "_minio_reports_bucket": "Bucket name for scan reports.",
+    "_minio_logs_bucket": "Bucket name for logs and event archives.",
+    "_minio_pg_backups_bucket": "Bucket name for PostgreSQL backups.",
+    "_minio_qdrant_bucket": "Bucket name for Qdrant snapshots.",
+    "_minio_data_bucket": "Bucket name for general data artefacts.",
 }
 
 
@@ -429,6 +700,20 @@ class AppConfig:
     elasticsearch: ElasticsearchConfig = field(
         default_factory=ElasticsearchConfig
     )
+    qdrant: QdrantVectorDBConfig = field(
+        default_factory=QdrantVectorDBConfig
+    )
+    embedding: EmbeddingModelConfig = field(
+        default_factory=EmbeddingModelConfig
+    )
+    reranker: RerankerModelConfig = field(
+        default_factory=RerankerModelConfig
+    )
+    llm: LLMConfig = field(default_factory=LLMConfig)
+    vector_correlation: VectorCorrelationSettings = field(
+        default_factory=VectorCorrelationSettings
+    )
+    minio: MinIOConfig = field(default_factory=MinIOConfig)
 
     # Opaque containers for module / correlation data (no typed schema)
     modules: dict[str, Any] | None = None

@@ -2,7 +2,90 @@
 
 *Author: poppopjmp*
 
-SpiderFoot provides both a REST API and a Python API for integration, automation, and advanced workflows. Use the API to automate scans, retrieve results, and integrate SpiderFoot with other tools and platforms. The enhanced SpiderFoot v5.3.3 includes 277 modules with advanced capabilities for TikTok OSINT, blockchain analytics, performance optimization, and AI-powered analysis.
+SpiderFoot provides a comprehensive **REST API**, a **GraphQL API** (queries, mutations, subscriptions), and a **Python API** for integration, automation, and advanced workflows.
+
+---
+
+## GraphQL API
+
+The GraphQL endpoint is available at `/api/graphql` and provides a GraphiQL IDE in the browser. Built with [Strawberry](https://strawberry.rocks/).
+
+### Queries
+
+| Field | Arguments | Returns |
+|-------|-----------|---------|
+| `scan` | `scanId: String!` | `ScanType` |
+| `scans` | `pagination: PaginationInput, statusFilter: String` | `PaginatedScans` |
+| `scanEvents` | `scanId: String!, filter: EventFilter, pagination: PaginationInput` | `PaginatedEvents` |
+| `eventSummary` | `scanId: String!` | `[EventTypeSummary]` |
+| `scanCorrelations` | `scanId: String!` | `[CorrelationType]` |
+| `scanLogs` | `scanId: String!, logType: String, limit: Int` | `[ScanLogType]` |
+| `scanStatistics` | `scanId: String!` | `ScanStatistics` |
+| `scanGraph` | `scanId: String!, maxNodes: Int` | `ScanGraph` |
+| `eventTypes` | — | `[EventTypeInfo]` |
+| `workspaces` | — | `[WorkspaceType]` |
+| `searchEvents` | `query: String!, scanIds: [String], eventTypes: [String], limit: Int` | `[EventType]` |
+| `semanticSearch` | `query: String!, collection: String, limit: Int, scoreThreshold: Float, scanId: String` | `VectorSearchResult` |
+| `vectorCollections` | — | `[VectorCollectionInfo]` |
+
+### Mutations
+
+| Mutation | Arguments | Returns |
+|----------|-----------|---------|
+| `startScan` | `input: ScanCreateInput!` | `ScanCreateResult` |
+| `stopScan` | `scanId: String!` | `MutationResult` |
+| `deleteScan` | `scanId: String!` | `MutationResult` |
+| `setFalsePositive` | `input: FalsePositiveInput!` | `FalsePositiveResult` |
+| `rerunScan` | `scanId: String!` | `ScanCreateResult` |
+
+### Subscriptions (WebSocket)
+
+| Subscription | Arguments | Yields |
+|--------------|-----------|--------|
+| `scanProgress` | `scanId: String!, interval: Float` | `ScanType` (on status change) |
+| `scanEventsLive` | `scanId: String!, interval: Float` | `EventType` (new events only) |
+
+Connect via `ws://localhost/api/graphql` using the `graphql-transport-ws` or `graphql-ws` protocol.
+
+### Input Types
+
+```graphql
+input ScanCreateInput {
+  name: String!
+  target: String!
+  modules: [String]
+  useCase: String
+}
+
+input FalsePositiveInput {
+  scanId: String!
+  resultIds: [String!]!
+  falsePositive: Boolean = true
+}
+
+input EventFilter {
+  eventTypes: [String]
+  modules: [String]
+  minRisk: Int
+  maxRisk: Int
+  minConfidence: Int
+  excludeFalsePositives: Boolean = true
+  searchText: String
+}
+
+input PaginationInput {
+  page: Int = 1
+  pageSize: Int = 50
+}
+```
+
+### Example: Semantic Search with cURL
+
+```bash
+curl -X POST http://localhost/api/graphql \
+  -H "Content-Type: application/json" \
+  -d '{"query": "{ semanticSearch(query: \"malicious domain\", limit: 5) { hits { id score data eventType } totalFound queryTimeMs } }"}'
+```
 
 ---
 

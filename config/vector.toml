@@ -40,7 +40,7 @@ multiline.timeout_ms = 1000
 [sources.sf_events_http]
 type = "http_server"
 address = "0.0.0.0:${SF_VECTOR_HTTP_PORT:-8686}"
-encoding.codec = "ndjson"
+decoding.codec = "json"
 strict_decoding = false
 headers = ["Authorization"]
 
@@ -60,7 +60,7 @@ source = '''
   # Try to parse the message as JSON
   parsed, err = parse_json(.message)
   if err == null {
-    . = merge(., parsed)
+    ., err = merge(., parsed)
     .log_format = "structured"
   } else {
     .log_format = "plain"
@@ -80,25 +80,44 @@ source = '''
   .ingestion_timestamp = now()
   
   # Categorize by event type
-  .event_category = if starts_with(to_string(.event_type) ?? "", "URL") { "web" }
-    else if starts_with(to_string(.event_type) ?? "", "IP") { "network" }
-    else if starts_with(to_string(.event_type) ?? "", "DOMAIN") { "domain" }
-    else if starts_with(to_string(.event_type) ?? "", "DNS") { "dns" }
-    else if starts_with(to_string(.event_type) ?? "", "VULNERABILITY") { "security" }
-    else if starts_with(to_string(.event_type) ?? "", "MALICIOUS") { "threat" }
-    else if starts_with(to_string(.event_type) ?? "", "EMAIL") { "email" }
-    else if starts_with(to_string(.event_type) ?? "", "PHONE") { "phone" }
-    else if starts_with(to_string(.event_type) ?? "", "USERNAME") { "identity" }
-    else if starts_with(to_string(.event_type) ?? "", "SOCIAL") { "social" }
-    else { "osint" }
+  event_str = to_string(.event_type) ?? ""
+  if starts_with(event_str, "URL") {
+    .event_category = "web"
+  } else if starts_with(event_str, "IP") {
+    .event_category = "network"
+  } else if starts_with(event_str, "DOMAIN") {
+    .event_category = "domain"
+  } else if starts_with(event_str, "DNS") {
+    .event_category = "dns"
+  } else if starts_with(event_str, "VULNERABILITY") {
+    .event_category = "security"
+  } else if starts_with(event_str, "MALICIOUS") {
+    .event_category = "threat"
+  } else if starts_with(event_str, "EMAIL") {
+    .event_category = "email"
+  } else if starts_with(event_str, "PHONE") {
+    .event_category = "phone"
+  } else if starts_with(event_str, "USERNAME") {
+    .event_category = "identity"
+  } else if starts_with(event_str, "SOCIAL") {
+    .event_category = "social"
+  } else {
+    .event_category = "osint"
+  }
   
   # Risk classification
   risk_val = to_int(.risk) ?? 0
-  .risk_level = if risk_val >= 80 { "critical" }
-    else if risk_val >= 60 { "high" }
-    else if risk_val >= 40 { "medium" }
-    else if risk_val >= 20 { "low" }
-    else { "info" }
+  if risk_val >= 80 {
+    .risk_level = "critical"
+  } else if risk_val >= 60 {
+    .risk_level = "high"
+  } else if risk_val >= 40 {
+    .risk_level = "medium"
+  } else if risk_val >= 20 {
+    .risk_level = "low"
+  } else {
+    .risk_level = "info"
+  }
 '''
 
 # Route events by type
@@ -139,39 +158,42 @@ encoding.codec = "json"
 # target = "stdout"
 
 # Elasticsearch for scan events (searchable event store)
-[sinks.elasticsearch_events]
-type = "elasticsearch"
-inputs = ["route_events.scan_events", "route_events.scan_status"]
-endpoints = ["${SF_ES_ENDPOINT:-http://elasticsearch:9200}"]
-api_version = "v8"
-mode = "bulk"
-bulk.index = "spiderfoot-events-{{ event_category }}-%Y-%m-%d"
-encoding.timestamp_format = "rfc3339"
+# Uncomment when Elasticsearch is available and set SF_ES_ENDPOINT
+# [sinks.elasticsearch_events]
+# type = "elasticsearch"
+# inputs = ["route_events.scan_events", "route_events.scan_status"]
+# endpoints = ["${SF_ES_ENDPOINT:-http://elasticsearch:9200}"]
+# api_version = "v8"
+# mode = "bulk"
+# bulk.index = "spiderfoot-events-{{ event_category }}-%Y-%m-%d"
+# encoding.timestamp_format = "rfc3339"
 # auth.strategy = "basic"
 # auth.user = "elastic"
-# auth.password = "${ELASTIC_PASSWORD}"
+# auth.password = "changeme"
 
 # Loki for log aggregation (enable via SF_LOKI_ENDPOINT env var)
-[sinks.loki_logs]
-type = "loki"
-inputs = ["route_logs.errors", "route_logs.warnings", "route_logs.info", "route_events.logs"]
-endpoint = "${SF_LOKI_ENDPOINT:-http://loki:3100}"
-labels.service = "spiderfoot"
-labels.environment = "{{ environment }}"
-labels.level = "{{ level }}"
-encoding.codec = "json"
-healthcheck.enabled = true
+# Uncomment when Loki is available and set SF_LOKI_ENDPOINT
+# [sinks.loki_logs]
+# type = "loki"
+# inputs = ["route_logs.errors", "route_logs.warnings", "route_logs.info", "route_events.logs"]
+# endpoint = "${SF_LOKI_ENDPOINT:-http://loki:3100}"
+# labels.service = "spiderfoot"
+# labels.environment = "{{ environment }}"
+# labels.level = "{{ level }}"
+# encoding.codec = "json"
+# healthcheck.enabled = true
 
 # High-severity webhook alerting (enable via SF_ALERT_WEBHOOK_URL)
 # Forwards events with risk >= 60 to PagerDuty, Slack, or custom endpoint
-[sinks.high_severity_webhook]
-type = "http"
-inputs = ["high_risk_filter"]
-uri = "${SF_ALERT_WEBHOOK_URL:-http://localhost:9999/alert}"
-method = "post"
-encoding.codec = "json"
-batch.max_events = 1
-batch.timeout_secs = 0
+# Uncomment and set SF_ALERT_WEBHOOK_URL
+# [sinks.high_severity_webhook]
+# type = "http"
+# inputs = ["high_risk_filter"]
+# uri = "${SF_ALERT_WEBHOOK_URL:-http://localhost:9999/alert}"
+# method = "post"
+# encoding.codec = "json"
+# batch.max_events = 1
+# batch.timeout_secs = 0
 
 # ClickHouse for high-volume analytics
 # Uncomment when ClickHouse is available
@@ -195,6 +217,65 @@ type = "file"
 inputs = ["parse_docker_logs"]
 path = "/var/log/vector/spiderfoot/logs-%Y-%m-%d.json"
 encoding.codec = "json"
+
+# ---------------------------------------------------------------------------
+# MinIO S3 sinks — primary persistent log & event storage
+# ---------------------------------------------------------------------------
+# These sinks push all logs and scan events to MinIO for long-term archival.
+# MinIO is configured as the central data persistence layer; all data here
+# survives container restarts.
+# ---------------------------------------------------------------------------
+
+# Scan events → MinIO (sf-logs bucket, partitioned by category + date)
+[sinks.minio_events]
+type = "aws_s3"
+inputs = ["enrich_events"]
+bucket = "${SF_MINIO_LOGS_BUCKET:-sf-logs}"
+key_prefix = "events/{{ event_category }}/%Y/%m/%d/"
+region = "us-east-1"
+endpoint = "${SF_MINIO_ENDPOINT:-http://minio:9000}"
+encoding.codec = "json"
+compression = "gzip"
+batch.max_bytes = 5242880
+batch.timeout_secs = 60
+
+[sinks.minio_events.auth]
+access_key_id = "${AWS_ACCESS_KEY_ID:-spiderfoot}"
+secret_access_key = "${AWS_SECRET_ACCESS_KEY:-changeme123}"
+
+# Container logs → MinIO (sf-logs bucket, partitioned by date)
+[sinks.minio_logs]
+type = "aws_s3"
+inputs = ["parse_docker_logs"]
+bucket = "${SF_MINIO_LOGS_BUCKET:-sf-logs}"
+key_prefix = "logs/%Y/%m/%d/"
+region = "us-east-1"
+endpoint = "${SF_MINIO_ENDPOINT:-http://minio:9000}"
+encoding.codec = "json"
+compression = "gzip"
+batch.max_bytes = 5242880
+batch.timeout_secs = 60
+
+[sinks.minio_logs.auth]
+access_key_id = "${AWS_ACCESS_KEY_ID:-spiderfoot}"
+secret_access_key = "${AWS_SECRET_ACCESS_KEY:-changeme123}"
+
+# High-risk events → MinIO (separate prefix for faster querying)
+[sinks.minio_alerts]
+type = "aws_s3"
+inputs = ["high_risk_filter"]
+bucket = "${SF_MINIO_LOGS_BUCKET:-sf-logs}"
+key_prefix = "alerts/%Y/%m/%d/"
+region = "us-east-1"
+endpoint = "${SF_MINIO_ENDPOINT:-http://minio:9000}"
+encoding.codec = "json"
+compression = "gzip"
+batch.max_bytes = 1048576
+batch.timeout_secs = 30
+
+[sinks.minio_alerts.auth]
+access_key_id = "${AWS_ACCESS_KEY_ID:-spiderfoot}"
+secret_access_key = "${AWS_SECRET_ACCESS_KEY:-changeme123}"
 
 # Prometheus metrics exporter
 # [sinks.prometheus_metrics]

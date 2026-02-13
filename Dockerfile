@@ -1,5 +1,5 @@
 #
-# Spiderfoot Dockerfile - Enterprise Edition
+# Spiderfoot Dockerfile
 # Multi-stage build with virtual environment support and FastAPI
 #
 

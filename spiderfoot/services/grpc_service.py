@@ -75,8 +75,8 @@ try:
         from spiderfoot import spiderfoot_pb2
         from spiderfoot import spiderfoot_pb2_grpc
         _STUBS_AVAILABLE = True
-    except ImportError:
-        log.debug("gRPC stubs not found — run 'python -m grpc_tools.protoc' to generate")
+    except (ImportError, Exception):
+        log.debug("gRPC stubs not available — protobuf version mismatch or stubs not generated")
 except ImportError:
     log.debug("grpcio not installed — using JSON-over-HTTP fallback")
 

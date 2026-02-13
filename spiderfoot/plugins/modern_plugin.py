@@ -53,6 +53,7 @@ from typing import Any
 
 from .plugin import SpiderFootPlugin
 from ..config.constants import DEFAULT_TTL_ONE_HOUR
+from ..scan.scan_state_map import DB_STATUS_FINISHED
 
 
 log = logging.getLogger("spiderfoot.modern_plugin")
@@ -147,6 +148,11 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
         if self._cache_service is None:
             self._cache_service = self._get_service("cache")
         return self._cache_service
+
+    @cache.setter
+    def cache(self, value: Any) -> None:
+        """Set a custom cache implementation."""
+        self._cache_service = value
 
     @property
     def data(self) -> Any | None:
@@ -273,14 +279,19 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
 
         return []
 
-    def cache_get(self, key: str) -> Any | None:
-        """Get a value from the cache."""
+    def cache_get(self, key: str, ttl: int = 0) -> Any | None:
+        """Get a value from the cache.
+
+        Args:
+            key: Cache key to look up.
+            ttl: Cache TTL in hours (used by legacy cacheGet; ignored by dict cache).
+        """
         try:
             if self.cache is not None:
                 return self.cache.get(key)
 
             if hasattr(self, "sf") and self.sf:
-                return self.sf.cacheGet(key, 24)
+                return self.sf.cacheGet(key, ttl or 24)
 
         except (KeyError, OSError) as e:
             self.log.debug("cache_get error for %s: %s", key, e)
@@ -422,6 +433,19 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
             if sfEvent is None:
                 # Poison pill
                 break
+
+            # Handle DB_STATUS_FINISHED signal (string, not an event object)
+            if sfEvent == DB_STATUS_FINISHED:
+                self.log.debug(
+                    "%s.threadWorker() got FINISHED from incomingEventQueue.",
+                    self.__name__,
+                )
+                try:
+                    self.finish()
+                except Exception as e:
+                    self.log.error("Module %s finish() failed: %s", self.__name__, e)
+                self.incomingEventQueue.task_done()
+                continue
 
             self._currentEvent = sfEvent
 

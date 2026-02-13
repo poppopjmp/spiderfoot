@@ -553,23 +553,26 @@ class VectorCorrelationEngine:
     def _rag_analyze(self, query: str,
                      hits: list[CorrelationHit]) -> str:
         """Run RAG analysis on correlation hits."""
-        from spiderfoot.rag_pipeline import RetrievedChunk, MockRetriever
+        try:
+            from spiderfoot.rag_pipeline import RetrievedChunk, MockRetriever
 
-        chunks = [
-            RetrievedChunk(
-                id=h.event.event_id,
-                text=h.event.to_text(),
-                score=h.score,
-                metadata=h.event.to_payload(),
-            )
-            for h in hits[:self._config.rerank_top_k]
-        ]
+            chunks = [
+                RetrievedChunk(
+                    id=h.event.event_id,
+                    text=h.event.to_text(),
+                    score=h.score,
+                    metadata=h.event.to_payload(),
+                )
+                for h in hits[:self._config.rerank_top_k]
+            ]
 
-        # Temporarily set retriever with pre-loaded chunks
-        retriever = MockRetriever(chunks)
-        self._rag.set_retriever(retriever)
-        response = self._rag.query(query)
-        return response.answer
+            retriever = MockRetriever(chunks)
+            self._rag.set_retriever(retriever)
+            response = self._rag.query(query)
+            return response.answer
+        except Exception as e:
+            log.warning("RAG analysis failed, returning empty: %s", e)
+            return ""
 
     def _compute_confidence(self, hits: list[CorrelationHit]) -> float:
         """Compute overall confidence from hit scores."""

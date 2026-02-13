@@ -153,6 +153,11 @@ class SpiderFootScanner():
         if not moduleList:
             raise ValueError("moduleList contains no valid module names")
 
+        # Always ensure sfp__stor_db (the DB storage module) is included.
+        # Without it, no scan results get saved to the database.
+        if "sfp__stor_db" not in moduleList:
+            moduleList.append("sfp__stor_db")
+
         self.__moduleList = moduleList
         self.__sf = SpiderFoot(self.__config)
         self.__sf.dbh = self.__dbh
@@ -166,8 +171,11 @@ class SpiderFootScanner():
         # Improved exception handling for scanInstanceCreate
         try:
             self.__sf.scanId = self.__scanId
-            self.__dbh.scanInstanceCreate(
-                self.__scanId, self.__scanName, self.__targetValue)
+            # Check if scan instance was already created (e.g., by API layer)
+            existing = self.__dbh.scanInstanceGet(self.__scanId)
+            if not existing:
+                self.__dbh.scanInstanceCreate(
+                    self.__scanId, self.__scanName, self.__targetValue)
         except Exception as e:
             self.__sf.status(f"Scan [{self.__scanId}] failed to create scan instance: {e}")
             self.__setStatus(DB_STATUS_ERROR_FAILED, None, time.time() * 1000)

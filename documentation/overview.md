@@ -39,13 +39,20 @@ SpiderFoot is designed for both beginners and advanced users, offering a user-fr
 
 ## Current Version and Capabilities
 
-**SpiderFoot v5.3.3** represents a significant advancement in OSINT automation with the following enhanced capabilities:
+**SpiderFoot v5.246.0** represents a significant advancement in OSINT automation with the following enhanced capabilities:
 
 ### Module Count and Categories
 - **277 Total Modules**: Comprehensive coverage across all major OSINT categories
 - **Core Investigation Modules**: DNS/Network (45+), Threat Intelligence (35+), Social Media (25+)
 - **Enhanced Modules**: TikTok OSINT, Blockchain Analytics, AI Analysis, Advanced Correlation
 - **Performance Modules**: Caching optimization, rate limiting, resource management
+
+### Microservices Architecture (10 containers)
+- **REST + GraphQL API**: FastAPI with Strawberry GraphQL (queries, mutations, subscriptions)
+- **Vector Search**: Qdrant-powered semantic search over scan events
+- **Object Storage**: MinIO S3-compatible storage for reports, exports, backups
+- **Log Pipeline**: Vector.dev aggregation and routing
+- **Automated Backups**: PG backup sidecar with MinIO archival
 
 ### New Advanced Features
 - **TikTok Intelligence**: Comprehensive TikTok profile analysis and content investigation
@@ -73,15 +80,16 @@ SpiderFoot is designed for both beginners and advanced users, offering a user-fr
 SpiderFoot consists of the following main components:
 
 - **Core Engine:** Orchestrates scans, manages modules, processes results, and handles scheduling. The engine is highly extensible and supports concurrent scanning.
+- **GraphQL + REST API:** Code-first Strawberry GraphQL schema (13 queries, 5 mutations, 2 WebSocket subscriptions) alongside the full REST API. Mounted at `/api/graphql` with GraphiQL IDE.
+- **Qdrant Vector Search:** Semantic similarity search over scan events using custom HTTP-based Qdrant client with embedding service (all-MiniLM-L6-v2, 384 dims). 5 correlation strategies.
+- **MinIO Object Storage:** S3-compatible storage for reports, exports, artifacts, backups, and logs across 5 auto-provisioned buckets.
 - **Security Middleware:** Enterprise-grade security layer providing CSRF protection, input validation, rate limiting, session management, API security, and comprehensive logging.
 - **Modules:** Each module is responsible for gathering a specific type of data or integrating with a particular source. Modules can be enabled, disabled, or configured individually.
-- **Web UI:** Provides a user-friendly interface for configuring scans, viewing results, managing workspaces, and visualizing relationships between entities. The UI supports advanced filtering, search, and export features with comprehensive security protection.
-- **API:** Enables programmatic access to SpiderFoot's capabilities for integration and automation. The API is fully documented and supports enterprise-grade authentication, authorization, and security features.
-- **Database:** Stores scan results, configuration, and workspace data. SpiderFoot uses SQLite by default but supports PostgreSQL for enterprise deployments with encryption and secure configuration management.
-- **Performance Optimization:** Intelligent caching system with TTL support, adaptive rate limiting, and resource monitoring for optimal performance and API usage efficiency.
+- **Web UI:** Provides a user-friendly interface for configuring scans, viewing results, managing workspaces, and visualizing relationships between entities.
+- **Database:** PostgreSQL (microservices) or SQLite (monolith) with automated PG backup sidecar.
+- **Performance Optimization:** Intelligent caching system with TTL support, adaptive rate limiting, and resource monitoring.
 - **Advanced Analytics:** Sophisticated data correlation including cross-platform identity resolution, temporal pattern analysis, geospatial clustering, and behavioral analytics.
-- **Scheduler:** Allows for automated, recurring scans to ensure continuous monitoring of assets and threats.
-- **Security Logging System:** Comprehensive structured logging for security events, audit trails, and compliance monitoring.
+- **Log Pipeline:** Vector.dev for structured log aggregation, transformation, and routing.
 
 ---
 

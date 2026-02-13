@@ -95,9 +95,9 @@ class CorrelationManager:
             raise ValueError(f"Invalid filter by value: {by}")
         ph = get_placeholder(self.db_type)
         if by == "risk":
-            qry = f"SELECT rule_risk, count(*) AS total FROM tbl_scan_correlation_results WHERE scan_instance_id = {ph} GROUP BY rule_risk ORDER BY rule_id"
-        if by == "rule":
-            qry = f"SELECT rule_id, rule_name, rule_risk, rule_descr, count(*) AS total FROM tbl_scan_correlation_results WHERE scan_instance_id = {ph} GROUP BY rule_id ORDER BY rule_id"
+            qry = f"SELECT rule_risk, count(*) AS total FROM tbl_scan_correlation_results WHERE scan_instance_id = {ph} GROUP BY rule_risk ORDER BY rule_risk"
+        elif by == "rule":
+            qry = f"SELECT rule_id, rule_name, rule_risk, rule_descr, count(*) AS total FROM tbl_scan_correlation_results WHERE scan_instance_id = {ph} GROUP BY rule_id, rule_name, rule_risk, rule_descr ORDER BY rule_id"
         qvars = [instanceId]
         with self.dbhLock:
             for attempt in range(3):
@@ -116,7 +116,7 @@ class CorrelationManager:
         if not isinstance(instanceId, str):
             raise TypeError(f"instanceId is {type(instanceId)}; expected str()")
         ph = get_placeholder(self.db_type)
-        qry = f"SELECT c.id, c.title, c.rule_id, c.rule_risk, c.rule_name, c.rule_descr, c.rule_logic, count(e.event_hash) AS event_count FROM tbl_scan_correlation_results c, tbl_scan_correlation_results_events e WHERE scan_instance_id = {ph} AND c.id = e.correlation_id GROUP BY c.id ORDER BY c.title, c.rule_risk"
+        qry = f"SELECT c.id, c.title, c.rule_id, c.rule_risk, c.rule_name, c.rule_descr, c.rule_logic, count(e.event_hash) AS event_count FROM tbl_scan_correlation_results c LEFT JOIN tbl_scan_correlation_results_events e ON c.id = e.correlation_id WHERE c.scan_instance_id = {ph} GROUP BY c.id, c.title, c.rule_id, c.rule_risk, c.rule_name, c.rule_descr, c.rule_logic ORDER BY c.title, c.rule_risk"
         qvars = [instanceId]
         with self.dbhLock:
             for attempt in range(3):
@@ -131,16 +131,10 @@ class CorrelationManager:
                     raise OSError("SQL error encountered when fetching correlation list") from e
 
     def close(self) -> None:
-        """Close the database cursor and connection."""
-        if hasattr(self, 'dbh') and self.dbh:
-            try:
-                self.dbh.close()
-            except Exception as e:
-                self._log_db_error("Error closing DB cursor", e)
-            self.dbh = None
-        if hasattr(self, 'conn') and self.conn:
-            try:
-                self.conn.close()
-            except Exception as e:
-                self._log_db_error("Error closing DB connection", e)
-            self.conn = None
+        """Release references to the shared database cursor and connection.
+
+        Note: Does NOT call .close() on dbh/conn since they are shared
+        with the parent SpiderFootDb instance which owns their lifecycle.
+        """
+        self.dbh = None
+        self.conn = None

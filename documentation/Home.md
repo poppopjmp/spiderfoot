@@ -2,24 +2,27 @@
 
 Welcome to the SpiderFoot documentation! This wiki provides a structured, up-to-date, and webapp-aligned reference for users, developers, and administrators.
 
-## 📚 Sections
+## Sections
 
-| Section            | Link                                                                 |
-|--------------------|----------------------------------------------------------------------|
-| :information_source: Overview           | [Overview](overview)                         |
-| :rocket: Getting Started    | [Getting Started](getting_started)                |
-| :arrow_down: Installation Guide | [Installation Guide](installation)                  |
-| ⚡ Quick Start        | [Quick Start](quickstart)                              |
-| :gear: Configuration      | [Configuration](configuration)                        |
-| :bust_in_silhouette: User Guide         | [User Guide](user_guide)                            |
-| :jigsaw: Modules            | [Modules](modules)                                    |
-| :computer: API Reference      | [API Reference](api_reference)                          |
-| :mortar_board: Advanced Topics    | [Advanced Topics](advanced)                              |
-| :fork_and_knife: Developer Guide    | [Developer Guide](developer_guide)                      |
-| :question: FAQ                | [FAQ](faq)                                            |
-| :wrench: Troubleshooting    | [Troubleshooting](troubleshooting)                      |
-| 🐳 Docker Deployment  | [Docker Deployment](docker_deployment)                  |
-| :mag: Correlations Engine   | [Correlations](correlations/correlation)                      |
+| Section | Link |
+|---|---|
+| Overview | [Overview](overview) |
+| Getting Started | [Getting Started](getting_started) |
+| Installation Guide | [Installation Guide](installation) |
+| Quick Start | [Quick Start](quickstart) |
+| Configuration | [Configuration](configuration) |
+| User Guide | [User Guide](user_guide) |
+| Modules | [Modules](modules) |
+| API Reference | [API Reference](api_reference) |
+| Advanced Topics | [Advanced Topics](advanced) |
+| Developer Guide | [Developer Guide](developer_guide) |
+| FAQ | [FAQ](faq) |
+| Troubleshooting | [Troubleshooting](troubleshooting) |
+| Docker Deployment | [Docker Deployment](docker_deployment) |
+| Architecture | [Architecture](ARCHITECTURE) |
+| Correlations Engine | [Correlations](correlations/correlation) |
+| Module Migration | [Module Migration Guide](MODULE_MIGRATION_GUIDE) |
+| Security | [Security](security) |
 
 ---
 

@@ -227,23 +227,32 @@ class sfp__stor_db(SpiderFootModernPlugin):
             self.error("Database handle not available for SQLite storage")
             return
 
-        try:
-            if self.opts['maxstorage'] != 0 and len(sfEvent.data) > self.opts['maxstorage']:
-                self.debug("Storing an event: " + sfEvent.eventType)
-                self.__sfdb__.scanEventStore(
-                    self.getScanId(), sfEvent, self.opts['maxstorage'])
-                return
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                if self.opts['maxstorage'] != 0 and len(sfEvent.data) > self.opts['maxstorage']:
+                    self.debug("Storing an event: " + sfEvent.eventType)
+                    self.__sfdb__.scanEventStore(
+                        self.getScanId(), sfEvent, self.opts['maxstorage'])
+                    return
 
-            self.debug("Storing an event: " + sfEvent.eventType)
-            self.__sfdb__.scanEventStore(self.getScanId(), sfEvent)
-        except Exception as e:
-            import traceback
-            self.error(f"_store_sqlite failed for event type={sfEvent.eventType} "
-                       f"module={sfEvent.module} hash={sfEvent.hash} "
-                       f"generated={sfEvent.generated} data_len={len(sfEvent.data) if sfEvent.data else 0}: "
-                       f"{type(e).__name__}: {e}")
-            self.error(f"Full traceback: {traceback.format_exc()}")
-            raise
+                self.debug("Storing an event: " + sfEvent.eventType)
+                self.__sfdb__.scanEventStore(self.getScanId(), sfEvent)
+                return
+            except Exception as e:
+                err_msg = str(e)
+                if "database is locked" in err_msg and attempt < max_retries - 1:
+                    import time as _time
+                    _time.sleep(0.1 * (attempt + 1))
+                    continue
+                import traceback
+                self.error(f"_store_sqlite failed for event type={sfEvent.eventType} "
+                           f"module={sfEvent.module} hash={sfEvent.hash} "
+                           f"generated={sfEvent.generated} data_len={len(sfEvent.data) if sfEvent.data else 0}: "
+                           f"{type(e).__name__}: {e}")
+                self.error(f"Full traceback: {traceback.format_exc()}")
+                # Do NOT re-raise — keep sfp__stor_db alive for subsequent events
+                return
 
     def _store_postgresql(self, sfEvent):
         """Store the event in the PostgreSQL database.

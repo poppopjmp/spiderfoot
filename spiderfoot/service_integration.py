@@ -181,6 +181,130 @@ def complete_scan_services(scan_id: str, status: str = "FINISHED",
     except Exception as e:
         log.debug("Vector.dev completion status send failed for %s: %s", scan_id, e)
 
+    # Auto-index scan events into Qdrant for RAG/Rerank correlations
+    if status == "FINISHED":
+        _index_scan_events_to_qdrant(scan_id)
+        _archive_scan_summary_to_minio(scan_id, duration)
+
+
+# ---------------------------------------------------------------------------
+# Qdrant vector indexing at scan completion
+# ---------------------------------------------------------------------------
+
+def _index_scan_events_to_qdrant(scan_id: str) -> None:
+    """Index all events from a completed scan into a per-scan Qdrant collection.
+
+    This is called automatically at scan completion when vector correlation
+    is enabled and auto-indexing is on.  Events are fetched from the database,
+    converted to VectorPoints, and batch-upserted into a ``scan_{scan_id}``
+    collection.
+
+    The function is fully self-contained and will not propagate exceptions
+    to avoid disrupting the normal scan completion flow.
+    """
+    import os
+    # Check if vector correlation auto-indexing is enabled
+    enabled = os.environ.get("SF_VECTOR_CORRELATION_ENABLED", "true").lower()
+    auto_index = os.environ.get("SF_VECTOR_AUTO_INDEX", "true").lower()
+    if enabled not in ("1", "true", "yes") or auto_index not in ("1", "true", "yes"):
+        log.debug("Vector auto-indexing disabled for scan %s", scan_id)
+        return
+
+    try:
+        from spiderfoot.correlations.vector_collection_manager import get_collection_manager
+        from spiderfoot.qdrant_client import VectorPoint
+
+        mgr = get_collection_manager()
+        mgr.create_scan_collection(scan_id)
+        log.info("Created Qdrant collection for scan %s", scan_id)
+    except Exception as e:
+        log.warning("Failed to create Qdrant collection for scan %s: %s", scan_id, e)
+        return
+
+    # Fetch all scan events from the database
+    try:
+        from spiderfoot.db import SpiderFootDb
+        dbh = SpiderFootDb(SpiderFootDb.build_config_from_env())
+        rows = dbh.scanResultEvent(scan_id, eventType="ALL", filterFp=True)
+        dbh.close()
+    except Exception as e:
+        log.warning("Failed to fetch events for Qdrant indexing (scan %s): %s", scan_id, e)
+        return
+
+    if not rows:
+        log.info("No events to index for scan %s", scan_id)
+        return
+
+    # Convert DB rows to VectorPoints for the collection manager
+    # Row format: (generated, data, module, hash, type, source_event_hash,
+    #              confidence, visibility, risk)
+    try:
+        from spiderfoot.services.embedding_service import EmbeddingService, EmbeddingConfig
+        embed_svc = EmbeddingService(EmbeddingConfig.from_env())
+
+        points: list[VectorPoint] = []
+        texts: list[str] = []
+        metadata_list: list[dict] = []
+
+        for row in rows:
+            generated, data, module, evt_hash, evt_type, source_hash, confidence, visibility, risk = (
+                row[0], row[1], row[2], row[3], row[4], row[5],
+                row[6] if len(row) > 6 else 50,
+                row[7] if len(row) > 7 else 50,
+                row[8] if len(row) > 8 else 0,
+            )
+
+            # Skip empty data or ROOT events
+            if not data or evt_type == "ROOT":
+                continue
+
+            # Build text representation for embedding
+            text = f"[{evt_type}] {data}"
+            if len(text) > 2048:
+                text = text[:2048]
+
+            texts.append(text)
+            metadata_list.append({
+                "scan_id": scan_id,
+                "event_type": evt_type,
+                "module": module or "",
+                "hash": evt_hash or "",
+                "source_hash": source_hash or "",
+                "confidence": confidence,
+                "visibility": visibility,
+                "risk": risk,
+                "generated": generated or 0,
+                "data_preview": data[:500] if data else "",
+            })
+
+        if not texts:
+            log.info("No indexable events for scan %s", scan_id)
+            return
+
+        # Batch embed all texts
+        log.info("Embedding %d events for scan %s", len(texts), scan_id)
+        batch_size = int(os.environ.get("SF_EMBEDDING_BATCH_SIZE", "32"))
+        all_vectors: list[list[float]] = []
+        for i in range(0, len(texts), batch_size):
+            batch = texts[i:i + batch_size]
+            vectors = embed_svc.embed_texts(batch)
+            all_vectors.extend(vectors)
+
+        # Build VectorPoints
+        for idx, (vector, meta) in enumerate(zip(all_vectors, metadata_list)):
+            points.append(VectorPoint(
+                id=meta["hash"] or f"evt_{idx}",
+                vector=vector,
+                payload=meta,
+            ))
+
+        # Upsert into the scan collection
+        mgr.index_events(scan_id, points)
+        log.info("Indexed %d events into Qdrant for scan %s", len(points), scan_id)
+
+    except Exception as e:
+        log.warning("Failed to index events into Qdrant for scan %s: %s", scan_id, e)
+
 
 # ---------------------------------------------------------------------------
 # Internal wiring helpers
@@ -322,3 +446,49 @@ def _wire_repository_factory(scanner) -> None:
         log.debug("RepositoryFactory attached to scanner")
     except Exception as e:
         log.debug("RepositoryFactory not available: %s", e)
+
+
+# ---------------------------------------------------------------------------
+# MinIO scan summary archival at scan completion
+# ---------------------------------------------------------------------------
+
+def _archive_scan_summary_to_minio(scan_id: str, duration: float = 0.0) -> None:
+    """Archive a JSON summary of the completed scan to MinIO."""
+    import os
+    enabled = os.environ.get("SF_MINIO_ENABLED", "true").lower()
+    if enabled not in ("1", "true", "yes"):
+        return
+
+    try:
+        import json
+        from spiderfoot.storage.minio_manager import get_storage_manager
+        from spiderfoot.db import SpiderFootDb
+
+        dbh = SpiderFootDb(SpiderFootDb.build_config_from_env())
+        scan_info = dbh.scanInstanceGet(scan_id)
+        result_count = len(dbh.scanResultEvent(scan_id) or [])
+        dbh.close()
+
+        summary = {
+            "scan_id": scan_id,
+            "name": scan_info[0] if scan_info else "",
+            "target": scan_info[1] if scan_info and len(scan_info) > 1 else "",
+            "status": "FINISHED",
+            "duration_seconds": duration,
+            "result_count": result_count,
+            "timestamp": time.time(),
+        }
+
+        mgr = get_storage_manager()
+        mgr.put_artefact(
+            scan_id,
+            "scan_summary.json",
+            json.dumps(summary, indent=2).encode("utf-8"),
+            content_type="application/json",
+        )
+        log.info("Archived scan summary to MinIO for scan %s", scan_id)
+
+    except ImportError:
+        log.debug("MinIO storage not available — scan summary archival skipped")
+    except Exception as e:
+        log.debug("Failed to archive scan summary to MinIO for %s: %s", scan_id, e)

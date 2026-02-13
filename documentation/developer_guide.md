@@ -30,18 +30,14 @@ When developing modules or features:
 
 **1. Input Validation**
 ```python
-from spiderfoot.input_validation import InputValidator
+# Input validation is handled by Pydantic models and FastAPI
+# path/query parameter validation. For custom validation:
+from pydantic import EmailStr, validator
 
-# Validate email addresses
-if InputValidator.validate_email(email):
-    # Process email
-    
-# Sanitize HTML content
-clean_html = InputValidator.sanitize_html(user_content)
-
-# Validate domains
-if InputValidator.validate_domain(domain):
-    # Process domain
+# Use Pydantic models for request validation
+class ScanRequest(BaseModel):
+    target: str
+    email: EmailStr  # Validates email format automatically
 ```
 
 **2. Security Logging**
@@ -63,16 +59,14 @@ logger.log_login_attempt("username", success=True, ip_address="192.168.1.1")
 
 **3. Rate Limiting Integration**
 ```python
-from spiderfoot.rate_limiting import rate_limit
+from spiderfoot.rate_limiter import RateLimiter
 
-@rate_limit('api')
+rate_limiter = RateLimiter()
+
+@rate_limiter.limit('api')
 def api_endpoint():
     # Your API logic here
     pass
-
-@rate_limit('web')  
-def web_endpoint():
-    # Your web logic here
     pass
 ```
 

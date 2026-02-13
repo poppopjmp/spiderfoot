@@ -371,18 +371,21 @@ class WebUiRoutes(
         try:
             dbh = self._get_dbh()
             logs = dbh.scanLogs(scanid)
-            return logs if logs is not None else []
+            return [list(row) for row in logs] if logs else []
         except Exception as e:
             return {'error': str(e)}
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def scanerrors(self, scanid: str) -> list | dict:
+    def scanerrors(self, id: str = "", scanid: str = "") -> list | dict:
         """Return scan errors for a given scan ID, matching legacy API."""
+        scan_id = id or scanid
+        if not scan_id:
+            return []
         try:
             dbh = self._get_dbh()
-            errors = dbh.scanErrors(scanid)
-            return errors if errors is not None else []
+            errors = dbh.scanErrors(scan_id)
+            return [list(row) for row in errors] if errors else []
         except Exception as e:
             return {'error': str(e)}
 
@@ -395,10 +398,39 @@ class WebUiRoutes(
             data = dbh.scanCorrelationList(id)
             retdata = []
             for row in data:
-                retdata.append(row)
+                retdata.append(list(row))
             return retdata
         except Exception as e:
             return self.jsonify_error("500", str(e))
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def runcorrelations(self, id: str) -> dict:
+        """Trigger correlation rule execution for a scan."""
+        try:
+            dbh = self._get_dbh()
+            if hasattr(dbh, 'runCorrelations'):
+                return dbh.runCorrelations(id)
+            # Direct mode fallback
+            import os
+            from spiderfoot.correlation.rule_executor import RuleExecutor
+            rules_dir = os.environ.get("SF_CORRELATION_RULES_DIR", "correlations")
+            rules = []
+            if os.path.isdir(rules_dir):
+                try:
+                    from spiderfoot.correlation.rule_loader import RuleLoader
+                    loader = RuleLoader(rules_dir)
+                    rules = loader.load_rules()
+                except ImportError:
+                    rules = SpiderFootHelpers.loadCorrelationRulesRaw(rules_dir) or []
+            if not rules:
+                return {"error": "No correlation rules found"}
+            executor = RuleExecutor(dbh, rules, scan_ids=[id])
+            raw_results = executor.run()
+            total = sum(1 for r in raw_results.values() if isinstance(r, dict) and r.get("correlation_id"))
+            return {"success": True, "results": total, "rules_evaluated": len(rules)}
+        except Exception as e:
+            return {"error": str(e)}
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
@@ -507,177 +539,76 @@ class WebUiRoutes(
         except Exception as e:
             return f'["ERROR", "{e}"]'.encode('utf-8')
 
+    # savesettings: The JS form sends JSON, so we need to handle JSON parsing.
+    # SettingsEndpoints.savesettings parses key=value lines which is incompatible.
     @cherrypy.expose
-    def savesettings(self, allopts: str, token: str, configFile: str | None = None) -> str:
-        """Save configuration settings from the web UI."""
-        if not hasattr(self, 'token') or self.token != token:
-            return self.error("Invalid token")
+    def savesettings(self, allopts: str, token: str, configFile=None) -> str:
+        """Save configuration settings from the web UI form (JSON or RESET)."""
+        # CSRF token validation
+        if str(token) != str(getattr(self, 'token', None)):
+            from mako.template import Template
+            templ = Template(filename='spiderfoot/templates/opts.tmpl', lookup=self.lookup)
+            return templ.render(
+                opts=self.config, pageid='SETTINGS',
+                token=self.token, version=__version__,
+                updated=None, docroot=self.docroot,
+                error_message="Invalid CSRF token",
+            )
 
         try:
-            import json
-            dbh = self._get_dbh()
-            opts = json.loads(allopts)
-
-            # Save configuration
             from spiderfoot.sflib import SpiderFoot
-            sf = SpiderFoot(self.config)
-            serialized = sf.configSerialize(opts, self.defaultConfig)
-            dbh.configSet(serialized)
 
-            # Redirect to settings page
+            # Handle file upload
+            if configFile and hasattr(configFile, 'file') and configFile.file:
+                uploaded = configFile.file.read().decode('utf-8')
+                new_config = {}
+                for line in uploaded.splitlines():
+                    if '=' in line:
+                        k, v = line.split('=', 1)
+                        new_config[k.strip()] = v.strip()
+                dbh = self._get_dbh()
+                dbh.configSet(new_config)
+                sf = SpiderFoot(self.defaultConfig)
+                self.config = sf.configUnserialize(new_config, self.defaultConfig)
+            elif allopts == "RESET":
+                try:
+                    dbh = self._get_dbh()
+                    dbh.configClear()
+                except Exception:
+                    pass
+                self.config = self.defaultConfig.copy()
+            else:
+                # JS form sends JSON
+                import json
+                opts = json.loads(allopts)
+                self.config.update(opts)
+                # Persist to DB
+                try:
+                    sf = SpiderFoot(self.config)
+                    serialized = sf.configSerialize(opts, self.defaultConfig)
+                    dbh = self._get_dbh()
+                    dbh.configSet(serialized)
+                except Exception as e:
+                    self.log.warning("Could not persist settings to DB: %s", e)
+
             raise cherrypy.HTTPRedirect(f"{self.docroot}/opts?updated=1")
 
         except cherrypy.HTTPRedirect:
             raise
         except Exception as e:
-            return self.error(f"Processing one or more of your inputs failed. {str(e)}")
-
-    @cherrypy.expose
-    def startscan(self, scanname: str, scantarget: str, modulelist: str = '', typelist: str = '', usecase: str = 'all') -> str:
-        """Start a new scan with the given parameters."""
-        try:
-            from sfwebui import SpiderFootHelpers
-            from copy import deepcopy
-
-            # Generate scan ID
-            scanId = SpiderFootHelpers.genScanInstanceId()
-
-            # Determine target type
-            targetType = SpiderFootHelpers.targetTypeFromString(scantarget)
-            if not targetType:
-                return self.error("Invalid target type")
-
-            cfg = deepcopy(self.config)
-
-            # ── Resolve module list from modulelist, typelist, or usecase ──
-            modlist = [m for m in modulelist.split(',') if m] if modulelist else []
-
-            if not modlist and typelist:
-                # Resolve requested event types → modules that produce them
-                requested_types = [t for t in typelist.split(',') if t]
-                if requested_types:
-                    for mod_name, mod_meta in cfg.get('__modules__', {}).items():
-                        provides = mod_meta.get('provides', []) or mod_meta.get('meta', {}).get('provides', [])
-                        if set(requested_types) & set(provides):
-                            modlist.append(mod_name)
-
-            if not modlist and usecase:
-                # Resolve use case name → modules belonging to that use case
-                for mod_name, mod_meta in cfg.get('__modules__', {}).items():
-                    if usecase == 'all':
-                        modlist.append(mod_name)
-                    else:
-                        use_cases = mod_meta.get('group', []) or mod_meta.get('meta', {}).get('useCases', [])
-                        if usecase in use_cases:
-                            modlist.append(mod_name)
-
-            if not modlist:
-                return self.error("No modules selected")
-
-            # Ensure storage module is present
-            if 'sfp__stor_db' not in modlist:
-                modlist.append('sfp__stor_db')
-            if 'sfp__stor_stdout' in modlist:
-                modlist.remove('sfp__stor_stdout')
-
-            modlist.sort()
-
-            # Start the scan process
-            from sfwebui import mp
-            from spiderfoot.scan_service.scanner import startSpiderFootScanner
-
-            process = mp.Process(
-                target=startSpiderFootScanner,
-                args=(self.loggingQueue, scanname, scanId, scantarget, targetType,
-                      modlist, cfg)
+            from mako.template import Template
+            templ = Template(filename='spiderfoot/templates/opts.tmpl', lookup=self.lookup)
+            return templ.render(
+                opts=self.config, pageid='SETTINGS',
+                token=self.token, version=__version__,
+                updated=None, docroot=self.docroot,
+                error_message=f"Processing one or more of your inputs failed. {str(e)}",
             )
-            process.daemon = True
-            process.start()
 
-            # Wait for scan to initialize (with timeout)
-            dbh = self._get_dbh()
-            from sfwebui import time
-            timeout_iterations = 10  # 10 iterations for tests (not seconds)
-            iterations = 0
-            while dbh.scanInstanceGet(scanId) is None and iterations < timeout_iterations:
-                time.sleep(1)
-                iterations += 1
+    # startscan is inherited from ScanEndpoints (scan.py)
+    # which supports both local (mp.Process) and API proxy mode.
 
-            raise cherrypy.HTTPRedirect(f"{self.docroot}/scaninfo?id={scanId}")
-
-        except cherrypy.HTTPRedirect:
-            raise
-        except Exception as e:
-            return self.error(f"Failed to start scan: {str(e)}")
-
-    @cherrypy.expose
-    def rerunscan(self, id: str) -> str:
-        """Re-run a previously completed scan by its ID."""
-        try:
-            from copy import deepcopy
-            cfg = deepcopy(self.config)
-            dbh = self._get_dbh(cfg)
-            info = dbh.scanInstanceGet(id)
-            if not info:
-                return self.error("Invalid scan ID.")
-
-            scanname = info[0]
-            scantarget = info[1]
-
-            if not scantarget:
-                return self.error(f"Scan {id} has no target defined.")
-
-            # Get scan configuration
-            scanconfig = dbh.scanConfigGet(id)
-            if not scanconfig:
-                return self.error(f"Error loading config from scan: {id}")
-
-            modlist = scanconfig['_modulesenabled'].split(',')
-            if "sfp__stor_stdout" in modlist:
-                modlist.remove("sfp__stor_stdout")
-
-            from sfwebui import SpiderFootHelpers
-            targetType = SpiderFootHelpers.targetTypeFromString(scantarget)
-            if not targetType:
-                # Try with quotes
-                targetType = SpiderFootHelpers.targetTypeFromString(f'"{scantarget}"')
-
-            if not targetType:
-                return self.error(
-                    f"Cannot determine target type for scan rerun."
-                    f" Target '{scantarget}' is not recognized."
-                )
-
-            if targetType not in ["HUMAN_NAME", "BITCOIN_ADDRESS"]:
-                scantarget = scantarget.lower()
-
-            # Start new scan
-            scanId = SpiderFootHelpers.genScanInstanceId()
-
-            from sfwebui import mp
-            from spiderfoot.scan_service.scanner import startSpiderFootScanner
-
-            process = mp.Process(
-                target=startSpiderFootScanner,
-                args=(self.loggingQueue, scanname, scanId, scantarget, targetType, modlist, cfg)
-            )
-            process.daemon = True
-            process.start()
-
-            # Wait for scan to initialize (with timeout)
-            from sfwebui import time
-            timeout_iterations = 10  # 10 iterations for tests (not seconds)
-            iterations = 0
-            while dbh.scanInstanceGet(scanId) is None and iterations < timeout_iterations:
-                time.sleep(1)
-                iterations += 1
-
-            raise cherrypy.HTTPRedirect(f"{self.docroot}/scaninfo?id={scanId}")
-
-        except cherrypy.HTTPRedirect:
-            raise
-        except Exception as e:
-            return self.error(f"Failed to rerun scan: {str(e)}")
+    # rerunscan is inherited from ScanEndpoints (scan.py)
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
@@ -1054,22 +985,115 @@ class WebUiRoutes(
         return json.dumps(scaninfo).encode('utf-8')
 
     @cherrypy.expose
-    def scanviz(self, scan_id: str, gexf: str = "0") -> str:
-        """Generate scan visualization."""
+    def scanviz(self, id: str = "", gexf: str = "0") -> str:
+        """Generate scan visualization as JSON for sigma.js or GEXF for download."""
+        if not id:
+            cherrypy.response.headers['Content-Type'] = 'application/json'
+            return b'{}'
         try:
             dbh = self._get_dbh()
-            data = dbh.scanResultEvent(scan_id)
-            scan = dbh.scanInstanceGet(scan_id)
+            events = dbh.scanResultEvent(id, filterFp=True)
+            scan = dbh.scanInstanceGet(id)
 
             if not scan:
-                return self.error("Scan not found")
+                cherrypy.response.headers['Content-Type'] = 'application/json'
+                return b'{}'
+
+            root = scan[1]
+
+            if not events:
+                cherrypy.response.headers['Content-Type'] = 'application/json'
+                return json.dumps({'nodes': [], 'edges': []}).encode('utf-8')
+
+            # Build event type category lookup for graph building
+            # DB format: (event_descr, event, event_raw, event_type)
+            # API/JSON format: [event_descr, event, event_raw, event_type] or dict
+            event_type_categories = {}
+            try:
+                et_list = dbh.eventTypes()
+                if et_list:
+                    for et in et_list:
+                        if isinstance(et, (list, tuple)):
+                            if len(et) >= 4:
+                                # DB tuple: (descr, event_name, raw, category)
+                                event_type_categories[et[1]] = et[3]
+                            elif len(et) >= 2:
+                                event_type_categories[et[0]] = et[1] if len(et) > 1 else 'DATA'
+                        elif isinstance(et, dict):
+                            event_type_categories[et.get('event', '')] = et.get('event_type', 'DATA')
+            except Exception:
+                pass
+
+            # Build hash → data value mapping for parent resolution
+            hash_to_data = {}
+            for row in events:
+                row = list(row) if isinstance(row, tuple) else row
+                event_hash = row[3] if len(row) > 3 else ''
+                event_data = row[1] if len(row) > 1 else ''
+                if event_hash:
+                    hash_to_data[event_hash] = event_data
+
+            # Transform 9-element tuples to 15-element format for buildGraphData
+            # 15-col format: generated, data, source_data, module, type,
+            #   source_event_hash, confidence, visibility, hash, false_positive,
+            #   risk, event_type_category, event_descr, parent_type_category, parent_descr
+            extended_data = []
+            for row in events:
+                row = list(row) if isinstance(row, tuple) else row
+                generated = row[0] if len(row) > 0 else 0
+                data_val = row[1] if len(row) > 1 else ''
+                module = row[2] if len(row) > 2 else ''
+                event_hash = row[3] if len(row) > 3 else ''
+                event_type = row[4] if len(row) > 4 else ''
+                source_hash = row[5] if len(row) > 5 else 'ROOT'
+                confidence = row[6] if len(row) > 6 else 100
+                visibility = row[7] if len(row) > 7 else 100
+                risk = row[8] if len(row) > 8 else 0
+
+                # Resolve parent data value from hash
+                source_data = hash_to_data.get(source_hash, 'ROOT') if source_hash != 'ROOT' else root
+                # Look up event type category
+                category = event_type_categories.get(event_type, 'DATA')
+
+                extended_row = (
+                    generated,       # 0
+                    data_val,        # 1 - entity value
+                    source_data,     # 2 - parent entity value
+                    module,          # 3
+                    event_type,      # 4 - event type
+                    source_hash,     # 5
+                    confidence,      # 6
+                    visibility,      # 7
+                    event_hash,      # 8 - event ID
+                    0,               # 9 - false_positive
+                    risk,            # 10
+                    category,        # 11 - ENTITY/INTERNAL/DESCRIPTOR/DATA
+                    '',              # 12 - event_descr
+                    '',              # 13 - parent_type_category
+                    '',              # 14 - parent_descr
+                )
+                extended_data.append(extended_row)
 
             from spiderfoot.helpers import SpiderFootHelpers
-            graph_data = SpiderFootHelpers.buildGraphJson(data, scan[1])
-            return graph_data
+
+            if gexf != "0":
+                scan_name = scan[0] if scan[0] else 'SpiderFoot'
+                cherrypy.response.headers['Content-Disposition'] = f"attachment; filename={scan_name}-SpiderFoot.gexf"
+                cherrypy.response.headers['Content-Type'] = 'application/gexf'
+                cherrypy.response.headers['Pragma'] = 'no-cache'
+                return SpiderFootHelpers.buildGraphGexf([root], 'SpiderFoot Export', extended_data)
+
+            cherrypy.response.headers['Content-Type'] = 'application/json'
+            result = SpiderFootHelpers.buildGraphJson([root], extended_data)
+            if isinstance(result, str):
+                return result.encode('utf-8')
+            return result
 
         except Exception as e:
-            return self.error(f"Visualization failed: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            cherrypy.response.headers['Content-Type'] = 'application/json'
+            return b'{}'
 
     @cherrypy.expose
     def scanvizmulti(self, ids: str, gexf: str = "1") -> str:
@@ -1098,53 +1122,6 @@ class WebUiRoutes(
 
         except Exception as e:
             return self.error(f"Visualization failed: {str(e)}")
-
-    # Workspace methods
-    @cherrypy.expose
-    @cherrypy.tools.json_out()
-    def workspacescanresults(
-        self, workspace_id: str,
-        scan_id: str | None = None,
-        event_type: str | None = None,
-        limit: str | int = 100,
-    ) -> dict:
-        """Get workspace scan results."""
-        try:
-            # Convert string limit to int if needed
-            if isinstance(limit, str):
-                try:
-                    limit = int(limit)
-                    if limit < 0:
-                        limit = 100
-                except ValueError:
-                    limit = 100
-
-            from sfwebui import SpiderFootWorkspace
-            workspace = SpiderFootWorkspace(self.config)
-            workspace_instance = workspace.getWorkspace(workspace_id)
-
-            if not workspace_instance:
-                return {'success': False, 'error': 'Workspace not found'}
-
-            dbh = self._get_dbh()
-            results = []
-
-            # Get scans from workspace
-            scans = getattr(workspace_instance, 'scans', [])
-            if scans:
-                for scan in scans[:limit]:  # Apply limit properly
-                    scan_data = dbh.scanResultSummary(scan.get('scan_id'))
-                    if scan_data:
-                        results.append(scan_data)
-
-            return {
-                'success': True,
-                'workspace_id': workspace_id,
-                'results': results
-            }
-
-        except Exception as e:
-            return {'success': False, 'error': str(e)}
 
     def _validate_configuration(self):
         """Validate and fix configuration values."""

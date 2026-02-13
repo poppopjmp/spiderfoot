@@ -50,6 +50,17 @@ class Config:
             return
 
         # Build legacy default dict
+        # Detect PostgreSQL from environment (microservice mode)
+        import os as _os
+        pg_dsn = _os.environ.get('SF_POSTGRES_DSN', '')
+        if pg_dsn:
+            _db_path = pg_dsn
+            _db_type = 'postgresql'
+            self.log.info("Using PostgreSQL backend from SF_POSTGRES_DSN")
+        else:
+            _db_path = f"{SpiderFootHelpers.dataPath()}/spiderfoot.db"
+            _db_type = 'sqlite'
+
         default_config: dict[str, Any] = {
             '__modules__': {},
             '__correlationrules__': [],
@@ -57,7 +68,8 @@ class Config:
             '__webaddr': '127.0.0.1',
             '__webport': '8001',
             '__webaddr_apikey': None,
-            '__database': f"{SpiderFootHelpers.dataPath()}/spiderfoot.db",
+            '__database': _db_path,
+            '__dbtype': _db_type,
             '__loglevel': 'INFO',
             '__logfile': '',
             '__version__': __version__,
@@ -77,6 +89,23 @@ class Config:
         dbh = SpiderFootDb(self.defaultConfig, init=True)
         sf = SpiderFoot(self.defaultConfig)
         merged = sf.configUnserialize(dbh.configGet(), self.defaultConfig)
+
+        # Load modules from filesystem (same as sf_orchestrator)
+        if not merged.get('__modules__'):
+            import os
+            mod_dir = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)), '..', '..', 'modules'
+            )
+            mod_dir = os.path.abspath(mod_dir)
+            if os.path.isdir(mod_dir):
+                try:
+                    modules = SpiderFootHelpers.loadModulesAsDict(
+                        mod_dir, ['sfp_template.py']
+                    )
+                    merged['__modules__'] = modules
+                    self.log.info("Loaded %d modules into config", len(modules))
+                except Exception as exc:
+                    self.log.warning("Failed to load modules: %s", exc)
 
         self._app_config = AppConfig.from_dict(merged)
         self._app_config.apply_env_overrides()

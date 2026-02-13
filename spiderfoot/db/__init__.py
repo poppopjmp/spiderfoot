@@ -106,7 +106,7 @@ def get_schema_queries(db_type: str) -> list[str]:
             )",
             "CREATE TABLE IF NOT EXISTS tbl_scan_correlation_results_events ( \
                 correlation_id      VARCHAR NOT NULL REFERENCES tbl_scan_correlation_results(id), \
-                event_hash          VARCHAR NOT NULL REFERENCES tbl_scan_results(hash) \
+                event_hash          VARCHAR NOT NULL \
             )",
             "CREATE INDEX IF NOT EXISTS idx_scan_results_id ON tbl_scan_results (scan_instance_id)",
             "CREATE INDEX IF NOT EXISTS idx_scan_results_type ON tbl_scan_results (scan_instance_id, type)",
@@ -119,6 +119,7 @@ def get_schema_queries(db_type: str) -> list[str]:
         ]
     elif db_type == 'postgresql':
         return [
+            "CREATE TABLE IF NOT EXISTS tbl_schema_version (\n    version INTEGER NOT NULL,\n    applied_at BIGINT NOT NULL\n)",
             "CREATE TABLE IF NOT EXISTS tbl_event_types ( \
                 event       VARCHAR NOT NULL PRIMARY KEY, \
                 event_descr VARCHAR NOT NULL, \
@@ -179,7 +180,7 @@ def get_schema_queries(db_type: str) -> list[str]:
             )",
             "CREATE TABLE IF NOT EXISTS tbl_scan_correlation_results_events ( \
                 correlation_id      VARCHAR NOT NULL REFERENCES tbl_scan_correlation_results(id), \
-                event_hash          VARCHAR NOT NULL REFERENCES tbl_scan_results(hash) \
+                event_hash          VARCHAR NOT NULL \
             )",
             "CREATE INDEX IF NOT EXISTS idx_scan_results_id ON tbl_scan_results (scan_instance_id)",
             "CREATE INDEX IF NOT EXISTS idx_scan_results_type ON tbl_scan_results (scan_instance_id, type)",
@@ -448,7 +449,7 @@ class SpiderFootDb:
             database_path = opts['__database']
             Path(database_path).parent.mkdir(exist_ok=True, parents=True)
             try:
-                dbh = sqlite3.connect(database_path, check_same_thread=False)
+                dbh = sqlite3.connect(database_path, check_same_thread=False, timeout=30)
             except Exception as e:
                 raise OSError(
                     f"Error connecting to internal database {database_path}") from e
@@ -456,6 +457,9 @@ class SpiderFootDb:
                 raise OSError(
                     f"Could not connect to internal database, and could not create {database_path}") from None
             dbh.text_factory = str
+            # Enable WAL mode for better concurrent read/write performance
+            dbh.execute("PRAGMA journal_mode=WAL")
+            dbh.execute("PRAGMA busy_timeout=30000")
             self.conn = dbh
             self.dbh = dbh.cursor()
             def __dbregex__(qry: str, data: str) -> bool:
@@ -564,6 +568,31 @@ class SpiderFootDb:
         self.managers['scan'] = ScanManager(self)
         self.managers['correlation'] = CorrelationManager(self)
         # self.managers['utils'] = DbUtils(self)  # Removed: DbUtils class no longer exists, use get_placeholder instead
+
+    def execute(self, sql: str, params=None):
+        """Execute a raw SQL query with proper placeholder handling.
+
+        This is a low-level method for direct SQL execution (e.g., API key management).
+        For standard operations, use the dedicated manager methods instead.
+        """
+        from spiderfoot.db.db_utils import get_placeholder
+        # Convert ? placeholders to %s for PostgreSQL
+        if self.db_type == 'postgresql' and '?' in sql:
+            sql = sql.replace('?', '%s')
+        with self.dbhLock:
+            try:
+                if params:
+                    self.dbh.execute(sql, params)
+                else:
+                    self.dbh.execute(sql)
+                self.conn.commit()
+                return self.dbh
+            except Exception as e:
+                try:
+                    self.conn.rollback()
+                except Exception:
+                    pass
+                raise
 
     def close(self) -> None:
         """

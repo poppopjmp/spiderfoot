@@ -65,11 +65,33 @@
             </ul>
         </div>
   </div>
-    <script src="${docroot}/static/node_modules/sigma/build/sigma.min.js"></script>
-    <script src="${docroot}/static/node_modules/sigma/build/plugins/sigma.parsers.json.min.js"></script>
-    <script src="${docroot}/static/node_modules/sigma/build/plugins/sigma.plugins.dragNodes.min.js"></script>
-    <script src="${docroot}/static/node_modules/sigma/build/plugins/sigma.layout.forceAtlas2.min.js"></script>
-    <script src="${docroot}/static/node_modules/sigma/build/plugins/sigma.renderers.snapshot.min.js"></script>
+    <script src="https://unpkg.com/vis-network@9.1.6/standalone/umd/vis-network.min.js"></script>
+    <style>
+        #graph-container {
+            height: 600px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: #1a1a2e;
+        }
+        .graph-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 8px 0;
+            font-size: 12px;
+        }
+        .graph-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .graph-legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+    </style>
     <script type='text/javascript'>
         var currentType = "ALL";
         var currentTypeName = "All";
@@ -77,7 +99,7 @@
         var lastSearchType = "ALL";
         var lastSearchQuery = "";
         var dataloaders = [];
-        var sharedSigma = "";
+        var visNetwork = null;
         var loadersrunning = false;
         var refresh = function() { browseEventList("${id}"); }
         $('#searchvalue').popover({ 'trigger': 'focus', 'placement': 'bottom'});
@@ -218,8 +240,25 @@
 
         // Visualisation
         function graphEvents(instanceId) {
-            grid = "<div id='scansummary-content'><br />"
-            grid += "<div class='col-md-12 graph-container' id='graph-container'></div>"
+            var categoryColors = {
+                'ENTITY': '#4a90d9',
+                'INTERNAL': '#95a5a6',
+                'DESCRIPTOR': '#e67e22',
+                'DATA': '#2ecc71',
+                'SUBENTITY': '#9b59b6'
+            };
+
+            var legend = "<div class='graph-legend'>";
+            legend += "<div class='graph-legend-item'><span class='graph-legend-dot' style='background:#e74c3c'></span> Root Target</div>";
+            legend += "<div class='graph-legend-item'><span class='graph-legend-dot' style='background:#4a90d9'></span> Entity</div>";
+            legend += "<div class='graph-legend-item'><span class='graph-legend-dot' style='background:#2ecc71'></span> Data</div>";
+            legend += "<div class='graph-legend-item'><span class='graph-legend-dot' style='background:#e67e22'></span> Descriptor</div>";
+            legend += "<div class='graph-legend-item'><span class='graph-legend-dot' style='background:#9b59b6'></span> Sub-Entity</div>";
+            legend += "<div class='graph-legend-item'><span class='graph-legend-dot' style='background:#95a5a6'></span> Internal</div>";
+            legend += "</div>";
+
+            grid = "<div id='scansummary-content'>" + legend + "<br />"
+            grid += "<div class='col-md-12' id='graph-container'></div>"
             grid += "</div>"
 
             $("#scansummary-content").remove();
@@ -238,35 +277,118 @@
             $("#btn-forceatlas").removeClass("active");
             $("#btn-random").addClass("active");
 
-            sigma.renderers.def = sigma.renderers.canvas
-            sigma.parsers.json("${docroot}/scanviz?id=" + instanceId + "&gexf=0", {
-                container: 'graph-container'
-            }, function(s) { 
-                if (s.renderers[0].nodesOnScreen.length == 0) {
+            $.getJSON("${docroot}/scanviz?id=" + instanceId + "&gexf=0", function(graphData) {
+                if (!graphData || !graphData.nodes || graphData.nodes.length === 0) {
                     $("#graph-container").append("<div class='alert alert-danger'>Insufficient data to produce a graph.</div>");
                     $("#loader").hide();
                     return;
                 }
-                sharedSigma = s;
-                s.settings({
-                    edgeColor: 'default',
-                    defaultEdgeColor: '#aaa',
-                    maxNodeSize: 5
+
+                // Convert to vis-network format
+                var visNodes = graphData.nodes.map(function(n) {
+                    var title = n.label;
+                    if (n.event_type) title += '\nType: ' + n.event_type;
+                    if (n.category) title += '\nCategory: ' + n.category;
+                    return {
+                        id: parseInt(n.id),
+                        label: n.label.length > 30 ? n.label.substring(0, 30) + '...' : n.label,
+                        title: title,
+                        color: {
+                            background: n.color,
+                            border: n.color,
+                            highlight: { background: '#f1c40f', border: '#f39c12' },
+                            hover: { background: n.color, border: '#fff' }
+                        },
+                        font: { color: '#ecf0f1', size: 10 },
+                        shape: 'dot',
+                        size: n.label === '${name}' ? 20 : 8
+                    };
                 });
-                sigma.plugins.dragNodes(s, s.renderers[0])
-                s.refresh()
+
+                var visEdges = graphData.edges.map(function(e) {
+                    return {
+                        from: parseInt(e.source),
+                        to: parseInt(e.target),
+                        color: { color: 'rgba(150,150,150,0.4)', highlight: '#f1c40f' },
+                        width: 0.5
+                    };
+                });
+
+                var container = document.getElementById('graph-container');
+                var data = {
+                    nodes: new vis.DataSet(visNodes),
+                    edges: new vis.DataSet(visEdges)
+                };
+                var options = {
+                    physics: {
+                        enabled: false,
+                        solver: 'forceAtlas2Based',
+                        forceAtlas2Based: {
+                            gravitationalConstant: -50,
+                            centralGravity: 0.005,
+                            springLength: 100,
+                            springConstant: 0.08,
+                            damping: 0.4,
+                            avoidOverlap: 0.5
+                        },
+                        stabilization: { iterations: 200, updateInterval: 25 }
+                    },
+                    interaction: {
+                        hover: true,
+                        tooltipDelay: 200,
+                        zoomView: true,
+                        dragView: true,
+                        dragNodes: true
+                    },
+                    nodes: {
+                        borderWidth: 1,
+                        shadow: { enabled: true, color: 'rgba(0,0,0,0.3)', size: 5 }
+                    },
+                    edges: {
+                        smooth: { type: 'continuous', roundness: 0.2 }
+                    },
+                    layout: {
+                        improvedLayout: true,
+                        randomSeed: 42
+                    }
+                };
+
+                visNetwork = new vis.Network(container, data, options);
+                visNetwork.on('stabilizationIterationsDone', function() {
+                    visNetwork.setOptions({ physics: { enabled: false } });
+                });
+                $("#loader").hide();
+            }).fail(function() {
+                $("#graph-container").append("<div class='alert alert-danger'>Failed to load graph data.</div>");
                 $("#loader").hide();
             });
         }
 
         function vizUpdate(method) {
-            s = sharedSigma
+            if (!visNetwork) return;
+
             if (method == "force") {
                 $("#btn-forceatlas").addClass("active");
                 $("#btn-random").removeClass("active");
-                s.startForceAtlas2();
-                s.refresh();
-                setTimeout(function() { s.stopForceAtlas2() }, 5000);
+                visNetwork.setOptions({
+                    physics: {
+                        enabled: true,
+                        solver: 'forceAtlas2Based',
+                        forceAtlas2Based: {
+                            gravitationalConstant: -50,
+                            centralGravity: 0.005,
+                            springLength: 100,
+                            springConstant: 0.08,
+                            damping: 0.4,
+                            avoidOverlap: 0.5
+                        },
+                        stabilization: { iterations: 200 }
+                    }
+                });
+                visNetwork.stabilize(200);
+                setTimeout(function() {
+                    visNetwork.setOptions({ physics: { enabled: false } });
+                }, 6000);
             }
 
             if (method == "random") {
@@ -276,7 +398,13 @@
             }
 
             if (method == "download") {
-                s.renderers[0].snapshot({download: true});
+                var canvas = document.querySelector('#graph-container canvas');
+                if (canvas) {
+                    var link = document.createElement('a');
+                    link.download = 'spiderfoot-graph.png';
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                }
             }
         }
 
@@ -665,10 +793,49 @@
         }
 
         function noCorrelationsFound() {
-            var table = "<div id='scansummary-content' class='alert alert-warning'><h4>No correlations found.</h4>If the scan is still running please reload once it has completed. If the scan is complete, it may not have triggered any correlation rules.</div>";
+            var table = "<div id='scansummary-content' class='alert alert-warning'>";
+            table += "<h4>No correlations found.</h4>";
+            table += "<p>If the scan is still running please reload once it has completed. If the scan is complete, click below to run correlation rules against the scan results.</p>";
+            table += "<button class='btn btn-primary' onclick='runCorrelations(\"${id}\")'>Run Correlations</button>";
+            table += "</div>";
             $("#loader").fadeOut(500);
             $("#mainbody").append(table);
             sf.updateTooltips();
+        }
+
+        function runCorrelations(instanceId) {
+            $("#scansummary-content").remove();
+            $("#loader").show();
+            var runMsg = "<div id='scansummary-content' class='alert alert-info'><h4>Running correlations...</h4><p>Evaluating correlation rules against scan results. This may take a moment.</p></div>";
+            $("#mainbody").append(runMsg);
+
+            $.post('${docroot}/runcorrelations', {'id': instanceId}, function(data) {
+                $("#scansummary-content").remove();
+                if (data && (data.success || data.results > 0)) {
+                    var msg = "<div id='scansummary-content' class='alert alert-success'>";
+                    msg += "<h4>Correlations Complete</h4>";
+                    msg += "<p>Evaluated " + (data.rules_evaluated || 0) + " rules, found " + (data.results || 0) + " correlations.</p>";
+                    msg += "<button class='btn btn-primary' onclick='browseCorrelations(\"" + instanceId + "\")'>View Correlations</button>";
+                    msg += "</div>";
+                    $("#loader").fadeOut(500);
+                    $("#mainbody").append(msg);
+                } else {
+                    var msg = "<div id='scansummary-content' class='alert alert-warning'>";
+                    msg += "<h4>No correlations matched</h4>";
+                    msg += "<p>Evaluated rules but no correlations were triggered for this scan's data.</p>";
+                    if (data && data.error) {
+                        msg += "<p>Error: " + data.error + "</p>";
+                    }
+                    msg += "</div>";
+                    $("#loader").fadeOut(500);
+                    $("#mainbody").append(msg);
+                }
+            }).fail(function(xhr) {
+                $("#scansummary-content").remove();
+                var msg = "<div id='scansummary-content' class='alert alert-danger'><h4>Correlation Error</h4><p>" + (xhr.responseText || "Unknown error") + "</p></div>";
+                $("#loader").fadeOut(500);
+                $("#mainbody").append(msg);
+            });
         }
 
         // Logs for the scan

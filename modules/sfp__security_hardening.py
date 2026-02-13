@@ -749,9 +749,11 @@ class sfp__security_hardening(SpiderFootModernPlugin):
     """Advanced Security Hardening Module."""
 
     meta = {
-        'name': "Security Hardening Engine",
-        'summary': "Advanced security hardening with zero-trust, encryption, MFA, RBAC, and comprehensive audit logging.",
-        'flags': ["enterprise", "security"]
+        'name': "Security Hardening Engine [DEPRECATED]",
+        'summary': "DEPRECATED: Security hardening (zero-trust, encryption, MFA, RBAC, audit logging) "
+                   "is now handled at the infrastructure/framework level via the security middleware "
+                   "and API authentication layers, not as a per-scan module.",
+        'flags': ["deprecated", "enterprise", "security"]
     }
 
     _priority = 0  # High priority for security

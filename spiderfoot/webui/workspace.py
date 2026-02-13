@@ -2,14 +2,29 @@
 
 from __future__ import annotations
 
+import os
 import cherrypy
 import json
 from mako.template import Template
 from spiderfoot.workspace import SpiderFootWorkspace
 from spiderfoot import __version__
 
+_API_MODE = os.environ.get("SF_WEBUI_API_MODE", "").lower() in ("1", "true", "yes")
+
+
 class WorkspaceEndpoints:
     """WebUI endpoints for workspace management."""
+
+    def _get_scan_db_for_workspace(self):
+        """Get scan DB handle for workspace operations.
+
+        In API proxy mode, returns the ApiClient so scan queries
+        go through the FastAPI backend instead of the local SQLite.
+        In local mode, returns None (workspace will use its own db).
+        """
+        if _API_MODE and hasattr(self, '_get_dbh'):
+            return self._get_dbh()
+        return None
     @cherrypy.expose
     def workspaces(self) -> str:
         """Show workspace management page.
@@ -51,7 +66,7 @@ class WorkspaceEndpoints:
     def workspacecreate(self, name: str, description: str = '') -> dict:
         """Create a new workspace with the given name and description."""
         try:
-            ws = SpiderFootWorkspace(self.config, name=name)
+            ws = SpiderFootWorkspace(self.config, name=name, scan_db=self._get_scan_db_for_workspace())
             ws.description = description
             ws.save_workspace()
             return {"success": True, "workspace_id": ws.workspace_id}
@@ -63,7 +78,7 @@ class WorkspaceEndpoints:
     def workspaceget(self, workspace_id: str) -> dict:
         """Retrieve workspace details including targets, scans, and metadata."""
         try:
-            ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id)
+            ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id, scan_db=self._get_scan_db_for_workspace())
             return {
                 "workspace_id": ws.workspace_id,
                 "name": ws.name,
@@ -82,7 +97,7 @@ class WorkspaceEndpoints:
     def workspaceupdate(self, workspace_id: str, name: str | None = None, description: str | None = None) -> dict:
         """Update workspace name and description."""
         try:
-            ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id)
+            ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id, scan_db=self._get_scan_db_for_workspace())
             if name:
                 ws.name = name
             if description:
@@ -97,7 +112,7 @@ class WorkspaceEndpoints:
     def workspacedelete(self, workspace_id: str) -> dict:
         """Delete a workspace by its ID."""
         try:
-            ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id)
+            ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id, scan_db=self._get_scan_db_for_workspace())
             ws.delete_workspace()
             return {"success": True}
         except Exception as e:
@@ -108,17 +123,19 @@ class WorkspaceEndpoints:
     def workspacesummary(self, workspace_id: str) -> dict:
         """Return a summary of the workspace including scan statistics."""
         try:
-            ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id)
-            return ws.get_workspace_summary()
+            ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id, scan_db=self._get_scan_db_for_workspace())
+            summary = ws.get_workspace_summary()
+            summary['success'] = True
+            return summary
         except Exception as e:
-            return {"error": str(e)}
+            return {"success": False, "error": str(e)}
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def workspaceaddtarget(self, workspace_id: str, target: str, target_type: str | None = None) -> dict:
         """Add a scan target to the specified workspace."""
         try:
-            ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id)
+            ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id, scan_db=self._get_scan_db_for_workspace())
             target_id = ws.add_target(target, target_type)
             return {"success": True, "target_id": target_id}
         except Exception as e:
@@ -129,7 +146,7 @@ class WorkspaceEndpoints:
     def workspaceremovetarget(self, workspace_id: str, target_id: str) -> dict:
         """Remove a scan target from the specified workspace."""
         try:
-            ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id)
+            ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id, scan_db=self._get_scan_db_for_workspace())
             ok = ws.remove_target(target_id)
             return {"success": ok}
         except Exception as e:
@@ -140,7 +157,7 @@ class WorkspaceEndpoints:
     def workspaceimportscans(self, workspace_id: str, scan_ids: str) -> dict:
         """Import existing scans into a workspace by scan IDs."""
         try:
-            ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id)
+            ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id, scan_db=self._get_scan_db_for_workspace())
             scan_id_list = [s.strip() for s in scan_ids.split(',') if s.strip()]
             results = ws.bulk_import_scans(scan_id_list)
             return {"success": True, "results": results}
@@ -160,7 +177,7 @@ class WorkspaceEndpoints:
             targets, modules, scan_name_prefix,
         )
         try:
-            ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id)
+            ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id, scan_db=self._get_scan_db_for_workspace())
             target_list = [t.strip() for t in targets.split(',') if t.strip()]
             module_list = [m.strip() for m in modules.split(',') if m.strip()]
             results = ws.start_multiscan(target_list, module_list, scan_name_prefix, enable_correlation)
@@ -180,7 +197,7 @@ class WorkspaceEndpoints:
     ) -> dict:
         """Generate an MCP-format report for the specified workspace."""
         try:
-            ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id)
+            ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id, scan_db=self._get_scan_db_for_workspace())
             report = ws.generate_mcp_report(
                 report_type, format, include_correlations,
                 include_threat_intel, include_recommendations, tlp_level,
@@ -204,7 +221,7 @@ class WorkspaceEndpoints:
     ) -> dict:
         """Update scan timing and scheduling configuration for a workspace."""
         try:
-            ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id)
+            ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id, scan_db=self._get_scan_db_for_workspace())
             timing = ws.update_timing_config(
                 timezone, default_start_time, retention_period,
                 auto_scheduling, business_hours_only, enable_throttling,
@@ -224,28 +241,81 @@ class WorkspaceEndpoints:
     ) -> dict:
         """Retrieve scan results for a workspace, optionally filtered by scan or event type."""
         try:
-            ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id)
-            results = ws.get_scan_results(scan_id=scan_id, event_type=event_type, limit=limit)
-            return {"results": results}
+            ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id, scan_db=self._get_scan_db_for_workspace())
+            raw_results = ws.get_scan_results(scan_id=scan_id, event_type=event_type, limit=limit)
+            # Normalize field names to match what the JS template expects
+            results = []
+            for r in raw_results:
+                results.append({
+                    'scan_id': r.get('scan_id', ''),
+                    'timestamp': r.get('created', 0),
+                    'event_type': r.get('type', ''),
+                    'event_data': r.get('data', ''),
+                    'source_module': r.get('module', ''),
+                    'confidence': r.get('confidence', 0),
+                    'visibility': r.get('visibility', 0),
+                    'risk': r.get('risk', 0),
+                })
+            return {"success": True, "results": results, "total_results": len(results)}
         except Exception as e:
-            return {"error": str(e)}
+            return {"success": False, "error": str(e)}
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def workspacescancorrelations(self, workspace_id: str) -> dict:
         """Retrieve cross-scan correlations for a workspace."""
         try:
-            ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id)
+            ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id, scan_db=self._get_scan_db_for_workspace())
             correlations = ws.get_cross_scan_correlations()
-            return {"correlations": correlations}
+
+            # Count finished scans
+            total_scans = len(ws.scans)
+            finished_scans = 0
+            for scan in ws.scans:
+                row = ws._get_scan_row(scan['scan_id'])
+                if row and len(row) > 5 and row[5] == 'FINISHED':
+                    finished_scans += 1
+
+            # Group correlations by rule_name for the template
+            correlation_groups = {}
+            for corr in correlations:
+                rule_name = corr.get('rule_name', corr.get('rule_id', 'Unknown'))
+                if rule_name not in correlation_groups:
+                    correlation_groups[rule_name] = []
+                correlation_groups[rule_name].append({
+                    'scan_id': corr.get('scan_id', ''),
+                    'rule_risk': corr.get('risk', 'INFO'),
+                    'rule_description': corr.get('rule_descr', corr.get('title', '')),
+                    'title': corr.get('title', ''),
+                })
+
+            message = ''
+            if not correlations:
+                if total_scans < 2:
+                    message = 'Need at least 2 completed scans for cross-correlation analysis.'
+                elif finished_scans < 2:
+                    message = 'Waiting for scans to finish before running correlations.'
+                else:
+                    message = 'No correlations found across workspace scans.'
+
+            return {
+                "success": True,
+                "correlations": correlations,
+                "total_correlations": len(correlations),
+                "cross_scan_patterns": len(correlation_groups),
+                "correlation_groups": correlation_groups,
+                "total_scans": total_scans,
+                "finished_scans": finished_scans,
+                "message": message,
+            }
         except Exception as e:
-            return {"error": str(e)}
+            return {"success": False, "error": str(e)}
 
     @cherrypy.expose
     def workspacedetails(self, workspace_id: str) -> str:
         """Render the workspace details page with scans and metadata."""
         try:
-            ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id)
+            ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id, scan_db=self._get_scan_db_for_workspace())
 
             # Ensure workspace has required attributes
             if not hasattr(ws, 'name') or not ws.name:
@@ -291,3 +361,14 @@ class WorkspaceEndpoints:
             raise
         except Exception as e:
             return str(e)
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def workspaceperiodicscans(self, workspace_id: str) -> dict:
+        """List periodic/scheduled scans for a workspace."""
+        try:
+            ws = SpiderFootWorkspace(self.config, workspace_id=workspace_id, scan_db=self._get_scan_db_for_workspace())
+            periodic = ws.metadata.get('periodic_scans', [])
+            return {"success": True, "schedules": periodic}
+        except Exception as e:
+            return {"success": False, "error": str(e)}

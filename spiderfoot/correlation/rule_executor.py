@@ -101,31 +101,45 @@ class DefaultRuleExecutionStrategy(RuleExecutionStrategy):
     def _get_scan_events(self, dbh, scan_id, collect_rules) -> list:
         """Get events for a specific scan that match collection rules."""
         log = logging.getLogger("spiderfoot.correlation.collect")
+        from spiderfoot.db.db_utils import get_placeholder
+
+        # Determine placeholder based on db type
+        db_type = getattr(dbh, 'db_type', 'sqlite')
+        ph = get_placeholder(db_type)
 
         try:
             # Check which table schema we're working with
             # Try the simplified test schema first
+            _test_schema = False
+            dbh_lock = getattr(dbh, 'dbhLock', None)
             try:
-                dbh_lock = getattr(dbh, 'dbhLock', None)
                 if dbh_lock:
                     with dbh_lock:
-                        dbh.dbh.execute("SELECT scan_id, type, data FROM tbl_scan_results WHERE scan_id = ? LIMIT 1", [scan_id])
+                        dbh.dbh.execute(f"SELECT scan_id, type, data FROM tbl_scan_results WHERE scan_id = {ph} LIMIT 1", [scan_id])
                         test_row = dbh.dbh.fetchone()
                 else:
                     # For tests without lock
-                    dbh.dbh.execute("SELECT scan_id, type, data FROM tbl_scan_results WHERE scan_id = ? LIMIT 1", [scan_id])
+                    dbh.dbh.execute(f"SELECT scan_id, type, data FROM tbl_scan_results WHERE scan_id = {ph} LIMIT 1", [scan_id])
                     test_row = dbh.dbh.fetchone()
 
-                # Use simplified schema for tests
-                base_query = "SELECT scan_id as hash, type, data, 'test_module' as module, 0 as created, 'ROOT' as source_event_hash FROM tbl_scan_results WHERE scan_id = ?"
+                # Use simplified schema for tests — generate deterministic hashes
+                import hashlib
+                base_query = f"SELECT type, data, 'test_module' as module, 0 as created, 'ROOT' as source_event_hash FROM tbl_scan_results WHERE scan_id = {ph}"
                 query_params = [scan_id]
+                _test_schema = True
 
             except Exception as e:
+                # Rollback the failed test query (required for PostgreSQL)
+                try:
+                    if hasattr(dbh, 'conn') and dbh.conn:
+                        dbh.conn.rollback()
+                except Exception:
+                    pass
                 # Use full production schema
-                base_query = """
+                base_query = f"""
                     SELECT hash, type, data, module, generated, source_event_hash
                     FROM tbl_scan_results
-                    WHERE scan_instance_id = ? AND false_positive = 0
+                    WHERE scan_instance_id = {ph} AND false_positive = 0
                 """
                 query_params = [scan_id]
 
@@ -141,15 +155,30 @@ class DefaultRuleExecutionStrategy(RuleExecutionStrategy):
 
             # Convert to dict format for easier processing
             for row in rows:
-                event = {
-                    'hash': row[0],
-                    'type': row[1],
-                    'data': row[2],
-                    'module': row[3],
-                    'created': row[4],  # using generated column as created
-                    'source_event_hash': row[5],
-                    'scan_id': scan_id
-                }
+                if _test_schema:
+                    # Test schema: columns are (type, data, module, created, source_event_hash)
+                    import hashlib
+                    event_hash = hashlib.sha256(f"{scan_id}:{row[0]}:{row[1]}".encode()).hexdigest()[:16]
+                    event = {
+                        'hash': event_hash,
+                        'type': row[0],
+                        'data': row[1],
+                        'module': row[2],
+                        'created': row[3],
+                        'source_event_hash': row[4],
+                        'scan_id': scan_id
+                    }
+                else:
+                    # Production schema: columns are (hash, type, data, module, generated, source_event_hash)
+                    event = {
+                        'hash': row[0],
+                        'type': row[1],
+                        'data': row[2],
+                        'module': row[3],
+                        'created': row[4],
+                        'source_event_hash': row[5],
+                        'scan_id': scan_id
+                    }
                 events.append(event)
 
             log.debug("Retrieved %s base events for scan %s", len(events), scan_id)
@@ -186,7 +215,9 @@ class DefaultRuleExecutionStrategy(RuleExecutionStrategy):
                         break
             return filtered
         else:
-            # Unknown method, return all events
+            # Unknown method, warn and return all events unfiltered
+            log = logging.getLogger("spiderfoot.correlation")
+            log.warning("Unknown filter method '%s' — returning all events unfiltered", method)
             return events
 
     def _aggregate_events(self, events, aggregation) -> dict:
@@ -274,7 +305,14 @@ class DefaultRuleExecutionStrategy(RuleExecutionStrategy):
         try:
             # Generate correlation title using headline template
             headline = rule.get('headline', 'Correlation found')
-            correlation_title = headline.format(data=group_key)
+            try:
+                correlation_title = headline.format(
+                    data=group_key,
+                    count=len(events),
+                    type=events[0].get('type', '') if events else '',
+                )
+            except (KeyError, IndexError):
+                correlation_title = f"{headline} — {group_key}"
 
             # Use first scan ID as the primary scan
             scan_id = scan_ids[0] if scan_ids else 'unknown'

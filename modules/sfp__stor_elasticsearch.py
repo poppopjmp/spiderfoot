@@ -28,8 +28,10 @@ class sfp__stor_elasticsearch(SpiderFootModernPlugin):
     """
 
     meta = {
-        'name': "ElasticSearch Storage",
-        'summary': "Stores scan results into an ElasticSearch instance for indexing and visualization."
+        'name': "ElasticSearch Storage [DEPRECATED]",
+        'summary': "DEPRECATED: Use Vector.dev integration instead (config/vector.toml). "
+                   "Stores scan results into an ElasticSearch instance for indexing and visualization.",
+        'flags': ["deprecated"]
     }
 
     _priority = 0

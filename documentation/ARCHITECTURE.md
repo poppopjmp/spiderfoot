@@ -2,11 +2,38 @@
 
 ## Overview
 
-SpiderFoot v5.245+ implements a modular microservices architecture that can run
+SpiderFoot v5.246.0 implements a modular microservices architecture that can run
 in two modes:
 
 - **Monolith mode**: All services run in a single process (default, backward-compatible)
-- **Microservices mode**: Services run as separate containers behind an Nginx gateway
+- **Microservices mode**: 10 containers behind an Nginx gateway (PostgreSQL, Redis, Qdrant, MinIO)
+
+## Service Topology (v5.246.0)
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                      Nginx Gateway (:80)                           │
+│           Rate limiting · WebSocket · Reverse proxy                 │
+├──────────────────────────┬──────────────────────────────────────────┤
+│ WebUI :5001              │ REST API + GraphQL :8001                 │
+│ (CherryPy)               │ (FastAPI + Strawberry)                  │
+├──────────────────────────┴──────────────────────────────────────────┤
+│                       Data Layer                                    │
+│  ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐      │
+│  │ PostgreSQL │ │   Redis    │ │  Qdrant    │ │   MinIO    │      │
+│  │ :5432      │ │  :6379     │ │ :6333      │ │ :9000/9001 │      │
+│  │ (Primary)  │ │ (EventBus, │ │ (Vector    │ │ (S3 Object │      │
+│  │            │ │  Cache)    │ │  Search)   │ │  Storage)  │      │
+│  └────────────┘ └────────────┘ └────────────┘ └────────────┘      │
+├───────────────────────────────────────────────────────────────────┤
+│                   Sidecars & Pipelines                              │
+│  ┌────────────┐ ┌────────────┐ ┌────────────┐                      │
+│  │ Vector.dev │ │ pg-backup  │ │ minio-init │                      │
+│  │ :8686      │ │ (cron)     │ │ (one-shot) │                      │
+│  │ (Log pipe) │ │ → MinIO    │ │ 5 buckets  │                      │
+│  └────────────┘ └────────────┘ └────────────┘                      │
+└───────────────────────────────────────────────────────────────────┘
+```
 
 ## Package Structure (v5.245.0+)
 
@@ -227,25 +254,154 @@ Inter-service communication:
 
 ## Docker Microservices
 
-The `docker/` directory contains production-ready Docker configuration:
+The `docker-compose-microservices.yml` defines 10 containers:
 
-| File | Purpose |
-|---|---|
-| `Dockerfile.base` | Multi-stage base image with Python deps |
-| `Dockerfile.scanner` | Scanner service |
-| `Dockerfile.api` | REST API service |
-| `Dockerfile.webui` | Web UI service |
-| `docker-compose-microservices.yml` | Full stack orchestration |
-| `nginx-microservices.conf` | Reverse proxy with rate limiting |
-| `config/vector.toml` | Vector.dev pipeline configuration |
-| `env.example` | Environment variable reference |
-| `build.sh` | Build all images |
+| Container | Image | Purpose |
+|---|---|---|
+| sf-api | spiderfoot-api | REST API + GraphQL (:8001) |
+| sf-webui | spiderfoot-webui | CherryPy Web UI (:5001) |
+| sf-nginx | nginx:alpine | Reverse proxy + TLS + WebSocket (:80) |
+| sf-postgres | postgres:16-alpine | Primary database (:5432) |
+| sf-redis | redis:7-alpine | Event bus + cache (:6379) |
+| sf-qdrant | qdrant/qdrant:latest | Vector similarity search (:6333) |
+| sf-vector | timberio/vector:latest | Log aggregation (:8686) |
+| sf-minio | minio/minio:latest | S3-compatible object storage (:9000/9001) |
+| sf-minio-init | minio/mc:latest | One-shot bucket provisioner |
+| sf-pg-backup | postgres:16-alpine | Scheduled PG backup → MinIO |
 
 ### Networks
 
-- **sf-frontend**: Nginx ↔ WebUI/API
-- **sf-backend**: Services ↔ PostgreSQL
-- **sf-events**: Services ↔ Redis/NATS EventBus
+- **sf-frontend**: Nginx ↔ WebUI/API (external-facing)
+- **sf-backend**: All services ↔ PostgreSQL/Redis/Qdrant/MinIO (internal)
+
+### Volumes
+
+| Volume | Container | Mount Path |
+|---|---|---|
+| sf-postgres-data | sf-postgres | /var/lib/postgresql/data |
+| sf-redis-data | sf-redis | /data |
+| sf-qdrant-data | sf-qdrant | /qdrant/storage |
+| sf-qdrant-snapshots | sf-qdrant | /qdrant/snapshots |
+| sf-vector-data | sf-vector | /var/lib/vector |
+| sf-minio-data | sf-minio | /data |
+| sf-logs | sf-api, sf-webui | /app/logs |
+
+## Qdrant Vector Search
+
+### Client (`spiderfoot/qdrant_client.py`)
+
+Custom HTTP-based Qdrant client (NOT the PyPI `qdrant-client`). Communicates
+with Qdrant via `urllib.request` REST calls.
+
+- **Singleton** via `get_qdrant_client()` / `init_qdrant_client()`
+- **Backends**: `MemoryVectorBackend` (testing), `HttpVectorBackend` (production)
+- **Collection prefix**: `sf_` (configurable via `SF_QDRANT_PREFIX`)
+- **Key classes**: `VectorPoint(id, vector, payload, score)`,
+  `SearchResult(points, query_time_ms, total_found)`,
+  `Filter(must, must_not, should)` with `match()` / `range()` statics,
+  `CollectionInfo(name, vector_size, distance, point_count)`
+- **Methods**: `ensure_collection`, `search`, `upsert`, `get`, `delete`,
+  `scroll`, `count`, `collection_info`, `list_collections`
+
+### Embedding Service (`spiderfoot/services/embedding_service.py`)
+
+Generates vector embeddings for text data:
+
+- **Providers**: MOCK (default), SENTENCE_TRANSFORMER, OPENAI, HUGGINGFACE
+- **Default model**: `all-MiniLM-L6-v2` (384 dimensions)
+- **Methods**: `embed_text()`, `embed_texts()` with caching and batching
+
+### Vector Correlation (`spiderfoot/vector_correlation.py`)
+
+5 correlation strategies over vectorized scan events:
+
+| Strategy | Description |
+|---|---|
+| SIMILARITY | Cosine similarity within a scan |
+| CROSS_SCAN | Similar events across different scans |
+| TEMPORAL | Time-windowed clustering |
+| INFRASTRUCTURE | Infrastructure topology grouping |
+| MULTI_HOP | Multi-step relationship discovery |
+
+Default collection: `sf_osint_events`
+
+## MinIO Object Storage
+
+S3-compatible object storage for artifacts, reports, and backups.
+
+### Buckets (created by sf-minio-init)
+
+| Bucket | Purpose |
+|---|---|
+| spiderfoot-reports | Generated scan reports (PDF/HTML/MD) |
+| spiderfoot-exports | Exported scan data (CSV/JSON/STIX) |
+| spiderfoot-artifacts | Raw scan artifacts and screenshots |
+| spiderfoot-backups | PostgreSQL pg_dump archives |
+| spiderfoot-logs | Archived log files |
+
+### Storage API (`spiderfoot/storage/minio_client.py`)
+
+- **MinioStorageClient**: Upload, download, list, delete, presigned URLs
+- **Singleton**: `get_minio_client()` with automatic bucket creation
+- **Lifecycle**: Configurable retention policies per bucket
+
+### PG Backup Sidecar
+
+Runs in the `sf-pg-backup` container:
+
+- Hourly `pg_dump` of the SpiderFoot database
+- Compressed archives uploaded to the `spiderfoot-backups` bucket
+- Configurable retention (default: 7 days)
+- Health check via backup recency validation
+
+## GraphQL API Layer
+
+### Schema (`spiderfoot/api/graphql/`)
+
+Code-first GraphQL using Strawberry ≥ 0.235.0, mounted at `/api/graphql`
+with GraphiQL IDE.
+
+#### Queries (13 fields)
+
+| Field | Return Type | Description |
+|---|---|---|
+| `scan(id)` | ScanType | Single scan by ID |
+| `scans(page, pageSize)` | PaginatedScans | Paginated scan list |
+| `scanEvents(scanId, filter, pagination)` | PaginatedEvents | Filtered events |
+| `eventSummary(scanId)` | [EventTypeSummary] | Event type counts |
+| `scanCorrelations(scanId)` | [CorrelationType] | Correlation hits |
+| `scanLogs(scanId)` | [ScanLogType] | Module execution logs |
+| `scanStatistics(scanId)` | ScanStatistics | Aggregate scan stats |
+| `scanGraph(scanId, maxNodes)` | ScanGraph | D3 graph data |
+| `eventTypes` | [EventTypeInfo] | Available event types |
+| `workspaces` | [WorkspaceType] | Scan workspaces |
+| `searchEvents(query, scanId)` | PaginatedEvents | Full-text search |
+| `semanticSearch(query, ...)` | VectorSearchResult | Qdrant vector search |
+| `vectorCollections` | [VectorCollectionInfo] | Qdrant collections |
+
+#### Mutations (5)
+
+| Mutation | Return Type | Description |
+|---|---|---|
+| `startScan(input)` | ScanCreateResult | Create and start a scan |
+| `stopScan(scanId)` | MutationResult | Abort a running scan |
+| `deleteScan(scanId)` | MutationResult | Delete scan + data |
+| `setFalsePositive(input)` | FalsePositiveResult | Toggle FP status |
+| `rerunScan(scanId)` | ScanCreateResult | Clone and rerun a scan |
+
+#### Subscriptions (2, via WebSocket)
+
+| Subscription | Yields | Description |
+|---|---|---|
+| `scanProgress(scanId, interval)` | ScanType | Polls scan status changes |
+| `scanEventsLive(scanId, interval)` | EventType | New events as they appear |
+
+Protocols: `graphql-transport-ws`, `graphql-ws`
+
+#### Extensions
+
+- **QueryDepthLimiter**: Max depth = 10 (prevents deeply nested abuse)
+- **DataLoaders**: `ScanEventLoader`, `ScanCorrelationLoader` (N+1 prevention)
 
 ## Module System
 
@@ -276,10 +432,11 @@ class sfp_example(SpiderFootModernPlugin):
 See [MODULE_MIGRATION_GUIDE.md](MODULE_MIGRATION_GUIDE.md) for step-by-step
 migration instructions.
 
-## Version History (v5.4.0 – v5.245.0)
+## Version History (v5.4.0 – v5.246.0)
 
 | Version | Change |
 |---|---|
+| 5.246.0 | GraphQL mutations (5), subscriptions (2, WebSocket), Qdrant semantic search resolver, query depth limiter, MinIO object storage (5 buckets), PG backup sidecar, complete documentation overhaul |
 | 5.245.0 | Complete shim removal — 79 backward-compat files deleted, 470 imports rewritten to 8 domain sub-packages |
 | 5.244.0 | Fix circular imports across all 8 sub-packages (relative imports) |
 | 5.243.0 | Populate 8 domain sub-packages (events, scan, plugins, config, security, observability, services, reporting) |

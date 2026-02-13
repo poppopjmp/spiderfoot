@@ -39,6 +39,7 @@ class EventManager:
         self.conn = conn
         self.dbhLock = dbhLock
         self.db_type = db_type
+        self._ph = get_placeholder(db_type)
 
     def _log_db_error(self, msg, exc):
         log.error("[DB] %s: %s", msg, exc)
@@ -120,6 +121,10 @@ class EventManager:
                     return
                 except (sqlite3.Error, psycopg2.Error) as e:
                     self._log_db_error("Error in scanLogEvent", e)
+                    try:
+                        self.conn.rollback()
+                    except Exception:
+                        pass
                     if self._is_transient_error(e) and attempt < 2:
                         time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
                         continue
@@ -129,9 +134,15 @@ class EventManager:
         """Retrieve scan log entries for a given scan instance."""
         if not isinstance(instanceId, str):
             raise TypeError(f"instanceId is {type(instanceId)}; expected str()")
-        qry = "SELECT generated AS generated, component, type, message, rowid FROM tbl_scan_log WHERE scan_instance_id = ?"
+        if self.db_type == 'postgresql':
+            qry = f"SELECT generated AS generated, component, type, message, generated AS rowid FROM tbl_scan_log WHERE scan_instance_id = {self._ph}"
+        else:
+            qry = f"SELECT generated AS generated, component, type, message, rowid FROM tbl_scan_log WHERE scan_instance_id = {self._ph}"
         if fromRowId:
-            qry += " and rowid > ?"
+            if self.db_type == 'postgresql':
+                qry += f" and generated > {self._ph}"
+            else:
+                qry += f" and rowid > {self._ph}"
         qry += " ORDER BY generated "
         if reverse:
             qry += "ASC"
@@ -141,7 +152,7 @@ class EventManager:
         if fromRowId:
             qvars.append(str(fromRowId))
         if limit is not None:
-            qry += " LIMIT ?"
+            qry += f" LIMIT {self._ph}"
             qvars.append(str(limit))
         with self.dbhLock:
             try:
@@ -156,10 +167,10 @@ class EventManager:
             raise TypeError(f"instanceId is {type(instanceId)}; expected str()")
         if not isinstance(limit, int):
             raise TypeError(f"limit is {type(limit)}; expected int()")
-        qry = "SELECT generated AS generated, component, message FROM tbl_scan_log WHERE scan_instance_id = ? AND type = 'ERROR' ORDER BY generated DESC"
+        qry = f"SELECT generated AS generated, component, message FROM tbl_scan_log WHERE scan_instance_id = {self._ph} AND type = 'ERROR' ORDER BY generated DESC"
         qvars = [instanceId]
         if limit:
-            qry += " LIMIT ?"
+            qry += f" LIMIT {self._ph}"
             qvars.append(str(limit))
         with self.dbhLock:
             try:
@@ -183,37 +194,37 @@ class EventManager:
         # Legacy tuple order: generated, data, module, hash, type, source_event_hash, confidence, visibility, risk
         qry = ("SELECT ROUND(c.generated) AS generated, c.data, c.module, c.hash, c.type, c.source_event_hash, c.confidence, c.visibility, c.risk "
                "FROM tbl_scan_results c "
-               "WHERE c.scan_instance_id = ? ")
+               f"WHERE c.scan_instance_id = {self._ph} ")
         qvars = [instanceId]
         if eventType != "ALL":
             if isinstance(eventType, list):
-                qry += " AND c.type in (" + ','.join(['?'] * len(eventType)) + ")"
+                qry += " AND c.type in (" + ','.join([self._ph] * len(eventType)) + ")"
                 qvars.extend(eventType)
             else:
-                qry += " AND c.type = ?"
+                qry += f" AND c.type = {self._ph}"
                 qvars.append(eventType)
         if filterFp:
             qry += " AND c.false_positive <> 1"
         if srcModule:
             if isinstance(srcModule, list):
-                qry += " AND c.module in (" + ','.join(['?'] * len(srcModule)) + ")"
+                qry += " AND c.module in (" + ','.join([self._ph] * len(srcModule)) + ")"
                 qvars.extend(srcModule)
             else:
-                qry += " AND c.module = ?"
+                qry += f" AND c.module = {self._ph}"
                 qvars.append(srcModule)
         if data:
             if isinstance(data, list):
-                qry += " AND c.data in (" + ','.join(['?'] * len(data)) + ")"
+                qry += " AND c.data in (" + ','.join([self._ph] * len(data)) + ")"
                 qvars.extend(data)
             else:
-                qry += " AND c.data = ?"
+                qry += f" AND c.data = {self._ph}"
                 qvars.append(data)
         if sourceId:
             if isinstance(sourceId, list):
-                qry += " AND c.source_event_hash in (" + ','.join(['?'] * len(sourceId)) + ")"
+                qry += " AND c.source_event_hash in (" + ','.join([self._ph] * len(sourceId)) + ")"
                 qvars.extend(sourceId)
             else:
-                qry += " AND c.source_event_hash = ?"
+                qry += f" AND c.source_event_hash = {self._ph}"
                 qvars.append(sourceId)
         # Special case: include events where c.source_event_hash = 'ROOT'
         qry += " AND (c.source_event_hash = 'ROOT' OR c.source_event_hash != 'ROOT')"
@@ -231,10 +242,10 @@ class EventManager:
             raise TypeError(f"instanceId is {type(instanceId)}; expected str()")
         if not isinstance(eventType, str):
             raise TypeError(f"eventType is {type(eventType)}; expected str()")
-        qry = "SELECT DISTINCT data, type, COUNT(*) FROM tbl_scan_results WHERE scan_instance_id = ?"
+        qry = f"SELECT DISTINCT data, type, COUNT(*) FROM tbl_scan_results WHERE scan_instance_id = {self._ph}"
         qvars = [instanceId]
         if eventType != "ALL":
-            qry += " AND type = ?"
+            qry += f" AND type = {self._ph}"
             qvars.append(eventType)
         if filterFp:
             qry += " AND false_positive <> 1"
@@ -255,11 +266,11 @@ class EventManager:
         if by not in ["type", "module", "entity"]:
             raise ValueError(f"Invalid filter by value: {by}")
         if by == "type":
-            qry = "SELECT r.type, e.event_descr, MAX(ROUND(generated)) AS last_in, count(*) AS total, count(DISTINCT r.data) as utotal FROM tbl_scan_results r, tbl_event_types e WHERE e.event = r.type AND r.scan_instance_id = ? GROUP BY r.type ORDER BY e.event_descr"
-        if by == "module":
-            qry = "SELECT r.module, '', MAX(ROUND(generated)) AS last_in, count(*) AS total, count(DISTINCT r.data) as utotal FROM tbl_scan_results r, tbl_event_types e WHERE e.event = r.type AND r.scan_instance_id = ? GROUP BY r.module ORDER BY r.module DESC"
-        if by == "entity":
-            qry = "SELECT r.data, e.event_descr, MAX(ROUND(generated)) AS last_in, count(*) AS total, count(DISTINCT r.data) as utotal FROM tbl_scan_results r, tbl_event_types e WHERE e.event = r.type AND r.scan_instance_id = ? AND e.event_type in ('ENTITY') GROUP BY r.data, e.event_descr ORDER BY total DESC limit 50"
+            qry = f"SELECT r.type, e.event_descr, MAX(ROUND(generated)) AS last_in, count(*) AS total, count(DISTINCT r.data) as utotal FROM tbl_scan_results r, tbl_event_types e WHERE e.event = r.type AND r.scan_instance_id = {self._ph} GROUP BY r.type, e.event_descr ORDER BY e.event_descr"
+        elif by == "module":
+            qry = f"SELECT r.module, '' AS event_descr, MAX(ROUND(generated)) AS last_in, count(*) AS total, count(DISTINCT r.data) as utotal FROM tbl_scan_results r, tbl_event_types e WHERE e.event = r.type AND r.scan_instance_id = {self._ph} GROUP BY r.module ORDER BY r.module DESC"
+        elif by == "entity":
+            qry = f"SELECT r.data, e.event_descr, MAX(ROUND(generated)) AS last_in, count(*) AS total, count(DISTINCT r.data) as utotal FROM tbl_scan_results r, tbl_event_types e WHERE e.event = r.type AND r.scan_instance_id = {self._ph} AND e.event_type in ('ENTITY') GROUP BY r.data, e.event_descr ORDER BY total DESC LIMIT 50"
         qvars = [instanceId]
         with self.dbhLock:
             try:
@@ -272,7 +283,10 @@ class EventManager:
         """Retrieve scan result counts grouped by time and event type."""
         if not isinstance(instanceId, str):
             raise TypeError(f"instanceId is {type(instanceId)}; expected str()")
-        qry = "SELECT STRFTIME('%H:%M %w', generated, 'unixepoch') AS hourmin, type, COUNT(*) FROM tbl_scan_results WHERE scan_instance_id = ? GROUP BY hourmin, type"
+        if self.db_type == 'postgresql':
+            qry = f"SELECT to_char(to_timestamp(generated), 'HH24:MI D') AS hourmin, type, COUNT(*) FROM tbl_scan_results WHERE scan_instance_id = {self._ph} GROUP BY hourmin, type"
+        else:
+            qry = f"SELECT STRFTIME('%H:%M %w', generated, 'unixepoch') AS hourmin, type, COUNT(*) FROM tbl_scan_results WHERE scan_instance_id = {self._ph} GROUP BY hourmin, type"
         qvars = [instanceId]
         with self.dbhLock:
             try:
@@ -289,7 +303,7 @@ class EventManager:
             raise TypeError(f"resultHashes is {type(resultHashes)}; expected list()")
         with self.dbhLock:
             for resultHash in resultHashes:
-                qry = "UPDATE tbl_scan_results SET false_positive = ? WHERE scan_instance_id = ? AND hash = ?"
+                qry = f"UPDATE tbl_scan_results SET false_positive = {self._ph} WHERE scan_instance_id = {self._ph} AND hash = {self._ph}"
                 qvars = [fpFlag, instanceId, resultHash]
                 try:
                     self.dbh.execute(qry, qvars)
@@ -298,6 +312,10 @@ class EventManager:
             try:
                 self.conn.commit()
             except (sqlite3.Error, psycopg2.Error) as e:
+                try:
+                    self.conn.rollback()
+                except Exception:
+                    pass
                 raise OSError("SQL error encountered when updating false-positive") from e
         return True
 
@@ -348,7 +366,8 @@ class EventManager:
             storeData = storeData[0:truncateSize]
         # Always store generated as int (ms)
         generated_ms = int(sfEvent.generated * 1000)
-        qry = "INSERT INTO tbl_scan_results (scan_instance_id, hash, type, generated, confidence, visibility, risk, module, data, source_event_hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        ph = self._ph
+        qry = f"INSERT INTO tbl_scan_results (scan_instance_id, hash, type, generated, confidence, visibility, risk, module, data, source_event_hash) VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph})"
         qvals = [
             instanceId, sfEvent.hash, sfEvent.eventType, generated_ms,
             sfEvent.confidence, sfEvent.visibility, sfEvent.risk,
@@ -359,6 +378,10 @@ class EventManager:
                 self.dbh.execute(qry, qvals)
                 self.conn.commit()
             except (sqlite3.Error, psycopg2.Error) as e:
+                try:
+                    self.conn.rollback()
+                except Exception:
+                    pass
                 raise OSError(f"SQL error encountered when storing event data ({self.dbh})") from e
 
     def scanElementSourcesDirect(self, instanceId: str, elementIdList: list) -> list:
@@ -374,7 +397,7 @@ class EventManager:
             if not hashId.isalnum():
                 continue
             hashIds.append(hashId)
-        qry = "SELECT ROUND(c.generated) AS generated, c.data, s.data as 'source_data', c.module, c.type, c.confidence, c.visibility, c.risk, c.hash, c.source_event_hash, t.event_descr, t.event_type, s.scan_instance_id, c.false_positive as 'fp', s.false_positive as 'parent_fp', s.type, s.module, st.event_type as 'source_entity_type' FROM tbl_scan_results c, tbl_scan_results s, tbl_event_types t, tbl_event_types st WHERE c.scan_instance_id = ? AND c.source_event_hash = s.hash AND s.scan_instance_id = c.scan_instance_id AND st.event = s.type AND t.event = c.type AND c.hash in ('%s')" % "','".join(hashIds)
+        qry = f"SELECT ROUND(c.generated) AS generated, c.data, s.data as source_data, c.module, c.type, c.confidence, c.visibility, c.risk, c.hash, c.source_event_hash, t.event_descr, t.event_type, s.scan_instance_id, c.false_positive as fp, s.false_positive as parent_fp, s.type, s.module, st.event_type as source_entity_type FROM tbl_scan_results c, tbl_scan_results s, tbl_event_types t, tbl_event_types st WHERE c.scan_instance_id = {self._ph} AND c.source_event_hash = s.hash AND s.scan_instance_id = c.scan_instance_id AND st.event = s.type AND t.event = c.type AND c.hash in ('%s')" % "','".join(hashIds)
         qvars = [instanceId]
         with self.dbhLock:
             try:
@@ -396,7 +419,7 @@ class EventManager:
             if not hashId.isalnum():
                 continue
             hashIds.append(hashId)
-        qry = "SELECT ROUND(c.generated) AS generated, c.data, s.data as 'source_data', c.module, c.type, c.confidence, c.visibility, c.risk, c.hash, c.source_event_hash, t.event_descr, t.event_type, s.scan_instance_id, c.false_positive as 'fp', s.false_positive as 'parent_fp' FROM tbl_scan_results c, tbl_scan_results s, tbl_event_types t WHERE c.scan_instance_id = ? AND c.source_event_hash = s.hash AND s.scan_instance_id = c.scan_instance_id AND t.event = c.type AND s.hash in ('%s')" % "','".join(hashIds)
+        qry = f"SELECT ROUND(c.generated) AS generated, c.data, s.data as source_data, c.module, c.type, c.confidence, c.visibility, c.risk, c.hash, c.source_event_hash, t.event_descr, t.event_type, s.scan_instance_id, c.false_positive as fp, s.false_positive as parent_fp FROM tbl_scan_results c, tbl_scan_results s, tbl_event_types t WHERE c.scan_instance_id = {self._ph} AND c.source_event_hash = s.hash AND s.scan_instance_id = c.scan_instance_id AND t.event = c.type AND s.hash in ('%s')" % "','".join(hashIds)
         qvars = [instanceId]
         with self.dbhLock:
             try:
@@ -476,13 +499,13 @@ class EventManager:
 
     def get_sources(self, scan_id: str, event_hash: str) -> list:
         """Retrieve the source events for a given event hash."""
-        qry = """
+        qry = f"""
             SELECT s.hash, s.type, s.data, s.module, s.generated, s.source_event_hash
             FROM tbl_scan_results c
             JOIN tbl_scan_results s
               ON c.source_event_hash = s.hash
-            WHERE c.scan_instance_id = ?
-              AND c.hash = ?
+            WHERE c.scan_instance_id = {self._ph}
+              AND c.hash = {self._ph}
               AND c.source_event_hash != 'ROOT'
         """
         qvars = [scan_id, event_hash]
@@ -506,11 +529,11 @@ class EventManager:
 
     def get_entities(self, scan_id: str, event_hash: str) -> list:
         """Retrieve entity-type child events for a given event hash."""
-        qry = """
+        qry = f"""
             SELECT c.hash, c.type, c.data, c.module, c.generated, c.source_event_hash
             FROM tbl_scan_results c
-            WHERE c.scan_instance_id = ?
-              AND c.source_event_hash = ?
+            WHERE c.scan_instance_id = {self._ph}
+              AND c.source_event_hash = {self._ph}
               AND c.type IN (
                 SELECT event FROM tbl_event_types WHERE event_type = 'ENTITY'
               )
@@ -549,26 +572,26 @@ class EventManager:
             raise ValueError("criteria must include a valid 'scan_id' string")
         # Legacy tuple order: generated, data, module, hash, type, source_event_hash, confidence, visibility, risk
         qry = ("SELECT ROUND(generated) AS generated, data, module, hash, type, source_event_hash, confidence, visibility, risk "
-               "FROM tbl_scan_results WHERE scan_instance_id = ?")
+               f"FROM tbl_scan_results WHERE scan_instance_id = {self._ph}")
         qvars = [scan_id]
         if 'type' in criteria and criteria['type']:
-            qry += " AND type = ?"
+            qry += f" AND type = {self._ph}"
             qvars.append(criteria['type'])
         if 'data' in criteria and criteria['data']:
-            qry += " AND data = ?"
+            qry += f" AND data = {self._ph}"
             qvars.append(criteria['data'])
         if 'module' in criteria and criteria['module']:
-            qry += " AND module = ?"
+            qry += f" AND module = {self._ph}"
             qvars.append(criteria['module'])
         if 'start_date' in criteria and criteria['start_date']:
-            qry += " AND generated >= ?"
+            qry += f" AND generated >= {self._ph}"
             start = criteria['start_date']
             if start > 1000000000000:  # already ms
                 qvars.append(start)
             else:
                 qvars.append(int(start * 1000))
         if 'end_date' in criteria and criteria['end_date']:
-            qry += " AND generated <= ?"
+            qry += f" AND generated <= {self._ph}"
             end = criteria['end_date']
             if end > 1000000000000:
                 qvars.append(end)

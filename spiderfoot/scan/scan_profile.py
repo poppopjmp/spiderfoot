@@ -105,6 +105,9 @@ class ScanProfile:
         """
         selected: set[str] = set()
 
+        # Always exclude deprecated modules unless explicitly included
+        effective_exclude_flags = set(self.exclude_flags) | {"deprecated"}
+
         for mod_name, mod_info in all_modules.items():
             meta = mod_info.get("meta", {})
             flags = set(meta.get("flags", []))
@@ -132,15 +135,14 @@ class ScanProfile:
 
             selected.add(mod_name)
 
-        # Exclude by flags
-        if self.exclude_flags:
-            to_remove = set()
-            for mod_name in selected:
-                meta = all_modules[mod_name].get("meta", {})
-                flags = set(meta.get("flags", []))
-                if flags.intersection(self.exclude_flags):
-                    to_remove.add(mod_name)
-            selected -= to_remove
+        # Exclude by flags (always excludes deprecated)
+        to_remove = set()
+        for mod_name in selected:
+            meta = all_modules[mod_name].get("meta", {})
+            flags = set(meta.get("flags", []))
+            if flags.intersection(effective_exclude_flags):
+                to_remove.add(mod_name)
+        selected -= to_remove
 
         # Exclude specific modules
         selected -= set(self.exclude_modules)
@@ -148,11 +150,11 @@ class ScanProfile:
         # Include specific modules (always added)
         selected.update(self.include_modules)
 
-        # Always include storage module
+        # Always include core storage module (sfp__stor_db only, skip deprecated stores)
         for mod_name in all_modules:
-            if mod_name.startswith("sfp__stor_"):
+            if mod_name == "sfp__stor_db":
                 selected.add(mod_name)
-
+                break
         return sorted(selected)
 
     def apply_overrides(self, global_opts: dict) -> dict:
