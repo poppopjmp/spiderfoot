@@ -98,6 +98,9 @@ services:
         mc mb --ignore-existing sfminio/sf-pg-backups;
         mc mb --ignore-existing sfminio/sf-qdrant-snapshots;
         mc mb --ignore-existing sfminio/sf-data;
+        mc mb --ignore-existing sfminio/sf-loki-data;
+        mc mb --ignore-existing sfminio/sf-loki-ruler;
+        mc mb --ignore-existing sfminio/sf-enrichment;
         mc anonymous set download sfminio/sf-reports;
         cp /usr/bin/mc /opt/mc-share/mc && chmod +x /opt/mc-share/mc;
         echo 'MinIO buckets initialized + mc binary shared';
@@ -329,10 +332,13 @@ services:
   # Vector.dev — Data Pipeline (logs, events, metrics)
   # ---------------------------------------------------------------------------
   # Integration point for shipping scan data to external storage/analytics:
-  #   - Elasticsearch: full-text search & Kibana dashboards
-  #   - S3/Minio: long-term archival of all scan events
   #   - Loki: centralized log aggregation
+  #   - Prometheus: metrics via exporter
+  #   - S3/Minio: long-term archival of all scan events
   #   - Webhooks: real-time high-severity alerts
+  #
+  # Vector.dev replaces Promtail + OTel Collector, serving as the unified
+  # telemetry pipeline (logs, metrics, traces).
   #
   # Enable sinks via env vars — see config/vector.toml for details.
   # ---------------------------------------------------------------------------
@@ -343,6 +349,8 @@ services:
     restart: unless-stopped
     networks:
       - sf-backend
+    ports:
+      - "9598:9598"    # Prometheus metrics exporter
     volumes:
       - ./config/vector.toml:/etc/vector/vector.toml:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -366,11 +374,129 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
+      loki:
+        condition: service_started
     deploy:
       resources:
         limits:
           cpus: "${VECTOR_CPUS:-0.5}"
           memory: "${VECTOR_MEMORY:-256M}"
+
+  # ---------------------------------------------------------------------------
+  # Loki — Log Aggregation (Grafana-native)
+  # ---------------------------------------------------------------------------
+  # Receives logs from Vector.dev (replaces Promtail).  Uses MinIO for
+  # chunk/index storage so logs survive container restarts.
+  # ---------------------------------------------------------------------------
+
+  loki:
+    image: grafana/loki:3.3.2
+    container_name: sf-loki
+    restart: unless-stopped
+    networks:
+      - sf-backend
+    volumes:
+      - ./infra/loki/local-config.yaml:/etc/loki/local-config.yaml:ro
+    command: -config.file=/etc/loki/local-config.yaml
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-spiderfoot}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-changeme123}
+    depends_on:
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3100/ready || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: "${LOKI_CPUS:-1.0}"
+          memory: "${LOKI_MEMORY:-512M}"
+
+  # ---------------------------------------------------------------------------
+  # Grafana — Dashboards & Observability UI
+  # ---------------------------------------------------------------------------
+  # Pre-provisioned with datasources (Loki, Prometheus, PostgreSQL) and
+  # dashboards for scan monitoring, event analytics, and service health.
+  # ---------------------------------------------------------------------------
+
+  grafana:
+    image: grafana/grafana:11.4.0
+    container_name: sf-grafana
+    restart: unless-stopped
+    networks:
+      - sf-frontend
+      - sf-backend
+    ports:
+      - "${SF_GRAFANA_PORT:-3000}:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GF_SECURITY_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD:-spiderfoot}
+      GF_SERVER_ROOT_URL: ${GF_SERVER_ROOT_URL:-http://localhost:3000}
+      GF_SERVER_SERVE_FROM_SUB_PATH: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: "Viewer"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_INSTALL_PLUGINS: "grafana-piechart-panel"
+      # Database connection for PostgreSQL datasource
+      SF_POSTGRES_DSN: postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-spiderfoot}
+    volumes:
+      - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infra/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      loki:
+        condition: service_healthy
+      prometheus:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3000/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: "${GRAFANA_CPUS:-1.0}"
+          memory: "${GRAFANA_MEMORY:-512M}"
+
+  # ---------------------------------------------------------------------------
+  # Prometheus — Metrics Collection & Storage
+  # ---------------------------------------------------------------------------
+  # Scrapes metrics from SpiderFoot API, Vector.dev, Qdrant, MinIO, and
+  # future services (agents, enrichment, LiteLLM, Jaeger).
+  # ---------------------------------------------------------------------------
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: sf-prometheus
+    restart: unless-stopped
+    networks:
+      - sf-backend
+    ports:
+      - "${SF_PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-lifecycle'
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:9090/-/healthy || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: "${PROMETHEUS_CPUS:-1.0}"
+          memory: "${PROMETHEUS_MEMORY:-512M}"
 
   # ---------------------------------------------------------------------------
   # PostgreSQL Backup Sidecar — pg_dump to MinIO
@@ -422,3 +548,5 @@ volumes:
   vector-logs:
   minio-data:
   mc-bin:
+  grafana-data:
+  prometheus-data:

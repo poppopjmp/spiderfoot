@@ -171,17 +171,19 @@ encoding.codec = "json"
 # auth.user = "elastic"
 # auth.password = "changeme"
 
-# Loki for log aggregation (enable via SF_LOKI_ENDPOINT env var)
-# Uncomment when Loki is available and set SF_LOKI_ENDPOINT
-# [sinks.loki_logs]
-# type = "loki"
-# inputs = ["route_logs.errors", "route_logs.warnings", "route_logs.info", "route_events.logs"]
-# endpoint = "${SF_LOKI_ENDPOINT:-http://loki:3100}"
-# labels.service = "spiderfoot"
-# labels.environment = "{{ environment }}"
-# labels.level = "{{ level }}"
-# encoding.codec = "json"
-# healthcheck.enabled = true
+# Loki for log aggregation
+[sinks.loki_logs]
+type = "loki"
+inputs = ["route_logs.errors", "route_logs.warnings", "route_logs.info", "route_events.logs"]
+endpoint = "${SF_LOKI_ENDPOINT:-http://loki:3100}"
+encoding.codec = "json"
+healthcheck.enabled = true
+
+[sinks.loki_logs.labels]
+service = "spiderfoot"
+job = "{{ container_name }}"
+level = "{{ level }}"
+log_format = "{{ log_format }}"
 
 # High-severity webhook alerting (enable via SF_ALERT_WEBHOOK_URL)
 # Forwards events with risk >= 60 to PagerDuty, Slack, or custom endpoint
@@ -277,11 +279,12 @@ batch.timeout_secs = 30
 access_key_id = "${AWS_ACCESS_KEY_ID:-spiderfoot}"
 secret_access_key = "${AWS_SECRET_ACCESS_KEY:-changeme123}"
 
-# Prometheus metrics exporter
-# [sinks.prometheus_metrics]
-# type = "prometheus_exporter"
-# inputs = ["route_events.metrics", "vector_metrics"]
-# address = "0.0.0.0:9598"
+# Prometheus metrics exporter — Vector internal + SpiderFoot pipeline metrics
+[sinks.prometheus_metrics]
+type = "prometheus_exporter"
+inputs = ["route_events.metrics", "vector_metrics"]
+address = "0.0.0.0:9598"
+default_namespace = "spiderfoot"
 
 # S3 for long-term archival (enable via SF_S3_BUCKET + SF_S3_REGION)
 # Uncomment for cloud deployments

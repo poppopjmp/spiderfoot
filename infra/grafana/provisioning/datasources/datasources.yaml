@@ -1,0 +1,42 @@
+# =============================================================================
+# Grafana Datasource Provisioning — SpiderFoot
+# =============================================================================
+apiVersion: 1
+
+datasources:
+  # Loki — log aggregation (via Vector.dev)
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    isDefault: true
+    editable: true
+    jsonData:
+      maxLines: 1000
+      timeout: 60
+
+  # Prometheus — metrics scraping
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    editable: true
+    jsonData:
+      httpMethod: POST
+      timeInterval: 15s
+
+  # PostgreSQL — direct DB dashboards
+  - name: PostgreSQL
+    type: postgres
+    access: proxy
+    url: postgres:5432
+    user: ${POSTGRES_USER}
+    editable: true
+    jsonData:
+      database: ${POSTGRES_DB}
+      sslmode: disable
+      maxOpenConns: 5
+      maxIdleConns: 2
+      connMaxLifetime: 600
+    secureJsonData:
+      password: ${POSTGRES_PASSWORD}
