@@ -19,7 +19,7 @@ from .routers import (
     stix, sarif, scan_metrics, asm, tenants, rbac_enhanced,
     ai_scan_config, marketplace, webhook_delivery,
     data_retention, scan_comparison, distributed_scan,
-    sso, report_templates,
+    sso, report_templates, tag_group,
 )
 from spiderfoot import __version__
 
@@ -153,6 +153,7 @@ _VERSIONED_ROUTERS = [
     (distributed_scan.router, "/api", ["distributed-scan"]),
     (sso.router,              "/api", ["sso"]),
     (report_templates.router, "/api", ["report-templates"]),
+    (tag_group.router,        "/api", ["tags-groups"]),
     (websocket.router,        "/ws",  ["websockets"]),
 ]
 
