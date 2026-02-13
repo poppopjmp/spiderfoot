@@ -1,0 +1,122 @@
+name: Dependency & Container Scanning
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "requirements.txt"
+      - "Pipfile"
+      - "Dockerfile"
+      - "docker-compose*.yml"
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 6 * * 1"  # Weekly Monday 6am UTC
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  dependency-audit:
+    name: Python Dependency Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install pip-audit
+        run: pip install pip-audit
+
+      - name: Audit dependencies
+        run: |
+          pip-audit -r requirements.txt \
+            --format json \
+            --output pip-audit-report.json \
+            --desc || true
+
+      - name: Upload audit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: pip-audit-report
+          path: pip-audit-report.json
+          retention-days: 90
+
+      - name: Summary
+        run: |
+          echo "## Dependency Audit Results" >> $GITHUB_STEP_SUMMARY
+          if [ -f pip-audit-report.json ]; then
+            VULN_COUNT=$(python -c "import json; d=json.load(open('pip-audit-report.json')); print(len(d.get('vulnerabilities', d if isinstance(d, list) else [])))")
+            echo "Found **${VULN_COUNT}** vulnerabilities" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  container-scan:
+    name: Container Image Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image for scanning
+        run: |
+          docker build -t spiderfoot:scan-target .
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "spiderfoot:scan-target"
+          format: "sarif"
+          output: "trivy-results.sarif"
+          severity: "CRITICAL,HIGH"
+          exit-code: "0"
+
+      - name: Upload Trivy SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-results.sarif
+
+      - name: Trivy table output
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "spiderfoot:scan-target"
+          format: "table"
+          severity: "CRITICAL,HIGH,MEDIUM"
+          exit-code: "0"
+
+  license-check:
+    name: License Compliance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pip-licenses
+
+      - name: Check licenses
+        run: |
+          pip-licenses --format=json --output-file=licenses.json
+          pip-licenses --format=markdown --output-file=licenses.md
+
+          # Fail on copyleft licenses in production dependencies
+          pip-licenses --fail-on="GPL-3.0;AGPL-3.0" \
+            --allow-only="MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;PSF-2.0;MPL-2.0;LGPL-2.1;LGPL-3.0;Unlicense;CC0-1.0" \
+            || echo "::warning::Some dependencies have restrictive licenses"
+
+      - name: Upload license report
+        uses: actions/upload-artifact@v4
+        with:
+          name: license-report
+          path: |
+            licenses.json
+            licenses.md
+          retention-days: 90
