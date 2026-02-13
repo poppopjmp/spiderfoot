@@ -143,6 +143,25 @@ class ReportListItem(BaseModel):
     created_at: float = 0.0
 
 
+class PDFReportRequest(BaseModel):
+    """Request body for PDF report generation (v5.4.3+)."""
+    scan_id: str = Field(..., description="ID of the scan to generate a PDF for")
+    title: str | None = Field(None, description="Custom report title")
+    template: str = Field("default", description="Report template name")
+    include_executive_summary: bool = Field(True, description="Include AI executive summary")
+    include_charts: bool = Field(True, description="Include data visualizations")
+    include_raw_data: bool = Field(False, description="Append raw event data")
+    llm_enhanced: bool = Field(False, description="Use LLM for narrative enrichment")
+    branding: dict[str, str] | None = Field(None, description="Custom branding overrides")
+
+
+class ExportFormatRequest(BaseModel):
+    """Request body for async export via Celery (v5.4.3+)."""
+    scan_id: str = Field(..., description="ID of the scan to export")
+    format: str = Field("json", description="Export format: json, csv, stix, sarif, excel")
+    filename: str | None = Field(None, description="Custom output filename")
+
+
 # ---------------------------------------------------------------------------
 # Report store helpers (in-memory, replaced by DB in Cycle 9)
 # ---------------------------------------------------------------------------
@@ -663,3 +682,158 @@ else:
         if not delete_stored_report(report_id):
             raise HTTPException(status_code=404, detail="Report not found")
         return None
+
+    # -------------------------------------------------------------------
+    # PDF / Export endpoints (v5.4.3 — Celery-powered)
+    # -------------------------------------------------------------------
+
+    @router.post(
+        "/reports/pdf",
+        response_model=ReportStatusResponse,
+        status_code=202,
+        summary="Generate PDF report (async)",
+        description="Dispatches PDF generation to a Celery worker. Returns report ID for polling.",
+    )
+    async def generate_pdf_report(
+        request: PDFReportRequest,
+        scan_service: ScanService = Depends(get_scan_service),
+    ) -> ReportStatusResponse:
+        """Generate a branded PDF report asynchronously via Celery."""
+        report_id = str(uuid.uuid4())
+
+        # Initialize report record
+        store_report(report_id, {
+            "report_id": report_id,
+            "scan_id": request.scan_id,
+            "title": request.title or f"PDF Report",
+            "status": "pending",
+            "report_type": "pdf",
+            "progress_pct": 0.0,
+            "message": "Queued for PDF generation",
+            "created_at": time.time(),
+        })
+
+        # Dispatch to Celery if available, else generate inline
+        try:
+            from spiderfoot.celery_app import is_celery_available
+            if is_celery_available():
+                from spiderfoot.tasks.report import generate_pdf_report as pdf_task
+                pdf_task.apply_async(
+                    kwargs={
+                        "scan_id": request.scan_id,
+                        "report_id": report_id,
+                        "template": request.template,
+                        "branding": request.branding,
+                        "include_executive_summary": request.include_executive_summary,
+                        "include_charts": request.include_charts,
+                        "include_raw_data": request.include_raw_data,
+                        "llm_enhanced": request.llm_enhanced,
+                    },
+                    queue="report",
+                )
+                return ReportStatusResponse(
+                    report_id=report_id,
+                    scan_id=request.scan_id,
+                    status="pending",
+                    message="PDF generation dispatched to worker",
+                )
+        except Exception as e:
+            log.warning("Celery unavailable for PDF generation: %s", e)
+
+        # Fallback: generate inline (blocking)
+        try:
+            events, scan_meta = _get_scan_events(request.scan_id, scan_service=scan_service)
+            from spiderfoot.reporting.report_formatter import ReportFormatter
+            from spiderfoot.reporting.pdf_renderer import PDFRenderer
+
+            formatter = ReportFormatter()
+            # Build a minimal GeneratedReport for HTML rendering
+            from spiderfoot.reporting.report_generator import GeneratedReport
+            report = GeneratedReport(
+                title=request.title or f"Scan Report: {scan_meta.get('target', 'Unknown')}",
+                scan_id=request.scan_id,
+                sections=[],
+            )
+            html_content = formatter.to_html(report)
+            renderer = PDFRenderer()
+            pdf_bytes = renderer.render(html_content, title=report.title)
+
+            store_report(report_id, {
+                "report_id": report_id,
+                "scan_id": request.scan_id,
+                "status": "completed",
+                "title": report.title,
+                "report_type": "pdf",
+                "progress_pct": 100.0,
+                "message": "PDF generated (inline)",
+                "pdf_size_bytes": len(pdf_bytes),
+                "created_at": time.time(),
+            })
+        except Exception as e:
+            store_report(report_id, {
+                "report_id": report_id,
+                "scan_id": request.scan_id,
+                "status": "failed",
+                "report_type": "pdf",
+                "message": str(e),
+                "created_at": time.time(),
+            })
+
+        return ReportStatusResponse(
+            report_id=report_id,
+            scan_id=request.scan_id,
+            status="pending",
+            message="PDF generation started",
+        )
+
+    @router.post(
+        "/reports/export",
+        response_model=ReportStatusResponse,
+        status_code=202,
+        summary="Export scan data (async)",
+        description="Dispatches data export to a Celery worker. Supports JSON, CSV, STIX, SARIF, Excel.",
+    )
+    async def export_scan_data(
+        request: ExportFormatRequest,
+    ) -> ReportStatusResponse:
+        """Export scan data in the specified format via Celery."""
+        export_id = str(uuid.uuid4())
+
+        store_report(export_id, {
+            "report_id": export_id,
+            "scan_id": request.scan_id,
+            "title": f"Export ({request.format.upper()})",
+            "status": "pending",
+            "report_type": f"export_{request.format}",
+            "message": "Queued for export",
+            "created_at": time.time(),
+        })
+
+        try:
+            from spiderfoot.celery_app import is_celery_available
+            if is_celery_available():
+                from spiderfoot.tasks.export import export_scan_data as export_task
+                export_task.apply_async(
+                    kwargs={
+                        "scan_id": request.scan_id,
+                        "export_format": request.format,
+                        "filename": request.filename,
+                    },
+                    task_id=export_id,
+                    queue="export",
+                )
+                return ReportStatusResponse(
+                    report_id=export_id,
+                    scan_id=request.scan_id,
+                    status="pending",
+                    message=f"Export ({request.format}) dispatched to worker",
+                )
+        except Exception as e:
+            log.warning("Celery unavailable for export: %s", e)
+
+        return ReportStatusResponse(
+            report_id=export_id,
+            scan_id=request.scan_id,
+            status="failed",
+            message="Celery workers required for async export",
+        )
