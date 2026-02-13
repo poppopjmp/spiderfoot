@@ -16,7 +16,7 @@ from .routers import (
     visualization, correlations, rag_correlation, reports,
     health, scan_progress, tasks, webhooks, export, storage,
     engines, schedules, rate_limits, rbac, keys, audit, monitor,
-    stix,
+    stix, sarif,
 )
 from spiderfoot import __version__
 
@@ -137,6 +137,7 @@ _VERSIONED_ROUTERS = [
     (audit.router,            "/api", ["audit"]),
     (monitor.router,          "/api", ["monitoring"]),
     (stix.router,             "/api", ["stix", "taxii"]),
+    (sarif.router,            "/api", ["sarif"]),
     (websocket.router,        "/ws",  ["websockets"]),
 ]
 
