@@ -185,11 +185,11 @@ services:
       SF_RERANKER_API_KEY: ${SF_RERANKER_API_KEY:-}
       SF_RERANKER_TOP_K: ${SF_RERANKER_TOP_K:-10}
       SF_RERANKER_SCORE_THRESHOLD: ${SF_RERANKER_SCORE_THRESHOLD:-0.3}
-      # RAG / LLM settings
+      # RAG / LLM settings (routed through LiteLLM proxy)
       SF_LLM_PROVIDER: ${SF_LLM_PROVIDER:-mock}
       SF_LLM_MODEL: ${SF_LLM_MODEL:-}
-      SF_LLM_API_KEY: ${SF_LLM_API_KEY:-}
-      SF_LLM_API_BASE: ${SF_LLM_API_BASE:-}
+      SF_LLM_API_KEY: ${SF_LLM_API_KEY:-sk-sf-litellm-dev-key}
+      SF_LLM_API_BASE: ${SF_LLM_API_BASE:-http://litellm:4000}
       # Vector correlation settings
       SF_VECTOR_CORRELATION_ENABLED: ${SF_VECTOR_CORRELATION_ENABLED:-true}
       SF_VECTOR_SIMILARITY_THRESHOLD: ${SF_VECTOR_SIMILARITY_THRESHOLD:-0.7}
@@ -501,6 +501,57 @@ services:
         limits:
           cpus: "${PROMETHEUS_CPUS:-1.0}"
           memory: "${PROMETHEUS_MEMORY:-512M}"
+
+  # ---------------------------------------------------------------------------
+  # LiteLLM Proxy — Unified LLM Gateway
+  # ---------------------------------------------------------------------------
+  # Routes all LLM requests through a single API endpoint with:
+  #   - Multi-provider support (OpenAI, Anthropic, Ollama, Azure)
+  #   - Cost tracking & usage analytics
+  #   - Redis-backed response caching
+  #   - Prometheus metrics for LLM operations
+  #   - Model fallback chains
+  # All SpiderFoot services connect to litellm:4000 instead of
+  # individual LLM providers.
+  # ---------------------------------------------------------------------------
+
+  litellm:
+    image: ghcr.io/berriai/litellm:main-v1.74.0
+    container_name: sf-litellm
+    restart: unless-stopped
+    networks:
+      - sf-frontend
+      - sf-backend
+    ports:
+      - "${SF_LITELLM_PORT:-4000}:4000"
+    volumes:
+      - ./infra/litellm/config.yaml:/app/config.yaml:ro
+    environment:
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY:-sk-sf-litellm-dev-key}
+      LITELLM_DATABASE_URL: postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-spiderfoot}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OLLAMA_API_BASE: ${OLLAMA_API_BASE:-http://host.docker.internal:11434}
+      # OTEL tracing to Vector
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://vector:4317"
+      OTEL_SERVICE_NAME: "litellm"
+    command: ["--config", "/app/config.yaml", "--port", "4000", "--num_workers", "2"]
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:4000/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: "${LITELLM_CPUS:-1.0}"
+          memory: "${LITELLM_MEMORY:-512M}"
 
   # ---------------------------------------------------------------------------
   # Jaeger — Distributed Tracing
