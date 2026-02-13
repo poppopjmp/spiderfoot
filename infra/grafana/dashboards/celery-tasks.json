@@ -1,0 +1,318 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "description": "Celery task queue monitoring — workers, tasks, queues, and performance",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 1,
+      "title": "Workers Overview",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 1 }
+            ]
+          }
+        }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
+      "id": 2,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "textMode": "auto"
+      },
+      "title": "Active Workers",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "flower_worker_online",
+          "legendFormat": "Online Workers"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "color": "blue", "value": null }
+            ]
+          }
+        }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
+      "id": 3,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "title": "Tasks Completed (Total)",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "sum(flower_worker_completed_tasks)",
+          "legendFormat": "Completed"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 5 },
+              { "color": "red", "value": 20 }
+            ]
+          }
+        }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 },
+      "id": 4,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "title": "Active Tasks",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "sum(flower_worker_executing_tasks)",
+          "legendFormat": "Active"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 1 },
+              { "color": "red", "value": 5 }
+            ]
+          }
+        }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 1 },
+      "id": 5,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "title": "Failed Tasks",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "sum(flower_events_total{type=\"task-failed\"})",
+          "legendFormat": "Failed"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "id": 10,
+      "title": "Task Throughput",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 20
+          },
+          "unit": "ops"
+        }
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "id": 11,
+      "options": { "tooltip": { "mode": "multi" } },
+      "title": "Task Events Rate",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "rate(flower_events_total{type=\"task-succeeded\"}[5m])",
+          "legendFormat": "Succeeded/s"
+        },
+        {
+          "expr": "rate(flower_events_total{type=\"task-failed\"}[5m])",
+          "legendFormat": "Failed/s"
+        },
+        {
+          "expr": "rate(flower_events_total{type=\"task-received\"}[5m])",
+          "legendFormat": "Received/s"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 10
+          },
+          "unit": "s"
+        }
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+      "id": 12,
+      "options": { "tooltip": { "mode": "multi" } },
+      "title": "Task Runtime Distribution",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "flower_task_runtime_seconds{quantile=\"0.5\"}",
+          "legendFormat": "p50 {{task}}"
+        },
+        {
+          "expr": "flower_task_runtime_seconds{quantile=\"0.95\"}",
+          "legendFormat": "p95 {{task}}"
+        },
+        {
+          "expr": "flower_task_runtime_seconds{quantile=\"0.99\"}",
+          "legendFormat": "p99 {{task}}"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
+      "id": 20,
+      "title": "Queue Depths",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 80
+          },
+          "color": { "mode": "palette-classic" }
+        }
+      },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 15 },
+      "id": 21,
+      "title": "Queue Message Counts",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "flower_queue_length{queue=\"default\"}",
+          "legendFormat": "default"
+        },
+        {
+          "expr": "flower_queue_length{queue=\"scan\"}",
+          "legendFormat": "scan"
+        },
+        {
+          "expr": "flower_queue_length{queue=\"report\"}",
+          "legendFormat": "report"
+        },
+        {
+          "expr": "flower_queue_length{queue=\"export\"}",
+          "legendFormat": "export"
+        },
+        {
+          "expr": "flower_queue_length{queue=\"agents\"}",
+          "legendFormat": "agents"
+        },
+        {
+          "expr": "flower_queue_length{queue=\"monitor\"}",
+          "legendFormat": "monitor"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 23 },
+      "id": 30,
+      "title": "Worker Details",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Status" },
+            "properties": [
+              {
+                "id": "custom.displayMode",
+                "value": "color-background-solid"
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  { "options": { "online": { "color": "green", "text": "ONLINE" } }, "type": "value" },
+                  { "options": { "offline": { "color": "red", "text": "OFFLINE" } }, "type": "value" }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 24 },
+      "id": 31,
+      "title": "Worker Status Table",
+      "type": "table",
+      "targets": [
+        {
+          "expr": "flower_worker_online",
+          "format": "table",
+          "legendFormat": "{{worker}}"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["celery", "spiderfoot", "tasks"],
+  "templating": { "list": [] },
+  "time": { "from": "now-1h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "SpiderFoot — Celery Task Queue",
+  "uid": "sf-celery-tasks",
+  "version": 1
+}

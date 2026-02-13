@@ -86,6 +86,15 @@ scrape_configs:
         labels:
           service: "litellm"
 
+  # Flower (Celery monitoring) metrics (v5.4.4+)
+  - job_name: "celery-flower"
+    metrics_path: "/flower/metrics"
+    static_configs:
+      - targets: ["flower:5555"]
+        labels:
+          service: "celery"
+          component: "flower"
+
   # Prometheus self-monitoring
   - job_name: "prometheus"
     metrics_path: "/prometheus/metrics"
