@@ -4,25 +4,33 @@
 # Traefik replaces Nginx as the reverse-proxy / API gateway.
 # Routing is defined via Docker labels on each service in docker-compose.
 #
-# Dashboard:  http://localhost:8080/dashboard/
-# Web entry:  http://localhost (port 80)
+# All traffic is HTTPS (port 443) with automatic HTTP→HTTPS redirect.
+# Self-signed certs for dev; Let's Encrypt option below for production.
+#
+# Dashboard:  https://localhost/dashboard/
+# Web entry:  https://localhost (port 443)
 # =============================================================================
 
 # --- Entrypoints ---
 entryPoints:
   web:
     address: ":80"
-  # Uncomment for HTTPS with Let's Encrypt or manual certs:
-  # websecure:
-  #   address: ":443"
-  #   http:
-  #     tls:
-  #       certResolver: letsencrypt
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
+  websecure:
+    address: ":443"
+    http:
+      tls: {}
 
 # --- API / Dashboard ---
 api:
   dashboard: true
-  insecure: true          # Dashboard on :8080 without auth (dev mode)
+  # Dashboard is served via an internal router (see dynamic.yml)
+  # No insecure port — everything goes through HTTPS
 
 # --- Docker provider ---
 providers:
@@ -52,12 +60,14 @@ ping:
 # --- Metrics (Prometheus) ---
 metrics:
   prometheus:
-    entryPoint: "web"
+    entryPoint: "websecure"
     addEntryPointsLabels: true
     addServicesLabels: true
     addRoutersLabels: true
 
 # --- Optional: Let's Encrypt ACME ---
+# Uncomment below and set your email.  Remove the tls.certificates section
+# from dynamic.yml when using ACME.
 # certificatesResolvers:
 #   letsencrypt:
 #     acme:
@@ -65,3 +75,4 @@ metrics:
 #       storage: "/letsencrypt/acme.json"
 #       httpChallenge:
 #         entryPoint: web
+#       # tlsChallenge: {}    # Alternative: TLS-ALPN-01

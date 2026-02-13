@@ -1,12 +1,48 @@
 # =============================================================================
-# Traefik Dynamic Configuration — Middlewares & TLS
+# Traefik Dynamic Configuration — Middlewares, TLS & Dashboard
 # =============================================================================
 # Shared middlewares referenced by Docker labels on each service.
 # This file is hot-reloaded by Traefik (watch: true in static config).
 # =============================================================================
 
+# --- TLS certificates (self-signed for dev) ---
+# Generate certs:  ./scripts/generate-traefik-certs.sh
+# For production, use Let's Encrypt (see traefik.yml) and remove this section.
+tls:
+  certificates:
+    - certFile: /certs/spiderfoot.crt
+      keyFile: /certs/spiderfoot.key
+  options:
+    default:
+      minVersion: "VersionTLS12"
+      cipherSuites:
+        - "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"
+        - "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"
+        - "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256"
+      sniStrict: false          # false for self-signed / localhost
+
 http:
+  # --- Traefik dashboard router (served via HTTPS, no separate port) ---
+  routers:
+    dashboard:
+      rule: "PathPrefix(`/dashboard`) || PathPrefix(`/api/overview`)"
+      entryPoints:
+        - websecure
+      tls: {}
+      service: api@internal
+      middlewares:
+        - dashboard-auth
+        - security-headers
+
   middlewares:
+    # --- Dashboard basic auth (default: admin / spiderfoot) ---
+    # Generate new hash:  htpasswd -nB admin
+    dashboard-auth:
+      basicAuth:
+        users:
+          - "${TRAEFIK_DASHBOARD_USER:-admin}:${TRAEFIK_DASHBOARD_PASS:-$$2y$$05$$k7H8LRkHkN0eCmJ4XqYH5eZ0P.f7Q.PqG3XnvFBuX8i3Jm8LoLyXy}"
+        realm: "SpiderFoot Dashboard"
+
     # --- Security headers ---
     security-headers:
       headers:
@@ -14,6 +50,9 @@ http:
         contentTypeNosniff: true
         browserXssFilter: true
         referrerPolicy: "strict-origin-when-cross-origin"
+        stsSeconds: 31536000
+        stsIncludeSubdomains: true
+        stsPreload: true
         customResponseHeaders:
           X-Powered-By: ""
           Server: ""
@@ -59,6 +98,11 @@ http:
         prefixes:
           - "/litellm"
 
+    strip-minio:
+      stripPrefix:
+        prefixes:
+          - "/minio"
+
     # --- Retry on transient failures ---
     retry-middleware:
       retry:
@@ -70,10 +114,3 @@ http:
       buffering:
         maxRequestBodyBytes: 104857600
         memRequestBodyBytes: 2097152
-
-  # --- Optional: default TLS config ---
-  # tls:
-  #   options:
-  #     default:
-  #       minVersion: "VersionTLS12"
-  #       sniStrict: true

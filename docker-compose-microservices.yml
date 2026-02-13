@@ -22,12 +22,13 @@
 #   docker compose -f docker-compose-microservices.yml up --build -d
 #
 # Access:
-#   Web UI           -> http://localhost                (via Traefik)
-#   API (Swagger)    -> http://localhost/api/docs
-#   Traefik Dashboard-> http://localhost:8080/dashboard/
-#   Grafana          -> http://localhost/grafana/
-#   Jaeger           -> http://localhost/jaeger/
-#   Prometheus       -> http://localhost/prometheus/
+#   Web UI           -> https://localhost               (via Traefik)
+#   API (Swagger)    -> https://localhost/api/docs
+#   Dashboard        -> https://localhost/dashboard/     (basic auth)
+#   Grafana          -> https://localhost/grafana/
+#   Jaeger           -> https://localhost/jaeger/
+#   Prometheus       -> https://localhost/prometheus/
+#   MinIO Console    -> https://localhost/minio/
 #
 # All SpiderFoot services share the same Docker image built from /Dockerfile.
 # The service role is selected via SF_SERVICE env var + command override.
@@ -71,14 +72,29 @@ services:
     container_name: sf-minio
     restart: unless-stopped
     networks:
+      - sf-frontend
       - sf-backend
-    ports:
-      - "${SF_MINIO_API_PORT:-9000}:9000"
-      - "${SF_MINIO_CONSOLE_PORT:-9001}:9001"
+    labels:
+      - "traefik.enable=true"
+      # MinIO Console (admin UI)
+      - "traefik.http.routers.minio-console.rule=PathPrefix(`/minio`)"
+      - "traefik.http.routers.minio-console.entrypoints=websecure"
+      - "traefik.http.routers.minio-console.tls=true"
+      - "traefik.http.routers.minio-console.middlewares=security-headers@file"
+      - "traefik.http.routers.minio-console.service=minio-console"
+      - "traefik.http.services.minio-console.loadbalancer.server.port=9001"
+      # MinIO API (S3) — internal services use minio:9000, this route is for external S3 clients
+      - "traefik.http.routers.minio-api.rule=PathPrefix(`/s3`)"
+      - "traefik.http.routers.minio-api.entrypoints=websecure"
+      - "traefik.http.routers.minio-api.tls=true"
+      - "traefik.http.routers.minio-api.middlewares=security-headers@file"
+      - "traefik.http.routers.minio-api.service=minio-api"
+      - "traefik.http.services.minio-api.loadbalancer.server.port=9000"
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-spiderfoot}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-changeme123}
       MINIO_PROMETHEUS_AUTH_TYPE: public
+      MINIO_BROWSER_REDIRECT_URL: ${SF_MINIO_CONSOLE_URL:-https://localhost/minio/}
     volumes:
       - minio-data:/data
     command: server /data --console-address ":9001"
@@ -177,12 +193,14 @@ services:
       - "traefik.enable=true"
       # REST API routes
       - "traefik.http.routers.api.rule=PathPrefix(`/api`)"
-      - "traefik.http.routers.api.entrypoints=web"
+      - "traefik.http.routers.api.entrypoints=websecure"
+      - "traefik.http.routers.api.tls=true"
       - "traefik.http.routers.api.middlewares=rate-limit-api@file,security-headers@file,gzip-compress@file,body-limit@file"
       - "traefik.http.services.api.loadbalancer.server.port=8001"
       # WebSocket for real-time updates
       - "traefik.http.routers.api-ws.rule=PathPrefix(`/api/ws`)"
-      - "traefik.http.routers.api-ws.entrypoints=web"
+      - "traefik.http.routers.api-ws.entrypoints=websecure"
+      - "traefik.http.routers.api-ws.tls=true"
       - "traefik.http.services.api-ws.loadbalancer.server.port=8001"
     environment:
       SF_SERVICE: api
@@ -278,7 +296,8 @@ services:
       - "traefik.enable=true"
       # Catch-all for the Web UI (lowest priority)
       - "traefik.http.routers.webui.rule=PathPrefix(`/`)"
-      - "traefik.http.routers.webui.entrypoints=web"
+      - "traefik.http.routers.webui.entrypoints=websecure"
+      - "traefik.http.routers.webui.tls=true"
       - "traefik.http.routers.webui.priority=1"
       - "traefik.http.routers.webui.middlewares=rate-limit-web@file,security-headers@file,gzip-compress@file"
       - "traefik.http.services.webui.loadbalancer.server.port=5001"
@@ -327,16 +346,15 @@ services:
       - sf-backend
     ports:
       - "${SF_HTTP_PORT:-80}:80"
-      - "${SF_TRAEFIK_DASHBOARD_PORT:-8080}:8080"
-      # Uncomment for HTTPS:
-      # - "${SF_HTTPS_PORT:-443}:443"
+      - "${SF_HTTPS_PORT:-443}:443"
     volumes:
       - ./infra/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
       - ./infra/traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
+      - ./infra/traefik/certs:/certs:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - traefik-logs:/var/log/traefik
-      # Uncomment for Let's Encrypt:
-      # - traefik-certs:/letsencrypt
+      # Uncomment for Let's Encrypt (and remove certs volume above):
+      # - traefik-acme:/letsencrypt
     depends_on:
       api:
         condition: service_healthy
@@ -411,10 +429,6 @@ services:
     restart: unless-stopped
     networks:
       - sf-backend
-    ports:
-      - "9598:9598"    # Prometheus metrics exporter
-      - "4317:4317"    # OTLP gRPC (trace ingestion)
-      - "4318:4318"    # OTLP HTTP (trace ingestion)
     volumes:
       - ./config/vector.toml:/etc/vector/vector.toml:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -499,15 +513,14 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.grafana.rule=PathPrefix(`/grafana`)"
-      - "traefik.http.routers.grafana.entrypoints=web"
+      - "traefik.http.routers.grafana.entrypoints=websecure"
+      - "traefik.http.routers.grafana.tls=true"
       - "traefik.http.routers.grafana.middlewares=security-headers@file"
       - "traefik.http.services.grafana.loadbalancer.server.port=3000"
-    ports:
-      - "${SF_GRAFANA_PORT:-3000}:3000"
     environment:
       GF_SECURITY_ADMIN_USER: ${GF_SECURITY_ADMIN_USER:-admin}
       GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD:-spiderfoot}
-      GF_SERVER_ROOT_URL: ${GF_SERVER_ROOT_URL:-http://localhost/grafana/}
+      GF_SERVER_ROOT_URL: ${GF_SERVER_ROOT_URL:-https://localhost/grafana/}
       GF_SERVER_SERVE_FROM_SUB_PATH: "true"
       GF_AUTH_ANONYMOUS_ENABLED: "true"
       GF_AUTH_ANONYMOUS_ORG_ROLE: "Viewer"
@@ -553,12 +566,11 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.prometheus.rule=PathPrefix(`/prometheus`)"
-      - "traefik.http.routers.prometheus.entrypoints=web"
+      - "traefik.http.routers.prometheus.entrypoints=websecure"
+      - "traefik.http.routers.prometheus.tls=true"
       - "traefik.http.routers.prometheus.middlewares=security-headers@file"
       - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
       - "traefik.docker.network=sf-frontend"
-    ports:
-      - "${SF_PROMETHEUS_PORT:-9090}:9090"
     volumes:
       - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus-data:/prometheus
@@ -632,11 +644,10 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.agents.rule=PathPrefix(`/api/agents`)"
-      - "traefik.http.routers.agents.entrypoints=web"
+      - "traefik.http.routers.agents.entrypoints=websecure"
+      - "traefik.http.routers.agents.tls=true"
       - "traefik.http.routers.agents.middlewares=rate-limit-api@file,security-headers@file,body-limit@file"
       - "traefik.http.services.agents.loadbalancer.server.port=8100"
-    ports:
-      - "${SF_AGENTS_PORT:-8100}:8100"
     environment:
       SF_SERVICE: agents
       SF_AGENTS_HOST: "0.0.0.0"
@@ -694,11 +705,10 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.litellm.rule=PathPrefix(`/litellm`)"
-      - "traefik.http.routers.litellm.entrypoints=web"
+      - "traefik.http.routers.litellm.entrypoints=websecure"
+      - "traefik.http.routers.litellm.tls=true"
       - "traefik.http.routers.litellm.middlewares=strip-litellm@file,security-headers@file"
       - "traefik.http.services.litellm.loadbalancer.server.port=4000"
-    ports:
-      - "${SF_LITELLM_PORT:-4000}:4000"
     volumes:
       - ./infra/litellm/config.yaml:/app/config.yaml:ro
     environment:
@@ -747,13 +757,10 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.jaeger.rule=PathPrefix(`/jaeger`)"
-      - "traefik.http.routers.jaeger.entrypoints=web"
+      - "traefik.http.routers.jaeger.entrypoints=websecure"
+      - "traefik.http.routers.jaeger.tls=true"
       - "traefik.http.routers.jaeger.middlewares=security-headers@file"
       - "traefik.http.services.jaeger.loadbalancer.server.port=16686"
-    ports:
-      - "${SF_JAEGER_UI_PORT:-16686}:16686"    # Jaeger UI
-      - "4317"    # OTLP gRPC (internal, for Vector)
-      - "4318"    # OTLP HTTP (internal, for Vector)
     volumes:
       - ./infra/jaeger/config.yaml:/etc/jaeger/config.yaml:ro
     command: ["--config", "/etc/jaeger/config.yaml"]
