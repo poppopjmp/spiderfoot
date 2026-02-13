@@ -55,13 +55,43 @@
         $("[id^="+activeTab+"_]").prop("checked", false);
     }
 
+    function checkInteractiveModules() {
+        var interactiveChecked = [];
+        $("tr.sf-interactive-module input[type=checkbox]:checked").each(function() {
+            var modId = $(this).attr('id').replace('module_', '');
+            var modName = $(this).closest('tr').find('td:nth-child(2)').text().trim();
+            interactiveChecked.push(modName);
+        });
+
+        var $banner = $('#interactive-warning');
+        if (interactiveChecked.length > 0) {
+            var names = interactiveChecked.join(', ');
+            $banner.html(
+                '<div class="alert alert-warning" style="margin-top: 10px; font-size: 12px;">' +
+                '<i class="glyphicon glyphicon-hand-up"></i>&nbsp;&nbsp;<strong>Interactive modules selected:</strong> ' +
+                names + '<br>' +
+                '<small>These modules require user interaction (e.g. file upload) during each scan run. ' +
+                'You can upload documents via <a href="' + docroot + '/enrichment">Document Upload</a> while the scan is running.</small>' +
+                '</div>'
+            );
+            $banner.show();
+        } else {
+            $banner.hide();
+        }
+    }
+
 $(document).ready(function() {
     $("#usetab").click(function() { switchTab("use"); });
     $("#typetab").click(function() { switchTab("type"); });
     $("#moduletab").click(function() { switchTab("module"); });
-    $("#btn-select-all").click(function() { selectAll(); });
-    $("#btn-deselect-all").click(function() { deselectAll(); });
+    $("#btn-select-all").click(function() { selectAll(); checkInteractiveModules(); });
+    $("#btn-deselect-all").click(function() { deselectAll(); checkInteractiveModules(); });
     
+    // Monitor interactive module checkbox changes
+    $(document).on('change', 'tr.sf-interactive-module input[type=checkbox]', function() {
+        checkInteractiveModules();
+    });
+
     // Handle form submission to ensure JavaScript runs before submit
     $("#btn-run-scan").click(function(e) { 
         e.preventDefault();
@@ -76,4 +106,7 @@ $(document).ready(function() {
     });
 
     $('#scantarget').popover({ 'html': true, 'animation': true, 'trigger': 'focus'});
+
+    // Initial check for interactive modules
+    checkInteractiveModules();
 });
