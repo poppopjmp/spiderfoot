@@ -1,4 +1,5 @@
 import { Outlet, NavLink } from 'react-router-dom';
+import { useState } from 'react';
 import {
   LayoutDashboard,
   Radar,
@@ -24,6 +25,9 @@ import {
   Building2,
   Store,
   Target,
+  ExternalLink,
+  ChevronDown,
+  X,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 
@@ -93,13 +97,28 @@ const navSections: NavSection[] = [
   },
 ];
 
+const SERVICE_LINKS = [
+  { name: 'Grafana', url: '/grafana/', desc: 'Metrics & dashboards' },
+  { name: 'Jaeger', url: '/jaeger/', desc: 'Distributed tracing' },
+  { name: 'Prometheus', url: '/prometheus/', desc: 'Metrics collection' },
+  { name: 'Traefik', url: '/dashboard/', desc: 'Reverse proxy' },
+  { name: 'MinIO', url: '/minio/', desc: 'Object storage' },
+  { name: 'Flower', url: '/flower/', desc: 'Celery task monitor' },
+];
+
 export default function Layout() {
+  const [showAbout, setShowAbout] = useState(false);
+  const [servicesOpen, setServicesOpen] = useState(false);
+
   return (
     <div className="flex h-full">
       {/* Sidebar */}
       <aside className="w-64 bg-dark-900 border-r border-dark-700 flex flex-col">
         {/* Logo */}
-        <div className="flex items-center gap-3 px-6 py-5 border-b border-dark-700">
+        <div
+          className="flex items-center gap-3 px-6 py-5 border-b border-dark-700 cursor-pointer hover:bg-dark-800/50 transition-colors"
+          onClick={() => setShowAbout(true)}
+        >
           <Bug className="h-8 w-8 text-spider-500" />
           <div>
             <h1 className="text-lg font-bold text-white">SpiderFoot</h1>
@@ -156,9 +175,37 @@ export default function Layout() {
           </div>
         </nav>
 
+        {/* Services dropdown */}
+        <div className="px-3 pb-2">
+          <button
+            onClick={() => setServicesOpen(!servicesOpen)}
+            className="w-full flex items-center gap-2 px-3 py-2 text-xs text-dark-400 hover:text-dark-200 hover:bg-dark-800 rounded-lg transition-colors"
+          >
+            <Server className="h-3.5 w-3.5" />
+            <span className="flex-1 text-left">Services</span>
+            <ChevronDown className={clsx('h-3 w-3 transition-transform', servicesOpen && 'rotate-180')} />
+          </button>
+          {servicesOpen && (
+            <div className="mt-1 space-y-0.5 animate-fade-in">
+              {SERVICE_LINKS.map((svc) => (
+                <a
+                  key={svc.name}
+                  href={svc.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-3 py-1.5 text-xs text-dark-400 hover:text-dark-200 hover:bg-dark-800 rounded-lg transition-colors"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  <span className="flex-1">{svc.name}</span>
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* Footer */}
         <div className="px-6 py-4 border-t border-dark-700">
-          <p className="text-xs text-dark-500">SpiderFoot v5.7.5</p>
+          <p className="text-xs text-dark-500">SpiderFoot v5.7.7</p>
         </div>
       </aside>
 
@@ -168,6 +215,40 @@ export default function Layout() {
           <Outlet />
         </div>
       </main>
+
+      {/* About Modal */}
+      {showAbout && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowAbout(false)} />
+          <div className="relative bg-dark-800 border border-dark-700 rounded-2xl p-8 max-w-md w-full shadow-2xl animate-fade-in-up">
+            <button
+              onClick={() => setShowAbout(false)}
+              className="absolute top-4 right-4 text-dark-500 hover:text-dark-300"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <div className="text-center">
+              <Bug className="h-16 w-16 text-spider-500 mx-auto mb-4" />
+              <h2 className="text-xl font-bold text-white">SpiderFoot</h2>
+              <p className="text-dark-400 text-sm mt-1">Open Source Intelligence Automation</p>
+              <p className="text-spider-400 font-mono text-sm mt-3">v5.7.7</p>
+              <div className="mt-6 space-y-2 text-sm text-dark-400">
+                <p>An OSINT automation tool for reconnaissance.</p>
+                <p>
+                  <a
+                    href="https://github.com/smicallef/spiderfoot"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-spider-400 hover:text-spider-300 underline decoration-spider-600/50 underline-offset-2"
+                  >
+                    View on GitHub
+                  </a>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

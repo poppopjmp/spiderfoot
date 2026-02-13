@@ -1,290 +1,333 @@
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState, useEffect } from 'react';
-import { configApi, type Module } from '../lib/api';
 import {
-  Settings as SettingsIcon, Save, RefreshCw, Search,
-  ChevronDown, ChevronRight, AlertTriangle, CheckCircle, Key,
+  configApi, dataApi, type Module,
+} from '../lib/api';
+import {
+  Settings as SettingsIcon, Globe, Key, Upload, Download,
+  RotateCcw, Save, Eye, EyeOff, AlertTriangle,
+  Loader2,
 } from 'lucide-react';
+import {
+  PageHeader, SearchInput, Toast, ConfirmDialog, EmptyState,
+  Skeleton,
+  type ToastType,
+} from '../components/ui';
 
 export default function SettingsPage() {
   const queryClient = useQueryClient();
+  const [activeSection, setActiveSection] = useState('__global__');
   const [search, setSearch] = useState('');
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
+  const [toast, setToast] = useState<{ type: ToastType; message: string } | null>(null);
+  const [confirmReset, setConfirmReset] = useState(false);
   const [editedValues, setEditedValues] = useState<Record<string, string>>({});
-  const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [showPasswords, setShowPasswords] = useState<Set<string>>(new Set());
 
-  // Load current config
-  const { data: configData, isLoading } = useQuery({
+  /* Queries */
+  const { data: configData, isLoading: configLoading } = useQuery({
     queryKey: ['config'],
     queryFn: configApi.get,
   });
-
-  // Load modules (for module-specific settings)
   const { data: modulesData } = useQuery({
-    queryKey: ['config-modules'],
-    queryFn: configApi.modules,
-  });
-
-  // Config summary
-  const { data: summaryData } = useQuery({
-    queryKey: ['config-summary'],
-    queryFn: configApi.summary,
+    queryKey: ['modules', { page: 1, page_size: 500 }],
+    queryFn: () => dataApi.modules({ page: 1, page_size: 500 }),
   });
 
   const config = configData?.config ?? {};
-  const version = configData?.version ?? '';
-  const modules = modulesData?.modules ?? [];
+  const modules: Module[] = modulesData?.data ?? [];
 
-  // Group settings by section prefix
-  const sections: Record<string, { key: string; value: unknown }[]> = {};
-  for (const [key, value] of Object.entries(config)) {
-    // Settings like _socks_type, __logging, sfp_module:setting
-    let section = 'General';
-    if (key.startsWith('sfp_')) {
-      const parts = key.split(':');
-      section = parts[0]; // module name
-    } else if (key.startsWith('__')) {
-      section = 'Internal';
-    } else if (key.startsWith('_')) {
-      section = 'Global';
-    }
-    if (!sections[section]) sections[section] = [];
-    sections[section].push({ key, value });
-  }
+  /* Separate global vs module options */
+  const globalOptions = useMemo(() => {
+    return Object.entries(config).filter(([k]) => !k.includes(':'));
+  }, [config]);
 
-  // Sort sections: Global first, then modules
-  const sortedSections = Object.entries(sections).sort(([a], [b]) => {
-    if (a === 'General') return -1;
-    if (b === 'General') return 1;
-    if (a === 'Global') return -1;
-    if (b === 'Global') return 1;
-    if (a === 'Internal') return 1;
-    if (b === 'Internal') return -1;
-    return a.localeCompare(b);
-  });
-
-  // Filter by search
-  const filteredSections = search
-    ? sortedSections
-        .map(([name, items]) => [
-          name,
-          items.filter(
-            (item) =>
-              item.key.toLowerCase().includes(search.toLowerCase()) ||
-              String(item.value).toLowerCase().includes(search.toLowerCase()),
-          ),
-        ] as [string, { key: string; value: unknown }[]])
-        .filter(([, items]) => items.length > 0)
-    : sortedSections;
-
-  const toggleSection = (name: string) => {
-    setExpandedSections((prev) => {
-      const next = new Set(prev);
-      if (next.has(name)) next.delete(name); else next.add(name);
-      return next;
+  const moduleOptionMap = useMemo(() => {
+    const map = new Map<string, [string, unknown][]>();
+    Object.entries(config).forEach(([k, v]) => {
+      if (!k.includes(':')) return;
+      const [mod, ...rest] = k.split(':');
+      if (!map.has(mod)) map.set(mod, []);
+      map.get(mod)!.push([rest.join(':'), v]);
     });
-  };
+    return map;
+  }, [config]);
 
-  const handleValueChange = (key: string, value: string) => {
-    setEditedValues((prev) => ({ ...prev, [key]: value }));
-  };
+  /* Sidebar sections */
+  const sections = useMemo(() => {
+    const items: { key: string; label: string; count: number; hasApiKey: boolean }[] = [
+      { key: '__global__', label: 'Global Settings', count: globalOptions.length, hasApiKey: false },
+    ];
+    const sorted = [...moduleOptionMap.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+    for (const [mod, opts] of sorted) {
+      const modInfo = modules.find((m) => m.name === mod);
+      const hasApiKey = opts.some(([k]) => k.toLowerCase().includes('api_key') || k.toLowerCase().includes('apikey'));
+      items.push({
+        key: mod,
+        label: modInfo ? mod.replace('sfp_', '') : mod,
+        count: opts.length,
+        hasApiKey,
+      });
+    }
+    if (search) {
+      const q = search.toLowerCase();
+      return items.filter((i) => i.label.toLowerCase().includes(q) || i.key.toLowerCase().includes(q));
+    }
+    return items;
+  }, [globalOptions, moduleOptionMap, modules, search]);
 
-  // Save mutation
-  const saveConfig = useMutation({
+  /* Current section options */
+  const currentOptions = useMemo(() => {
+    if (activeSection === '__global__') return globalOptions;
+    return moduleOptionMap.get(activeSection)?.map(([k, v]) => [`${activeSection}:${k}`, v] as [string, unknown]) ?? [];
+  }, [activeSection, globalOptions, moduleOptionMap]);
+
+  /* Save */
+  const saveMut = useMutation({
     mutationFn: (options: Record<string, unknown>) => configApi.update(options),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['config'] });
       setEditedValues({});
-      setSaveMessage({ type: 'success', text: 'Settings saved successfully.' });
-      setTimeout(() => setSaveMessage(null), 3000);
+      setToast({ type: 'success', message: 'Settings saved' });
     },
-    onError: (err: Error) => {
-      setSaveMessage({ type: 'error', text: `Failed to save: ${err.message}` });
-    },
+    onError: () => setToast({ type: 'error', message: 'Failed to save settings' }),
   });
 
-  const reloadConfig = useMutation({
-    mutationFn: configApi.reload,
-    onSuccess: () => {
+  /* Import/Export */
+  const handleExport = async () => {
+    try {
+      const data = await configApi.exportConfig();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'spiderfoot-config.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      setToast({ type: 'success', message: 'Configuration exported' });
+    } catch {
+      setToast({ type: 'error', message: 'Export failed' });
+    }
+  };
+
+  const handleImport = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const parsed = JSON.parse(text);
+        await configApi.importConfig(parsed);
+        queryClient.invalidateQueries({ queryKey: ['config'] });
+        setToast({ type: 'success', message: 'Configuration imported' });
+      } catch {
+        setToast({ type: 'error', message: 'Import failed — invalid JSON' });
+      }
+    };
+    input.click();
+  };
+
+  /* Reset */
+  const handleReset = async () => {
+    try {
+      await configApi.replace({});
       queryClient.invalidateQueries({ queryKey: ['config'] });
-      queryClient.invalidateQueries({ queryKey: ['config-summary'] });
-      setSaveMessage({ type: 'success', text: 'Configuration reloaded.' });
-      setTimeout(() => setSaveMessage(null), 3000);
-    },
-  });
+      setConfirmReset(false);
+      setEditedValues({});
+      setToast({ type: 'success', message: 'Reset to factory defaults' });
+    } catch {
+      setToast({ type: 'error', message: 'Reset failed' });
+    }
+  };
 
   const handleSave = () => {
     if (Object.keys(editedValues).length === 0) return;
-    saveConfig.mutate(editedValues);
+    saveMut.mutate(editedValues);
   };
 
-  const hasChanges = Object.keys(editedValues).length > 0;
+  const togglePassword = (key: string) => {
+    const next = new Set(showPasswords);
+    next.has(key) ? next.delete(key) : next.add(key);
+    setShowPasswords(next);
+  };
 
-  // Find module description
-  const getModuleInfo = (name: string): Module | undefined =>
-    modules.find((m) => m.name === name);
+  const isApiKey = (key: string) => {
+    const k = key.toLowerCase();
+    return k.includes('api_key') || k.includes('apikey') || k.includes('password') || k.includes('secret');
+  };
+
+  const activeModule = modules.find((m) => m.name === activeSection);
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Settings</h1>
-          {version && <p className="text-dark-400 text-sm mt-1">Version: {version}</p>}
-        </div>
-        <div className="flex items-center gap-3">
-          <button
-            className="btn-secondary flex items-center gap-2"
-            onClick={() => reloadConfig.mutate()}
-            disabled={reloadConfig.isPending}
-          >
-            <RefreshCw className={`h-4 w-4 ${reloadConfig.isPending ? 'animate-spin' : ''}`} />
-            Reload
+    <div className="space-y-6">
+      <PageHeader title="Settings" subtitle="Configure SpiderFoot options and API keys">
+        <div className="flex gap-2">
+          <button className="btn-secondary text-sm" onClick={handleImport}>
+            <Upload className="h-3.5 w-3.5" /> Import
           </button>
-          <button
-            className="btn-primary flex items-center gap-2"
-            onClick={handleSave}
-            disabled={!hasChanges || saveConfig.isPending}
-          >
-            <Save className="h-4 w-4" />
-            {saveConfig.isPending ? 'Saving...' : `Save${hasChanges ? ` (${Object.keys(editedValues).length})` : ''}`}
+          <button className="btn-secondary text-sm" onClick={handleExport}>
+            <Download className="h-3.5 w-3.5" /> Export
+          </button>
+          <button className="btn-ghost text-sm text-red-400" onClick={() => setConfirmReset(true)}>
+            <RotateCcw className="h-3.5 w-3.5" /> Reset
           </button>
         </div>
-      </div>
+      </PageHeader>
 
-      {/* Save message */}
-      {saveMessage && (
-        <div className={`mb-4 p-3 rounded-lg flex items-center gap-2 text-sm ${
-          saveMessage.type === 'success'
-            ? 'bg-green-900/30 text-green-400 border border-green-800'
-            : 'bg-red-900/30 text-red-400 border border-red-800'
-        }`}>
-          {saveMessage.type === 'success' ? <CheckCircle className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
-          {saveMessage.text}
-        </div>
-      )}
-
-      {/* Summary cards */}
-      {summaryData?.sections && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          {Object.entries(summaryData.sections as Record<string, object>)
-            .slice(0, 8)
-            .map(([name]) => (
-              <div
-                key={name}
-                className="card py-3 px-4 cursor-pointer hover:border-spider-600 transition-colors"
-                onClick={() => {
-                  setSearch(name);
-                  setExpandedSections(new Set([name]));
-                }}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Sidebar */}
+        <div className="card p-0 overflow-hidden h-fit lg:sticky lg:top-4">
+          <div className="p-3 border-b border-dark-700/50">
+            <SearchInput value={search} onChange={setSearch} placeholder="Find section..." className="w-full" />
+          </div>
+          <div className="overflow-y-auto max-h-[600px]">
+            {sections.map((s) => (
+              <button
+                key={s.key}
+                onClick={() => setActiveSection(s.key)}
+                className={`w-full flex items-center justify-between px-3 py-2.5 text-left text-sm transition-colors ${
+                  activeSection === s.key
+                    ? 'bg-spider-600/10 text-spider-400 border-l-2 border-spider-500'
+                    : 'text-dark-300 hover:bg-dark-700/30 border-l-2 border-transparent'
+                }`}
               >
-                <p className="text-white font-medium text-sm capitalize">{name}</p>
-                <p className="text-dark-400 text-xs">
-                  {sections[name]?.length ?? 0} settings
-                </p>
-              </div>
+                <div className="flex items-center gap-2 min-w-0">
+                  {s.key === '__global__' ? (
+                    <Globe className="h-3.5 w-3.5 flex-shrink-0 text-dark-500" />
+                  ) : s.hasApiKey ? (
+                    <Key className="h-3.5 w-3.5 flex-shrink-0 text-yellow-500" />
+                  ) : (
+                    <SettingsIcon className="h-3.5 w-3.5 flex-shrink-0 text-dark-600" />
+                  )}
+                  <span className="truncate">{s.label}</span>
+                </div>
+                <span className="text-xs text-dark-600 tabular-nums">{s.count}</span>
+              </button>
             ))}
+          </div>
         </div>
-      )}
 
-      {/* Search */}
-      <div className="relative mb-6">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dark-400" />
-        <input
-          className="input-field pl-10"
-          placeholder="Search settings (key or value)..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+        {/* Options Panel */}
+        <div className="lg:col-span-3 space-y-4">
+          {/* Module info header */}
+          {activeSection !== '__global__' && activeModule && (
+            <div className="card animate-fade-in">
+              <h3 className="text-sm font-semibold text-white">{activeSection}</h3>
+              <p className="text-xs text-dark-400 mt-1">
+                {activeModule.descr || activeModule.description || 'No description available.'}
+              </p>
+              {activeModule.provides && activeModule.provides.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {activeModule.provides.slice(0, 6).map((p) => (
+                    <span key={p} className="badge badge-info text-[10px]">{p}</span>
+                  ))}
+                  {activeModule.provides.length > 6 && (
+                    <span className="text-xs text-dark-500">+{activeModule.provides.length - 6} more</span>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Options */}
+          <div className="card animate-fade-in">
+            {configLoading ? (
+              <div className="space-y-4">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="space-y-2">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-10 w-full" />
+                  </div>
+                ))}
+              </div>
+            ) : currentOptions.length > 0 ? (
+              <div className="space-y-5">
+                {currentOptions.map(([key, val]) => {
+                  const editedVal = editedValues[key as string];
+                  const currentVal = editedVal ?? String(val ?? '');
+                  const isSensitive = isApiKey(key as string);
+                  const isHidden = isSensitive && !showPasswords.has(key as string);
+                  const optKey = key as string;
+                  const shortKey = optKey.includes(':') ? optKey.split(':').slice(1).join(':') : optKey;
+
+                  return (
+                    <div key={optKey}>
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <label className="text-sm text-dark-300 font-medium">{shortKey}</label>
+                        {isSensitive && (
+                          <button
+                            onClick={() => togglePassword(optKey)}
+                            className="text-dark-500 hover:text-dark-300 transition-colors"
+                          >
+                            {isHidden ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                          </button>
+                        )}
+                        {isSensitive && !currentVal && (
+                          <span className="text-yellow-500 text-[10px] flex items-center gap-0.5">
+                            <AlertTriangle className="h-3 w-3" /> Not set
+                          </span>
+                        )}
+                        {editedVal !== undefined && (
+                          <span className="text-spider-400 text-[10px]">Modified</span>
+                        )}
+                      </div>
+                      <input
+                        type={isHidden ? 'password' : 'text'}
+                        className="input-field text-sm font-mono"
+                        value={currentVal}
+                        onChange={(e) => {
+                          setEditedValues((prev) => ({ ...prev, [optKey]: e.target.value }));
+                        }}
+                        placeholder={isSensitive ? 'Enter API key...' : ''}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <EmptyState
+                icon={SettingsIcon}
+                title="No options"
+                description="This section has no configurable options."
+              />
+            )}
+          </div>
+
+          {/* Save Bar */}
+          {Object.keys(editedValues).length > 0 && (
+            <div className="sticky bottom-4 card flex items-center justify-between animate-fade-in-up border border-spider-600/30">
+              <p className="text-sm text-dark-300">
+                {Object.keys(editedValues).length} unsaved change(s)
+              </p>
+              <div className="flex gap-2">
+                <button className="btn-secondary" onClick={() => setEditedValues({})}>Discard</button>
+                <button className="btn-primary" onClick={handleSave} disabled={saveMut.isPending}>
+                  {saveMut.isPending ? (
+                    <><Loader2 className="h-4 w-4 animate-spin" /> Saving...</>
+                  ) : (
+                    <><Save className="h-4 w-4" /> Save Changes</>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Settings sections */}
-      {isLoading ? (
-        <div className="flex items-center justify-center h-40">
-          <div className="animate-spin h-6 w-6 border-2 border-spider-500 border-t-transparent rounded-full" />
-        </div>
-      ) : filteredSections.length > 0 ? (
-        <div className="space-y-2">
-          {filteredSections.map(([sectionName, items]) => {
-            const moduleInfo = sectionName.startsWith('sfp_') ? getModuleInfo(sectionName) : undefined;
-            const isExpanded = expandedSections.has(sectionName);
+      {/* Dialogs */}
+      <ConfirmDialog
+        open={confirmReset}
+        title="Reset to Factory Defaults"
+        message="This will reset ALL settings to their factory defaults. API keys and custom configurations will be lost."
+        confirmLabel="Reset Everything"
+        danger
+        onConfirm={handleReset}
+        onCancel={() => setConfirmReset(false)}
+      />
 
-            return (
-              <div key={sectionName} className="border border-dark-700 rounded-lg overflow-hidden">
-                <button
-                  onClick={() => toggleSection(sectionName)}
-                  className="w-full flex items-center justify-between p-4 bg-dark-800 hover:bg-dark-700/80 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    {isExpanded ? (
-                      <ChevronDown className="h-4 w-4 text-dark-400" />
-                    ) : (
-                      <ChevronRight className="h-4 w-4 text-dark-400" />
-                    )}
-                    <div className="text-left">
-                      <span className="text-white font-medium text-sm">
-                        {sectionName.startsWith('sfp_') ? (
-                          <>
-                            <span className="font-mono">{sectionName}</span>
-                            {moduleInfo && (
-                              <span className="text-dark-400 font-normal ml-2">
-                                — {moduleInfo.description || moduleInfo.descr}
-                              </span>
-                            )}
-                          </>
-                        ) : (
-                          sectionName
-                        )}
-                      </span>
-                    </div>
-                  </div>
-                  <span className="text-dark-400 text-xs">{items.length} setting{items.length !== 1 ? 's' : ''}</span>
-                </button>
-
-                {isExpanded && (
-                  <div className="divide-y divide-dark-700/50">
-                    {items.map((item) => {
-                      const currentValue = editedValues[item.key] ?? String(item.value ?? '');
-                      const isEdited = item.key in editedValues;
-                      const isApiKey = item.key.toLowerCase().includes('api_key') ||
-                                       item.key.toLowerCase().includes('apikey') ||
-                                       item.key.toLowerCase().includes('password') ||
-                                       item.key.toLowerCase().includes('secret');
-
-                      return (
-                        <div key={item.key} className="p-4 hover:bg-dark-700/20">
-                          <div className="flex items-start gap-4">
-                            <div className="flex-1 min-w-0">
-                              <label className="text-sm text-dark-200 flex items-center gap-2">
-                                <span className="font-mono text-xs">{item.key}</span>
-                                {isApiKey && <Key className="h-3 w-3 text-yellow-500" />}
-                                {isEdited && <span className="text-spider-400 text-xs">(modified)</span>}
-                              </label>
-                              <input
-                                type={isApiKey ? 'password' : 'text'}
-                                className={`input-field mt-1 text-sm ${isEdited ? 'border-spider-500' : ''}`}
-                                value={currentValue}
-                                onChange={(e) => handleValueChange(item.key, e.target.value)}
-                                placeholder="(empty)"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      ) : (
-        <div className="card text-center py-12">
-          <SettingsIcon className="h-12 w-12 mx-auto text-dark-600 mb-3" />
-          <p className="text-dark-400">
-            {search ? `No settings match "${search}"` : 'No configuration loaded. Is the API running?'}
-          </p>
-        </div>
-      )}
+      {toast && <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />}
     </div>
   );
 }

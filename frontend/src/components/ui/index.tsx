@@ -1,0 +1,405 @@
+/**
+ * Shared UI primitives — used across all pages.
+ * Follows emotional design principles:
+ * - Micro-interactions that delight (hover lifts, press effects)
+ * - Progressive disclosure (expandable sections, tooltips)
+ * - Helpful empty states with actionable guidance
+ * - Loading skeletons instead of spinners where possible
+ * - Contextual feedback (toast, inline success)
+ */
+
+import { clsx } from 'clsx';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import {
+  ChevronDown, ChevronRight, Copy, Check, Search,
+  AlertCircle, X, Info, CheckCircle2,
+} from 'lucide-react';
+
+/* ── Page Header ──────────────────────────────────────────── */
+export function PageHeader({
+  title, subtitle, children, className,
+}: {
+  title: string; subtitle?: string; children?: React.ReactNode; className?: string;
+}) {
+  return (
+    <div className={clsx('flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 animate-fade-in', className)}>
+      <div>
+        <h1 className="text-2xl font-bold text-white tracking-tight">{title}</h1>
+        {subtitle && <p className="text-dark-400 mt-1 text-sm">{subtitle}</p>}
+      </div>
+      {children && <div className="flex items-center gap-3 flex-shrink-0">{children}</div>}
+    </div>
+  );
+}
+
+/* ── Stat Card ────────────────────────────────────────────── */
+export function StatCard({
+  label, value, icon: Icon, color = 'text-spider-400', loading, delay = 0,
+  trend, trendLabel,
+}: {
+  label: string;
+  value: number | string;
+  icon: React.ComponentType<{ className?: string }>;
+  color?: string;
+  loading?: boolean;
+  delay?: number;
+  trend?: 'up' | 'down' | 'flat';
+  trendLabel?: string;
+}) {
+  return (
+    <div
+      className="card-hover flex items-center gap-4"
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      <div className={clsx('p-3 rounded-xl bg-dark-700/50', color)}>
+        <Icon className="h-6 w-6" />
+      </div>
+      <div className="flex-1 min-w-0">
+        {loading ? (
+          <div className="skeleton h-7 w-16 mb-1" />
+        ) : (
+          <p className="text-2xl font-bold text-white animate-count-up">{value}</p>
+        )}
+        <p className="text-xs text-dark-400 truncate">{label}</p>
+      </div>
+      {trend && trendLabel && (
+        <span className={clsx('text-xs font-medium', {
+          'text-green-400': trend === 'up',
+          'text-red-400': trend === 'down',
+          'text-dark-500': trend === 'flat',
+        })}>
+          {trend === 'up' ? '↑' : trend === 'down' ? '↓' : '–'} {trendLabel}
+        </span>
+      )}
+    </div>
+  );
+}
+
+/* ── Search Input ─────────────────────────────────────────── */
+export function SearchInput({
+  value, onChange, placeholder = 'Search...', className,
+}: {
+  value: string; onChange: (v: string) => void; placeholder?: string; className?: string;
+}) {
+  return (
+    <div className={clsx('relative', className)}>
+      <Search className="h-4 w-4 text-dark-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+      <input
+        type="text"
+        className="input-search"
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
+      {value && (
+        <button
+          onClick={() => onChange('')}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-500 hover:text-dark-300 transition-colors"
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+      )}
+    </div>
+  );
+}
+
+/* ── Copy Button ──────────────────────────────────────────── */
+export function CopyButton({ text, className }: { text: string; className?: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const copy = useCallback(() => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, [text]);
+
+  return (
+    <button
+      onClick={copy}
+      className={clsx('btn-icon transition-all', className)}
+      title={copied ? 'Copied!' : 'Copy'}
+    >
+      {copied ? (
+        <Check className="h-3.5 w-3.5 text-green-400" />
+      ) : (
+        <Copy className="h-3.5 w-3.5" />
+      )}
+    </button>
+  );
+}
+
+/* ── Expandable Section ───────────────────────────────────── */
+export function Expandable({
+  title, children, defaultOpen = false, badge, className,
+}: {
+  title: string; children: React.ReactNode; defaultOpen?: boolean; badge?: React.ReactNode; className?: string;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+
+  return (
+    <div className={clsx('border border-dark-700/50 rounded-lg overflow-hidden', className)}>
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-dark-200 hover:bg-dark-700/30 transition-colors"
+      >
+        {open ? <ChevronDown className="h-4 w-4 text-dark-500" /> : <ChevronRight className="h-4 w-4 text-dark-500" />}
+        <span className="flex-1 text-left">{title}</span>
+        {badge}
+      </button>
+      {open && (
+        <div className="px-4 pb-4 animate-fade-in">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── Empty State ──────────────────────────────────────────── */
+export function EmptyState({
+  icon: Icon, title, description, action, className,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  description?: string;
+  action?: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={clsx('empty-state animate-fade-in-up', className)}>
+      <Icon className="empty-state-icon" />
+      <h3 className="empty-state-title">{title}</h3>
+      {description && <p className="empty-state-text">{description}</p>}
+      {action && <div className="mt-6">{action}</div>}
+    </div>
+  );
+}
+
+/* ── Skeleton / Loading ───────────────────────────────────── */
+export function Skeleton({ className }: { className?: string }) {
+  return <div className={clsx('skeleton', className)} />;
+}
+
+export function TableSkeleton({ rows = 5, cols = 4 }: { rows?: number; cols?: number }) {
+  return (
+    <div className="space-y-3">
+      {Array.from({ length: rows }).map((_, i) => (
+        <div key={i} className="flex gap-4" style={{ animationDelay: `${i * 80}ms` }}>
+          {Array.from({ length: cols }).map((_, j) => (
+            <Skeleton key={j} className={clsx('h-5 rounded', j === 0 ? 'w-1/3' : 'w-1/6')} />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ── Toast / Notification ─────────────────────────────────── */
+export type ToastType = 'success' | 'error' | 'info' | 'warning';
+
+const toastConfig: Record<ToastType, { icon: typeof CheckCircle2; color: string; bg: string }> = {
+  success: { icon: CheckCircle2, color: 'text-green-400', bg: 'bg-green-900/20 border-green-800/30' },
+  error: { icon: AlertCircle, color: 'text-red-400', bg: 'bg-red-900/20 border-red-800/30' },
+  info: { icon: Info, color: 'text-blue-400', bg: 'bg-blue-900/20 border-blue-800/30' },
+  warning: { icon: AlertCircle, color: 'text-yellow-400', bg: 'bg-yellow-900/20 border-yellow-800/30' },
+};
+
+export function Toast({
+  type = 'info', message, onClose,
+}: {
+  type?: ToastType; message: string; onClose: () => void;
+}) {
+  const cfg = toastConfig[type];
+  const Icon = cfg.icon;
+
+  useEffect(() => {
+    const t = setTimeout(onClose, 5000);
+    return () => clearTimeout(t);
+  }, [onClose]);
+
+  return (
+    <div className={clsx(
+      'animate-toast fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-xl border shadow-2xl max-w-sm',
+      cfg.bg,
+    )}>
+      <Icon className={clsx('h-5 w-5 flex-shrink-0', cfg.color)} />
+      <p className="text-sm text-dark-100 flex-1">{message}</p>
+      <button onClick={onClose} className="text-dark-400 hover:text-dark-200">
+        <X className="h-4 w-4" />
+      </button>
+    </div>
+  );
+}
+
+/* ── Confirm Dialog ───────────────────────────────────────── */
+export function ConfirmDialog({
+  open, title, message, confirmLabel = 'Confirm', danger = false,
+  onConfirm, onCancel,
+}: {
+  open: boolean; title: string; message: string; confirmLabel?: string; danger?: boolean;
+  onConfirm: () => void; onCancel: () => void;
+}) {
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onCancel} />
+      <div className="relative bg-dark-800 border border-dark-700 rounded-2xl p-6 max-w-md w-full shadow-2xl animate-fade-in-up">
+        <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
+        <p className="text-sm text-dark-300 mb-6">{message}</p>
+        <div className="flex justify-end gap-3">
+          <button className="btn-secondary" onClick={onCancel}>Cancel</button>
+          <button className={danger ? 'btn-danger' : 'btn-primary'} onClick={onConfirm}>
+            {confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Progress Bar ─────────────────────────────────────────── */
+export function ProgressBar({
+  value, max = 100, color = 'bg-spider-500', className, showLabel = false,
+}: {
+  value: number; max?: number; color?: string; className?: string; showLabel?: boolean;
+}) {
+  const pct = Math.min(100, Math.round((value / max) * 100));
+  return (
+    <div className={clsx('flex items-center gap-2', className)}>
+      <div className="progress-bar flex-1">
+        <div className={clsx('progress-fill animate-progress', color)} style={{ width: `${pct}%` }} />
+      </div>
+      {showLabel && <span className="text-xs text-dark-400 w-8 text-right tabular-nums">{pct}%</span>}
+    </div>
+  );
+}
+
+/* ── Dropdown Menu ────────────────────────────────────────── */
+export function DropdownMenu({
+  trigger, children, align = 'right',
+}: {
+  trigger: React.ReactNode; children: React.ReactNode; align?: 'left' | 'right';
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  return (
+    <div className="relative" ref={ref}>
+      <div onClick={() => setOpen(!open)}>{trigger}</div>
+      {open && (
+        <div
+          className={clsx(
+            'absolute z-40 mt-1 min-w-[180px] bg-dark-800 border border-dark-700 rounded-xl shadow-2xl py-1 animate-fade-in',
+            align === 'right' ? 'right-0' : 'left-0',
+          )}
+          onClick={() => setOpen(false)}
+        >
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function DropdownItem({
+  children, onClick, danger, disabled, icon: Icon,
+}: {
+  children: React.ReactNode; onClick?: () => void; danger?: boolean; disabled?: boolean;
+  icon?: React.ComponentType<{ className?: string }>;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={clsx(
+        'w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left transition-colors',
+        danger
+          ? 'text-red-400 hover:bg-red-900/20'
+          : 'text-dark-200 hover:bg-dark-700/60',
+        disabled && 'opacity-40 cursor-not-allowed',
+      )}
+    >
+      {Icon && <Icon className="h-4 w-4 flex-shrink-0" />}
+      {children}
+    </button>
+  );
+}
+
+/* ── Status Badge (scan-aware) ────────────────────────────── */
+export function StatusBadge({ status }: { status: string }) {
+  const s = status?.toUpperCase() ?? '';
+  const dotClass = s.includes('RUNNING') || s.includes('STARTING') ? 'status-dot-running'
+    : s === 'FINISHED' ? 'status-dot-finished'
+    : s === 'ERROR-FAILED' ? 'status-dot-failed'
+    : s.includes('ABORT') || s.includes('STOP') ? 'status-dot-aborted'
+    : 'status-dot bg-dark-500';
+
+  const badgeClass = s.includes('RUNNING') || s.includes('STARTING') ? 'badge bg-blue-900/30 text-blue-300 ring-1 ring-blue-800/30'
+    : s === 'FINISHED' ? 'badge-success'
+    : s === 'ERROR-FAILED' ? 'badge-critical'
+    : s.includes('ABORT') || s.includes('STOP') ? 'badge-medium'
+    : 'badge-info';
+
+  return (
+    <span className={clsx('badge', badgeClass)}>
+      <span className={dotClass} />
+      {status}
+    </span>
+  );
+}
+
+/* ── Risk Pills (correlation summary row) ─────────────────── */
+export function RiskPills({
+  high = 0, medium = 0, low = 0, info = 0,
+}: {
+  high?: number; medium?: number; low?: number; info?: number;
+}) {
+  if (!high && !medium && !low && !info) return <span className="text-dark-600 text-xs">—</span>;
+  return (
+    <div className="flex items-center gap-1.5">
+      {high > 0 && <span className="risk-pill risk-pill-high">{high} H</span>}
+      {medium > 0 && <span className="risk-pill risk-pill-medium">{medium} M</span>}
+      {low > 0 && <span className="risk-pill risk-pill-low">{low} L</span>}
+      {info > 0 && <span className="risk-pill risk-pill-info">{info} I</span>}
+    </div>
+  );
+}
+
+/* ── Tabs Component ───────────────────────────────────────── */
+export function Tabs<T extends string>({
+  tabs, active, onChange,
+}: {
+  tabs: { key: T; label: string; icon?: React.ComponentType<{ className?: string }>; count?: number }[];
+  active: T;
+  onChange: (tab: T) => void;
+}) {
+  return (
+    <div className="tab-bar">
+      {tabs.map((t) => (
+        <button
+          key={t.key}
+          onClick={() => onChange(t.key)}
+          className={active === t.key ? 'tab-button-active' : 'tab-button'}
+        >
+          {t.icon && <t.icon className="h-4 w-4" />}
+          {t.label}
+          {t.count != null && (
+            <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded-full bg-dark-700/60 text-dark-400">
+              {t.count}
+            </span>
+          )}
+        </button>
+      ))}
+    </div>
+  );
+}
