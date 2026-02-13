@@ -5,18 +5,36 @@
 #   - webui     : CherryPy web UI   (proxies all data through API)
 #   - redis     : event bus + cache
 #   - postgres  : persistent data store
-#   - nginx     : reverse proxy / API gateway
+#   - traefik   : reverse proxy / API gateway  (replaces nginx since v5.3.17)
+#   - tika      : Apache Tika full — document text/metadata extraction
+#   - agents    : AI-powered analysis agents  (LLM via LiteLLM)
+#   - litellm   : unified LLM gateway (OpenAI, Anthropic, Ollama, …)
+#   - vector    : telemetry pipeline  (logs → Loki, traces → Jaeger)
+#   - loki      : log aggregation
+#   - grafana   : dashboards & observability
+#   - prometheus: metrics collection
+#   - jaeger    : distributed tracing
+#   - qdrant    : vector DB for RAG / correlations
+#   - minio     : S3-compatible object storage
 #
 # Usage:
 #   cp docker/env.example .env         # customise settings
 #   docker compose -f docker-compose-microservices.yml up --build -d
 #
 # Access:
-#   Web UI  -> http://localhost                (via nginx)
-#   API     -> http://localhost/api/docs       (Swagger UI)
+#   Web UI           -> http://localhost                (via Traefik)
+#   API (Swagger)    -> http://localhost/api/docs
+#   Traefik Dashboard-> http://localhost:8080/dashboard/
+#   Grafana          -> http://localhost/grafana/
+#   Jaeger           -> http://localhost/jaeger/
+#   Prometheus       -> http://localhost/prometheus/
 #
-# All services share the same Docker image built from /Dockerfile.
+# All SpiderFoot services share the same Docker image built from /Dockerfile.
 # The service role is selected via SF_SERVICE env var + command override.
+#
+# Document analysis is handled by the sfp_document_analyzer plugin which
+# communicates with the Tika container — no separate enrichment/user-input
+# services are needed.
 # =============================================================================
 
 # Shared build definition (anchored for YAML reuse)
@@ -101,7 +119,6 @@ services:
         mc mb --ignore-existing sfminio/sf-data;
         mc mb --ignore-existing sfminio/sf-loki-data;
         mc mb --ignore-existing sfminio/sf-loki-ruler;
-        mc mb --ignore-existing sfminio/sf-enrichment;
         mc anonymous set download sfminio/sf-reports;
         cp /usr/bin/mc /opt/mc-share/mc && chmod +x /opt/mc-share/mc;
         echo 'MinIO buckets initialized + mc binary shared';
@@ -156,6 +173,17 @@ services:
     networks:
       - sf-frontend
       - sf-backend
+    labels:
+      - "traefik.enable=true"
+      # REST API routes
+      - "traefik.http.routers.api.rule=PathPrefix(`/api`)"
+      - "traefik.http.routers.api.entrypoints=web"
+      - "traefik.http.routers.api.middlewares=rate-limit-api@file,security-headers@file,gzip-compress@file,body-limit@file"
+      - "traefik.http.services.api.loadbalancer.server.port=8001"
+      # WebSocket for real-time updates
+      - "traefik.http.routers.api-ws.rule=PathPrefix(`/api/ws`)"
+      - "traefik.http.routers.api-ws.entrypoints=web"
+      - "traefik.http.services.api-ws.loadbalancer.server.port=8001"
     environment:
       SF_SERVICE: api
       SF_SERVICE_ROLE: api
@@ -168,6 +196,8 @@ services:
       SF_LOG_LEVEL: ${SF_LOG_LEVEL:-INFO}
       SF_API_KEY: ${SF_API_KEY:-}
       SF_VECTOR_URL: "http://vector:${SF_VECTOR_HTTP_PORT:-8686}"
+      # Apache Tika for document analysis (used by sfp_document_analyzer module)
+      SF_TIKA_URL: "http://tika:9998"
       # OTEL tracing to Vector → Jaeger
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://vector:4317"
       OTEL_SERVICE_NAME: "spiderfoot-api"
@@ -216,6 +246,8 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
+      tika:
+        condition: service_healthy
     entrypoint: ["/usr/local/bin/docker-entrypoint.sh"]
     command: ["python", "-m", "spiderfoot.service_runner", "--service", "api", "--port", "8001"]
     healthcheck:
@@ -242,6 +274,14 @@ services:
     networks:
       - sf-frontend
       - sf-backend
+    labels:
+      - "traefik.enable=true"
+      # Catch-all for the Web UI (lowest priority)
+      - "traefik.http.routers.webui.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.webui.entrypoints=web"
+      - "traefik.http.routers.webui.priority=1"
+      - "traefik.http.routers.webui.middlewares=rate-limit-web@file,security-headers@file,gzip-compress@file"
+      - "traefik.http.services.webui.loadbalancer.server.port=5001"
     environment:
       SF_SERVICE: webui
       SF_SERVICE_ROLE: webui
@@ -271,30 +311,47 @@ services:
           memory: "${WEBUI_MEMORY:-1G}"
 
   # ---------------------------------------------------------------------------
-  # Nginx Reverse Proxy / API Gateway
+  # Traefik Reverse Proxy / API Gateway  (replaces Nginx since v5.3.17)
+  # ---------------------------------------------------------------------------
+  # Routing is driven by Docker labels on each service — no separate config
+  # file needed for adding/removing routes.  Static config lives in
+  # infra/traefik/traefik.yml; shared middlewares in infra/traefik/dynamic.yml.
   # ---------------------------------------------------------------------------
 
-  nginx:
-    image: nginx:1.25-alpine
-    container_name: sf-nginx
+  traefik:
+    image: traefik:v3.3
+    container_name: sf-traefik
     restart: unless-stopped
     networks:
       - sf-frontend
       - sf-backend
     ports:
       - "${SF_HTTP_PORT:-80}:80"
+      - "${SF_TRAEFIK_DASHBOARD_PORT:-8080}:8080"
+      # Uncomment for HTTPS:
+      # - "${SF_HTTPS_PORT:-443}:443"
     volumes:
-      - ./docker/nginx-microservices.conf:/etc/nginx/nginx.conf:ro
+      - ./infra/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./infra/traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik-logs:/var/log/traefik
+      # Uncomment for Let's Encrypt:
+      # - traefik-certs:/letsencrypt
     depends_on:
       api:
         condition: service_healthy
       webui:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:80/nginx-health"]
-      interval: 30s
-      timeout: 10s
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 15s
+      timeout: 5s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "${TRAEFIK_CPUS:-0.5}"
+          memory: "${TRAEFIK_MEMORY:-128M}"
 
   # ---------------------------------------------------------------------------
   # Qdrant — Vector Database for RAG / Rerank Correlations
@@ -439,6 +496,12 @@ services:
     networks:
       - sf-frontend
       - sf-backend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.rule=PathPrefix(`/grafana`)"
+      - "traefik.http.routers.grafana.entrypoints=web"
+      - "traefik.http.routers.grafana.middlewares=security-headers@file"
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
     ports:
       - "${SF_GRAFANA_PORT:-3000}:3000"
     environment:
@@ -485,7 +548,15 @@ services:
     container_name: sf-prometheus
     restart: unless-stopped
     networks:
+      - sf-frontend
       - sf-backend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.prometheus.rule=PathPrefix(`/prometheus`)"
+      - "traefik.http.routers.prometheus.entrypoints=web"
+      - "traefik.http.routers.prometheus.middlewares=security-headers@file"
+      - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
+      - "traefik.docker.network=sf-frontend"
     ports:
       - "${SF_PROMETHEUS_PORT:-9090}:9090"
     volumes:
@@ -509,112 +580,34 @@ services:
           memory: "${PROMETHEUS_MEMORY:-512M}"
 
   # ---------------------------------------------------------------------------
-  # SpiderFoot User Input Service
+  # Apache Tika — Document Text / Metadata Extraction  (new in v5.3.17)
   # ---------------------------------------------------------------------------
-  # API for user-supplied investigation data:
-  #   - Document/report uploads for enrichment
-  #   - IOC list submissions for cross-referencing
-  #   - Context data to enhance scan analysis
-  #   - Batch target lists for multi-target scanning
+  # Full Tika image with OCR (Tesseract) — handles 1 000+ file types:
+  #   PDF, DOCX, XLSX, PPTX, RTF, HTML, images (OCR), e-mail, archives …
+  # The sfp_document_analyzer plug-in sends files here via HTTP PUT.
+  # No authentication needed — Tika is on the internal backend network only.
   # ---------------------------------------------------------------------------
 
-  user-input:
-    <<: *sf-build
-    image: spiderfoot-micro:latest
-    container_name: sf-user-input
+  tika:
+    image: apache/tika:3.1.0.0-full
+    container_name: sf-tika
     restart: unless-stopped
     networks:
-      - sf-frontend
       - sf-backend
-    ports:
-      - "${SF_INPUT_PORT:-8300}:8300"
     environment:
-      SF_SERVICE: user-input
-      SF_INPUT_HOST: "0.0.0.0"
-      SF_INPUT_PORT: "8300"
-      SF_LOG_LEVEL: ${SF_LOG_LEVEL:-INFO}
-      # Internal service URLs
-      SF_ENRICHMENT_URL: "http://enrichment:8200"
-      SF_AGENTS_URL: "http://agents:8100"
-      # MinIO storage
-      SF_MINIO_ENDPOINT: "minio:9000"
-      SF_MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-spiderfoot}
-      SF_MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-changeme123}
-      # OTEL tracing
-      SF_OTEL_ENDPOINT: "http://vector:4317"
-      SF_SERVICE_NAME: "spiderfoot-user-input"
-    entrypoint: ["/usr/local/bin/docker-entrypoint.sh"]
-    command: ["python", "-m", "spiderfoot.user_input.service"]
-    depends_on:
-      enrichment:
-        condition: service_healthy
-      agents:
-        condition: service_healthy
-      minio:
-        condition: service_healthy
+      # Tika runs on port 9998 by default; the -full image includes Tesseract OCR
+      TIKA_SERVER_JAVA_OPTS: "-Xmx${TIKA_HEAP:-512m}"
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8300/health')"]
-      interval: 30s
-      timeout: 10s
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:9998/tika || exit 1"]
+      interval: 15s
+      timeout: 5s
       retries: 5
-      start_period: 20s
+      start_period: 15s
     deploy:
       resources:
         limits:
-          cpus: "${INPUT_CPUS:-1.0}"
-          memory: "${INPUT_MEMORY:-1G}"
-
-  # ---------------------------------------------------------------------------
-  # SpiderFoot Enrichment Service (Document Processing Pipeline)
-  # ---------------------------------------------------------------------------
-  # Processes uploaded documents and scan artifacts through:
-  #   - Text extraction (PDF, DOCX, XLSX, HTML, etc.)
-  #   - Entity/IOC extraction (IPs, domains, hashes, CVEs, etc.)
-  #   - MinIO storage for original + extracted content
-  #   - Dispatch to agents for LLM-powered analysis
-  # ---------------------------------------------------------------------------
-
-  enrichment:
-    <<: *sf-build
-    image: spiderfoot-micro:latest
-    container_name: sf-enrichment
-    restart: unless-stopped
-    networks:
-      - sf-frontend
-      - sf-backend
-    ports:
-      - "${SF_ENRICHMENT_PORT:-8200}:8200"
-    environment:
-      SF_SERVICE: enrichment
-      SF_ENRICHMENT_HOST: "0.0.0.0"
-      SF_ENRICHMENT_PORT: "8200"
-      SF_ENRICHMENT_WORKERS: ${SF_ENRICHMENT_WORKERS:-2}
-      SF_LOG_LEVEL: ${SF_LOG_LEVEL:-INFO}
-      # OTEL tracing to Vector → Jaeger
-      OTEL_EXPORTER_OTLP_ENDPOINT: "http://vector:4317"
-      OTEL_SERVICE_NAME: "spiderfoot-enrichment"
-      # MinIO storage
-      SF_MINIO_ENDPOINT: "minio:9000"
-      SF_MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-spiderfoot}
-      SF_MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-changeme123}
-      # Optional Apache Tika for complex document formats
-      SF_TIKA_ENDPOINT: ${SF_TIKA_ENDPOINT:-}
-    entrypoint: ["/usr/local/bin/docker-entrypoint.sh"]
-    command: ["python", "-m", "spiderfoot.enrichment.service"]
-    depends_on:
-      minio:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8200/health')"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 20s
-    deploy:
-      resources:
-        limits:
-          cpus: "${ENRICHMENT_CPUS:-2.0}"
-          memory: "${ENRICHMENT_MEMORY:-2G}"
+          cpus: "${TIKA_CPUS:-2.0}"
+          memory: "${TIKA_MEMORY:-1G}"
 
   # ---------------------------------------------------------------------------
   # SpiderFoot Agents Service (AI analysis agents)
@@ -636,6 +629,12 @@ services:
     networks:
       - sf-frontend
       - sf-backend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.agents.rule=PathPrefix(`/api/agents`)"
+      - "traefik.http.routers.agents.entrypoints=web"
+      - "traefik.http.routers.agents.middlewares=rate-limit-api@file,security-headers@file,body-limit@file"
+      - "traefik.http.services.agents.loadbalancer.server.port=8100"
     ports:
       - "${SF_AGENTS_PORT:-8100}:8100"
     environment:
@@ -692,6 +691,12 @@ services:
     networks:
       - sf-frontend
       - sf-backend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.litellm.rule=PathPrefix(`/litellm`)"
+      - "traefik.http.routers.litellm.entrypoints=web"
+      - "traefik.http.routers.litellm.middlewares=strip-litellm@file,security-headers@file"
+      - "traefik.http.services.litellm.loadbalancer.server.port=4000"
     ports:
       - "${SF_LITELLM_PORT:-4000}:4000"
     volumes:
@@ -729,7 +734,7 @@ services:
   # ---------------------------------------------------------------------------
   # All-in-one Jaeger instance for trace collection and visualization.
   # Services send traces via OTLP (gRPC/HTTP) through Vector.dev or directly.
-  # UI accessible via nginx /jaeger/ or direct port 16686.
+  # UI accessible via Traefik at /jaeger/ or direct port 16686.
   # ---------------------------------------------------------------------------
 
   jaeger:
@@ -739,6 +744,12 @@ services:
     networks:
       - sf-frontend
       - sf-backend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.jaeger.rule=PathPrefix(`/jaeger`)"
+      - "traefik.http.routers.jaeger.entrypoints=web"
+      - "traefik.http.routers.jaeger.middlewares=security-headers@file"
+      - "traefik.http.services.jaeger.loadbalancer.server.port=16686"
     ports:
       - "${SF_JAEGER_UI_PORT:-16686}:16686"    # Jaeger UI
       - "4317"    # OTLP gRPC (internal, for Vector)
@@ -810,3 +821,4 @@ volumes:
   mc-bin:
   grafana-data:
   prometheus-data:
+  traefik-logs:

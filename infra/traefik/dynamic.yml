@@ -1,0 +1,79 @@
+# =============================================================================
+# Traefik Dynamic Configuration — Middlewares & TLS
+# =============================================================================
+# Shared middlewares referenced by Docker labels on each service.
+# This file is hot-reloaded by Traefik (watch: true in static config).
+# =============================================================================
+
+http:
+  middlewares:
+    # --- Security headers ---
+    security-headers:
+      headers:
+        frameDeny: true
+        contentTypeNosniff: true
+        browserXssFilter: true
+        referrerPolicy: "strict-origin-when-cross-origin"
+        customResponseHeaders:
+          X-Powered-By: ""
+          Server: ""
+
+    # --- Gzip compression ---
+    gzip-compress:
+      compress:
+        excludedContentTypes:
+          - "text/event-stream"
+
+    # --- Rate limiting: general web ---
+    rate-limit-web:
+      rateLimit:
+        average: 30
+        burst: 60
+        period: "1s"
+
+    # --- Rate limiting: API ---
+    rate-limit-api:
+      rateLimit:
+        average: 50
+        burst: 100
+        period: "1s"
+
+    # --- Strip prefix helpers ---
+    strip-grafana:
+      stripPrefix:
+        prefixes:
+          - "/grafana"
+
+    strip-jaeger:
+      stripPrefix:
+        prefixes:
+          - "/jaeger"
+
+    strip-prometheus:
+      stripPrefix:
+        prefixes:
+          - "/prometheus"
+
+    strip-litellm:
+      stripPrefix:
+        prefixes:
+          - "/litellm"
+
+    # --- Retry on transient failures ---
+    retry-middleware:
+      retry:
+        attempts: 3
+        initialInterval: "100ms"
+
+    # --- Request body size limit (100 MB for doc uploads) ---
+    body-limit:
+      buffering:
+        maxRequestBodyBytes: 104857600
+        memRequestBodyBytes: 2097152
+
+  # --- Optional: default TLS config ---
+  # tls:
+  #   options:
+  #     default:
+  #       minVersion: "VersionTLS12"
+  #       sniStrict: true

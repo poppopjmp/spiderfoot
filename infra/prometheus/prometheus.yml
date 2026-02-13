@@ -28,14 +28,13 @@ scrape_configs:
           service: "spiderfoot"
           component: "agents"
 
-  # SpiderFoot Enrichment service metrics
-  - job_name: "spiderfoot-enrichment"
+  # Traefik reverse proxy metrics
+  - job_name: "traefik"
     metrics_path: "/metrics"
     static_configs:
-      - targets: ["enrichment:8200"]
+      - targets: ["traefik:8080"]
         labels:
-          service: "spiderfoot"
-          component: "enrichment"
+          service: "traefik"
 
   # Vector.dev internal metrics
   - job_name: "vector"

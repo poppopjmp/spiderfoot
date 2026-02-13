@@ -1,0 +1,67 @@
+# =============================================================================
+# Traefik Static Configuration — SpiderFoot Microservices
+# =============================================================================
+# Traefik replaces Nginx as the reverse-proxy / API gateway.
+# Routing is defined via Docker labels on each service in docker-compose.
+#
+# Dashboard:  http://localhost:8080/dashboard/
+# Web entry:  http://localhost (port 80)
+# =============================================================================
+
+# --- Entrypoints ---
+entryPoints:
+  web:
+    address: ":80"
+  # Uncomment for HTTPS with Let's Encrypt or manual certs:
+  # websecure:
+  #   address: ":443"
+  #   http:
+  #     tls:
+  #       certResolver: letsencrypt
+
+# --- API / Dashboard ---
+api:
+  dashboard: true
+  insecure: true          # Dashboard on :8080 without auth (dev mode)
+
+# --- Docker provider ---
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false          # Only route containers with traefik.enable=true
+    network: "sf-frontend"           # Default Docker network for routing
+  file:
+    filename: "/etc/traefik/dynamic.yml"
+    watch: true
+
+# --- Logging ---
+log:
+  level: "INFO"                       # DEBUG | INFO | WARN | ERROR
+
+accessLog:
+  filePath: "/var/log/traefik/access.log"
+  bufferingSize: 100
+  filters:
+    statusCodes:
+      - "400-599"
+
+# --- Health check ---
+ping:
+  entryPoint: "web"
+
+# --- Metrics (Prometheus) ---
+metrics:
+  prometheus:
+    entryPoint: "web"
+    addEntryPointsLabels: true
+    addServicesLabels: true
+    addRoutersLabels: true
+
+# --- Optional: Let's Encrypt ACME ---
+# certificatesResolvers:
+#   letsencrypt:
+#     acme:
+#       email: "admin@example.com"
+#       storage: "/letsencrypt/acme.json"
+#       httpChallenge:
+#         entryPoint: web

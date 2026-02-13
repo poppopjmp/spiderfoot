@@ -2,15 +2,27 @@
 <script src="${docroot}/static/js/spiderfoot.newscan.js"></script>
 <h2>New Scan</h2>
 <div style='padding-top: 20px'>
-<form class="form" action='${docroot}/startscan' method='POST'>
+<form class="form" action='${docroot}/startscan' method='POST' enctype='multipart/form-data'>
 <div class='col-sm-3' style='padding: 0'>
     <label for="scanname">Scan Name</label>
     <div class="input-group" style='padding-bottom: 10px'>
         <input class='form-control' type="text" id="scanname" name="scanname" value="${scanname}" placeholder="The name of this scan.">
     </div>
     <label for="scantarget">Scan Target</label>
-    <div class="input-group">
+    <div class="input-group" style='padding-bottom: 10px'>
         <input class='form-control' type="text" value="${scantarget}" id="scantarget" name="scantarget" placeholder="The target of your scan.">
+    </div>
+    <label for="scandocs">Attach Documents <small class="text-muted">(optional)</small></label>
+    <div class="input-group" style='padding-bottom: 10px'>
+        <input class='form-control' type="file" id="scandocs" name="scandocs" multiple
+               accept=".pdf,.docx,.xlsx,.pptx,.html,.htm,.rtf,.txt,.csv,.json,.xml,.md,.eml,.msg,.odt,.ods,.odp">
+        <p class="help-block" style="font-size: 11px; margin: 4px 0 0 0">
+          <i class="glyphicon glyphicon-info-sign"></i>
+          Upload documents to extract IOCs &amp; entities via <b>Apache Tika</b>.
+          Results feed into the scan pipeline alongside other modules.
+          Supported: PDF, DOCX, XLSX, PPTX, HTML, RTF, TXT, images (OCR), e-mail, and
+          <a href="https://tika.apache.org/3.1.0/formats.html" target="_blank">1 000+ formats</a>.
+        </p>
     </div>
 </div>
 <div class='col-sm-9' style='font-size: 12px; padding: 0; padding-left: 10px'>
