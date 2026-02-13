@@ -16,7 +16,7 @@ from .routers import (
     visualization, correlations, rag_correlation, reports,
     health, scan_progress, tasks, webhooks, export, storage,
     engines, schedules, rate_limits, rbac, keys, audit, monitor,
-    stix, sarif, scan_metrics, asm, tenants,
+    stix, sarif, scan_metrics, asm, tenants, rbac_enhanced,
 )
 from spiderfoot import __version__
 
@@ -141,6 +141,7 @@ _VERSIONED_ROUTERS = [
     (scan_metrics.router,     "/api", ["metrics"]),
     (asm.router,              "/api", ["asm"]),
     (tenants.router,          "/api", ["tenants"]),
+    (rbac_enhanced.router,    "/api", ["rbac-v2"]),
     (websocket.router,        "/ws",  ["websockets"]),
 ]
 
