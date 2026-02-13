@@ -1,0 +1,71 @@
+{{- if .Values.celery.beat.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "spiderfoot.fullname" . }}-celery-beat
+  labels:
+    {{- include "spiderfoot.labels" . | nindent 4 }}
+    app.kubernetes.io/component: celery-beat
+spec:
+  replicas: 1  # Beat must be a singleton
+  strategy:
+    type: Recreate  # Prevent duplicate beat instances
+  selector:
+    matchLabels:
+      {{- include "spiderfoot.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: celery-beat
+  template:
+    metadata:
+      labels:
+        {{- include "spiderfoot.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: celery-beat
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "spiderfoot.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: celery-beat
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - celery
+            - -A
+            - spiderfoot.celery_app
+            - beat
+            - --loglevel={{ .Values.config.logLevel | lower }}
+            - --schedule=/var/lib/spiderfoot/celerybeat-schedule
+          env:
+            {{- include "spiderfoot.env" . | nindent 12 }}
+            - name: SF_SERVICE
+              value: "celery-beat"
+            - name: CELERY_BROKER_URL
+              value: "redis://{{ include "spiderfoot.redis.host" . }}:6379/0"
+            - name: CELERY_RESULT_BACKEND
+              value: "redis://{{ include "spiderfoot.redis.host" . }}:6379/1"
+            {{- with .Values.celery.beat.env }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          resources:
+            {{- toYaml .Values.celery.beat.resources | nindent 12 }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          {{- if .Values.persistence.enabled }}
+          volumeMounts:
+            - name: scan-data
+              mountPath: /var/lib/spiderfoot
+          {{- end }}
+      {{- if .Values.persistence.enabled }}
+      volumes:
+        - name: scan-data
+          persistentVolumeClaim:
+            claimName: {{ include "spiderfoot.fullname" . }}-data
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

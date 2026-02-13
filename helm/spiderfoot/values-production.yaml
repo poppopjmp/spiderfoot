@@ -1,0 +1,185 @@
+# SpiderFoot Helm Chart — Production Values Overlay
+#
+# Usage:
+#   helm install spiderfoot ./helm/spiderfoot \
+#     -f helm/spiderfoot/values-production.yaml \
+#     --set postgresql.auth.password=<SECURE_PASSWORD> \
+#     --set config.jwtSecret=<JWT_SECRET> \
+#     -n spiderfoot --create-namespace
+
+image:
+  tag: "5.6.5"
+  pullPolicy: Always
+
+# -- Web UI
+webui:
+  replicaCount: 2
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+# -- API
+api:
+  replicaCount: 3
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: "2"
+      memory: 2Gi
+
+# -- Scanner workers
+scanner:
+  replicaCount: 3
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: "2"
+      memory: 2Gi
+
+# -- Celery
+celery:
+  worker:
+    replicaCount: 4
+    concurrency: 8
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+      limits:
+        cpu: "2"
+        memory: 2Gi
+  beat:
+    enabled: true
+  flower:
+    enabled: true
+
+# -- PostgreSQL
+postgresql:
+  enabled: true
+  auth:
+    database: spiderfoot
+    username: spiderfoot
+    # Set via --set postgresql.auth.password=...
+  primary:
+    persistence:
+      enabled: true
+      size: 50Gi
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+      limits:
+        cpu: "2"
+        memory: 4Gi
+
+# -- Redis
+redis:
+  enabled: true
+  auth:
+    enabled: true
+    # Set via --set redis.auth.password=...
+  master:
+    persistence:
+      enabled: true
+      size: 10Gi
+    resources:
+      requests:
+        cpu: 250m
+        memory: 512Mi
+      limits:
+        cpu: "1"
+        memory: 2Gi
+
+# -- Ingress (configure for your domain)
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/rate-limit: "30"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  hosts:
+    - host: spiderfoot.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+          service: webui
+        - path: /api
+          pathType: Prefix
+          service: api
+  tls:
+    - secretName: spiderfoot-tls
+      hosts:
+        - spiderfoot.example.com
+
+# -- Autoscaling
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+# -- Persistence
+persistence:
+  enabled: true
+  accessMode: ReadWriteOnce
+  size: 50Gi
+
+# -- Monitoring
+metrics:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    interval: 15s
+    scrapeTimeout: 10s
+    labels:
+      release: prometheus  # Match your Prometheus Operator serviceMonitorSelector
+
+# -- Backup
+backup:
+  enabled: true
+  schedule: "0 2 * * *"
+  retainCount: 14
+  storageSize: 100Gi
+
+# -- Network Policy
+networkPolicy:
+  enabled: true
+
+# -- Pod Disruption Budget
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+# -- Node scheduling
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - spiderfoot
+          topologyKey: kubernetes.io/hostname
+
+# -- Configuration
+config:
+  authMethod: "jwt"
+  logLevel: "WARNING"
+  structuredLogging: true
+  eventBusBackend: "redis"
+  cacheBackend: "redis"

@@ -1,0 +1,98 @@
+{{- if .Values.backup.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "spiderfoot.fullname" . }}-backup
+  labels:
+    {{- include "spiderfoot.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backup
+spec:
+  schedule: {{ .Values.backup.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: {{ .Values.backup.successfulJobsHistoryLimit | default 3 }}
+  failedJobsHistoryLimit: {{ .Values.backup.failedJobsHistoryLimit | default 1 }}
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            {{- include "spiderfoot.selectorLabels" . | nindent 12 }}
+            app.kubernetes.io/component: backup
+        spec:
+          {{- with .Values.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          serviceAccountName: {{ include "spiderfoot.serviceAccountName" . }}
+          restartPolicy: OnFailure
+          containers:
+            - name: backup
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -e
+                  TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+                  BACKUP_DIR="/backups/sf-backup-${TIMESTAMP}"
+                  mkdir -p "${BACKUP_DIR}"
+
+                  echo "Starting SpiderFoot backup at ${TIMESTAMP}"
+
+                  {{- if .Values.postgresql.enabled }}
+                  # PostgreSQL dump
+                  PGPASSWORD="${SF_DB_PASSWORD}" pg_dump \
+                    -h {{ include "spiderfoot.postgresql.host" . }} \
+                    -U {{ .Values.postgresql.auth.username }} \
+                    -d {{ .Values.postgresql.auth.database }} \
+                    -F c -f "${BACKUP_DIR}/database.dump"
+                  echo "Database backup complete"
+                  {{- end }}
+
+                  # Scan data backup
+                  if [ -d /var/lib/spiderfoot ]; then
+                    tar czf "${BACKUP_DIR}/scan-data.tar.gz" -C /var/lib/spiderfoot .
+                    echo "Scan data backup complete"
+                  fi
+
+                  # Cleanup old backups (keep last N)
+                  ls -dt /backups/sf-backup-* | tail -n +{{ add .Values.backup.retainCount 1 }} | xargs rm -rf 2>/dev/null || true
+
+                  echo "Backup complete: ${BACKUP_DIR}"
+              env:
+                {{- include "spiderfoot.env" . | nindent 16 }}
+              volumeMounts:
+                - name: backup-storage
+                  mountPath: /backups
+                {{- if .Values.persistence.enabled }}
+                - name: scan-data
+                  mountPath: /var/lib/spiderfoot
+                  readOnly: true
+                {{- end }}
+          volumes:
+            - name: backup-storage
+              persistentVolumeClaim:
+                claimName: {{ include "spiderfoot.fullname" . }}-backups
+            {{- if .Values.persistence.enabled }}
+            - name: scan-data
+              persistentVolumeClaim:
+                claimName: {{ include "spiderfoot.fullname" . }}-data
+            {{- end }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "spiderfoot.fullname" . }}-backups
+  labels:
+    {{- include "spiderfoot.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.backup.storageSize | default "20Gi" }}
+  {{- if .Values.backup.storageClass }}
+  storageClassName: {{ .Values.backup.storageClass | quote }}
+  {{- end }}
+{{- end }}

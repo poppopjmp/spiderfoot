@@ -81,6 +81,48 @@ scanner:
       memory: 1Gi
   env: []
 
+# -- Celery Task Queue
+celery:
+  worker:
+    enabled: true
+    replicaCount: 2
+    concurrency: 4
+    queues: "default,scan,enrichment,export,notification,maintenance"
+    resources:
+      requests:
+        cpu: 250m
+        memory: 512Mi
+      limits:
+        cpu: "1"
+        memory: 1Gi
+    env: []
+  beat:
+    enabled: true
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi
+    env: []
+  flower:
+    enabled: false
+    image:
+      repository: mher/flower
+      tag: "2.0"
+    port: 5555
+    service:
+      type: ClusterIP
+      port: 5555
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi
+
 # -- PostgreSQL (sub-chart or external)
 postgresql:
   enabled: true
@@ -183,8 +225,19 @@ metrics:
   serviceMonitor:
     enabled: false
     interval: 30s
+    scrapeTimeout: 10s
     labels: {}
   port: 9090
+
+# -- Backup CronJob
+backup:
+  enabled: false
+  schedule: "0 2 * * *"  # Daily at 2am
+  retainCount: 7
+  storageSize: 20Gi
+  storageClass: ""
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
 
 # -- Network Policy
 networkPolicy:
@@ -216,3 +269,6 @@ config:
 
   # Cache
   cacheBackend: "redis"  # memory, file, redis
+
+  # Extra environment variables (key: value)
+  extraEnv: {}

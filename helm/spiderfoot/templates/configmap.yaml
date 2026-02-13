@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "spiderfoot.fullname" . }}-config
+  labels:
+    {{- include "spiderfoot.labels" . | nindent 4 }}
+data:
+  SF_DEPLOY_MODE: "microservices"
+  SF_LOG_LEVEL: {{ .Values.config.logLevel | quote }}
+  SF_STRUCTURED_LOGGING: {{ .Values.config.structuredLogging | quote }}
+  SF_EVENTBUS_BACKEND: {{ .Values.config.eventBusBackend | quote }}
+  SF_CACHE_BACKEND: {{ .Values.config.cacheBackend | quote }}
+  SF_AUTH_METHOD: {{ .Values.config.authMethod | quote }}
+  {{- if .Values.postgresql.enabled }}
+  SF_DB_TYPE: "postgresql"
+  SF_DB_HOST: {{ include "spiderfoot.postgresql.host" . | quote }}
+  SF_DB_PORT: "5432"
+  SF_DB_NAME: {{ .Values.postgresql.auth.database | quote }}
+  SF_DB_USER: {{ .Values.postgresql.auth.username | quote }}
+  {{- end }}
+  {{- if .Values.redis.enabled }}
+  SF_REDIS_HOST: {{ include "spiderfoot.redis.host" . | quote }}
+  SF_REDIS_PORT: "6379"
+  {{- end }}
+  {{- with .Values.config.extraEnv }}
+  {{- range $key, $value := . }}
+  {{ $key }}: {{ $value | quote }}
+  {{- end }}
+  {{- end }}

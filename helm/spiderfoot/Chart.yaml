@@ -2,16 +2,27 @@ apiVersion: v2
 name: spiderfoot
 description: SpiderFoot OSINT automation platform - Helm chart for Kubernetes deployment
 type: application
-version: 0.1.0
-appVersion: "5.14.0"
+version: 0.2.0
+appVersion: "5.6.5"
 keywords:
   - osint
   - security
   - reconnaissance
   - spiderfoot
   - scanning
+  - celery
+  - microservices
 maintainers:
   - name: SpiderFoot Team
 home: https://github.com/smicallef/spiderfoot
 sources:
   - https://github.com/smicallef/spiderfoot
+dependencies:
+  - name: postgresql
+    version: "~15.x"
+    repository: https://charts.bitnami.com/bitnami
+    condition: postgresql.enabled
+  - name: redis
+    version: "~19.x"
+    repository: https://charts.bitnami.com/bitnami
+    condition: redis.enabled
