@@ -43,6 +43,12 @@ DEFAULT_TIER_LIMITS: dict[str, tuple] = {
     "config": (30, 60.0),
     "reports": (20, 60.0),
     "health": (60, 60.0),
+    "engines": (40, 60.0),
+    "schedules": (30, 60.0),
+    "export": (10, 60.0),
+    "storage": (60, 60.0),
+    "graphql": (30, 60.0),
+    "auth": (10, 60.0),
     "default": (60, 60.0),
 }
 
@@ -64,11 +70,17 @@ ROUTE_TIER_MAP: dict[str, str] = {
     "/api/config": "config",
     "/api/reports": "reports",
     "/api/health": "health",
+    "/api/engines": "engines",
+    "/api/schedules": "schedules",
+    "/api/export": "export",
+    "/api/storage": "storage",
+    "/api/graphql": "graphql",
     "/api/tasks": "default",
     "/api/webhooks": "default",
     "/api/workspaces": "default",
     "/api/visualization": "data",
     "/api/correlations": "data",
+    "/api/rag": "data",
     "/ws/": "default",
 }
 
