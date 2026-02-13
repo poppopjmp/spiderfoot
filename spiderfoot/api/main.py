@@ -17,7 +17,7 @@ from .routers import (
     health, scan_progress, tasks, webhooks, export, storage,
     engines, schedules, rate_limits, rbac, keys, audit, monitor,
     stix, sarif, scan_metrics, asm, tenants, rbac_enhanced,
-    ai_scan_config, marketplace,
+    ai_scan_config, marketplace, webhook_delivery,
 )
 from spiderfoot import __version__
 
@@ -145,6 +145,7 @@ _VERSIONED_ROUTERS = [
     (rbac_enhanced.router,    "/api", ["rbac-v2"]),
     (ai_scan_config.router,   "/api", ["ai-config"]),
     (marketplace.router,      "/api", ["marketplace"]),
+    (webhook_delivery.router, "/api", ["webhook-delivery"]),
     (websocket.router,        "/ws",  ["websockets"]),
 ]
 
