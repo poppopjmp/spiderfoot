@@ -18,7 +18,7 @@ from .routers import (
     engines, schedules, rate_limits, rbac, keys, audit, monitor,
     stix, sarif, scan_metrics, asm, tenants, rbac_enhanced,
     ai_scan_config, marketplace, webhook_delivery,
-    data_retention, scan_comparison,
+    data_retention, scan_comparison, distributed_scan,
 )
 from spiderfoot import __version__
 
@@ -149,6 +149,7 @@ _VERSIONED_ROUTERS = [
     (webhook_delivery.router, "/api", ["webhook-delivery"]),
     (data_retention.router,   "/api", ["data-retention"]),
     (scan_comparison.router,  "/api", ["scan-comparison"]),
+    (distributed_scan.router, "/api", ["distributed-scan"]),
     (websocket.router,        "/ws",  ["websockets"]),
 ]
 
