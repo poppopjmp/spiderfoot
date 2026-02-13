@@ -423,7 +423,25 @@
                 }
 
                 // Convert to vis-network format
-                var visNodes = graphData.nodes.map(function(n) {
+                // Determine if this is a large graph and cap nodes for performance
+                var isLargeGraph = graphData.nodes.length > 500;
+                var maxNodes = 2000;
+                var nodeSlice = graphData.nodes;
+                var edgeSlice = graphData.edges;
+                if (graphData.nodes.length > maxNodes) {
+                    var nodeIds = new Set();
+                    nodeSlice = graphData.nodes.slice(0, maxNodes);
+                    nodeSlice.forEach(function(n) { nodeIds.add(parseInt(n.id)); });
+                    edgeSlice = graphData.edges.filter(function(e) {
+                        return nodeIds.has(parseInt(e.source)) && nodeIds.has(parseInt(e.target));
+                    });
+                    $("#graph-container").prepend(
+                        "<div class='alert alert-info' style='position:absolute;z-index:10;margin:8px;font-size:12px'>" +
+                        "Showing " + maxNodes + " of " + graphData.nodes.length + " nodes for performance.</div>"
+                    );
+                }
+
+                var visNodes = nodeSlice.map(function(n) {
                     var title = n.label;
                     if (n.event_type) title += '\nType: ' + n.event_type;
                     if (n.category) title += '\nCategory: ' + n.category;
@@ -431,23 +449,18 @@
                         id: parseInt(n.id),
                         label: n.label.length > 30 ? n.label.substring(0, 30) + '...' : n.label,
                         title: title,
-                        color: {
-                            background: n.color,
-                            border: n.color,
-                            highlight: { background: '#f1c40f', border: '#f39c12' },
-                            hover: { background: n.color, border: '#fff' }
-                        },
-                        font: { color: '#ecf0f1', size: 10 },
+                        color: n.color,
+                        font: { color: '#ecf0f1', size: isLargeGraph ? 8 : 10 },
                         shape: 'dot',
-                        size: n.label === '${name}' ? 20 : 8
+                        size: n.label === '${name}' ? 20 : (isLargeGraph ? 5 : 8)
                     };
                 });
 
-                var visEdges = graphData.edges.map(function(e) {
+                var visEdges = edgeSlice.map(function(e) {
                     return {
                         from: parseInt(e.source),
                         to: parseInt(e.target),
-                        color: { color: 'rgba(150,150,150,0.4)', highlight: '#f1c40f' },
+                        color: { color: 'rgba(150,150,150,0.3)' },
                         width: 0.5
                     };
                 });
@@ -462,31 +475,37 @@
                         enabled: false,
                         solver: 'forceAtlas2Based',
                         forceAtlas2Based: {
-                            gravitationalConstant: -50,
+                            gravitationalConstant: -26,
                             centralGravity: 0.005,
                             springLength: 100,
                             springConstant: 0.08,
                             damping: 0.4,
-                            avoidOverlap: 0.5
+                            avoidOverlap: 0.3
                         },
-                        stabilization: { iterations: 200, updateInterval: 25 }
+                        stabilization: {
+                            iterations: isLargeGraph ? 80 : 150,
+                            updateInterval: isLargeGraph ? 50 : 25
+                        }
                     },
                     interaction: {
-                        hover: true,
-                        tooltipDelay: 200,
+                        hover: !isLargeGraph,
+                        tooltipDelay: 300,
                         zoomView: true,
                         dragView: true,
-                        dragNodes: true
+                        dragNodes: true,
+                        hideEdgesOnDrag: isLargeGraph,
+                        hideEdgesOnZoom: isLargeGraph,
+                        hideNodesOnDrag: false
                     },
                     nodes: {
                         borderWidth: 1,
-                        shadow: { enabled: true, color: 'rgba(0,0,0,0.3)', size: 5 }
+                        shadow: false
                     },
                     edges: {
-                        smooth: { type: 'continuous', roundness: 0.2 }
+                        smooth: false
                     },
                     layout: {
-                        improvedLayout: true,
+                        improvedLayout: !isLargeGraph,
                         randomSeed: 42
                     }
                 };
@@ -513,20 +532,20 @@
                         enabled: true,
                         solver: 'forceAtlas2Based',
                         forceAtlas2Based: {
-                            gravitationalConstant: -50,
+                            gravitationalConstant: -26,
                             centralGravity: 0.005,
                             springLength: 100,
                             springConstant: 0.08,
                             damping: 0.4,
-                            avoidOverlap: 0.5
+                            avoidOverlap: 0.3
                         },
-                        stabilization: { iterations: 200 }
+                        stabilization: { iterations: 150 }
                     }
                 });
-                visNetwork.stabilize(200);
+                visNetwork.stabilize(150);
                 setTimeout(function() {
                     visNetwork.setOptions({ physics: { enabled: false } });
-                }, 6000);
+                }, 4000);
             }
 
             if (method == "random") {

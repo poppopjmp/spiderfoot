@@ -6,7 +6,8 @@
 # FastAPI API service instead of accessing the database directly.
 # Set SF_WEBUI_API_MODE=true (default in this Dockerfile) to enable.
 #
-FROM spiderfoot-base:latest
+ARG BASE_IMAGE=spiderfoot-base:latest
+FROM ${BASE_IMAGE}
 
 LABEL service="webui"
 LABEL description="SpiderFoot web interface"

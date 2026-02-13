@@ -2,7 +2,8 @@
 # SpiderFoot API Service
 # Runs the FastAPI REST API
 #
-FROM spiderfoot-base:latest
+ARG BASE_IMAGE=spiderfoot-base:latest
+FROM ${BASE_IMAGE}
 
 LABEL service="api"
 LABEL description="SpiderFoot REST API service"

@@ -5,7 +5,8 @@
 # In microservice mode, the scanner accesses data through the API
 # service's DataService interface (HTTP or gRPC) instead of direct DB.
 #
-FROM spiderfoot-base:latest
+ARG BASE_IMAGE=spiderfoot-base:latest
+FROM ${BASE_IMAGE}
 
 LABEL service="scanner"
 LABEL description="SpiderFoot scan execution engine"
