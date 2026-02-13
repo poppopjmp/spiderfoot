@@ -202,6 +202,126 @@ input:checked + .slider:before {
   padding: 6px 12px !important;
 }
 
+/* Interactive module highlighting */
+.sf-interactive-module {
+  background-color: #fff8e1 !important;
+  border-left: 4px solid #f0ad4e;
+}
+
+.sf-interactive-badge {
+  font-size: 10px;
+  vertical-align: middle;
+  padding: 2px 6px;
+  border-radius: 3px;
+  cursor: help;
+}
+
+.sf-interactive-module td:first-child {
+  position: relative;
+}
+
+/* Services dropdown styling */
+#services-nav .dropdown-menu {
+  min-width: 220px;
+}
+
+#services-nav .dropdown-header {
+  font-weight: bold;
+  color: #555;
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+
+#services-nav .dropdown-menu > li > a > .glyphicon {
+  margin-right: 4px;
+  width: 16px;
+  text-align: center;
+}
+
+/* Upload area styling */
+.sf-upload-zone {
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  padding: 40px 20px;
+  text-align: center;
+  background: #fafafa;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  margin: 15px 0;
+}
+
+.sf-upload-zone:hover,
+.sf-upload-zone.dragover {
+  border-color: #337ab7;
+  background: #f0f7ff;
+}
+
+.sf-upload-zone .glyphicon {
+  font-size: 48px;
+  color: #999;
+  margin-bottom: 10px;
+}
+
+.sf-upload-zone.dragover .glyphicon {
+  color: #337ab7;
+}
+
+.sf-upload-file-list {
+  list-style: none;
+  padding: 0;
+  margin: 15px 0;
+}
+
+.sf-upload-file-list li {
+  padding: 8px 12px;
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sf-upload-file-list li .file-size {
+  color: #888;
+  font-size: 12px;
+}
+
+.sf-upload-file-list li .btn-remove {
+  color: #d9534f;
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-size: 16px;
+}
+
+/* Agent/Enrichment status cards */
+.sf-service-card {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 15px;
+  margin-bottom: 15px;
+  background: #fff;
+}
+
+.sf-service-card .service-status {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+.sf-service-card .service-status.online {
+  background: #5cb85c;
+}
+
+.sf-service-card .service-status.offline {
+  background: #d9534f;
+}
+
 /* Media Queries for Responsiveness */
 @media (max-width: 1200px) {
   body {

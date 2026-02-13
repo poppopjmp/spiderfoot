@@ -56,11 +56,15 @@
         <table class="table table-striped table-condensed" id="moduletable" style="display: none">
             <%
             modlist = dict()
+            interactive_mods = set()
             for item in modules:
                 if 'name' in modules[item]:
                     modlist[modules[item]['name']] = item
                 else:
                     modlist[item] = item
+                flags = modules[item].get('meta', {}).get('flags', []) or modules[item].get('flags', [])
+                if 'interactive' in flags:
+                    interactive_mods.add(item)
             %>
             % for it in sorted(modlist, key=lambda v: v.upper()):
                 <% item = modlist[it] %>
@@ -74,8 +78,18 @@
                     %>
                 % endif
 
+                <% is_interactive = item in interactive_mods %>
+                <% interactive_badge = "" %>
+                % if is_interactive:
+                    <% interactive_badge = "&nbsp;&nbsp;<span class='label label-warning sf-interactive-badge' rel='tooltip' title='Requires user interaction on every run (e.g. file upload)'><i class='glyphicon glyphicon-hand-up'></i>&nbsp;Interactive</span>" %>
+                % endif
+
                 % if item != "sfp__stor_db" and item != "sfp__stor_stdout":
+                    % if is_interactive:
+                    <tr class="sf-interactive-module"><td><input type=checkbox id="module_${item}" checked></td><td>${modules[item].get('name', item)}${keyicon}${interactive_badge}</td><td>${modules[item].get('descr', 'No description available')}</td></tr>
+                    % else:
                     <tr><td><input type=checkbox id="module_${item}" checked></td><td>${modules[item].get('name', item)}${keyicon}</td><td>${modules[item].get('descr', 'No description available')}</td></tr>
+                    % endif
                 % endif
             % endfor
         </table>
