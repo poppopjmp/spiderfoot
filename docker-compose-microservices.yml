@@ -276,6 +276,7 @@ services:
     restart: unless-stopped
     networks:
       - sf-frontend
+      - sf-backend
     ports:
       - "${SF_HTTP_PORT:-80}:80"
     volumes:
@@ -286,7 +287,7 @@ services:
       webui:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:80/nginx-health"]
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:80/nginx-health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -344,7 +345,7 @@ services:
   # ---------------------------------------------------------------------------
 
   vector:
-    image: timberio/vector:0.39.0-alpine
+    image: timberio/vector:0.53.0-alpine
     container_name: sf-vector
     restart: unless-stopped
     networks:
@@ -653,7 +654,7 @@ services:
       redis:
         condition: service_healthy
       litellm:
-        condition: service_healthy
+        condition: service_started
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8100/health')"]
       interval: 30s
@@ -680,7 +681,7 @@ services:
   # ---------------------------------------------------------------------------
 
   litellm:
-    image: ghcr.io/berriai/litellm:main-v1.74.0
+    image: ghcr.io/berriai/litellm:main-latest
     container_name: sf-litellm
     restart: unless-stopped
     networks:
@@ -737,7 +738,7 @@ services:
     environment:
       COLLECTOR_OTLP_ENABLED: "true"
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:14269/ || exit 1"]
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:13133/status || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 5

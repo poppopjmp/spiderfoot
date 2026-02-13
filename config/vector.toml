@@ -297,8 +297,15 @@ default_namespace = "spiderfoot"
 [sinks.jaeger_traces]
 type = "opentelemetry"
 inputs = ["otlp_traces.traces"]
-endpoint = "http://jaeger:4317"
+
+[sinks.jaeger_traces.protocol]
+type = "http"
+uri = "http://jaeger:4318/v1/traces"
+method = "post"
 compression = "gzip"
+
+[sinks.jaeger_traces.protocol.encoding]
+codec = "otlp"
 
 # S3 for long-term archival (enable via SF_S3_BUCKET + SF_S3_REGION)
 # Uncomment for cloud deployments
