@@ -288,6 +288,36 @@ async def remove_scan_from_workspace(workspace_id: str, scan_id: str, api_key: s
         raise HTTPException(status_code=500, detail="Failed to remove scan from workspace") from e
 
 
+@router.post("/workspaces/{workspace_id}/scans/{scan_id}")
+async def link_scan_to_workspace(workspace_id: str, scan_id: str, api_key: str = api_key_dep) -> dict:
+    """
+    Link an existing scan to a workspace for cross-scan correlation.
+
+    Args:
+        workspace_id (str): Workspace ID.
+        scan_id (str): Scan ID to link.
+        api_key (str): API key for authentication.
+
+    Returns:
+        dict: Success message.
+
+    Raises:
+        HTTPException: On error.
+    """
+    try:
+        config = get_app_config()
+        workspace = SpiderFootWorkspace(config.get_config(), workspace_id)
+        success = workspace.import_single_scan(scan_id)
+        if not success:
+            return {"message": "Scan already linked to workspace"}
+        return {"message": "Scan linked to workspace successfully"}
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+    except Exception as e:
+        log.error("Failed to link scan %s to workspace %s: %s", scan_id, workspace_id, e)
+        raise HTTPException(status_code=500, detail="Failed to link scan to workspace") from e
+
+
 @router.post("/workspaces/{workspace_id}/set-active")
 async def set_active_workspace(workspace_id: str, api_key: str = api_key_dep) -> dict:
     """

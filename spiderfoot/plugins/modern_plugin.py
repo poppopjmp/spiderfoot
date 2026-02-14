@@ -212,10 +212,30 @@ class SpiderFootModernPlugin(SpiderFootPlugin):
         t0 = time.monotonic()
         try:
             if self.http is not None:
-                result = self.http.fetch_url(
-                    url, method=method, headers=headers,
-                    data=data, timeout=timeout, **kwargs
-                )
+                # Translate modern kwargs to HttpService.fetch_url() params
+                svc_kwargs: dict[str, Any] = dict(kwargs)
+                svc_kwargs["headers"] = headers
+                svc_kwargs["timeout"] = timeout
+                if data is not None:
+                    svc_kwargs["post_data"] = data
+                if method and method.upper() == "HEAD":
+                    svc_kwargs["head_only"] = True
+                # Map legacy camelCase kwargs to HttpService snake_case
+                if "postData" in svc_kwargs:
+                    svc_kwargs.setdefault("post_data", svc_kwargs.pop("postData"))
+                if "headOnly" in svc_kwargs:
+                    svc_kwargs.setdefault("head_only", svc_kwargs.pop("headOnly"))
+                if "sizeLimit" in svc_kwargs:
+                    svc_kwargs.setdefault("size_limit", svc_kwargs.pop("sizeLimit"))
+                if "disableContentEncoding" in svc_kwargs:
+                    svc_kwargs.setdefault("disable_content_encoding",
+                                          svc_kwargs.pop("disableContentEncoding"))
+                # Drop keys that HttpService.fetch_url() doesn't accept
+                for _drop in ("method", "data", "use_cache", "cache_ttl",
+                              "noLog", "dontMaskPassword", "fatal",
+                              "useragent_for_page"):
+                    svc_kwargs.pop(_drop, None)
+                result = self.http.fetch_url(url, **svc_kwargs)
                 self._record_http_metric(method, result.get("code", 0), t0)
                 return result
 

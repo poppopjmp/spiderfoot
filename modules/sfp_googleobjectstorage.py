@@ -83,7 +83,7 @@ class sfp_googleobjectstorage(SpiderFootModernPlugin):
         res = self.fetch_url(
             url, timeout=10, useragent="SpiderFoot", noLog=True)
 
-        if not res["content"]:
+        if res is None or not res.get('content'):
             return
 
         if "NoSuchBucket" in res["content"]:

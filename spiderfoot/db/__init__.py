@@ -438,126 +438,71 @@ class SpiderFootDb:
         self._event = EventManager(self.dbh, self.conn, self.dbhLock, self.db_type)
         self._config = ConfigManager(self.dbh, self.conn, self.dbhLock, self.db_type)
         self._correlation = CorrelationManager(self.dbh, self.conn, self.dbhLock, self.db_type)
-        if not isinstance(opts, dict):
-            raise TypeError(f"opts is {type(opts)}; expected dict()")
-        if not opts:
-            raise ValueError("opts is empty")
-        if not opts.get('__database'):
-            raise ValueError("opts['__database'] is empty")
-        # ...existing code for sqlite/postgresql init...
-        if self.db_type == 'sqlite':
-            database_path = opts['__database']
-            Path(database_path).parent.mkdir(exist_ok=True, parents=True)
-            try:
-                dbh = sqlite3.connect(database_path, check_same_thread=False, timeout=30)
-            except Exception as e:
-                raise OSError(
-                    f"Error connecting to internal database {database_path}") from e
-            if dbh is None:
-                raise OSError(
-                    f"Could not connect to internal database, and could not create {database_path}") from None
-            dbh.text_factory = str
-            # Enable WAL mode for better concurrent read/write performance
-            dbh.execute("PRAGMA journal_mode=WAL")
-            dbh.execute("PRAGMA busy_timeout=30000")
-            self.conn = dbh
-            self.dbh = dbh.cursor()
-            def __dbregex__(qry: str, data: str) -> bool:
-                """Test if a regular expression matches data."""
-                try:
-                    rx = re.compile(qry, re.IGNORECASE | re.DOTALL)
-                    ret = rx.match(data)
-                except Exception as e:
-                    return False
-                return ret is not None
-            with self.dbhLock:
-                try:
-                    self.dbh.execute('SELECT COUNT(*) FROM tbl_scan_config')
-                    self.conn.create_function("REGEXP", 2, __dbregex__)
-                except sqlite3.Error:
-                    init = True
-                    try:
-                        for query in get_schema_queries(self.db_type):
-                            self.dbh.execute(query)
-                        self.conn.commit()
-                    except Exception as e:
-                        raise OSError(
-                            "Tried to set up the SpiderFoot database schema, but failed") from e
-                try:
-                    self.dbh.execute(
-                        "SELECT COUNT(*) FROM tbl_scan_correlation_results")
-                except sqlite3.Error:
-                    try:
-                        for query in get_schema_queries(self.db_type):
-                            if "correlation" in query:
-                                self.dbh.execute(query)
-                        self.conn.commit()
-                    except sqlite3.Error:
-                        raise OSError("Looks like you are running a pre-4.0 database. Unfortunately "
-                                      "SpiderFoot wasn't able to migrate you, so you'll need to delete "
-                                      "your SpiderFoot database in order to proceed.") from None
-                if init:
-                    for row in self.eventDetails:
-                        event = row[0]
-                        event_descr = row[1]
-                        event_raw = row[2]
-                        event_type = row[3]
-                        qry = "INSERT INTO tbl_event_types (event, event_descr, event_raw, event_type) VALUES (?, ?, ?, ?)"
-                        try:
-                            self.dbh.execute(qry, (
-                                event, event_descr, event_raw, event_type
-                            ))
-                            self.conn.commit()
-                        except Exception as e:
-                            continue
-                    self.conn.commit()
-        elif self.db_type == 'postgresql':
-            try:
-                self.conn = psycopg2.connect(opts['__database'])
-                self.dbh = self.conn.cursor(
-                    cursor_factory=psycopg2.extras.DictCursor)
-            except Exception as e:
-                raise OSError(
-                    f"Error connecting to PostgreSQL database {opts['__database']}") from e
-            with self.dbhLock:
-                try:
-                    self.dbh.execute('SELECT COUNT(*) FROM tbl_scan_config')
-                except psycopg2.Error:
-                    init = True
-                    try:
-                        for query in get_schema_queries(self.db_type):
-                            self.dbh.execute(query)
-                        self.conn.commit()
-                    except Exception as e:
-                        raise OSError(
-                            "Tried to set up the SpiderFoot database schema, but failed") from e
-                if init:
-                    for row in self.eventDetails:
-                        event = row[0]
-                        event_descr = row[1]
-                        event_raw = row[2]
-                        event_type = row[3]
-                        qry = "INSERT INTO tbl_event_types (event, event_descr, event_raw, event_type) VALUES (%s, %s, %s, %s)"
-                        try:
-                            self.dbh.execute(qry, (
-                                event, event_descr, event_raw, event_type
-                            ))
-                            self.conn.commit()
-                        except Exception as e:
-                            continue
-                    self.conn.commit()
-        else:
-            raise ValueError(f"Unsupported database type: {self.db_type}")
 
-        # CRITICAL FIX: Re-initialize managers with the final database connection.
-        # DbCore creates an initial connection used by managers at lines 437-440,
-        # but the sqlite/postgresql init block above creates a SECOND connection
-        # that overwrites self.dbh and self.conn. Without re-init, managers would
-        # operate on the stale DbCore cursor/connection, causing SQL errors.
-        self._scan = ScanManager(self.dbh, self.conn, self.dbhLock, self.db_type)
-        self._event = EventManager(self.dbh, self.conn, self.dbhLock, self.db_type)
-        self._config = ConfigManager(self.dbh, self.conn, self.dbhLock, self.db_type)
-        self._correlation = CorrelationManager(self.dbh, self.conn, self.dbhLock, self.db_type)
+        # DbCore creates the schema but uses its own generic eventDetails.
+        # We must populate tbl_event_types with the REAL SpiderFoot event
+        # types (ROOT, DOMAIN_NAME, IP_ADDRESS, etc.) so that the foreign
+        # key constraint on tbl_scan_results.type is satisfiable.
+        self._populate_event_types()
+
+    @staticmethod
+    def build_config_from_env() -> dict:
+        """Build a database config dict from environment variables.
+
+        Prefers PostgreSQL (SF_POSTGRES_DSN) over SQLite.
+
+        Returns:
+            dict: Configuration suitable for SpiderFootDb(opts).
+        """
+        import os
+        pg_dsn = os.environ.get('SF_POSTGRES_DSN', '')
+        if pg_dsn:
+            return {
+                '__database': pg_dsn,
+                '__dbtype': 'postgresql',
+            }
+        from spiderfoot import SpiderFootHelpers
+        return {
+            '__database': f"{SpiderFootHelpers.dataPath()}/spiderfoot.db",
+            '__dbtype': 'sqlite',
+        }
+
+    def _populate_event_types(self) -> None:
+        """Upsert the canonical SpiderFoot event types into tbl_event_types.
+
+        DbCore populates generic placeholder rows; this replaces/extends them
+        with the real event types that modules actually emit (ROOT,
+        DOMAIN_NAME, IP_ADDRESS, INTERNET_NAME …).
+        """
+        from spiderfoot.db.db_utils import get_placeholder, get_upsert_clause
+
+        ph = get_placeholder(self.db_type)
+        upsert = get_upsert_clause(
+            self.db_type, 'tbl_event_types', ['event'],
+            ['event_descr', 'event_raw', 'event_type'],
+        )
+        qry = (f"INSERT INTO tbl_event_types "
+               f"(event, event_descr, event_raw, event_type) "
+               f"VALUES ({ph}, {ph}, {ph}, {ph}) {upsert}")
+
+        with self.dbhLock:
+            try:
+                for row in self.eventDetails:
+                    try:
+                        self.dbh.execute(qry, (row[0], row[1], row[2], row[3]))
+                        self.conn.commit()
+                    except Exception:
+                        try:
+                            self.conn.rollback()
+                        except Exception:
+                            pass
+                        continue
+            except Exception as e:
+                log.error("Failed to populate canonical event types: %s", e)
+                try:
+                    self.conn.rollback()
+                except Exception:
+                    pass
 
     def _setup_managers(self) -> None:
         """

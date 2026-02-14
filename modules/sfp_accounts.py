@@ -83,7 +83,7 @@ class sfp_accounts(SpiderFootModernPlugin):
             url = "https://raw.githubusercontent.com/WebBreacher/WhatsMyName/main/wmn-data.json"
             data = self.fetch_url(url, useragent="SpiderFoot")
 
-            if data['content'] is None:
+            if data is None or data['content'] is None:
                 self.error(f"Unable to fetch {url}")
                 self.errorState = True
                 return
@@ -133,7 +133,7 @@ class sfp_accounts(SpiderFootModernPlugin):
             verify=False
         )
 
-        if not res['content']:
+        if res is None or not res.get('content'):
             with self.lock:
                 self.siteResults[retname] = False
             return

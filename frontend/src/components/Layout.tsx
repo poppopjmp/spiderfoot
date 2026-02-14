@@ -4,30 +4,15 @@ import {
   LayoutDashboard,
   Radar,
   PlusCircle,
-  Cpu,
-  Clock,
-  Globe,
   Settings,
-  Bug,
-  ShieldCheck,
-  Key,
-  ScrollText,
-  Lock,
-  Link,
-  FileText,
-  FileDown,
-  Bell,
-  Webhook,
-  Tags,
-  GitCompare,
-  Database,
   Server,
-  Building2,
-  Store,
-  Target,
   ExternalLink,
   ChevronDown,
   X,
+  Briefcase,
+  Bot,
+  BookOpen,
+  Menu,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 
@@ -37,89 +22,53 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string }>;
 }
 
-interface NavSection {
-  label: string;
-  items: NavItem[];
-}
-
-const navSections: NavSection[] = [
-  {
-    label: 'Core',
-    items: [
-      { name: 'Dashboard', to: '/', icon: LayoutDashboard },
-      { name: 'Scans', to: '/scans', icon: Radar },
-      { name: 'New Scan', to: '/scans/new', icon: PlusCircle },
-      { name: 'Modules', to: '/modules', icon: Cpu },
-      { name: 'Schedules', to: '/schedules', icon: Clock },
-      { name: 'Monitor', to: '/monitor', icon: Globe },
-    ],
-  },
-  {
-    label: 'Analysis',
-    items: [
-      { name: 'Correlations', to: '/correlations', icon: Link },
-      { name: 'Scan Compare', to: '/scan-compare', icon: GitCompare },
-      { name: 'ASM', to: '/asm', icon: Target },
-    ],
-  },
-  {
-    label: 'Reports',
-    items: [
-      { name: 'Templates', to: '/report-templates', icon: FileText },
-      { name: 'Export', to: '/export', icon: FileDown },
-    ],
-  },
-  {
-    label: 'Security',
-    items: [
-      { name: 'RBAC', to: '/rbac', icon: ShieldCheck },
-      { name: 'API Keys', to: '/api-keys', icon: Key },
-      { name: 'Audit Log', to: '/audit', icon: ScrollText },
-      { name: 'SSO / SAML', to: '/sso', icon: Lock },
-    ],
-  },
-  {
-    label: 'Enterprise',
-    items: [
-      { name: 'Tenants', to: '/tenants', icon: Building2 },
-      { name: 'Tags & Groups', to: '/tags-groups', icon: Tags },
-      { name: 'Data Retention', to: '/data-retention', icon: Database },
-    ],
-  },
-  {
-    label: 'Integrations',
-    items: [
-      { name: 'Webhooks', to: '/webhooks', icon: Webhook },
-      { name: 'Notifications', to: '/notifications', icon: Bell },
-      { name: 'Marketplace', to: '/marketplace', icon: Store },
-      { name: 'Distributed', to: '/distributed', icon: Server },
-    ],
-  },
+/* Navigation matches CherryPy: New Scan, Scans, Workspaces, Documentation, Settings
+   plus Dashboard (new) and Agents (from Services dropdown) */
+const navItems: NavItem[] = [
+  { name: 'Dashboard', to: '/', icon: LayoutDashboard },
+  { name: 'New Scan', to: '/scans/new', icon: PlusCircle },
+  { name: 'Scans', to: '/scans', icon: Radar },
+  { name: 'Workspaces', to: '/workspaces', icon: Briefcase },
+  { name: 'Documentation', to: '/documentation', icon: BookOpen },
+  { name: 'Settings', to: '/settings', icon: Settings },
 ];
 
 const SERVICE_LINKS = [
-  { name: 'Grafana', url: '/grafana/', desc: 'Metrics & dashboards' },
-  { name: 'Jaeger', url: '/jaeger/', desc: 'Distributed tracing' },
-  { name: 'Prometheus', url: '/prometheus/', desc: 'Metrics collection' },
-  { name: 'Traefik', url: '/dashboard/', desc: 'Reverse proxy' },
-  { name: 'MinIO', url: '/minio/', desc: 'Object storage' },
-  { name: 'Flower', url: '/flower/', desc: 'Celery task monitor' },
+  { name: 'AI Agents', url: '/agents', internal: true, desc: 'AI agent orchestrator' },
+  { name: 'Grafana', url: '/grafana/', internal: false, desc: 'Metrics & dashboards (admin/spiderfoot)' },
+  { name: 'Jaeger', url: '/jaeger/', internal: false, desc: 'Distributed tracing' },
+  { name: 'Prometheus', url: '/prometheus/', internal: false, desc: 'Metrics collection' },
+  { name: 'Traefik', url: '/dashboard/', internal: false, desc: 'Reverse proxy (admin/spiderfoot)' },
+  { name: 'MinIO', url: '/minio/', internal: false, desc: 'Object storage (spiderfoot/changeme123)' },
+  { name: 'Flower', url: '/flower/', internal: false, desc: 'Celery monitor (admin/spiderfoot)' },
 ];
 
 export default function Layout() {
   const [showAbout, setShowAbout] = useState(false);
   const [servicesOpen, setServicesOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   return (
     <div className="flex h-full">
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-64 bg-dark-900 border-r border-dark-700 flex flex-col">
+      <aside className={clsx(
+        'fixed lg:relative z-40 w-64 bg-dark-900 border-r border-dark-700 flex flex-col h-full transition-transform lg:translate-x-0',
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+      )}>
         {/* Logo */}
         <div
           className="flex items-center gap-3 px-6 py-5 border-b border-dark-700 cursor-pointer hover:bg-dark-800/50 transition-colors"
           onClick={() => setShowAbout(true)}
         >
-          <Bug className="h-8 w-8 text-spider-500" />
+          <img src="/spiderfoot-icon.png" alt="SpiderFoot" className="h-8 w-8" />
           <div>
             <h1 className="text-lg font-bold text-white">SpiderFoot</h1>
             <p className="text-xs text-dark-400">OSINT Platform</p>
@@ -127,52 +76,26 @@ export default function Layout() {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 px-3 py-4 space-y-4 overflow-y-auto">
-          {navSections.map((section) => (
-            <div key={section.label}>
-              <p className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-dark-500">
-                {section.label}
-              </p>
-              <div className="space-y-0.5">
-                {section.items.map((item) => (
-                  <NavLink
-                    key={item.to}
-                    to={item.to}
-                    end={item.to === '/'}
-                    className={({ isActive }) =>
-                      clsx(
-                        'flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors',
-                        isActive
-                          ? 'bg-spider-600/20 text-spider-400'
-                          : 'text-dark-300 hover:bg-dark-800 hover:text-dark-100',
-                      )
-                    }
-                  >
-                    <item.icon className="h-4 w-4 flex-shrink-0" />
-                    {item.name}
-                  </NavLink>
-                ))}
-              </div>
-            </div>
-          ))}
-
-          {/* Settings (standalone at bottom of nav) */}
-          <div>
+        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+          {navItems.map((item) => (
             <NavLink
-              to="/settings"
+              key={item.to}
+              to={item.to}
+              end={item.to === '/'}
+              onClick={() => { if (window.innerWidth < 1024) setSidebarOpen(false); }}
               className={({ isActive }) =>
                 clsx(
-                  'flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors',
+                  'flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors',
                   isActive
                     ? 'bg-spider-600/20 text-spider-400'
                     : 'text-dark-300 hover:bg-dark-800 hover:text-dark-100',
                 )
               }
             >
-              <Settings className="h-4 w-4 flex-shrink-0" />
-              Settings
+              <item.icon className="h-4 w-4 flex-shrink-0" />
+              {item.name}
             </NavLink>
-          </div>
+          ))}
         </nav>
 
         {/* Services dropdown */}
@@ -187,30 +110,50 @@ export default function Layout() {
           </button>
           {servicesOpen && (
             <div className="mt-1 space-y-0.5 animate-fade-in">
-              {SERVICE_LINKS.map((svc) => (
-                <a
-                  key={svc.name}
-                  href={svc.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-3 py-1.5 text-xs text-dark-400 hover:text-dark-200 hover:bg-dark-800 rounded-lg transition-colors"
-                >
-                  <ExternalLink className="h-3 w-3" />
-                  <span className="flex-1">{svc.name}</span>
-                </a>
-              ))}
+              {SERVICE_LINKS.map((svc) =>
+                svc.internal ? (
+                  <NavLink
+                    key={svc.name}
+                    to={svc.url}
+                    className="flex items-center gap-2 px-3 py-1.5 text-xs text-dark-400 hover:text-dark-200 hover:bg-dark-800 rounded-lg transition-colors"
+                  >
+                    <Bot className="h-3 w-3" />
+                    <span className="flex-1">{svc.name}</span>
+                  </NavLink>
+                ) : (
+                  <a
+                    key={svc.name}
+                    href={svc.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={svc.desc}
+                    className="flex items-center gap-2 px-3 py-1.5 text-xs text-dark-400 hover:text-dark-200 hover:bg-dark-800 rounded-lg transition-colors"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                    <span className="flex-1">{svc.name}</span>
+                  </a>
+                ),
+              )}
             </div>
           )}
         </div>
 
         {/* Footer */}
         <div className="px-6 py-4 border-t border-dark-700">
-          <p className="text-xs text-dark-500">SpiderFoot v5.7.7</p>
+          <p className="text-xs text-dark-500">SpiderFoot v5.8.0</p>
         </div>
       </aside>
 
       {/* Main content */}
       <main className="flex-1 overflow-auto">
+        {/* Mobile header */}
+        <div className="lg:hidden flex items-center gap-3 px-4 py-3 border-b border-dark-700 bg-dark-900">
+          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-dark-300 hover:text-white">
+            <Menu className="h-5 w-5" />
+          </button>
+          <img src="/spiderfoot-icon.png" alt="SpiderFoot" className="h-5 w-5" />
+          <span className="text-sm font-bold text-white">SpiderFoot</span>
+        </div>
         <div className="max-w-7xl mx-auto px-6 py-8">
           <Outlet />
         </div>
@@ -228,10 +171,10 @@ export default function Layout() {
               <X className="h-5 w-5" />
             </button>
             <div className="text-center">
-              <Bug className="h-16 w-16 text-spider-500 mx-auto mb-4" />
+              <img src="/spiderfoot-header-dark.png" alt="SpiderFoot" className="h-16 mx-auto mb-4" />
               <h2 className="text-xl font-bold text-white">SpiderFoot</h2>
               <p className="text-dark-400 text-sm mt-1">Open Source Intelligence Automation</p>
-              <p className="text-spider-400 font-mono text-sm mt-3">v5.7.7</p>
+              <p className="text-spider-400 font-mono text-sm mt-3">v5.8.0</p>
               <div className="mt-6 space-y-2 text-sm text-dark-400">
                 <p>An OSINT automation tool for reconnaissance.</p>
                 <p>

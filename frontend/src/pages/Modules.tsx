@@ -2,13 +2,12 @@ import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { dataApi, type Module } from '../lib/api';
 import {
-  Cpu, Search, Lock, Unlock, ToggleLeft, ToggleRight,
-  ChevronDown, ChevronRight, Info, Zap, Shield,
-  AlertTriangle, Eye,
+  Cpu, Lock, Unlock, ToggleLeft, ToggleRight,
+  ChevronDown, ChevronRight, Shield,
 } from 'lucide-react';
 import {
   PageHeader, SearchInput, StatCard, EmptyState, TableSkeleton,
-  Toast, Expandable,
+  Toast,
   type ToastType,
 } from '../components/ui';
 
@@ -36,7 +35,7 @@ export default function ModulesPage() {
     queryFn: dataApi.moduleCategories,
   });
 
-  const modules: Module[] = modulesData?.data ?? [];
+  const modules: Module[] = modulesData?.items ?? [];
   const statusMap = useMemo(() => {
     const map = new Map<string, boolean>();
     statusData?.modules?.forEach((m: { module: string; enabled: boolean }) => map.set(m.module, m.enabled));
@@ -69,7 +68,7 @@ export default function ModulesPage() {
       ([k]) => k.toLowerCase().includes('api_key') || k.toLowerCase().includes('apikey'),
     );
     if (apiKeys.length === 0) return true;
-    return apiKeys.every(([, v]) => v.default && v.default !== '');
+    return apiKeys.every(([, v]) => v !== '' && v !== null && v !== undefined);
   };
 
   /* Filter & search */
@@ -81,7 +80,8 @@ export default function ModulesPage() {
         (m) =>
           m.name?.toLowerCase().includes(q) ||
           (m.descr || m.description || '').toLowerCase().includes(q) ||
-          m.group?.toLowerCase().includes(q),
+          (Array.isArray(m.group) ? m.group.join(' ') : (m.group || '')).toLowerCase().includes(q) ||
+          (Array.isArray(m.cats) ? m.cats.join(' ') : '').toLowerCase().includes(q),
       );
     }
     if (filter === 'enabled') list = list.filter((m) => statusMap.get(m.name) !== false);
@@ -94,7 +94,7 @@ export default function ModulesPage() {
   const grouped = useMemo(() => {
     const map = new Map<string, Module[]>();
     filteredModules.forEach((m) => {
-      const cat = m.group || m.category || 'Other';
+      const cat = (Array.isArray(m.cats) && m.cats[0]) || (Array.isArray(m.group) ? m.group[0] : m.group) || m.category || 'Other';
       if (!map.has(cat)) map.set(cat, []);
       map.get(cat)!.push(m);
     });
@@ -210,7 +210,7 @@ export default function ModulesPage() {
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                               <p className="text-xs text-dark-500 mb-1">Category</p>
-                              <p className="text-sm text-dark-300">{m.group || m.category || 'N/A'}</p>
+                              <p className="text-sm text-dark-300">{Array.isArray(m.group) ? m.group.join(', ') : (m.group || m.category || 'N/A')}</p>
                             </div>
                             {m.provides && m.provides.length > 0 && (
                               <div>
@@ -232,16 +232,6 @@ export default function ModulesPage() {
                                 </div>
                               </div>
                             )}
-                            {m.dependencies && m.dependencies.length > 0 && (
-                              <div>
-                                <p className="text-xs text-dark-500 mb-1">Dependencies</p>
-                                <div className="flex flex-wrap gap-1">
-                                  {m.dependencies.map((d) => (
-                                    <span key={d} className="badge text-[10px] bg-dark-700 text-dark-300">{d}</span>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
                             {m.opts && Object.keys(m.opts).length > 0 && (
                               <div className="sm:col-span-2">
                                 <p className="text-xs text-dark-500 mb-2">Options ({Object.keys(m.opts).length})</p>
@@ -249,7 +239,7 @@ export default function ModulesPage() {
                                   {Object.entries(m.opts).map(([k, v]) => (
                                     <div key={k} className="flex items-center justify-between text-xs">
                                       <span className="text-dark-400 font-mono">{k}</span>
-                                      <span className="text-dark-500">{v.type} — {v.description?.slice(0, 60)}</span>
+                                      <span className="text-dark-500">{m.optdescs?.[k]?.slice(0, 60) || String(v ?? '')}</span>
                                     </div>
                                   ))}
                                 </div>

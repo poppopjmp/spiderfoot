@@ -34,37 +34,31 @@ export default function SettingsPage() {
   });
 
   const config = configData?.config ?? {};
-  const modules: Module[] = modulesData?.data ?? [];
+  const modules: Module[] = modulesData?.items ?? [];
 
-  /* Separate global vs module options */
+  /* Global options: config keys that are not internal */
   const globalOptions = useMemo(() => {
-    return Object.entries(config).filter(([k]) => !k.includes(':'));
+    return Object.entries(config).filter(([k]) => !k.startsWith('__'));
   }, [config]);
 
-  const moduleOptionMap = useMemo(() => {
-    const map = new Map<string, [string, unknown][]>();
-    Object.entries(config).forEach(([k, v]) => {
-      if (!k.includes(':')) return;
-      const [mod, ...rest] = k.split(':');
-      if (!map.has(mod)) map.set(mod, []);
-      map.get(mod)!.push([rest.join(':'), v]);
-    });
-    return map;
-  }, [config]);
-
-  /* Sidebar sections */
+  /* Sidebar sections: global + one per module that has opts */
   const sections = useMemo(() => {
     const items: { key: string; label: string; count: number; hasApiKey: boolean }[] = [
       { key: '__global__', label: 'Global Settings', count: globalOptions.length, hasApiKey: false },
     ];
-    const sorted = [...moduleOptionMap.entries()].sort((a, b) => a[0].localeCompare(b[0]));
-    for (const [mod, opts] of sorted) {
-      const modInfo = modules.find((m) => m.name === mod);
-      const hasApiKey = opts.some(([k]) => k.toLowerCase().includes('api_key') || k.toLowerCase().includes('apikey'));
+    const sortedModules = [...modules]
+      .filter((m) => m.opts && Object.keys(m.opts).length > 0)
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    for (const mod of sortedModules) {
+      const optKeys = Object.keys(mod.opts ?? {});
+      const hasApiKey = optKeys.some(
+        (k) => k.toLowerCase().includes('api_key') || k.toLowerCase().includes('apikey'),
+      );
       items.push({
-        key: mod,
-        label: modInfo ? mod.replace('sfp_', '') : mod,
-        count: opts.length,
+        key: mod.name,
+        label: mod.name.replace(/^sfp_/, ''),
+        count: optKeys.length,
         hasApiKey,
       });
     }
@@ -73,19 +67,53 @@ export default function SettingsPage() {
       return items.filter((i) => i.label.toLowerCase().includes(q) || i.key.toLowerCase().includes(q));
     }
     return items;
-  }, [globalOptions, moduleOptionMap, modules, search]);
+  }, [globalOptions, modules, search]);
+
+  const activeModule = modules.find((m) => m.name === activeSection);
 
   /* Current section options */
   const currentOptions = useMemo(() => {
-    if (activeSection === '__global__') return globalOptions;
-    return moduleOptionMap.get(activeSection)?.map(([k, v]) => [`${activeSection}:${k}`, v] as [string, unknown]) ?? [];
-  }, [activeSection, globalOptions, moduleOptionMap]);
+    if (activeSection === '__global__') {
+      return globalOptions.map(([k, v]) => ({ key: k, value: v, description: '' }));
+    }
+    if (!activeModule?.opts) return [];
+    const descs = activeModule.optdescs ?? {};
+    return Object.entries(activeModule.opts).map(([k, v]) => ({
+      key: `${activeModule.name}:${k}`,
+      value: v,
+      description: descs[k] || '',
+    }));
+  }, [activeSection, globalOptions, activeModule]);
 
-  /* Save */
+  /* Save — global options via PATCH /config, module opts via PATCH /modules/{name}/options */
   const saveMut = useMutation({
-    mutationFn: (options: Record<string, unknown>) => configApi.update(options),
+    mutationFn: async (edited: Record<string, string>) => {
+      const globalOpts: Record<string, unknown> = {};
+      const moduleOpts = new Map<string, Record<string, unknown>>();
+
+      for (const [key, val] of Object.entries(edited)) {
+        if (key.includes(':')) {
+          const [mod, ...rest] = key.split(':');
+          const optKey = rest.join(':');
+          if (!moduleOpts.has(mod)) moduleOpts.set(mod, {});
+          moduleOpts.get(mod)![optKey] = val;
+        } else {
+          globalOpts[key] = val;
+        }
+      }
+
+      const promises: Promise<unknown>[] = [];
+      if (Object.keys(globalOpts).length > 0) {
+        promises.push(configApi.update(globalOpts));
+      }
+      for (const [mod, opts] of moduleOpts) {
+        promises.push(configApi.updateModuleOptions(mod, opts));
+      }
+      await Promise.all(promises);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['config'] });
+      queryClient.invalidateQueries({ queryKey: ['modules'] });
       setEditedValues({});
       setToast({ type: 'success', message: 'Settings saved' });
     },
@@ -132,8 +160,9 @@ export default function SettingsPage() {
   /* Reset */
   const handleReset = async () => {
     try {
-      await configApi.replace({});
+      await configApi.reload();
       queryClient.invalidateQueries({ queryKey: ['config'] });
+      queryClient.invalidateQueries({ queryKey: ['modules'] });
       setConfirmReset(false);
       setEditedValues({});
       setToast({ type: 'success', message: 'Reset to factory defaults' });
@@ -157,8 +186,6 @@ export default function SettingsPage() {
     const k = key.toLowerCase();
     return k.includes('api_key') || k.includes('apikey') || k.includes('password') || k.includes('secret');
   };
-
-  const activeModule = modules.find((m) => m.name === activeSection);
 
   return (
     <div className="space-y-6">
@@ -214,7 +241,7 @@ export default function SettingsPage() {
           {/* Module info header */}
           {activeSection !== '__global__' && activeModule && (
             <div className="card animate-fade-in">
-              <h3 className="text-sm font-semibold text-white">{activeSection}</h3>
+              <h3 className="text-sm font-semibold text-white">{activeModule.name}</h3>
               <p className="text-xs text-dark-400 mt-1">
                 {activeModule.descr || activeModule.description || 'No description available.'}
               </p>
@@ -226,6 +253,13 @@ export default function SettingsPage() {
                   {activeModule.provides.length > 6 && (
                     <span className="text-xs text-dark-500">+{activeModule.provides.length - 6} more</span>
                   )}
+                </div>
+              )}
+              {activeModule.group && activeModule.group.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {activeModule.group.map((g) => (
+                    <span key={g} className="badge bg-dark-600 text-dark-200 text-[10px]">{g}</span>
+                  ))}
                 </div>
               )}
             </div>
@@ -244,22 +278,25 @@ export default function SettingsPage() {
               </div>
             ) : currentOptions.length > 0 ? (
               <div className="space-y-5">
-                {currentOptions.map(([key, val]) => {
-                  const editedVal = editedValues[key as string];
+                {currentOptions.map((opt) => {
+                  const optKey = opt.key;
+                  const val = opt.value;
+                  const optDesc = opt.description;
+                  const editedVal = editedValues[optKey];
                   const currentVal = editedVal ?? String(val ?? '');
-                  const isSensitive = isApiKey(key as string);
-                  const isHidden = isSensitive && !showPasswords.has(key as string);
-                  const optKey = key as string;
                   const shortKey = optKey.includes(':') ? optKey.split(':').slice(1).join(':') : optKey;
+                  const isSensitive = isApiKey(shortKey);
+                  const isHidden = isSensitive && !showPasswords.has(optKey);
 
                   // Detect value type for appropriate control
                   const rawVal = val as unknown;
                   const isBool = rawVal === true || rawVal === false || currentVal === 'true' || currentVal === 'false' || currentVal === 'True' || currentVal === 'False';
                   const isNumber = !isBool && !isSensitive && /^\d+(\.\d+)?$/.test(String(rawVal ?? ''));
+                  const isMultiLine = !isBool && !isNumber && String(val ?? '').includes(',') && String(val ?? '').length > 40;
 
                   return (
                     <div key={optKey}>
-                      <div className="flex items-center gap-2 mb-1.5">
+                      <div className="flex items-center gap-2 mb-1">
                         <label className="text-sm text-dark-300 font-medium">{shortKey}</label>
                         {isSensitive && (
                           <button
@@ -278,6 +315,9 @@ export default function SettingsPage() {
                           <span className="text-spider-400 text-[10px]">Modified</span>
                         )}
                       </div>
+                      {optDesc && (
+                        <p className="text-xs text-dark-500 mb-1.5">{optDesc}</p>
+                      )}
 
                       {/* Boolean toggle */}
                       {isBool ? (
@@ -302,6 +342,15 @@ export default function SettingsPage() {
                           onChange={(e) => {
                             setEditedValues((prev) => ({ ...prev, [optKey]: e.target.value }));
                           }}
+                        />
+                      ) : isMultiLine ? (
+                        <textarea
+                          className="input-field text-sm font-mono h-24 resize-y"
+                          value={currentVal}
+                          onChange={(e) => {
+                            setEditedValues((prev) => ({ ...prev, [optKey]: e.target.value }));
+                          }}
+                          placeholder="Comma-separated values..."
                         />
                       ) : (
                         <input

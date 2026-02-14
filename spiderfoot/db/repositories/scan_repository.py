@@ -84,11 +84,8 @@ class ScanRepository(AbstractRepository):
         if not row:
             return None
         try:
-            # scanInstanceGet returns (name, target, created, started, ended, status)
-            # but ScanRecord.from_row expects (guid, name, target, created, started, ended, status)
-            # Prepend scan_id since it's not included in the query result
-            if len(row) < 7:
-                row = (scan_id, *row)
+            # scanInstanceGet returns a single row (not a list of rows):
+            # (guid, name, target, created, started, ended, status[, result_count])
             return ScanRecord.from_row(row)
         except (ValueError, IndexError):
             return None

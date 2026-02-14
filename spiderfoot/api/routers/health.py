@@ -373,11 +373,83 @@ def _check_minio() -> dict[str, Any]:
         return {"status": "down", "message": str(e)}
 
 
+def _check_redis() -> dict[str, Any]:
+    """Check Redis connectivity."""
+    try:
+        import os
+        import redis as redis_lib
+        url = os.environ.get("SF_REDIS_URL", "redis://redis:6379/0")
+        r = redis_lib.Redis.from_url(url, socket_connect_timeout=3, socket_timeout=3)
+        info = r.info("server")
+        r.close()
+        return {
+            "status": "up",
+            "redis_version": info.get("redis_version", "unknown"),
+        }
+    except ImportError:
+        return {"status": "unknown", "message": "redis package not installed"}
+    except Exception as e:
+        return {"status": "down", "message": str(e)}
+
+
+def _check_celery() -> dict[str, Any]:
+    """Check Celery worker availability via ping."""
+    try:
+        import os
+        import redis as redis_lib
+        url = os.environ.get("SF_REDIS_URL", "redis://redis:6379/0")
+        r = redis_lib.Redis.from_url(url, socket_connect_timeout=3, socket_timeout=3)
+        # Check if any celery worker keys exist in Redis
+        worker_keys = r.keys("celery-task-meta-*")
+        # Also check the broker queue length
+        queue_len = r.llen("celery") or 0
+        r.close()
+        return {
+            "status": "up",
+            "completed_tasks": len(worker_keys),
+            "pending_queue": int(queue_len),
+        }
+    except ImportError:
+        return {"status": "unknown", "message": "redis package not installed"}
+    except Exception as e:
+        return {"status": "down", "message": str(e)}
+
+
+def _check_postgresql() -> dict[str, Any]:
+    """Direct PostgreSQL connectivity check."""
+    try:
+        import os
+        dsn = os.environ.get("SF_POSTGRES_DSN", "")
+        if not dsn:
+            return {"status": "unknown", "message": "SF_POSTGRES_DSN not set"}
+        import psycopg2
+        conn = psycopg2.connect(dsn, connect_timeout=5)
+        cur = conn.cursor()
+        cur.execute("SELECT version()")
+        version = cur.fetchone()[0]
+        cur.execute("SELECT count(*) FROM tbl_scan_instance")
+        scan_count = cur.fetchone()[0]
+        cur.close()
+        conn.close()
+        return {
+            "status": "up",
+            "version": version.split(",")[0] if version else "unknown",
+            "scan_count": scan_count,
+        }
+    except ImportError:
+        return {"status": "unknown", "message": "psycopg2 not installed"}
+    except Exception as e:
+        return {"status": "down", "message": str(e)}
+
+
 # -----------------------------------------------------------------------
 # Subsystem registry — run all checks
 # -----------------------------------------------------------------------
 
 _SUBSYSTEM_CHECKS = {
+    "postgresql": _check_postgresql,
+    "redis": _check_redis,
+    "celery": _check_celery,
     "database": _check_database,
     "eventbus": _check_eventbus,
     "data_service": _check_data_service,

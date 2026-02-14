@@ -105,8 +105,36 @@ def run_scan(
         # Import here to avoid circular imports at module load time
         from spiderfoot.scan_service.scanner import startSpiderFootScanner
 
+        # Ensure the scan instance exists in the database BEFORE the scanner
+        # init.  The API layer creates the record in PostgreSQL, but if the
+        # Celery worker runs on a different host or the API used a different
+        # DB backend, the row may be missing.  Creating it here (idempotent)
+        # prevents FK violations when modules write scan_log / scan_results.
+        try:
+            from spiderfoot.db import SpiderFootDb
+            _dbh = SpiderFootDb(global_opts)
+            _existing = _dbh.scanInstanceGet(scan_id)
+            if not _existing:
+                _dbh.scanInstanceCreate(scan_id, scan_name, target_value)
+                logger.info("scan.instance_created_on_worker scan_id=%s", scan_id)
+            _dbh.close()
+        except Exception as db_err:
+            logger.warning(
+                "Pre-flight scanInstanceCreate failed for %s (scanner will retry): %s",
+                scan_id, db_err,
+            )
+
+        # Ensure logging is enabled so modules actually write to the DB
+        global_opts.setdefault('__logging', True)
+        global_opts.setdefault('_debug', False)
+
         # Create a logging queue for the scanner subprocess
         log_queue = mp.Queue()
+
+        # Start the log listener that drains the queue into the DB
+        # (SpiderFootSqliteLogHandler writes batches to tbl_scan_log)
+        from spiderfoot.observability.logger import logListenerSetup
+        log_listener = logListenerSetup(log_queue, global_opts)
 
         # Run the scanner — this blocks until the scan completes
         scanner = startSpiderFootScanner(
@@ -118,6 +146,12 @@ def run_scan(
             module_list,
             global_opts,
         )
+
+        # Flush remaining log messages before returning
+        try:
+            log_listener.stop()
+        except Exception:
+            pass
 
         duration = time.time() - start_time
 
@@ -162,6 +196,11 @@ def run_scan(
         )
         # Try to gracefully stop the scan via DB status update
         _abort_scan_in_db(scan_id, global_opts)
+        # Flush remaining log messages
+        try:
+            log_listener.stop()
+        except Exception:
+            pass
         return {
             "scan_id": scan_id,
             "status": "timeout",
@@ -185,6 +224,12 @@ def run_scan(
 
         # Mark failed in DB
         _update_scan_status(scan_id, global_opts, "ERROR-FAILED", error_msg)
+
+        # Flush remaining log messages
+        try:
+            log_listener.stop()
+        except Exception:
+            pass
 
         # Send failure notification
         try:
@@ -333,6 +378,6 @@ def _update_scan_status(
         dbh = SpiderFootDb(opts)
         dbh.scanInstanceSet(scan_id, status=status)
         if error:
-            dbh.scanError(scan_id, error)
+            dbh.scanLogEvent(scan_id, "ERROR", error, "tasks.scan")
     except Exception as e:
         logger.error(f"Failed to update status for {scan_id}: {e}")

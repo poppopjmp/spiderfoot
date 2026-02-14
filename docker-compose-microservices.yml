@@ -176,6 +176,7 @@ services:
     command: ["postgres", "-c", "max_connections=500"]
     volumes:
       - postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres-initdb.d:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U spiderfoot"]
       interval: 10s
@@ -681,7 +682,9 @@ services:
       - "traefik.http.routers.agents.rule=PathPrefix(`/api/agents`)"
       - "traefik.http.routers.agents.entrypoints=websecure"
       - "traefik.http.routers.agents.tls=true"
-      - "traefik.http.routers.agents.middlewares=rate-limit-api@file,security-headers@file,body-limit@file"
+      - "traefik.http.routers.agents.priority=110"
+      - "traefik.http.middlewares.agents-strip.stripprefix.prefixes=/api"
+      - "traefik.http.routers.agents.middlewares=agents-strip,rate-limit-api@file,security-headers@file,body-limit@file"
       - "traefik.http.services.agents.loadbalancer.server.port=8100"
     environment:
       SF_SERVICE: agents
@@ -732,6 +735,7 @@ services:
     restart: unless-stopped
     networks:
       - sf-backend
+      - sf-frontend
     environment:
       SF_SERVICE: celery-worker
       SF_REDIS_URL: redis://redis:6379/0
@@ -870,7 +874,7 @@ services:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:5555/flower/')\""]
+      test: ["CMD-SHELL", "python -c \"import socket; s=socket.create_connection(('localhost',5555),2); s.close()\""]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -912,7 +916,7 @@ services:
       - ./infra/litellm/config.yaml:/app/config.yaml:ro
     environment:
       LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY:-sk-sf-litellm-dev-key}
-      LITELLM_DATABASE_URL: postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-spiderfoot}
+      LITELLM_DATABASE_URL: postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/litellm
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-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}

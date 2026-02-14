@@ -6,7 +6,7 @@ import {
 } from '../lib/api';
 import {
   Radar, Lock, Unlock, Zap,
-  ShieldCheck, FileText, Loader2,
+  ShieldCheck, FileText, Loader2, Upload, X,
 } from 'lucide-react';
 import { PageHeader, Tabs, SearchInput, Toast, type ToastType } from '../components/ui';
 
@@ -14,9 +14,20 @@ type TabKey = 'usecase' | 'data' | 'module';
 
 const USE_CASES = [
   { key: 'all', label: 'All Modules', desc: 'Run every available module for maximum coverage' },
+  { key: 'quick', label: 'Quick Scan', desc: 'Fast scan with essential passive modules (~20 modules)' },
   { key: 'footprint', label: 'Footprint', desc: 'Discover the target\'s full digital footprint' },
   { key: 'investigate', label: 'Investigate', desc: 'Deep dive into a specific target' },
   { key: 'passive', label: 'Passive Only', desc: 'Only passive/non-intrusive modules' },
+];
+
+/* Curated set of fast, reliable passive modules for quick scans */
+const QUICK_SCAN_MODULES = [
+  'sfp_dnsresolve', 'sfp_dnsbrute', 'sfp_dnscommonsrv', 'sfp_dnstxt',
+  'sfp_hackertarget', 'sfp_robtex', 'sfp_ipinfo', 'sfp_whois',
+  'sfp_sslcert', 'sfp_webframework', 'sfp_httpheaders', 'sfp_spider',
+  'sfp_crossref', 'sfp_pageinfo', 'sfp_similar', 'sfp_names',
+  'sfp_email', 'sfp_geoinfo', 'sfp_portscan_tcp', 'sfp_socialprofiles',
+  'sfp__stor_db',
 ];
 
 export default function NewScanPage() {
@@ -29,6 +40,7 @@ export default function NewScanPage() {
   const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set());
   const [moduleSearch, setModuleSearch] = useState('');
   const [toast, setToast] = useState<{ type: ToastType; message: string } | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
 
   /* Data queries */
   const { data: modulesData } = useQuery({
@@ -40,19 +52,22 @@ export default function NewScanPage() {
     queryFn: dataApi.entityTypes,
   });
 
-  const modules: Module[] = modulesData?.data ?? [];
+  const modules: Module[] = modulesData?.items ?? [];
   const entityTypes: string[] = entityData?.entity_types ?? [];
 
   /* Target type detection */
   const detectedType = useMemo(() => {
     const t = target.trim();
     if (!t) return null;
+    if (/^(1|3|bc1)[a-zA-HJ-NP-Z0-9]{25,62}$/.test(t)) return 'Bitcoin Address';
+    if (/^(0x)?[0-9a-fA-F]{40}$/.test(t)) return 'Ethereum Address';
     if (/^(\d{1,3}\.){3}\d{1,3}(\/\d+)?$/.test(t)) return 'IP Address';
     if (/^[a-f0-9:]+$/i.test(t) && t.includes(':')) return 'IPv6 Address';
     if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t)) return 'Email Address';
     if (/^(\+?\d[\d\s-]{6,})$/.test(t)) return 'Phone Number';
     if (/^[a-zA-Z0-9][a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(t)) return 'Domain Name';
     if (/^AS\d+$/i.test(t)) return 'ASN';
+    if (/^"[^"]+"$/.test(t) || /^@?[a-zA-Z0-9_]{1,30}$/.test(t)) return 'Username';
     if (/\s/.test(t)) return 'Human Name';
     return 'Unknown';
   }, [target]);
@@ -65,7 +80,8 @@ export default function NewScanPage() {
       (m) =>
         m.name?.toLowerCase().includes(q) ||
         (m.descr || m.description || '').toLowerCase().includes(q) ||
-        m.group?.toLowerCase().includes(q),
+        (Array.isArray(m.group) ? m.group.join(' ') : (m.group || '')).toLowerCase().includes(q) ||
+        (Array.isArray(m.cats) ? m.cats.join(' ') : '').toLowerCase().includes(q),
     );
   }, [modules, moduleSearch]);
 
@@ -73,7 +89,7 @@ export default function NewScanPage() {
   const grouped = useMemo(() => {
     const map = new Map<string, Module[]>();
     filteredModules.forEach((m) => {
-      const cat = m.group || m.category || 'Other';
+      const cat = (Array.isArray(m.cats) && m.cats.length > 0) ? m.cats[0] : (m.category || 'Other');
       if (!map.has(cat)) map.set(cat, []);
       map.get(cat)!.push(m);
     });
@@ -91,11 +107,13 @@ export default function NewScanPage() {
     }
     if (tab === 'usecase') {
       if (useCase === 'all') return [];
-      if (useCase === 'passive') {
-        return modules.filter((m) => m.flags?.includes('passive')).map((m) => m.name);
-      }
+      if (useCase === 'quick') return QUICK_SCAN_MODULES;
+      const ucLower = useCase.toLowerCase();
       return modules
-        .filter((m) => m.group?.toLowerCase().includes(useCase))
+        .filter((m) => {
+          const groups = Array.isArray(m.group) ? m.group : [];
+          return groups.some((g) => g.toLowerCase() === ucLower);
+        })
         .map((m) => m.name);
     }
     return [];
@@ -114,14 +132,24 @@ export default function NewScanPage() {
   });
 
   const handleSubmit = () => {
-    if (!target.trim()) return;
+    if (!target.trim()) {
+      setToast({ type: 'error', message: 'Please enter a target' });
+      return;
+    }
     const payload: ScanCreateRequest = {
       name: scanName || `Scan of ${target}`,
       target: target.trim(),
     };
-    if (effectiveModules.length > 0) {
+    if (tab === 'module' && selectedModules.size > 0) {
+      payload.modules = [...selectedModules];
+    } else if (tab === 'data' && selectedTypes.size > 0) {
+      payload.type_filter = [...selectedTypes];
+    } else if (tab === 'usecase' && useCase === 'quick') {
+      payload.modules = QUICK_SCAN_MODULES;
+    } else if (tab === 'usecase' && useCase !== 'all') {
       payload.modules = effectiveModules;
     }
+    // When useCase === 'all' or no selection, send no modules/type_filter → server uses all modules
     createMut.mutate(payload);
   };
 
@@ -139,9 +167,10 @@ export default function NewScanPage() {
 
   const hasApiKey = (m: Module) => {
     if (!m.opts) return true;
+    // opts is { api_key: "", daysback: 30, ... } — raw values, not objects
     return !Object.entries(m.opts).some(
       ([k, v]) => (k.toLowerCase().includes('api_key') || k.toLowerCase().includes('apikey'))
-        && (!v.default || v.default === ''),
+        && (v === '' || v === null || v === undefined),
     );
   };
 
@@ -177,6 +206,46 @@ export default function NewScanPage() {
             value={scanName}
             onChange={(e) => setScanName(e.target.value)}
           />
+        </div>
+
+        {/* Document Upload — matches CherryPy "Attach Documents" */}
+        <div className="mt-4">
+          <label className="section-label mb-2 block">Attach Documents (optional)</label>
+          <p className="text-xs text-dark-500 mb-2">Upload PDF, DOCX, XLSX, TXT and 1000+ other formats for IOC extraction via Apache Tika.</p>
+          <div
+            className="border-2 border-dashed border-dark-600 rounded-lg p-6 text-center hover:border-dark-500 transition-colors cursor-pointer"
+            onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+            onDrop={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const dropped = Array.from(e.dataTransfer.files);
+              setFiles((prev) => [...prev, ...dropped]);
+            }}
+            onClick={() => {
+              const input = document.createElement('input');
+              input.type = 'file';
+              input.multiple = true;
+              input.onchange = () => {
+                if (input.files) setFiles((prev) => [...prev, ...Array.from(input.files!)]);
+              };
+              input.click();
+            }}
+          >
+            <Upload className="h-6 w-6 text-dark-500 mx-auto mb-2" />
+            <p className="text-sm text-dark-400">Drag & drop files here, or click to browse</p>
+          </div>
+          {files.length > 0 && (
+            <div className="mt-2 space-y-1">
+              {files.map((f, i) => (
+                <div key={`${f.name}-${i}`} className="flex items-center justify-between px-3 py-1.5 bg-dark-700/50 rounded text-sm">
+                  <span className="text-dark-300 truncate">{f.name} <span className="text-dark-500">({(f.size / 1024).toFixed(1)} KB)</span></span>
+                  <button onClick={(e) => { e.stopPropagation(); setFiles((prev) => prev.filter((_, j) => j !== i)); }} className="text-dark-500 hover:text-red-400">
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -319,10 +388,10 @@ export default function NewScanPage() {
                                     <Unlock className="h-3 w-3" />
                                   </span>
                                 )}
-                                {m.flags?.includes('slow') && (
+                                {(m.labels?.includes('slow') || m.flags?.includes('slow')) && (
                                   <span className="badge bg-yellow-900/30 text-yellow-400 text-[9px] px-1 py-0">Slow</span>
                                 )}
-                                {m.flags?.includes('invasive') && (
+                                {(m.labels?.includes('invasive') || m.flags?.includes('invasive')) && (
                                   <span className="badge bg-red-900/30 text-red-400 text-[9px] px-1 py-0">Invasive</span>
                                 )}
                               </div>

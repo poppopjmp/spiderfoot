@@ -1,34 +1,18 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 import Layout from './components/Layout';
 
-// Core pages
+// Core pages (eagerly loaded — most visited)
 import DashboardPage from './pages/Dashboard';
 import ScansPage from './pages/Scans';
 import ScanDetailPage from './pages/ScanDetail';
 import NewScanPage from './pages/NewScan';
-import ModulesPage from './pages/Modules';
-import SchedulesPage from './pages/Schedules';
-import MonitorPage from './pages/Monitor';
 import SettingsPage from './pages/Settings';
 
-// Advanced pages (lazy loaded)
-const RBACPage = lazy(() => import('./pages/RBAC'));
-const ApiKeysPage = lazy(() => import('./pages/ApiKeys'));
-const AuditPage = lazy(() => import('./pages/Audit'));
-const CorrelationsPage = lazy(() => import('./pages/Correlations'));
-const ReportTemplatesPage = lazy(() => import('./pages/ReportTemplates'));
-const WebhooksPage = lazy(() => import('./pages/Webhooks'));
-const TagsGroupsPage = lazy(() => import('./pages/TagsGroups'));
-const NotificationsPage = lazy(() => import('./pages/Notifications'));
-const ScanComparisonPage = lazy(() => import('./pages/ScanComparison'));
-const DataRetentionPage = lazy(() => import('./pages/DataRetention'));
-const DistributedPage = lazy(() => import('./pages/Distributed'));
-const SSOPage = lazy(() => import('./pages/SSO'));
-const ASMPage = lazy(() => import('./pages/ASM'));
-const TenantsPage = lazy(() => import('./pages/Tenants'));
-const MarketplacePage = lazy(() => import('./pages/Marketplace'));
-const ExportPage = lazy(() => import('./pages/Export'));
+// Secondary pages (lazy loaded)
+const WorkspacesPage = lazy(() => import('./pages/Workspaces'));
+const DocumentationPage = lazy(() => import('./pages/Documentation'));
+const AgentsPage = lazy(() => import('./pages/Agents'));
 
 function LazyFallback() {
   return (
@@ -42,43 +26,38 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Layout />}>
-        {/* Core */}
+        {/* Dashboard / overview */}
         <Route index element={<DashboardPage />} />
+
+        {/* Scans — matches CherryPy: /scanlist, /newscan, /scaninfo?id= */}
         <Route path="scans" element={<ScansPage />} />
         <Route path="scans/new" element={<NewScanPage />} />
         <Route path="scans/:scanId" element={<ScanDetailPage />} />
-        <Route path="modules" element={<ModulesPage />} />
-        <Route path="schedules" element={<SchedulesPage />} />
-        <Route path="monitor" element={<MonitorPage />} />
 
-        {/* Analysis */}
-        <Route path="correlations" element={<Suspense fallback={<LazyFallback />}><CorrelationsPage /></Suspense>} />
-        <Route path="scan-compare" element={<Suspense fallback={<LazyFallback />}><ScanComparisonPage /></Suspense>} />
-        <Route path="asm" element={<Suspense fallback={<LazyFallback />}><ASMPage /></Suspense>} />
+        {/* Workspaces — matches CherryPy: /workspaces, /workspacedetails */}
+        <Route path="workspaces" element={<Suspense fallback={<LazyFallback />}><WorkspacesPage /></Suspense>} />
 
-        {/* Reports & Export */}
-        <Route path="report-templates" element={<Suspense fallback={<LazyFallback />}><ReportTemplatesPage /></Suspense>} />
-        <Route path="export" element={<Suspense fallback={<LazyFallback />}><ExportPage /></Suspense>} />
+        {/* Documentation — matches CherryPy: /documentation */}
+        <Route path="documentation" element={<Suspense fallback={<LazyFallback />}><DocumentationPage /></Suspense>} />
 
-        {/* Security */}
-        <Route path="rbac" element={<Suspense fallback={<LazyFallback />}><RBACPage /></Suspense>} />
-        <Route path="api-keys" element={<Suspense fallback={<LazyFallback />}><ApiKeysPage /></Suspense>} />
-        <Route path="audit" element={<Suspense fallback={<LazyFallback />}><AuditPage /></Suspense>} />
-        <Route path="sso" element={<Suspense fallback={<LazyFallback />}><SSOPage /></Suspense>} />
-
-        {/* Enterprise */}
-        <Route path="tenants" element={<Suspense fallback={<LazyFallback />}><TenantsPage /></Suspense>} />
-        <Route path="tags-groups" element={<Suspense fallback={<LazyFallback />}><TagsGroupsPage /></Suspense>} />
-        <Route path="data-retention" element={<Suspense fallback={<LazyFallback />}><DataRetentionPage /></Suspense>} />
-
-        {/* Integrations */}
-        <Route path="webhooks" element={<Suspense fallback={<LazyFallback />}><WebhooksPage /></Suspense>} />
-        <Route path="notifications" element={<Suspense fallback={<LazyFallback />}><NotificationsPage /></Suspense>} />
-        <Route path="marketplace" element={<Suspense fallback={<LazyFallback />}><MarketplacePage /></Suspense>} />
-        <Route path="distributed" element={<Suspense fallback={<LazyFallback />}><DistributedPage /></Suspense>} />
-
-        {/* Settings */}
+        {/* Settings — matches CherryPy: /opts */}
         <Route path="settings" element={<SettingsPage />} />
+
+        {/* Agents — matches CherryPy: /agents (from Services) */}
+        <Route path="agents" element={<Suspense fallback={<LazyFallback />}><AgentsPage /></Suspense>} />
+
+        {/* CherryPy URL redirects for backward compatibility */}
+        <Route path="newscan" element={<Navigate to="/scans/new" replace />} />
+        <Route path="opts" element={<Navigate to="/settings" replace />} />
+        <Route path="index" element={<Navigate to="/" replace />} />
+
+        {/* 404 catch-all */}
+        <Route path="*" element={
+          <div className="flex flex-col items-center justify-center h-64 text-center">
+            <p className="text-4xl font-bold text-dark-400 mb-2">404</p>
+            <p className="text-dark-500">Page not found</p>
+          </div>
+        } />
       </Route>
     </Routes>
   );

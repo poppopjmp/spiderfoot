@@ -740,13 +740,16 @@ class DbCore:
         if self.db_type == 'sqlite':
             Path(database_path).parent.mkdir(exist_ok=True, parents=True)
             try:
-                dbh = sqlite3.connect(database_path, check_same_thread=False)
+                dbh = sqlite3.connect(database_path, check_same_thread=False, timeout=30)
             except Exception as e:
                 self._log_db_error(f"Error connecting to internal database {database_path}", e)
                 raise OSError(f"Error connecting to internal database {database_path}") from e
             if dbh is None:
                 raise OSError(f"Could not connect to internal database, and could not create {database_path}")
             dbh.text_factory = str
+            # Enable WAL mode for better concurrent read/write performance
+            dbh.execute("PRAGMA journal_mode=WAL")
+            dbh.execute("PRAGMA busy_timeout=30000")
             self.conn = dbh
             self.dbh = dbh.cursor()
             def __dbregex__(qry: str, data: str) -> bool:
@@ -866,7 +869,22 @@ class DbCore:
                     # Use backend-aware schema creation
                     from spiderfoot.db.__init__ import get_schema_queries
                     for qry in get_schema_queries(self.db_type):
-                        self.dbh.execute(qry)
+                        try:
+                            self.dbh.execute(qry)
+                            self.conn.commit()
+                        except (sqlite3.Error, psycopg2.Error) as qe:
+                            # PostgreSQL raises UniqueViolation on
+                            # CREATE TABLE IF NOT EXISTS when the type
+                            # already exists (pg_type_typname_nsp_index).
+                            # This is harmless — rollback and continue.
+                            err_str = str(qe).lower()
+                            if "already exists" in err_str or "unique" in err_str:
+                                try:
+                                    self.conn.rollback()
+                                except Exception:
+                                    pass
+                                continue
+                            raise
                     self.conn.commit()
                     if self.get_schema_version() < self.SCHEMA_VERSION:
                         self.set_schema_version(self.SCHEMA_VERSION)

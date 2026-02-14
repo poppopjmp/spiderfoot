@@ -67,7 +67,7 @@ class DnsServiceConfig:
 
         return cls(
             nameservers=nameservers,
-            timeout=float(opts.get("_dnstimeout", 5.0)),
+            timeout=float(opts.get("_dnstimeout") or 5.0),
         )
 
 

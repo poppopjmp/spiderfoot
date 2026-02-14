@@ -149,9 +149,14 @@ celery_app.conf.beat_schedule = {
 # ---------------------------------------------------------------------------
 # Task autodiscovery
 # ---------------------------------------------------------------------------
-celery_app.autodiscover_tasks([
-    "spiderfoot.tasks",
-])
+celery_app.conf.include = [
+    "spiderfoot.tasks.scan",
+    "spiderfoot.tasks.report",
+    "spiderfoot.tasks.export",
+    "spiderfoot.tasks.agents",
+    "spiderfoot.tasks.monitor",
+    "spiderfoot.tasks.maintenance",
+]
 
 # ---------------------------------------------------------------------------
 # Signals — structured logging on task lifecycle

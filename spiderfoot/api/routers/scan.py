@@ -108,9 +108,10 @@ def start_scan_background(
             run_scan.apply_async(
                 kwargs={
                     "scan_name": scan_name,
-                    "scan_target": target,
+                    "scan_id": scan_id,
+                    "target_value": target,
+                    "target_type": target_type,
                     "module_list": modules,
-                    "type_list": type_filter,
                     "global_opts": config,
                 },
                 task_id=scan_id,

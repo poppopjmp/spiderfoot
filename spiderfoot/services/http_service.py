@@ -74,19 +74,20 @@ class HttpServiceConfig:
         """Create config from SpiderFoot options dict.
 
         Maps legacy _socks* and _fetchtimeout keys.
+        Uses ``or`` fallback so empty-string values don't crash ``int()``.
         """
         return cls(
-            proxy_type=opts.get("_socks1type", ""),
-            proxy_host=opts.get("_socks2addr", ""),
-            proxy_port=int(opts.get("_socks3port", 0)),
-            proxy_username=opts.get("_socks4user", ""),
-            proxy_password=opts.get("_socks5pwd", ""),
+            proxy_type=opts.get("_socks1type", "") or "",
+            proxy_host=opts.get("_socks2addr", "") or "",
+            proxy_port=int(opts.get("_socks3port") or 0),
+            proxy_username=opts.get("_socks4user", "") or "",
+            proxy_password=opts.get("_socks5pwd", "") or "",
             proxy_dns=opts.get("_socks6dns", True),
-            timeout=int(opts.get("_fetchtimeout", 30)),
-            size_limit=int(opts.get("_fetchsizelimit", 10_000_000)),
-            google_api_key=opts.get("_googlecseapi", ""),
-            google_cse_id=opts.get("_googlecseid", ""),
-            bing_api_key=opts.get("_bingkey", ""),
+            timeout=int(opts.get("_fetchtimeout") or 30),
+            size_limit=int(opts.get("_fetchsizelimit") or 10_000_000),
+            google_api_key=opts.get("_googlecseapi", "") or "",
+            google_cse_id=opts.get("_googlecseid", "") or "",
+            bing_api_key=opts.get("_bingkey", "") or "",
         )
 
 

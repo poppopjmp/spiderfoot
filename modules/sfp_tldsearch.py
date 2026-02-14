@@ -150,7 +150,7 @@ class sfp_tldsearch(SpiderFootModernPlugin):
                                            useragent=self.opts['_useragent'],
                                            noLog=True,
                                            verify=False)
-            if pageContent['content'] is not None:
+            if pageContent is not None and pageContent.get('content') is not None:
                 evt = SpiderFootEvent(
                     "SIMILARDOMAIN", result, self.__name__, source)
                 self.notifyListeners(evt)

@@ -83,6 +83,9 @@ class sfp_azureblobstorage(SpiderFootModernPlugin):
         res = self.fetch_url(
             url, timeout=10, useragent="SpiderFoot", noLog=True)
 
+        if res is None:
+            return
+
         if res["code"]:
             with self.lock:
                 self.s3results[url] = True

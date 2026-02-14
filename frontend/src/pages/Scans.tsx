@@ -10,7 +10,7 @@ import {
   Download, ChevronLeft, ChevronRight, MoreVertical, Eye, ClipboardCopy,
 } from 'lucide-react';
 import {
-  PageHeader, SearchInput, StatusBadge, RiskPills, CopyButton,
+  PageHeader, SearchInput, StatusBadge, CopyButton,
   EmptyState, TableSkeleton, ConfirmDialog, Toast, DropdownMenu, DropdownItem,
   type ToastType,
 } from '../components/ui';
@@ -54,10 +54,9 @@ export default function ScansPage() {
   const isSearchMode = !!(search || statusFilter);
   const isLoading = isSearchMode ? searchLoading : listLoading;
 
-  const scans = isSearchMode ? (searchData?.scans ?? []) : (listData?.data ?? []);
-  const pagination = isSearchMode ? undefined : listData?.pagination;
-  const totalPages = pagination?.total_pages ?? 1;
-  const totalCount = isSearchMode ? (searchData?.total ?? scans.length) : (pagination?.total ?? 0);
+  const scans = isSearchMode ? (searchData?.scans ?? []) : (listData?.items ?? []);
+  const totalPages = isSearchMode ? 1 : (listData?.pages ?? 1);
+  const totalCount = isSearchMode ? (searchData?.total ?? scans.length) : (listData?.total ?? 0);
 
   /* No further client-side filtering needed — server handles it */
   const filteredScans = scans;
@@ -183,11 +182,11 @@ export default function ScansPage() {
       </div>
 
       {/* Table */}
-      <div className="card p-0 overflow-hidden">
+      <div className="card p-0 overflow-visible">
         {isLoading ? (
           <div className="p-6"><TableSkeleton rows={8} cols={7} /></div>
         ) : filteredScans.length > 0 ? (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto overflow-y-visible">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-dark-700/60">
@@ -202,11 +201,10 @@ export default function ScansPage() {
                   <th className="table-header">Name</th>
                   <th className="table-header">Target</th>
                   <th className="table-header">Status</th>
-                  <th className="table-header">Risk</th>
                   <th className="table-header">Elements</th>
                   <th className="table-header">Started</th>
                   <th className="table-header">Duration</th>
-                  <th className="table-header w-10"></th>
+                  <th className="table-header text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-dark-700/30">
@@ -239,52 +237,68 @@ export default function ScansPage() {
                       </span>
                     </td>
                     <td className="table-cell"><StatusBadge status={scan.status} /></td>
-                    <td className="table-cell">
-                      <RiskPills high={scan.risk_high} medium={scan.risk_medium} low={scan.risk_low} info={scan.risk_info} />
-                    </td>
-                    <td className="table-cell text-dark-400 text-xs tabular-nums">{scan.element_count ?? '—'}</td>
+                    <td className="table-cell text-dark-400 text-xs tabular-nums">{scan.result_count ?? '—'}</td>
                     <td className="table-cell text-dark-400 text-xs whitespace-nowrap">{formatEpoch(scan.started)}</td>
                     <td className="table-cell text-dark-400 text-xs whitespace-nowrap">{formatDuration(scan.started, scan.ended)}</td>
                     <td className="table-cell">
-                      <DropdownMenu
-                        trigger={<button className="btn-icon"><MoreVertical className="h-4 w-4" /></button>}
-                      >
-                        <DropdownItem icon={Eye} onClick={() => navigate(`/scans/${scan.scan_id}`)}>View</DropdownItem>
-                        <DropdownItem icon={ClipboardCopy} onClick={() => {
-                          navigator.clipboard.writeText(scan.scan_id);
-                          setToast({ type: 'info', message: 'Scan ID copied' });
-                        }}>Copy ID</DropdownItem>
-                        <DropdownItem icon={CopyIcon} onClick={() => cloneMut.mutate(scan.scan_id)}>Clone</DropdownItem>
-                        {isRunning(scan) && (
-                          <DropdownItem icon={StopCircle} onClick={() => stopMut.mutate(scan.scan_id)}>Stop</DropdownItem>
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          onClick={() => navigate(`/scans/${scan.scan_id}`)}
+                          className="btn-icon text-dark-400 hover:text-spider-400"
+                          title="View scan details"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </button>
+                        {isRunning(scan) ? (
+                          <button
+                            onClick={() => stopMut.mutate(scan.scan_id)}
+                            className="btn-icon text-dark-400 hover:text-red-400"
+                            title="Stop scan"
+                          >
+                            <StopCircle className="h-4 w-4" />
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => rerunMut.mutate(scan.scan_id)}
+                            className="btn-icon text-dark-400 hover:text-green-400"
+                            title="Rerun scan"
+                          >
+                            <RotateCcw className="h-4 w-4" />
+                          </button>
                         )}
-                        {!isRunning(scan) && (
-                          <DropdownItem icon={RotateCcw} onClick={() => rerunMut.mutate(scan.scan_id)}>Rerun</DropdownItem>
-                        )}
-                        <DropdownItem
-                          icon={Download}
-                          onClick={() => {
-                            scanApi.exportEvents(scan.scan_id, { filetype: 'csv' }).then((r) => {
-                              const url = URL.createObjectURL(r.data);
-                              const a = document.createElement('a');
-                              a.href = url;
-                              a.download = `${scan.name || scan.scan_id}.csv`;
-                              a.click();
-                              URL.revokeObjectURL(url);
-                            });
-                          }}
-                        >Export CSV</DropdownItem>
-                        <DropdownItem
-                          icon={Trash2}
-                          danger
-                          onClick={() => setConfirm({
-                            title: 'Delete Scan',
-                            message: `Delete "${scan.name || scan.target}"? This cannot be undone.`,
-                            action: () => { deleteMut.mutate(scan.scan_id); setConfirm(null); },
-                            danger: true,
-                          })}
-                        >Delete</DropdownItem>
-                      </DropdownMenu>
+                        <DropdownMenu
+                          trigger={<button className="btn-icon text-dark-400 hover:text-dark-200"><MoreVertical className="h-4 w-4" /></button>}
+                        >
+                          <DropdownItem icon={ClipboardCopy} onClick={() => {
+                            navigator.clipboard.writeText(scan.scan_id);
+                            setToast({ type: 'info', message: 'Scan ID copied' });
+                          }}>Copy ID</DropdownItem>
+                          <DropdownItem icon={CopyIcon} onClick={() => cloneMut.mutate(scan.scan_id)}>Clone</DropdownItem>
+                          <DropdownItem
+                            icon={Download}
+                            onClick={() => {
+                              scanApi.exportEvents(scan.scan_id, { filetype: 'csv' }).then((r) => {
+                                const url = URL.createObjectURL(r.data);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = `${scan.name || scan.scan_id}.csv`;
+                                a.click();
+                                URL.revokeObjectURL(url);
+                              });
+                            }}
+                          >Export CSV</DropdownItem>
+                          <DropdownItem
+                            icon={Trash2}
+                            danger
+                            onClick={() => setConfirm({
+                              title: 'Delete Scan',
+                              message: `Delete "${scan.name || scan.target}"? This cannot be undone.`,
+                              action: () => { deleteMut.mutate(scan.scan_id); setConfirm(null); },
+                              danger: true,
+                            })}
+                          >Delete</DropdownItem>
+                        </DropdownMenu>
+                      </div>
                     </td>
                   </tr>
                 ))}

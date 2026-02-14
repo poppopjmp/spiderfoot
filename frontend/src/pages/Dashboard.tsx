@@ -19,18 +19,28 @@ export default function DashboardPage() {
     refetchInterval: 15_000,
   });
 
+  // Separate query for accurate status counts across ALL scans
+  const { data: searchData } = useQuery({
+    queryKey: ['scan-stats'],
+    queryFn: () => scanApi.search({ limit: 1, offset: 0 }),
+    refetchInterval: 15_000,
+  });
+
   const { data: health } = useQuery({
     queryKey: ['health'],
     queryFn: healthApi.check,
-    retry: false,
+    retry: 1,
     refetchInterval: 30_000,
   });
 
-  const scans = scanData?.data ?? [];
-  const total = scanData?.pagination?.total ?? 0;
-  const running = scans.filter((s: Scan) => ['RUNNING', 'STARTING'].includes(s.status?.toUpperCase())).length;
-  const finished = scans.filter((s: Scan) => s.status?.toUpperCase() === 'FINISHED').length;
-  const failed = scans.filter((s: Scan) => s.status?.toUpperCase() === 'ERROR-FAILED').length;
+  const scans = scanData?.items ?? [];
+  const total = scanData?.total ?? 0;
+
+  // Use facets from search API for accurate cross-scan status counts
+  const facets = searchData?.facets?.status ?? {};
+  const running = (facets['RUNNING'] ?? 0) + (facets['STARTING'] ?? 0);
+  const finished = facets['FINISHED'] ?? 0;
+  const failed = (facets['ERROR-FAILED'] ?? 0) + (facets['ABORTED'] ?? 0);
 
   const healthStatus = health?.status ?? 'unknown';
   const uptime = health?.uptime_seconds
@@ -92,7 +102,7 @@ export default function DashboardPage() {
                       <td className="table-cell text-dark-300 font-mono text-xs">{scan.target}</td>
                       <td className="table-cell"><StatusBadge status={scan.status} /></td>
                       <td className="table-cell">
-                        <RiskPills high={scan.risk_high} medium={scan.risk_medium} low={scan.risk_low} info={scan.risk_info} />
+                        <RiskPills />
                       </td>
                       <td className="table-cell text-dark-400 text-xs whitespace-nowrap">{formatEpoch(scan.started)}</td>
                       <td className="table-cell text-dark-400 text-xs whitespace-nowrap">{formatDuration(scan.started, scan.ended)}</td>
@@ -127,24 +137,36 @@ export default function DashboardPage() {
                 <span className="text-dark-400 text-sm">Uptime</span>
                 <span className="text-white font-mono text-sm">{uptime}</span>
               </div>
-              {health?.components && Object.keys(health.components).length > 0 && (
-                <div className="pt-3 border-t border-dark-700/50">
-                  <p className="section-label mb-3">Components</p>
-                  <div className="space-y-2">
-                    {Object.entries(health.components).map(([name, comp]) => (
+              {/* Always show core component status */}
+              <div className="pt-3 border-t border-dark-700/50">
+                <p className="section-label mb-3">Components</p>
+                <div className="space-y-2">
+                  {health?.components && Object.keys(health.components).length > 0 ? (
+                    Object.entries(health.components).map(([name, comp]) => (
                       <div key={name} className="flex items-center justify-between text-xs">
                         <span className="text-dark-300 capitalize">{name.replace(/_/g, ' ')}</span>
                         <span className="flex items-center gap-2">
-                          <span className={comp.status === 'up' ? 'text-green-400' : comp.status === 'degraded' ? 'text-yellow-400' : 'text-red-400'}>
+                          <span className={comp.status === 'up' ? 'text-green-400' : comp.status === 'degraded' ? 'text-yellow-400' : comp.status === 'unknown' ? 'text-dark-500' : 'text-red-400'}>
                             {comp.status}
                           </span>
                           {comp.latency_ms != null && <span className="text-dark-600 tabular-nums">{comp.latency_ms}ms</span>}
                         </span>
                       </div>
-                    ))}
-                  </div>
+                    ))
+                  ) : (
+                    <>
+                      {['API Server', 'Database', 'Redis', 'Celery Worker'].map((name) => (
+                        <div key={name} className="flex items-center justify-between text-xs">
+                          <span className="text-dark-300">{name}</span>
+                          <span className="text-dark-500">
+                            {healthStatus === 'unknown' ? 'checking...' : '—'}
+                          </span>
+                        </div>
+                      ))}
+                    </>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           </div>
 
@@ -156,7 +178,7 @@ export default function DashboardPage() {
             <div className="space-y-2">
               {[
                 { to: '/scans/new', icon: PlusCircle, iconBg: 'bg-spider-600/10 text-spider-400 group-hover:bg-spider-600/20', label: 'New Scan', desc: 'Start a new reconnaissance' },
-                { to: '/modules', icon: Shield, iconBg: 'bg-blue-600/10 text-blue-400 group-hover:bg-blue-600/20', label: 'Modules', desc: 'Configure data sources' },
+                { to: '/workspaces', icon: Shield, iconBg: 'bg-blue-600/10 text-blue-400 group-hover:bg-blue-600/20', label: 'Workspaces', desc: 'Manage scan workspaces' },
                 { to: '/settings', icon: Clock, iconBg: 'bg-purple-600/10 text-purple-400 group-hover:bg-purple-600/20', label: 'Settings', desc: 'API keys & configuration' },
               ].map((a) => (
                 <Link key={a.to} to={a.to} className="flex items-center gap-3 p-3 rounded-lg hover:bg-dark-700/50 transition-colors group">

@@ -107,11 +107,20 @@ class ScanManager:
                     raise OSError("Unable to set information for the scan instance.") from e
 
     def scanInstanceGet(self, instanceId: str) -> list:
-        """Retrieve a scan instance by its ID."""
+        """Retrieve a scan instance by its ID, including result count."""
         if not isinstance(instanceId, str):
             raise TypeError(f"instanceId is {type(instanceId)}; expected str()")
         ph = get_placeholder(self.db_type)
-        qry = f"SELECT name, seed_target, ROUND(created/1000) AS created, ROUND(started/1000) AS started, ROUND(ended/1000) AS ended, status FROM tbl_scan_instance WHERE guid = {ph}"
+        qry = (
+            f"SELECT i.guid, i.name, i.seed_target, "
+            f"ROUND(i.created/1000) AS created, "
+            f"ROUND(i.started/1000) AS started, "
+            f"ROUND(i.ended/1000) AS ended, "
+            f"i.status, "
+            f"(SELECT COUNT(*) FROM tbl_scan_results r "
+            f" WHERE r.scan_instance_id = i.guid AND r.type <> 'ROOT') AS result_count "
+            f"FROM tbl_scan_instance i WHERE i.guid = {ph}"
+        )
         qvars = [instanceId]
         with self.dbhLock:
             for attempt in range(3):
