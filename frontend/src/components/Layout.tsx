@@ -13,8 +13,13 @@ import {
   Bot,
   BookOpen,
   Menu,
+  LogOut,
+  Users,
+  User,
+  Shield,
 } from 'lucide-react';
 import { clsx } from 'clsx';
+import { useAuthStore } from '../lib/auth';
 
 interface NavItem {
   name: string;
@@ -47,6 +52,7 @@ export default function Layout() {
   const [showAbout, setShowAbout] = useState(false);
   const [servicesOpen, setServicesOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const { user, isAuthenticated, logout, hasPermission } = useAuthStore();
 
   return (
     <div className="flex h-full">
@@ -96,6 +102,25 @@ export default function Layout() {
               {item.name}
             </NavLink>
           ))}
+
+          {/* Admin-only nav items */}
+          {isAuthenticated && hasPermission('user:read') && (
+            <NavLink
+              to="/users"
+              onClick={() => { if (window.innerWidth < 1024) setSidebarOpen(false); }}
+              className={({ isActive }) =>
+                clsx(
+                  'flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors',
+                  isActive
+                    ? 'bg-spider-600/20 text-spider-400'
+                    : 'text-dark-300 hover:bg-dark-800 hover:text-dark-100',
+                )
+              }
+            >
+              <Users className="h-4 w-4 flex-shrink-0" />
+              Users
+            </NavLink>
+          )}
         </nav>
 
         {/* Services dropdown */}
@@ -138,9 +163,34 @@ export default function Layout() {
           )}
         </div>
 
-        {/* Footer */}
-        <div className="px-6 py-4 border-t border-dark-700">
-          <p className="text-xs text-dark-500">SpiderFoot v5.8.0</p>
+        {/* User menu & Footer */}
+        <div className="px-3 pb-2 border-t border-dark-700">
+          {isAuthenticated && user ? (
+            <div className="py-3">
+              <div className="flex items-center gap-3 px-3 py-2">
+                <div className="h-8 w-8 rounded-full bg-spider-600/20 flex items-center justify-center flex-shrink-0">
+                  <User className="h-4 w-4 text-spider-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-white truncate">{user.username}</p>
+                  <div className="flex items-center gap-1">
+                    <Shield className="h-3 w-3 text-dark-500" />
+                    <p className="text-xs text-dark-500 capitalize">{user.role}</p>
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => logout()}
+                className="w-full flex items-center gap-2 px-3 py-2 mt-1 text-xs text-dark-400 hover:text-red-400 hover:bg-dark-800 rounded-lg transition-colors"
+              >
+                <LogOut className="h-3.5 w-3.5" />
+                Sign out
+              </button>
+            </div>
+          ) : null}
+          <div className="px-3 py-2">
+            <p className="text-xs text-dark-500">SpiderFoot v5.8.0</p>
+          </div>
         </div>
       </aside>
 
@@ -179,7 +229,7 @@ export default function Layout() {
                 <p>An OSINT automation tool for reconnaissance.</p>
                 <p>
                   <a
-                    href="https://github.com/smicallef/spiderfoot"
+                    href="https://github.com/poppopjmp/spiderfoot"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-spider-400 hover:text-spider-300 underline decoration-spider-600/50 underline-offset-2"

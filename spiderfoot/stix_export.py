@@ -324,7 +324,7 @@ class TAXIIServer:
     def __init__(self):
         self.title = "SpiderFoot TAXII Server"
         self.description = "STIX 2.1 threat intelligence from SpiderFoot OSINT scans"
-        self.contact = "https://github.com/smicallef/spiderfoot"
+        self.contact = "https://github.com/poppopjmp/spiderfoot"
         self._collections: dict[str, TAXIICollection] = {}
         self._bundles: dict[str, dict[str, Any]] = {}
 

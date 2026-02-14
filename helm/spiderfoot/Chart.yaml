@@ -14,9 +14,9 @@ keywords:
   - microservices
 maintainers:
   - name: SpiderFoot Team
-home: https://github.com/smicallef/spiderfoot
+home: https://github.com/poppopjmp/spiderfoot
 sources:
-  - https://github.com/smicallef/spiderfoot
+  - https://github.com/poppopjmp/spiderfoot
 dependencies:
   - name: postgresql
     version: "~15.x"

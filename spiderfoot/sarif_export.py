@@ -296,7 +296,7 @@ class SARIFExporter:
                             "name": "SpiderFoot",
                             "version": self.version,
                             "semanticVersion": self.version,
-                            "informationUri": "https://github.com/smicallef/spiderfoot",
+                            "informationUri": "https://github.com/poppopjmp/spiderfoot",
                             "rules": self._build_rules(),
                             "properties": {
                                 "scanId": self.scan_id,

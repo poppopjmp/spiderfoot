@@ -1291,14 +1291,81 @@ async def export_scan_viz(
     if record is None:
         raise HTTPException(status_code=404, detail="Scan not found")
 
-    data = svc.get_events(scan_id, filter_fp=True)
+    events = svc.get_events(scan_id, filter_fp=True)
+
+    if not events:
+        payload = json.dumps({"nodes": [], "edges": []})
+        return Response(payload, media_type="application/json")
+
+    root = record.target
+
+    # Build event-type → category lookup
+    event_type_categories: dict[str, str] = {}
+    try:
+        dbh = svc._ensure_dbh()
+        et_list = dbh.eventTypes()
+        if et_list:
+            for et in et_list:
+                if isinstance(et, (list, tuple)):
+                    if len(et) >= 4:
+                        event_type_categories[et[1]] = et[3]
+                    elif len(et) >= 2:
+                        event_type_categories[et[0]] = et[1] if len(et) > 1 else "DATA"
+                elif isinstance(et, dict):
+                    event_type_categories[et.get("event", "")] = et.get("event_type", "DATA")
+    except Exception:
+        pass
+
+    # Build hash → data-value mapping for parent resolution
+    hash_to_data: dict[str, str] = {}
+    for row in events:
+        row = list(row) if isinstance(row, tuple) else row
+        event_hash = row[3] if len(row) > 3 else ""
+        event_data = row[1] if len(row) > 1 else ""
+        if event_hash:
+            hash_to_data[event_hash] = event_data
+
+    # Transform 9-col DB rows → 15-col format expected by buildGraphData
+    extended_data = []
+    for row in events:
+        row = list(row) if isinstance(row, tuple) else row
+        generated = row[0] if len(row) > 0 else 0
+        data_val = row[1] if len(row) > 1 else ""
+        module = row[2] if len(row) > 2 else ""
+        event_hash = row[3] if len(row) > 3 else ""
+        event_type = row[4] if len(row) > 4 else ""
+        source_hash = row[5] if len(row) > 5 else "ROOT"
+        confidence = row[6] if len(row) > 6 else 100
+        visibility = row[7] if len(row) > 7 else 100
+        risk = row[8] if len(row) > 8 else 0
+
+        source_data = hash_to_data.get(source_hash, "ROOT") if source_hash != "ROOT" else root
+        category = event_type_categories.get(event_type, "DATA")
+
+        extended_data.append((
+            generated,    # 0
+            data_val,     # 1 — entity value
+            source_data,  # 2 — parent entity value
+            module,       # 3
+            event_type,   # 4
+            source_hash,  # 5
+            confidence,   # 6
+            visibility,   # 7
+            event_hash,   # 8 — event ID
+            0,            # 9 — false_positive
+            risk,         # 10
+            category,     # 11 — ENTITY/INTERNAL/DESCRIPTOR/DATA
+            "",           # 12
+            "",           # 13
+            "",           # 14
+        ))
 
     if gexf == "0":
-        graph_json = SpiderFootHelpers.buildGraphJson([record.target], data)
+        graph_json = SpiderFootHelpers.buildGraphJson([root], extended_data)
         return Response(graph_json, media_type="application/json")
 
     fname = f"{record.name}-SpiderFoot.gexf" if record.name else "SpiderFoot.gexf"
-    gexf_data = SpiderFootHelpers.buildGraphGexf([record.target], "SpiderFoot Export", data)
+    gexf_data = SpiderFootHelpers.buildGraphGexf([root], "SpiderFoot Export", extended_data)
     return Response(
         gexf_data,
         media_type="application/gexf",

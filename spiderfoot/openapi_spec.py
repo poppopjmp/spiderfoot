@@ -120,7 +120,7 @@ class OpenAPIGenerator:
             },
             "contact": {
                 "name": "SpiderFoot Team",
-                "url": "https://github.com/smicallef/spiderfoot",
+                "url": "https://github.com/poppopjmp/spiderfoot",
             },
         }
 

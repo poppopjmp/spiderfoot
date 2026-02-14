@@ -365,6 +365,12 @@ def require_permission(permission: str):
 
         return user
 
+    # Fix: `from __future__ import annotations` turns type hints into strings,
+    # which prevents FastAPI from recognising `Request` as the special request
+    # object.  We restore the real class reference so FastAPI injects it properly.
+    _check.__annotations__["request"] = Request
+    _check.__annotations__["return"] = UserContext
+
     return _check
 
 

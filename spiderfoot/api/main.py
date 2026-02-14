@@ -23,6 +23,11 @@ from .routers import (
 )
 from spiderfoot import __version__
 
+# Auth & RBAC
+from spiderfoot.auth.routes import router as auth_router
+from spiderfoot.auth.middleware import install_auth_middleware
+from spiderfoot.auth.models import AuthConfig as AuthCfg
+
 # Security imports
 from spiderfoot.security.security_middleware import install_fastapi_security
 
@@ -62,6 +67,16 @@ async def _lifespan(application: FastAPI):
     mgr = get_shutdown_coordinator()
     _log.info("API startup — shutdown coordinator has %d registered services",
               len(mgr.registered_services()))
+
+    # Initialize auth service (creates tables, seeds default admin)
+    try:
+        from spiderfoot.auth.service import get_auth_service
+        auth_svc = get_auth_service()
+        auth_svc.initialize()
+        _log.info("Auth service initialized")
+    except Exception as e:
+        _log.warning("Auth service init failed (non-fatal): %s", e)
+
     yield
     # On shutdown, run all registered cleanup callbacks
     results = mgr.shutdown(reason="fastapi_lifespan")
@@ -152,6 +167,7 @@ _VERSIONED_ROUTERS = [
     (scan_comparison.router,  "/api", ["scan-comparison"]),
     (distributed_scan.router, "/api", ["distributed-scan"]),
     (sso.router,              "/api", ["sso"]),
+    (auth_router,             "/api", ["authentication"]),
     (report_templates.router, "/api", ["report-templates"]),
     (tag_group.router,        "/api", ["tags-groups"]),
     (notification_rules.router, "/api", ["notification-rules"]),
@@ -197,6 +213,9 @@ install_audit_logging(app)
 
 # Install response compression (compress large JSON responses)
 install_compression(app)
+
+# Install auth middleware (validates JWT, sets request.state.user)
+install_auth_middleware(app, AuthCfg())
 
 # Install CORS (must be last middleware added — runs first in ASGI onion)
 install_cors(app)

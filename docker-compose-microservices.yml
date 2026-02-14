@@ -261,6 +261,16 @@ services:
       SF_MINIO_REPORTS_BUCKET: ${SF_MINIO_REPORTS_BUCKET:-sf-reports}
       SF_MINIO_DATA_BUCKET: ${SF_MINIO_DATA_BUCKET:-sf-data}
       SF_MINIO_LOGS_BUCKET: ${SF_MINIO_LOGS_BUCKET:-sf-logs}
+      # ── Auth / RBAC ──
+      SF_JWT_SECRET: ${SF_JWT_SECRET:-change-me-in-production-please}
+      SF_JWT_EXPIRY_HOURS: ${SF_JWT_EXPIRY_HOURS:-24}
+      SF_JWT_REFRESH_EXPIRY_HOURS: ${SF_JWT_REFRESH_EXPIRY_HOURS:-168}
+      SF_AUTH_REQUIRED: ${SF_AUTH_REQUIRED:-true}
+      SF_RBAC_ENFORCE: ${SF_RBAC_ENFORCE:-true}
+      SF_ADMIN_USERNAME: ${SF_ADMIN_USERNAME:-admin}
+      SF_ADMIN_PASSWORD: ${SF_ADMIN_PASSWORD:-admin}
+      SF_ADMIN_EMAIL: ${SF_ADMIN_EMAIL:-admin@spiderfoot.local}
+      SF_MAX_LOGIN_ATTEMPTS: ${SF_MAX_LOGIN_ATTEMPTS:-5}
     depends_on:
       redis:
         condition: service_healthy

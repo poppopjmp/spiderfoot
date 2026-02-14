@@ -1,6 +1,7 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { lazy, Suspense } from 'react';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { lazy, Suspense, useEffect } from 'react';
 import Layout from './components/Layout';
+import { useAuthStore } from './lib/auth';
 
 // Core pages (eagerly loaded — most visited)
 import DashboardPage from './pages/Dashboard';
@@ -8,11 +9,13 @@ import ScansPage from './pages/Scans';
 import ScanDetailPage from './pages/ScanDetail';
 import NewScanPage from './pages/NewScan';
 import SettingsPage from './pages/Settings';
+import LoginPage from './pages/Login';
 
 // Secondary pages (lazy loaded)
 const WorkspacesPage = lazy(() => import('./pages/Workspaces'));
 const DocumentationPage = lazy(() => import('./pages/Documentation'));
 const AgentsPage = lazy(() => import('./pages/Agents'));
+const UsersPage = lazy(() => import('./pages/Users'));
 
 function LazyFallback() {
   return (
@@ -22,10 +25,49 @@ function LazyFallback() {
   );
 }
 
+/**
+ * Auth-aware route guard. When auth is required and the user is not
+ * authenticated, redirects to /login. When auth is optional (default),
+ * all routes are accessible.
+ */
+function RequireAuth({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, authRequired, isLoading } = useAuthStore();
+  const location = useLocation();
+
+  if (isLoading) {
+    return <LazyFallback />;
+  }
+
+  if (authRequired && !isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return <>{children}</>;
+}
+
 export default function App() {
+  const { fetchAuthStatus, fetchCurrentUser, setTokensFromUrl, accessToken } = useAuthStore();
+
+  // On mount: check for SSO tokens in URL, load auth status & current user
+  useEffect(() => {
+    setTokensFromUrl();
+    fetchAuthStatus();
+  }, []);
+
+  // Fetch current user when access token changes
+  useEffect(() => {
+    if (accessToken) {
+      fetchCurrentUser();
+    }
+  }, [accessToken]);
+
   return (
     <Routes>
-      <Route path="/" element={<Layout />}>
+      {/* Login page — always accessible */}
+      <Route path="/login" element={<LoginPage />} />
+
+      {/* Protected routes */}
+      <Route path="/" element={<RequireAuth><Layout /></RequireAuth>}>
         {/* Dashboard / overview */}
         <Route index element={<DashboardPage />} />
 
@@ -45,6 +87,9 @@ export default function App() {
 
         {/* Agents — matches CherryPy: /agents (from Services) */}
         <Route path="agents" element={<Suspense fallback={<LazyFallback />}><AgentsPage /></Suspense>} />
+
+        {/* User Management (admin only) */}
+        <Route path="users" element={<Suspense fallback={<LazyFallback />}><UsersPage /></Suspense>} />
 
         {/* CherryPy URL redirects for backward compatibility */}
         <Route path="newscan" element={<Navigate to="/scans/new" replace />} />

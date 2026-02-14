@@ -75,7 +75,7 @@ FROM python:3.11-slim-bookworm
 LABEL maintainer="SpiderFoot <support@spiderfoot.net>" \
       org.opencontainers.image.title="SpiderFoot" \
       org.opencontainers.image.description="OSINT automation platform" \
-      org.opencontainers.image.source="https://github.com/smicallef/spiderfoot" \
+      org.opencontainers.image.source="https://github.com/poppopjmp/spiderfoot" \
       org.opencontainers.image.licenses="MIT"
 
 # Install only runtime dependencies
