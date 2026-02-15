@@ -1,11 +1,11 @@
 """SpiderFoot security subpackage.
 
-This subpackage contains authentication, authorization, CSRF protection,
+This subpackage contains authentication, authorization,
 security middleware, and logging components.
 
 Usage::
 
-    from spiderfoot.security import AuthGuard, CSRFProtection
+    from spiderfoot.security import AuthGuard
     from spiderfoot.security import SpiderFootSecurityMiddleware
 """
 
@@ -18,15 +18,6 @@ from .auth import (
     AuthMethod,
     AuthResult,
     Role,
-)
-
-# CSRF protection
-from .csrf_protection import (
-    CSRFProtection,
-    CSRFTool,
-    csrf_protect,
-    csrf_token,
-    init_csrf_protection,
 )
 
 # Security compatibility
@@ -51,13 +42,11 @@ from .security_logging import (
 
 # Security middleware
 from .security_middleware import (
-    CherryPySecurityTool,
     FastAPISecurityMiddleware,
     SecurityConfigDefaults,
     SpiderFootSecurityMiddleware,
     create_security_config,
     get_security_status,
-    install_cherrypy_security,
     install_fastapi_security,
     validate_security_config,
 )
@@ -77,12 +66,6 @@ __all__ = [
     "AuthMethod",
     "AuthResult",
     "Role",
-    # CSRF protection
-    "CSRFProtection",
-    "CSRFTool",
-    "csrf_protect",
-    "csrf_token",
-    "init_csrf_protection",
     # Security compatibility
     "RequestContext",
     "get_request_context",
@@ -97,13 +80,11 @@ __all__ = [
     "handle_error",
     "log_security_event",
     # Security middleware
-    "CherryPySecurityTool",
     "FastAPISecurityMiddleware",
     "SecurityConfigDefaults",
     "SpiderFootSecurityMiddleware",
     "create_security_config",
     "get_security_status",
-    "install_cherrypy_security",
     "install_fastapi_security",
     "validate_security_config",
     # Service authentication

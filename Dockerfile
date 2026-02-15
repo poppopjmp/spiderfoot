@@ -168,9 +168,9 @@ EXPOSE 5001 8001
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8001/api/v1/health')" || exit 1
 
-# Default command with support for both web UI and API
+# Default command: FastAPI server
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh", "python"]
-CMD ["sf.py", "--both", "-l", "0.0.0.0:5001", "--api-listen", "0.0.0.0:8001"]
+CMD ["sf.py", "--api", "--api-listen", "0.0.0.0:8001"]
 
 # ---
 # NOTE: For persistent storage, logs, cache, and config, ensure the following paths are writeable by the spiderfoot user inside the container:

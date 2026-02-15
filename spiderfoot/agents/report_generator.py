@@ -26,6 +26,11 @@ Generate a comprehensive, professional security assessment report from the provi
 You will receive rich context from a vector database containing all indexed scan events —
 analyse every piece of evidence carefully and produce detailed, data-driven findings.
 
+IMPORTANT: The prompt includes a "PRE-COMPUTED ATTACK SURFACE" section with exact counts
+for domains, hosts, emails, open_ports, technologies, and exposed_services.
+You MUST copy these exact values into the attack_surface_summary field of your JSON output.
+Do NOT use zeros — always use the pre-computed values provided.
+
 Structure your report as JSON:
 {
   "title": "Report title",
@@ -121,6 +126,43 @@ def _get_qdrant_context(scan_id: str, target: str, max_events: int = 200) -> dic
             r = pt.payload.get("risk", 0)
             if isinstance(r, int) and 0 <= r <= 4:
                 risk_counts[r] = risk_counts.get(r, 0) + 1
+
+        # Pre-compute attack surface counts from event types
+        domain_types = {"INTERNET_NAME", "DOMAIN_NAME", "DOMAIN_WHOIS",
+                        "SIMILARDOMAIN", "AFFILIATE_DOMAIN"}
+        host_types = {"IP_ADDRESS", "IPV6_ADDRESS", "NETBLOCK_MEMBER",
+                      "NETBLOCK_OWNER", "CO_HOSTED_SITE"}
+        email_types = {"EMAIL_ADDRESS", "EMAILADDR", "EMAILADDR_GENERIC"}
+        port_types = {"TCP_PORT_OPEN", "UDP_PORT_OPEN", "OPEN_TCP_PORT",
+                      "TCP_PORT_OPEN_BANNER"}
+        tech_types = {"WEBSERVER_TECHNOLOGY", "SOFTWARE_USED",
+                      "WEBSERVER_HTTPHEADERS", "URL_WEB_FRAMEWORK",
+                      "WEBSERVER_STRANGEHEADER"}
+        service_types = {"WEBSERVER_BANNER", "OPERATING_SYSTEM",
+                         "TCP_PORT_OPEN_BANNER", "URL_JAVASCRIPT_FRAMEWORK"}
+
+        attack_surface = {
+            "domains": sum(type_counts.get(t, 0) for t in domain_types),
+            "hosts": sum(type_counts.get(t, 0) for t in host_types),
+            "emails": sum(type_counts.get(t, 0) for t in email_types),
+            "open_ports": sum(type_counts.get(t, 0) for t in port_types),
+        }
+
+        # Collect unique technology / service names from event payloads
+        technologies = set()
+        exposed_services = set()
+        for pt in all_events:
+            et = pt.payload.get("event_type", "")
+            data = str(pt.payload.get("data", ""))[:200]
+            if et in tech_types and data:
+                technologies.add(data.split("\n")[0].strip()[:80])
+            if et in service_types and data:
+                exposed_services.add(data.split("\n")[0].strip()[:80])
+
+        attack_surface["technologies"] = sorted(technologies)[:30]
+        attack_surface["exposed_services"] = sorted(exposed_services)[:30]
+
+        context["attack_surface"] = attack_surface
 
         context["event_stats"] = {
             "total_indexed": len(all_events),
@@ -272,6 +314,21 @@ Every finding should reference specific evidence from the scan data."""
 
                 result_data = self._parse_json_response(response)
 
+                # Post-process: override attack_surface_summary with
+                # pre-computed values so the LLM can't return zeros
+                pre_atk = qdrant_ctx.get("attack_surface", {})
+                if pre_atk:
+                    atk_summary = result_data.get("attack_surface_summary", {})
+                    if not isinstance(atk_summary, dict):
+                        atk_summary = {}
+                    for key in ("domains", "hosts", "emails", "open_ports"):
+                        if pre_atk.get(key, 0) > 0:
+                            atk_summary[key] = pre_atk[key]
+                    for key in ("technologies", "exposed_services"):
+                        if pre_atk.get(key):
+                            atk_summary[key] = pre_atk[key]
+                    result_data["attack_surface_summary"] = atk_summary
+
                 return AgentResult(
                     agent_name=self.config.name,
                     event_id=event.get("id", ""),
@@ -327,6 +384,21 @@ Every finding should reference specific evidence from the scan data."""
             lines.append(f"  Risk breakdown: Critical={risk.get('critical', 0)}, "
                          f"High={risk.get('high', 0)}, Medium={risk.get('medium', 0)}, "
                          f"Low={risk.get('low', 0)}, Info={risk.get('info', 0)}")
+
+        # Pre-computed attack surface counts (USE THESE EXACT VALUES)
+        atk = ctx.get("attack_surface", {})
+        if atk:
+            lines.append("\n🎯 **PRE-COMPUTED ATTACK SURFACE (use these exact values in attack_surface_summary):**")
+            lines.append(f"  domains: {atk.get('domains', 0)}")
+            lines.append(f"  hosts: {atk.get('hosts', 0)}")
+            lines.append(f"  emails: {atk.get('emails', 0)}")
+            lines.append(f"  open_ports: {atk.get('open_ports', 0)}")
+            techs = atk.get("technologies", [])
+            if techs:
+                lines.append(f"  technologies: {json.dumps(techs)}")
+            svcs = atk.get("exposed_services", [])
+            if svcs:
+                lines.append(f"  exposed_services: {json.dumps(svcs)}")
 
         # Type breakdown
         types = stats.get("type_breakdown", {})

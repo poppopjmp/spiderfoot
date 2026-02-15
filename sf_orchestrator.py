@@ -31,7 +31,6 @@ from pathlib import Path
 from spiderfoot.core.config import ConfigManager
 from spiderfoot.core.modules import ModuleManager
 from spiderfoot.core.scan import ScanManager
-from spiderfoot.core.server import ServerManager
 from spiderfoot.core.validation import ValidationUtils
 
 # Import SpiderFoot core
@@ -94,7 +93,6 @@ class SpiderFootOrchestrator:
             
             # Initialize remaining managers
             self.scan_manager = ScanManager(self.config)
-            self.server_manager = ServerManager(self.config)
             
             # Set up logging
             self.logging_queue = mp.Queue()
@@ -145,16 +143,12 @@ class SpiderFootOrchestrator:
                           help="Disable logging. This will also hide errors!")
         
         # Server options
-        parser.add_argument("-l", "--listen", metavar="IP:port",
-                          help="IP and port to listen on for web UI.")
         parser.add_argument("--api", action='store_true',
-                          help="Start FastAPI server instead of web UI.")
+                          help="Start FastAPI server.")
         parser.add_argument("--api-listen", metavar="IP:port",
                           help="IP and port for FastAPI server to listen on.")
         parser.add_argument("--api-workers", type=int, default=1,
                           help="Number of FastAPI worker processes.")
-        parser.add_argument("--both", action='store_true',
-                          help="Start both web UI and FastAPI servers.")
         
         # Scanning options
         parser.add_argument("-s", metavar="TARGET", help="Target for the scan.")
@@ -380,19 +374,10 @@ class SpiderFootOrchestrator:
         Args:
             args: Parsed command line arguments
         """
-        # Prepare server configurations
-        web_config = self.config_manager.get_web_config()
+        # Prepare server configuration
         api_config = self.config_manager.get_api_config()
         
         # Apply command line overrides
-        if args.listen:
-            try:
-                host, port = self.validation_utils.parse_host_port(args.listen)
-                web_config.update({'host': host, 'port': port})
-            except ValueError as e:
-                self.log.error(f"Invalid listen address: {e}")
-                sys.exit(-1)
-        
         if args.api_listen:
             try:
                 host, port = self.validation_utils.parse_host_port(args.api_listen, default_port=8001)
@@ -404,13 +389,15 @@ class SpiderFootOrchestrator:
         if args.api_workers:
             api_config['workers'] = args.api_workers
         
-        # Start appropriate server(s)
-        if args.api:
-            self.server_manager.start_fastapi_server(api_config, self.logging_queue)
-        elif args.both:
-            self.server_manager.start_both_servers(web_config, api_config, self.logging_queue)
-        else:
-            self.server_manager.start_web_server(web_config, self.logging_queue)
+        # Start FastAPI server
+        import uvicorn
+        uvicorn.run(
+            "spiderfoot.api.main:app",
+            host=api_config.get('host', '0.0.0.0'),
+            port=api_config.get('port', 8001),
+            workers=api_config.get('workers', 4),
+            log_level=os.environ.get("SF_LOG_LEVEL", "info").lower(),
+        )
     
     def run(self, args=None) -> None:
         """
@@ -433,8 +420,8 @@ class SpiderFootOrchestrator:
             
             # Initialize if we have any actual operation to perform
             if any([parsed_args.s, parsed_args.modules, parsed_args.types, parsed_args.correlate,
-                   parsed_args.listen, parsed_args.api, parsed_args.both, 
-                   hasattr(parsed_args, 'listen') or hasattr(parsed_args, 'api')]):
+                   parsed_args.api,
+                   hasattr(parsed_args, 'api')]):
                 self.initialize()
             
             # Apply configuration from command line
@@ -457,7 +444,7 @@ class SpiderFootOrchestrator:
                 self.handle_scan(parsed_args)
             
             # Handle server startup
-            if any([parsed_args.listen, parsed_args.api, parsed_args.both]) or not any(vars(parsed_args).values()):
+            if parsed_args.api or not any(vars(parsed_args).values()):
                 self.handle_server_startup(parsed_args)
             
         except KeyboardInterrupt:
@@ -502,7 +489,7 @@ class SpiderFootOrchestrator:
             logger.setLevel(log_level)
             
         # Also configure the main module loggers
-        for logger_name in ['__main__', 'sf', 'sfcli', 'sfapi', 'sfwebui']:
+        for logger_name in ['__main__', 'sf', 'sfcli', 'sfapi']:
             logger = logging.getLogger(logger_name)
             logger.setLevel(log_level)
 
@@ -511,9 +498,7 @@ def main():
     """Main entry point when called directly."""
     if len(sys.argv) <= 1:
         print("SpiderFoot usage:")
-        print("  Web UI:       python sf_orchestrator.py -l <ip>:<port>")
         print("  FastAPI:      python sf_orchestrator.py --api [--api-listen <ip>:<port>]")
-        print("  Both servers: python sf_orchestrator.py --both [-l <ip>:<port>] [--api-listen <ip>:<port>]")
         print("  CLI scan:     python sf_orchestrator.py -s <target> [options]")
         print("Try --help for full guidance.")
         sys.exit(-1)

@@ -189,7 +189,7 @@ def malicious_events():
     vulnerability = SpiderFootEvent(
         eventType='VULNERABILITY',
         data='Critical SQL injection vulnerability found',
-        module='sfp_tool_nuclei'
+        module='sfp_nuclei'
     )
     vulnerability.risk = 85
     events.append(vulnerability)

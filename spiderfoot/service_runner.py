@@ -2,7 +2,7 @@
 # -------------------------------------------------------------------------------
 # Name:         service_runner
 # Purpose:      Unified entry point for running SpiderFoot as individual
-#               microservices (scanner, api, webui) or as a monolith.
+#               microservices (scanner, api) or as a monolith.
 #
 # Author:       SpiderFoot Team
 # Created:      2025-07-08
@@ -17,11 +17,10 @@ Run individual SpiderFoot services for microservice deployment:
 
     python -m spiderfoot.service_runner --service scanner --port 5003
     python -m spiderfoot.service_runner --service api --port 8001
-    python -m spiderfoot.service_runner --service webui --port 5001
     python -m spiderfoot.service_runner --service all  # monolith mode
 
 Environment variables:
-    SF_SERVICE           Service to run (scanner|api|webui|all)
+    SF_SERVICE           Service to run (scanner|api|all)
     SF_REDIS_URL         Redis connection URL
     SF_POSTGRES_DSN      PostgreSQL DSN
     SF_VECTOR_ENDPOINT   Vector.dev HTTP source endpoint
@@ -221,23 +220,6 @@ def _run_api(port: int, config: dict) -> None:
     )
 
 
-def _run_webui(port: int, config: dict) -> None:
-    """Run the CherryPy Web UI service."""
-    _health.service_name = "webui"
-    _health.ready = True
-
-    log.info("Starting WebUI service on port %d", port)
-
-    # Re-use existing sf.py startup path in webui mode
-    sys.argv = [
-        "sf.py",
-        "-l", f"0.0.0.0:{port}",
-    ]
-
-    from sf import main as sf_main
-    sf_main()
-
-
 def _run_all(port: int, config: dict) -> None:
     """Run all services in a single process (monolith mode)."""
     _health.service_name = "monolith"
@@ -247,9 +229,8 @@ def _run_all(port: int, config: dict) -> None:
 
     sys.argv = [
         "sf.py",
-        "--both",
-        "-l", f"0.0.0.0:{port}",
-        "--api-listen", f"0.0.0.0:8001",
+        "--api",
+        "--api-listen", f"0.0.0.0:{port}",
     ]
 
     from sf import main as sf_main
@@ -259,7 +240,6 @@ def _run_all(port: int, config: dict) -> None:
 _SERVICE_MAP = {
     "scanner": _run_scanner,
     "api": _run_api,
-    "webui": _run_webui,
     "all": _run_all,
 }
 
@@ -290,7 +270,7 @@ def main() -> None:
         type=int,
         default=None,
         help="Health check port (defaults to service port for scanner, "
-             "separate port for api/webui)",
+             "separate port for api)",
     )
     parser.add_argument(
         "--log-level",

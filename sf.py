@@ -36,7 +36,6 @@ from sf_orchestrator import SpiderFootOrchestrator
 # Legacy compatibility imports for unit tests
 try:
     from spiderfoot.core.modules import ModuleManager
-    from spiderfoot.core.server import ServerManager
     from spiderfoot.core.validation import ValidationUtils
     from spiderfoot.core.scan import ScanManager
     from spiderfoot import SpiderFootHelpers
@@ -50,9 +49,6 @@ except ImportError:
     class DummyModuleManager:
         pass
     
-    class DummyServerManager:
-        pass
-    
     class DummyValidationUtils:
         pass
     
@@ -60,7 +56,6 @@ except ImportError:
         pass
     
     ModuleManager = DummyModuleManager
-    ServerManager = DummyServerManager
     ValidationUtils = DummyValidationUtils
     ScanManager = DummyScanManager
     SpiderFootHelpers = None
@@ -210,61 +205,6 @@ def start_scan(sfConfig, sfModules, args, loggingQueue):
         sys.exit(-1)
 
 
-def start_fastapi_server(sfApiConfig, sfConfig, loggingQueue=None):
-    """
-    Legacy function - now handled by ServerManager.
-    
-    This function is kept for backward compatibility but delegates
-    to the new modular architecture.
-    
-    Args:
-        sfApiConfig: FastAPI server configuration
-        sfConfig: SpiderFoot configuration dictionary
-        loggingQueue: Optional queue for logging messages
-    """
-    from spiderfoot.core.server import ServerManager
-    
-    server_manager = ServerManager(sfConfig)
-    server_manager.start_fastapi_server(sfApiConfig, loggingQueue)
-
-
-def start_both_servers(sfWebUiConfig, sfApiConfig, sfConfig, loggingQueue=None):
-    """
-    Legacy function - now handled by ServerManager.
-    
-    This function is kept for backward compatibility but delegates
-    to the new modular architecture.
-    
-    Args:
-        sfWebUiConfig: Web UI server configuration
-        sfApiConfig: FastAPI server configuration
-        sfConfig: SpiderFoot configuration dictionary
-        loggingQueue: Optional queue for logging messages
-    """
-    from spiderfoot.core.server import ServerManager
-    
-    server_manager = ServerManager(sfConfig)
-    server_manager.start_both_servers(sfWebUiConfig, sfApiConfig, loggingQueue)
-
-
-def start_web_server(sfWebUiConfig, sfConfig, loggingQueue=None):
-    """
-    Legacy function - now handled by ServerManager.
-    
-    This function is kept for backward compatibility but delegates
-    to the new modular architecture.
-    
-    Args:
-        sfWebUiConfig: Web UI server configuration
-        sfConfig: SpiderFoot configuration dictionary
-        loggingQueue: Optional queue for logging messages
-    """
-    from spiderfoot.core.server import ServerManager
-    
-    server_manager = ServerManager(sfConfig)
-    server_manager.start_web_server(sfWebUiConfig, loggingQueue)
-
-
 def handle_abort(signal, frame):
     """
     Legacy function - now handled by ScanManager.
@@ -350,7 +290,7 @@ def process_target(args, log):
 # Maintain backward compatibility
 if __name__ == '__main__':
     if len(sys.argv) <= 1:
-        usage_text = "SpiderFoot usage:\n  Web UI:       python sf.py -l <ip>:<port>\n  FastAPI:      python sf.py --api [--api-listen <ip>:<port>]\n  Both servers: python sf.py --both [-l <ip>:<port>] [--api-listen <ip>:<port>]\n  CLI scan:     python sf.py -s <target> [options]\nTry --help for full guidance."
+        usage_text = "SpiderFoot usage:\n  FastAPI:      python sf.py --api [--api-listen <ip>:<port>]\n  CLI scan:     python sf.py -s <target> [options]\nTry --help for full guidance."
         print(usage_text)
         print(usage_text, file=sys.stderr)
         sys.stdout.flush()

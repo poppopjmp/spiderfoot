@@ -2,7 +2,7 @@
 # SpiderFoot Microservices Docker Compose
 # Decomposes SpiderFoot into individual services:
 #   - api           : FastAPI REST API  (data layer, scan management)
-#   - webui         : CherryPy web UI   (proxies all data through API)
+#   - frontend      : React web UI      (served via Nginx)
 #   - redis         : event bus + cache + Celery broker
 #   - postgres      : persistent data store
 #   - traefik       : reverse proxy / API gateway  (replaces nginx since v5.3.17)

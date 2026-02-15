@@ -58,6 +58,6 @@ setup(
     },
     include_package_data=True,
     package_data={
-        "spiderfoot": ["data/*", "static/*", "templates/*"],
+        "spiderfoot": ["data/*", "static/*"],
     },
 )

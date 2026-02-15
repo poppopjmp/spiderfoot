@@ -246,48 +246,6 @@ class TestSfMainEnhanced(TestModuleBase):
         mock_log.error.assert_called_once()
         self.assertIn("Scan execution failed", str(mock_log.error.call_args))
     
-    @patch('spiderfoot.core.server.ServerManager')
-    def test_start_fastapi_server_legacy_function(self, mock_server_manager):
-        """Test start_fastapi_server legacy function delegates correctly."""
-        mock_manager = MagicMock()
-        mock_server_manager.return_value = mock_manager
-        
-        api_config = {'host': '127.0.0.1', 'port': 8001}
-        sf_config = {'_debug': False}
-        
-        sf.start_fastapi_server(api_config, sf_config, None)
-        
-        mock_server_manager.assert_called_once_with(sf_config)
-        mock_manager.start_fastapi_server.assert_called_once_with(api_config, None)
-    
-    @patch('spiderfoot.core.server.ServerManager')
-    def test_start_web_server_legacy_function(self, mock_server_manager):
-        """Test start_web_server legacy function delegates correctly."""
-        mock_manager = MagicMock()
-        mock_server_manager.return_value = mock_manager
-        
-        web_config = {'host': '127.0.0.1', 'port': 8080}
-        sf_config = {'_debug': False}
-        
-        sf.start_web_server(web_config, sf_config, None)
-        
-        mock_server_manager.assert_called_once_with(sf_config)
-        mock_manager.start_web_server.assert_called_once_with(web_config, None)
-    
-    @patch('spiderfoot.core.server.ServerManager')
-    def test_start_both_servers_legacy_function(self, mock_server_manager):
-        """Test start_both_servers legacy function delegates correctly."""
-        mock_manager = MagicMock()
-        mock_server_manager.return_value = mock_manager
-        
-        web_config = {'host': '127.0.0.1', 'port': 8080}
-        api_config = {'host': '127.0.0.1', 'port': 8001}
-        sf_config = {'_debug': False}
-        
-        sf.start_both_servers(web_config, api_config, sf_config, None)
-        
-        mock_server_manager.assert_called_once_with(sf_config)
-        mock_manager.start_both_servers.assert_called_once_with(web_config, api_config, None)
     
     # =============================================================================
     # VALIDATION AND TARGET PROCESSING TESTS

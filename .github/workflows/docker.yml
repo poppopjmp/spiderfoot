@@ -49,6 +49,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-base
           tags: |
             type=semver,pattern={{version}}
+            type=raw,value=${{ steps.meta.outputs.version }}
             type=sha,prefix=
             type=raw,value=latest,enable={{is_default_branch}}
 
@@ -69,14 +70,14 @@ jobs:
     needs: build-base
     strategy:
       matrix:
-        service: [scanner, api, webui]
+        service: [scanner, api, frontend]
         include:
           - service: scanner
             dockerfile: docker/Dockerfile.scanner
           - service: api
             dockerfile: docker/Dockerfile.api
-          - service: webui
-            dockerfile: docker/Dockerfile.webui
+          - service: frontend
+            dockerfile: frontend/Dockerfile
 
     steps:
       - uses: actions/checkout@v4
@@ -98,6 +99,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-${{ matrix.service }}
           tags: |
             type=semver,pattern={{version}}
+            type=raw,value=${{ needs.build-base.outputs.version }}
             type=sha,prefix=
             type=raw,value=latest,enable={{is_default_branch}}
 
@@ -120,7 +122,7 @@ jobs:
     needs: build-services
     strategy:
       matrix:
-        service: [scanner, api, webui]
+        service: [scanner, api, frontend]
     steps:
       - uses: actions/checkout@v4
 
