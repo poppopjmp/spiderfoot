@@ -1,0 +1,26 @@
+id: javascript_external
+version: "1"
+meta:
+  name: External JavaScript resources loaded
+  description: >
+    The target website loads JavaScript from external sources.
+    External scripts represent a supply chain risk — if the
+    third-party hosting the script is compromised, the script
+    could be modified to steal data, inject malware, or perform
+    cryptojacking on the target's visitors.
+  risk: INFO
+collections:
+  collect:
+      - method: exact
+        field: type
+        value: URL_JAVASCRIPT
+      - method: regex
+        field: source.type
+        value: LINKED_URL_EXTERNAL
+aggregation:
+  field: entity.data
+analysis:
+  - method: threshold
+    minimum: 3
+    field: data
+headline: "Multiple external JavaScript resources on: {entity.data}"

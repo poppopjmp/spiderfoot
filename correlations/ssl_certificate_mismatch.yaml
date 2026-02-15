@@ -1,0 +1,21 @@
+id: ssl_certificate_mismatch
+version: "1"
+meta:
+  name: SSL certificate hostname mismatch
+  description: >
+    An SSL/TLS certificate does not match the hostname it is
+    serving. This can indicate misconfigured infrastructure,
+    shared hosting without proper certificate management, or
+    potentially a man-in-the-middle attack.
+
+    Certificate mismatches also cause browser warnings which
+    can train users to ignore security indicators.
+  risk: MEDIUM
+collections:
+  collect:
+      - method: exact
+        field: type
+        value: SSL_CERTIFICATE_MISMATCH
+aggregation:
+  field: entity.data
+headline: "SSL certificate mismatch on host: {entity.data}"

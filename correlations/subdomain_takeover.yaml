@@ -1,0 +1,44 @@
+id: subdomain_takeover
+version: "1"
+meta:
+  name: Potential subdomain takeover candidate
+  description: >
+    A subdomain was found that resolves but returns error responses,
+    indicating it may be a candidate for subdomain takeover. If the
+    subdomain points to a third-party service that is no longer
+    configured, an attacker could claim the service and serve
+    content under the target's domain.
+
+    Subdomain takeover enables phishing, cookie stealing, and
+    bypassing domain-based security controls.
+  risk: HIGH
+collections:
+  collect:
+      - method: exact
+        field: type
+        value: INTERNET_NAME
+      - method: regex
+        field: child.type
+        value: HTTP_CODE
+  collect:
+      - method: exact
+        field: type
+        value: HTTP_CODE
+      - method: regex
+        field: data
+        value: not ^[2-3].*$
+      - method: regex
+        field: data
+        value: not 40[13]
+  collect:
+      - method: exact
+        field: type
+        value: ERROR_MESSAGE
+aggregation:
+  field: entity.data
+analysis:
+  - method: threshold
+    minimum: 2
+    field: type
+    count_unique_only: true
+headline: "Potential subdomain takeover candidate: {entity.data}"

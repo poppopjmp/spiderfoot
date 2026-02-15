@@ -1,0 +1,19 @@
+id: threat_intelligence_hit
+version: "1"
+meta:
+  name: Threat intelligence indicator match
+  description: >
+    The target matched one or more threat intelligence indicators.
+    This could mean that infrastructure, IP addresses, domains,
+    or other assets associated with the target appear in threat
+    feeds, indicating previous or ongoing malicious activity,
+    compromise, or association with known threat actors.
+  risk: HIGH
+collections:
+  collect:
+      - method: exact
+        field: type
+        value: THREAT_INTELLIGENCE
+aggregation:
+  field: entity.data
+headline: "Threat intelligence match for: {entity.data}"

@@ -160,10 +160,12 @@ class DocumentRequest(BaseModel):
 class ReportRequest(BaseModel):
     scan_id: str
     target: str
+    scan_name: str = ""
     findings: List[Dict[str, Any]] = []
     correlations: List[Dict[str, Any]] = []
     stats: Dict[str, Any] = {}
     agent_results: List[Dict[str, Any]] = []
+    geo_data: Dict[str, Any] = {}
 
 
 @app.post("/agents/process")
@@ -235,10 +237,12 @@ async def generate_report(request: ReportRequest):
         "event_type": "REPORT_REQUEST",
         "scan_id": request.scan_id,
         "target": request.target,
+        "scan_name": request.scan_name,
         "findings": request.findings,
         "correlations": request.correlations,
         "stats": request.stats,
         "agent_results": request.agent_results,
+        "geo_data": request.geo_data,
         "id": f"report-{int(time.time())}",
     }
 

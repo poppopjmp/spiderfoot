@@ -1,0 +1,19 @@
+id: physical_address_found
+version: "1"
+meta:
+  name: Physical address discovered
+  description: >
+    A physical street address associated with the target was
+    discovered through WHOIS records, web content, or other
+    sources. Physical addresses can reveal office locations,
+    data centre sites, or registered agent addresses that
+    help build a complete organisational profile.
+  risk: INFO
+collections:
+  collect:
+      - method: exact
+        field: type
+        value: PHYSICAL_ADDRESS
+aggregation:
+  field: data
+headline: "Physical address discovered: {data}"

@@ -1,0 +1,18 @@
+id: operating_system_detected
+version: "1"
+meta:
+  name: Operating system detected
+  description: >
+    The operating system running on a target host was identified
+    through various fingerprinting techniques. Knowing the OS
+    enables attackers to narrow their exploit selection and
+    tailor attacks more effectively.
+  risk: INFO
+collections:
+  collect:
+      - method: exact
+        field: type
+        value: OPERATING_SYSTEM
+aggregation:
+  field: data
+headline: "Operating system detected: {data}"

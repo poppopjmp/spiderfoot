@@ -1,0 +1,19 @@
+id: email_generic_exposed
+version: "1"
+meta:
+  name: Generic email address discovered
+  description: >
+    Generic or role-based email addresses (e.g., info@, admin@,
+    support@) were found. While expected, these addresses are
+    frequently targeted in phishing campaigns and may be shared
+    among multiple staff members, increasing the risk of
+    credential compromise.
+  risk: INFO
+collections:
+  collect:
+      - method: exact
+        field: type
+        value: EMAILADDR_GENERIC
+aggregation:
+  field: data
+headline: "Generic email address discovered: {data}"

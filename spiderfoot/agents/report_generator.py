@@ -33,7 +33,7 @@ Do NOT use zeros — always use the pre-computed values provided.
 
 Structure your report as JSON:
 {
-  "title": "Report title",
+  "title": "Report title (use the scan name if provided)",
   "executive_summary": "High-level summary for non-technical stakeholders (2-3 paragraphs)",
   "risk_rating": "critical" | "high" | "medium" | "low" | "info",
   "key_findings": [
@@ -52,6 +52,12 @@ Structure your report as JSON:
     "open_ports": 0,
     "technologies": [],
     "exposed_services": []
+  },
+  "geographic_intelligence": {
+    "countries": [{"code": "US", "name": "United States", "count": 5}],
+    "coordinates": [{"lat": 37.7749, "lon": -122.4194, "label": "San Francisco"}],
+    "addresses": ["123 Main St, San Francisco, CA"],
+    "summary": "Brief geographic distribution analysis"
   },
   "threat_assessment": "Overall threat assessment paragraph",
   "recommendations": [
@@ -259,10 +265,12 @@ class ReportGeneratorAgent(BaseAgent):
     async def process_event(self, event: Dict[str, Any]) -> AgentResult:
         scan_id = event.get("scan_id", "")
         target = event.get("target", "")
+        scan_name = event.get("scan_name", "")
         findings = event.get("findings", [])
         correlations = event.get("correlations", [])
         stats = event.get("stats", {})
         agent_results = event.get("agent_results", [])
+        geo_data = event.get("geo_data", {})
 
         # ── Retrieve rich context from Qdrant vector DB ──
         qdrant_ctx = _get_qdrant_context(scan_id, target)
@@ -271,11 +279,17 @@ class ReportGeneratorAgent(BaseAgent):
         findings_text = self._format_findings(findings[:50])
         correlations_text = self._format_correlations(correlations[:20])
         qdrant_section = self._format_qdrant_context(qdrant_ctx)
+        geo_section = self._format_geo_data(geo_data)
+
+        # Determine report title from scan name
+        title_hint = ""
+        if scan_name:
+            title_hint = f"\n**Scan Name:** {scan_name} (use this as the report title)"
 
         user_prompt = f"""Generate a comprehensive OSINT scan report:
 
 **Target:** {target}
-**Scan ID:** {scan_id}
+**Scan ID:** {scan_id}{title_hint}
 
 **Statistics:**
 - Total events: {stats.get('total_events', 'N/A')}
@@ -295,9 +309,12 @@ class ReportGeneratorAgent(BaseAgent):
 **Agent Analysis Results:**
 {json.dumps(agent_results[:10], indent=2) if agent_results else 'None available'}
 
+{geo_section}
+
 Generate a professional security assessment report. Use ALL the evidence from the
 Vector DB Context section above to provide detailed, data-driven analysis.
-Every finding should reference specific evidence from the scan data."""
+Every finding should reference specific evidence from the scan data.
+Include a geographic_intelligence section analysing the geographic distribution of infrastructure."""
 
         last_error = None
         for attempt in range(3):
@@ -468,6 +485,33 @@ Every finding should reference specific evidence from the scan data."""
                 f"- {c.get('type', c.get('rule_name', '?'))}: "
                 f"{c.get('description', c.get('rule_descr', ''))[:200]}"
             )
+        return "\n".join(lines)
+
+    def _format_geo_data(self, geo_data: Dict[str, Any]) -> str:
+        """Format geographic intelligence data for the LLM prompt."""
+        if not geo_data:
+            return ""
+        countries = geo_data.get("countries", [])
+        coordinates = geo_data.get("coordinates", [])
+        addresses = geo_data.get("addresses", [])
+        if not countries and not coordinates and not addresses:
+            return ""
+        lines = ["**Geographic Intelligence Data:**"]
+        if countries:
+            lines.append(f"\nCountries ({len(countries)}):")
+            for c in countries[:30]:
+                lines.append(f"  - {c.get('name', c.get('code', '?'))} "
+                             f"({c.get('code', '??')}): {c.get('count', 0)} events"
+                             + (f", city: {c['city']}" if c.get('city') else ""))
+        if coordinates:
+            lines.append(f"\nGeo-located endpoints ({len(coordinates)}):")
+            for coord in coordinates[:30]:
+                lines.append(f"  - ({coord.get('lat', 0)}, {coord.get('lon', 0)}) "
+                             f"{coord.get('label', '')}")
+        if addresses:
+            lines.append(f"\nPhysical addresses ({len(addresses)}):")
+            for addr in addresses[:20]:
+                lines.append(f"  - {addr}")
         return "\n".join(lines)
 
     @classmethod

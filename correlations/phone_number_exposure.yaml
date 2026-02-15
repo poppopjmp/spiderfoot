@@ -1,0 +1,18 @@
+id: phone_number_exposure
+version: "1"
+meta:
+  name: Phone number discovered
+  description: >
+    Phone numbers associated with the target were found in publicly
+    accessible sources. Exposed phone numbers can be used for
+    vishing (voice phishing), SIM swapping attacks, or as pivots
+    to discover additional personal information.
+  risk: MEDIUM
+collections:
+  collect:
+      - method: exact
+        field: type
+        value: PHONE_NUMBER
+aggregation:
+  field: data
+headline: "Phone number discovered: {data}"

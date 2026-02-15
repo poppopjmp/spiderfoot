@@ -1,0 +1,23 @@
+id: social_media_multiple
+version: "1"
+meta:
+  name: Multiple social media profiles for same entity
+  description: >
+    The same target entity has multiple social media profiles
+    across different platforms. A broad social media presence
+    increases exposure to impersonation, social engineering,
+    and information leakage attacks.
+  risk: MEDIUM
+collections:
+  collect:
+      - method: exact
+        field: type
+        value: SOCIAL_MEDIA
+aggregation:
+  field: entity.data
+analysis:
+  - method: threshold
+    minimum: 3
+    field: data
+    count_unique_only: true
+headline: "Multiple social media profiles for: {entity.data}"

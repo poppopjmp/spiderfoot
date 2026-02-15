@@ -1,0 +1,23 @@
+id: geo_multiple_countries
+version: "1"
+meta:
+  name: Infrastructure spread across many countries
+  description: >
+    The target's infrastructure spans a large number of distinct
+    countries. While this may be expected for global CDNs, it can
+    also indicate a complex and potentially difficult-to-manage
+    attack surface spanning multiple regulatory jurisdictions.
+  risk: INFO
+collections:
+  collect:
+      - method: exact
+        field: type
+        value: COUNTRY_NAME
+aggregation:
+  field: data
+analysis:
+  - method: threshold
+    minimum: 5
+    field: data
+    count_unique_only: true
+headline: "Infrastructure found in many countries including: {data}"

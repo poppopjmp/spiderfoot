@@ -1,0 +1,23 @@
+id: cross_scan_shared_social
+version: "1"
+meta:
+  name: Shared social media profile across scans
+  description: >
+    The same social media profile was discovered in multiple scans,
+    indicating different targets share a common social presence.
+    This may reveal hidden organisational connections or shared
+    digital identities.
+  risk: INFO
+  scope: workspace
+collections:
+  collect:
+      - method: exact
+        field: type
+        value: SOCIAL_MEDIA
+aggregation:
+  field: data
+analysis:
+  - method: threshold
+    field: data
+    minimum: 2
+headline: "Social media profile {data} found in multiple scans"

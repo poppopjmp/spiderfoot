@@ -1,0 +1,21 @@
+id: account_external
+version: "1"
+meta:
+  name: External account detected
+  description: >
+    External accounts owned or associated with the target were
+    discovered. These may include cloud services, SaaS platforms,
+    code repositories, or other third-party services.
+
+    External accounts expand the attack surface and may contain
+    sensitive information, API keys, or configurations that could
+    be leveraged by threat actors.
+  risk: INFO
+collections:
+  collect:
+      - method: exact
+        field: type
+        value: ACCOUNT_EXTERNAL_OWNED
+aggregation:
+  field: data
+headline: "External account discovered: {data}"

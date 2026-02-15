@@ -1153,6 +1153,35 @@ function extractReportMarkdown(resp: Record<string, unknown>, target: string): s
     lines.push('');
   }
 
+  // Geographic Intelligence
+  const geo = reportData.geographic_intelligence as Record<string, unknown> | undefined;
+  if (geo) {
+    lines.push('## Geographic Intelligence', '');
+    if (geo.summary) lines.push(geo.summary as string, '');
+    const geoCountries = geo.countries as Array<Record<string, unknown>> | undefined;
+    if (geoCountries?.length) {
+      lines.push('| Country | Code | Events |', '|---------|------|-------:|');
+      geoCountries.forEach((c) => {
+        lines.push(`| ${c.name ?? ''} | ${c.code ?? ''} | ${c.count ?? 0} |`);
+      });
+      lines.push('');
+    }
+    const geoCoords = geo.coordinates as Array<Record<string, unknown>> | undefined;
+    if (geoCoords?.length) {
+      lines.push('**Geo-located Endpoints:**', '');
+      geoCoords.forEach((c) => {
+        lines.push(`- (${c.lat}, ${c.lon}) — ${c.label ?? ''}`);
+      });
+      lines.push('');
+    }
+    const geoAddresses = geo.addresses as string[] | undefined;
+    if (geoAddresses?.length) {
+      lines.push('**Physical Addresses:**', '');
+      geoAddresses.forEach((a) => lines.push(`- ${a}`));
+      lines.push('');
+    }
+  }
+
   // Threat Assessment
   if (reportData.threat_assessment) {
     lines.push('## Threat Assessment', '');
@@ -1227,6 +1256,99 @@ function ReportTab({ scanId, scan }: { scanId: string; scan?: Scan }) {
     enabled: !!scanId,
   });
 
+  /* Fetch geo event data for report context */
+  const { data: geoInfoData } = useQuery({
+    queryKey: ['scan-events-geo-report', scanId, 'GEOINFO'],
+    queryFn: () => scanApi.events(scanId, { event_type: 'GEOINFO' }),
+    enabled: !!scanId,
+  });
+  const { data: geoCoordsData } = useQuery({
+    queryKey: ['scan-events-geo-report', scanId, 'PHYSICAL_COORDINATES'],
+    queryFn: () => scanApi.events(scanId, { event_type: 'PHYSICAL_COORDINATES' }),
+    enabled: !!scanId,
+  });
+  const { data: geoCountryData } = useQuery({
+    queryKey: ['scan-events-geo-report', scanId, 'COUNTRY_NAME'],
+    queryFn: () => scanApi.events(scanId, { event_type: 'COUNTRY_NAME' }),
+    enabled: !!scanId,
+  });
+  const { data: geoAddrData } = useQuery({
+    queryKey: ['scan-events-geo-report', scanId, 'PHYSICAL_ADDRESS'],
+    queryFn: () => scanApi.events(scanId, { event_type: 'PHYSICAL_ADDRESS' }),
+    enabled: !!scanId,
+  });
+
+  /* Build geo_data payload from fetched geo events */
+  const geoPayload = useMemo(() => {
+    const ccMap: Record<string, string> = {
+      'united states': 'US', 'united kingdom': 'GB', 'germany': 'DE', 'france': 'FR',
+      'canada': 'CA', 'australia': 'AU', 'japan': 'JP', 'china': 'CN', 'india': 'IN',
+      'brazil': 'BR', 'russia': 'RU', 'netherlands': 'NL', 'sweden': 'SE', 'italy': 'IT',
+      'spain': 'ES', 'south korea': 'KR', 'singapore': 'SG', 'ireland': 'IE',
+      'switzerland': 'CH', 'poland': 'PL', 'norway': 'NO', 'finland': 'FI', 'denmark': 'DK',
+      'austria': 'AT', 'belgium': 'BE', 'czech republic': 'CZ', 'czechia': 'CZ',
+      'portugal': 'PT', 'mexico': 'MX', 'argentina': 'AR', 'south africa': 'ZA',
+      'israel': 'IL', 'united arab emirates': 'AE', 'taiwan': 'TW', 'hong kong': 'HK',
+      'malaysia': 'MY', 'thailand': 'TH', 'philippines': 'PH', 'vietnam': 'VN',
+      'indonesia': 'ID', 'new zealand': 'NZ', 'ukraine': 'UA', 'romania': 'RO',
+      'hungary': 'HU', 'bulgaria': 'BG', 'croatia': 'HR', 'turkey': 'TR', 'egypt': 'EG',
+      'nigeria': 'NG', 'kenya': 'KE', 'colombia': 'CO', 'chile': 'CL', 'peru': 'PE',
+    };
+    const countryMap = new Map<string, { count: number; name: string }>();
+
+    // Parse GEOINFO events
+    (geoInfoData?.events ?? []).forEach((e: ScanEvent) => {
+      const d = e.data?.trim();
+      if (!d) return;
+      if (d.length === 2 && /^[A-Z]{2}$/i.test(d)) {
+        const code = d.toUpperCase();
+        const prev = countryMap.get(code) ?? { count: 0, name: code };
+        countryMap.set(code, { count: prev.count + 1, name: prev.name });
+      } else {
+        const parts = d.split(',').map((p: string) => p.trim());
+        const lastPart = parts[parts.length - 1];
+        if (lastPart?.length === 2 && /^[A-Z]{2}$/i.test(lastPart)) {
+          const code = lastPart.toUpperCase();
+          const prev = countryMap.get(code) ?? { count: 0, name: code };
+          countryMap.set(code, { count: prev.count + 1, name: prev.name });
+        }
+      }
+    });
+
+    // Parse COUNTRY_NAME events
+    (geoCountryData?.events ?? []).forEach((e: ScanEvent) => {
+      const name = e.data?.trim().toLowerCase();
+      if (!name) return;
+      const code = ccMap[name];
+      if (code) {
+        const prev = countryMap.get(code) ?? { count: 0, name: '' };
+        countryMap.set(code, { count: prev.count + 1, name: e.data!.trim() });
+      }
+    });
+
+    const countries = [...countryMap.entries()].map(([code, info]) => ({
+      code, name: info.name, count: info.count,
+    })).sort((a, b) => b.count - a.count);
+
+    // Parse coordinates
+    const coordinates: { lat: number; lon: number; label: string }[] = [];
+    (geoCoordsData?.events ?? []).forEach((e: ScanEvent) => {
+      const parts = e.data?.split(',');
+      if (parts?.length === 2) {
+        const lat = parseFloat(parts[0]);
+        const lon = parseFloat(parts[1]);
+        if (!isNaN(lat) && !isNaN(lon)) {
+          coordinates.push({ lat, lon, label: e.source_data || `${lat.toFixed(4)}, ${lon.toFixed(4)}` });
+        }
+      }
+    });
+
+    // Physical addresses
+    const addresses = (geoAddrData?.events ?? []).map((e: ScanEvent) => e.data).filter(Boolean) as string[];
+
+    return { countries, coordinates, addresses };
+  }, [geoInfoData, geoCoordsData, geoCountryData, geoAddrData]);
+
   /* Generate report mutation */
   const generateMut = useMutation({
     mutationFn: async () => {
@@ -1242,6 +1364,7 @@ function ReportTab({ scanId, scan }: { scanId: string; scan?: Scan }) {
       return agentsApi.report({
         scan_id: scanId,
         target: scan?.target ?? '',
+        scan_name: scan?.name ?? '',
         findings,
         correlations: correlations.map((c: ScanCorrelation) => ({
           rule_id: c.rule_id,
@@ -1256,6 +1379,7 @@ function ReportTab({ scanId, scan }: { scanId: string; scan?: Scan }) {
           scan_status: scan?.status,
           duration: formatDuration(scan?.started ?? 0, scan?.ended ?? 0),
         },
+        geo_data: geoPayload,
       });
     },
     onSuccess: (data) => {
@@ -1271,8 +1395,9 @@ function ReportTab({ scanId, scan }: { scanId: string; scan?: Scan }) {
     const correlations: ScanCorrelation[] = corrData?.correlations ?? [];
     const totalEvents = details.reduce((s: number, d: EventSummaryDetail) => s + d.total, 0);
 
+    const reportTitle = scan?.name || 'Threat Intelligence Report';
     const lines: string[] = [
-      `# Threat Intelligence Report`,
+      `# ${reportTitle}`,
       ``,
       `**Target:** ${scan?.target ?? 'Unknown'}`,
       `**Scan ID:** \`${scanId}\``,
@@ -1321,6 +1446,30 @@ function ReportTab({ scanId, scan }: { scanId: string; scan?: Scan }) {
       });
     }
 
+    // Geographic Intelligence section (from fetched geo events)
+    if (geoPayload.countries.length || geoPayload.coordinates.length || geoPayload.addresses.length) {
+      lines.push('## Geographic Intelligence', '');
+      if (geoPayload.countries.length) {
+        lines.push('| Country | Code | Events |', '|---------|------|-------:|');
+        geoPayload.countries.forEach((c) => {
+          lines.push(`| ${c.name} | ${c.code} | ${c.count} |`);
+        });
+        lines.push('');
+      }
+      if (geoPayload.coordinates.length) {
+        lines.push('**Geo-located Endpoints:**', '');
+        geoPayload.coordinates.slice(0, 30).forEach((c) => {
+          lines.push(`- (${c.lat}, ${c.lon}) — ${c.label}`);
+        });
+        lines.push('');
+      }
+      if (geoPayload.addresses.length) {
+        lines.push('**Physical Addresses:**', '');
+        geoPayload.addresses.slice(0, 20).forEach((a) => lines.push(`- ${a}`));
+        lines.push('');
+      }
+    }
+
     lines.push(
       '## Recommendations',
       '',
@@ -1337,7 +1486,7 @@ function ReportTab({ scanId, scan }: { scanId: string; scan?: Scan }) {
     const md = lines.join('\n');
     setReportContent(md);
     localStorage.setItem(storageKey, md);
-  }, [summaryData, corrData, scan, scanId, storageKey]);
+  }, [summaryData, corrData, scan, scanId, storageKey, geoPayload]);
 
   const startEditing = () => {
     setEditContent(reportContent);

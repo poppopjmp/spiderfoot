@@ -514,7 +514,7 @@ export const agentsApi = {
   analyze: (data: { filename: string; content: string; content_type?: string; target?: string; scan_id?: string }) =>
     api.post('/api/agents/analyze', data).then((r) => r.data),
 
-  report: (data: { scan_id: string; target: string; findings?: Array<Record<string, unknown>>; correlations?: Array<Record<string, unknown>>; stats?: Record<string, unknown>; agent_results?: Array<Record<string, unknown>> }) =>
+  report: (data: { scan_id: string; target: string; scan_name?: string; findings?: Array<Record<string, unknown>>; correlations?: Array<Record<string, unknown>>; stats?: Record<string, unknown>; agent_results?: Array<Record<string, unknown>>; geo_data?: Record<string, unknown> }) =>
     api.post('/api/agents/report', data).then((r) => r.data),
 };
 

@@ -1,0 +1,23 @@
+id: web_analytics_tracking
+version: "1"
+meta:
+  name: Web analytics ID links multiple domains
+  description: >
+    The same web analytics tracking ID (Google Analytics, Facebook
+    Pixel, etc.) was found on multiple domains or hosts. Shared
+    analytics IDs can reveal related infrastructure, shadow
+    domains, or organisational connections not immediately obvious.
+  risk: INFO
+collections:
+  collect:
+      - method: exact
+        field: type
+        value: WEB_ANALYTICS_ID
+aggregation:
+  field: data
+analysis:
+  - method: threshold
+    minimum: 2
+    field: source.data
+    count_unique_only: true
+headline: "Analytics ID links multiple sites: {data}"

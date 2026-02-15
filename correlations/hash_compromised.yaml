@@ -1,0 +1,20 @@
+id: hash_compromised
+version: "1"
+meta:
+  name: Compromised hash discovered
+  description: >
+    A password hash associated with the target was found exposed
+    in data breach databases.
+
+    Exposed hashes may be cracked offline to recover the original
+    password, potentially enabling unauthorised access to systems
+    where the same credentials are used.
+  risk: MEDIUM
+collections:
+  collect:
+      - method: exact
+        field: type
+        value: HASH_COMPROMISED
+aggregation:
+  field: source.data
+headline: "Compromised hash found for: {source.data}"

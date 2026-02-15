@@ -93,24 +93,111 @@ In short, SpiderFoot translates the YAML rules into a combination queries agains
 
 ### The rules
 
-Each rule exists as a YAML file within the `/correlations` folder in the SpiderFoot installation path. Here you can see a list of rules in 4.0, which we hope to grow over time:
+Each rule exists as a YAML file within the `/correlations` folder in the SpiderFoot installation path. As of v5.8.0, there are **94 correlation rules** covering network, infrastructure, identity, vulnerability, data leak, geographic, cryptocurrency, web, social media, and cross-scan workspace analysis:
 
-```sh
-cert_expired.yaml                    host_only_from_certificatetransparency.yaml  outlier_ipaddress.yaml
-cloud_bucket_open.yaml               http_errors.yaml                             outlier_registrar.yaml
-cloud_bucket_open_related.yaml       human_name_in_whois.yaml                     outlier_webserver.yaml
-data_from_base64.yaml                internal_host.yaml                           remote_desktop_exposed.yaml
-data_from_docmeta.yaml               internal_service_exposed.yaml                root_path_needs_auth.yaml
-database_exposed.yaml                multiple_malicious.yaml                      rocketreach_exposed_contacts.yaml
-dev_or_test_system.yaml              multiple_malicious_affiliate.yaml            stale_host.yaml
-dns_zone_transfer_possible.yaml      multiple_malicious_cohost.yaml               strong_affiliate_certs.yaml
-egress_ip_from_wikipedia.yaml        name_only_from_pasteleak_site.yaml           strong_similardomain_crossref.yaml
-email_in_multiple_breaches.yaml      open_port_version.yaml                       template.yaml
-email_in_whois.yaml                  outlier_cloud.yaml                           vulnerability_critical.yaml
-email_only_from_pasteleak_site.yaml  outlier_country.yaml                         vulnerability_high.yaml
-fofa_exposed_services.yaml           outlier_email.yaml                           vulnerability_mediumlow.yaml
-host_only_from_bruteforce.yaml       outlier_hostname.yaml                        zoomeye_exposed_services.yaml
-```
+#### Scan-Scope Rules (69 rules)
+
+| Risk | Rule | Description |
+|------|------|-------------|
+| **HIGH** | `cloud_bucket_open` | Cloud storage bucket open to the Internet |
+| **HIGH** | `darknet_mention` | Target mentioned on the dark web |
+| **HIGH** | `database_exposed` | Database server exposed to the Internet |
+| **HIGH** | `dns_zone_transfer_possible` | DNS zone transfer is possible |
+| **HIGH** | `email_in_multiple_breaches` | Email in multiple breaches |
+| **HIGH** | `internal_service_exposed` | Internal service exposed to the Internet |
+| **HIGH** | `leaksite_content_found` | Target data found on leak/paste site |
+| **HIGH** | `multiple_malicious` | Entity malicious by multiple sources |
+| **HIGH** | `password_compromised` | Compromised password discovered |
+| **HIGH** | `password_compromised_multiple` | Multiple compromised passwords for same account |
+| **HIGH** | `remote_desktop_exposed` | Remote desktop exposed to the Internet |
+| **HIGH** | `blockchain_risk_aggregation` | High-risk cryptocurrency activity detection |
+| **HIGH** | `stale_host` | Stale/unmaintained host found |
+| **HIGH** | `subdomain_takeover` | Potential subdomain takeover candidate |
+| **HIGH** | `threat_intelligence_hit` | Threat intelligence indicator match |
+| **HIGH** | `udp_service_exposed` | UDP service exposed to the Internet |
+| **HIGH** | `vulnerability_critical` | Critical-rated vulnerability |
+| **HIGH** | `vulnerability_high` | High-rated vulnerability |
+| **MEDIUM** | `cert_expired` | Expired SSL certificate found |
+| **MEDIUM** | `crypto_address_found` | Cryptocurrency address associated with target |
+| **MEDIUM** | `dev_or_test_system` | Test/dev system found |
+| **MEDIUM** | `dns_srv_exposed` | DNS SRV record reveals internal services |
+| **MEDIUM** | `egress_ip_from_wikipedia` | Wikipedia edit from target-owned network |
+| **MEDIUM** | `email_only_from_pasteleak_site` | Email only from paste/leak site |
+| **MEDIUM** | `geo_outlier_hosting` | Infrastructure hosted in unusual country |
+| **MEDIUM** | `hash_compromised` | Compromised hash discovered |
+| **MEDIUM** | `internal_host` | Host resolving to unroutable IPs |
+| **MEDIUM** | `name_only_from_pasteleak_site` | Human name only from paste/leak site |
+| **MEDIUM** | `phone_number_exposure` | Phone number discovered |
+| **MEDIUM** | `security_headers_missing` | Unusual/missing security headers |
+| **MEDIUM** | `similar_domain_found` | Similar/look-alike domain detected |
+| **MEDIUM** | `social_media_multiple` | Multiple social media profiles for same entity |
+| **MEDIUM** | `ssl_certificate_mismatch` | SSL certificate hostname mismatch |
+| **MEDIUM** | `tiktok_user_correlation` | TikTok user cross-platform correlation |
+| **MEDIUM** | `upload_endpoint_exposed` | Upload endpoint found on website |
+| **MEDIUM** | `vulnerability_mediumlow` | Multiple medium/low vulnerabilities |
+| **LOW** | `cloud_bucket_open_related` | Possibly related cloud bucket open |
+| **LOW** | `host_only_from_bruteforce` | Host only from bruteforcing |
+| **LOW** | `host_only_from_certificatetransparency` | Host only from CT |
+| **LOW** | `http_errors` | Multiple HTTP errors |
+| **LOW** | `multiple_malicious_affiliate` | Affiliated entity malicious by multiple sources |
+| **LOW** | `multiple_malicious_cohost` | Co-hosted site malicious by multiple sources |
+| **INFO** | `account_external` | External account detected |
+| **INFO** | `bgp_as_discovered` | BGP autonomous system identified |
+| **INFO** | `cohosted_site_detected` | Multiple sites co-hosted on same infrastructure |
+| **INFO** | `data_from_base64` | Data found in base64-encoded data |
+| **INFO** | `data_from_docmeta` | Data found in document/image metadata |
+| **INFO** | `dns_spf_issues` | DNS SPF record found |
+| **INFO** | `dns_txt_sensitive` | DNS TXT record with potentially sensitive data |
+| **INFO** | `email_generic_exposed` | Generic email address discovered |
+| **INFO** | `email_in_whois` | Email found in Whois data |
+| **INFO** | `geo_multiple_countries` | Infrastructure spread across many countries |
+| **INFO** | `human_name_in_whois` | Human name in Whois data |
+| **INFO** | `javascript_external` | External JavaScript resources loaded |
+| **INFO** | `netblock_discovered` | Network block ownership identified |
+| **INFO** | `open_port_version` | Open TCP port reveals version |
+| **INFO** | `operating_system_detected` | Operating system detected |
+| **INFO** | `physical_address_found` | Physical address discovered |
+| **INFO** | `root_path_needs_auth` | Website root path needs auth |
+| **INFO** | `social_media_exposure` | Social media profiles discovered |
+| **INFO** | `software_version_exposed` | Software version information exposed |
+| **INFO** | `strong_affiliate_certs` | Affiliated host with strong cert relationship |
+| **INFO** | `strong_similardomain_crossref` | Similar domain with strong cross-reference |
+| **INFO** | `username_exposure` | Username discovered across multiple platforms |
+| **INFO** | `web_analytics_tracking` | Web analytics ID links multiple domains |
+| **INFO** | `web_form_enumeration` | Multiple web forms discovered |
+| **INFO** | `whois_domain_expiring` | Domain WHOIS data reveals registration details |
+
+#### Cross-Scan Workspace-Scope Rules (25 rules)
+
+| Risk | Rule | Description |
+|------|------|-------------|
+| **HIGH** | `cross_scan_shared_crypto` | Shared cryptocurrency address across scans |
+| **HIGH** | `cross_scan_shared_darknet` | Shared dark web mention across scans |
+| **HIGH** | `cross_scan_shared_leak` | Shared credential or data leak across scans |
+| **HIGH** | `cross_scan_shared_malicious` | Shared malicious indicator across scans |
+| **HIGH** | `cross_scan_shared_password` | Shared compromised password across scans |
+| **MEDIUM** | `cross_scan_rare_technology` | Rare technology across scans |
+| **MEDIUM** | `cross_scan_shared_exposure` | Shared open port across scans |
+| **MEDIUM** | `cross_scan_shared_phone` | Shared phone number across scans |
+| **MEDIUM** | `outlier_cloud` | Outlier cloud provider |
+| **MEDIUM** | `outlier_registrar` | Outlier registrar |
+| **MEDIUM** | `outlier_webserver` | Outlier web server |
+| **INFO** | `cross_scan_outlier_email` | Outlier email across scans |
+| **INFO** | `cross_scan_outlier_hosting` | Outlier hosting provider across scans |
+| **INFO** | `cross_scan_outlier_technology` | Outlier web technology across scans |
+| **INFO** | `cross_scan_shared_affiliate` | Shared affiliate across scans |
+| **INFO** | `cross_scan_shared_domain` | Shared domain across scans |
+| **INFO** | `cross_scan_shared_email` | Shared email across scans |
+| **INFO** | `cross_scan_shared_hosting` | Shared hosting provider across scans |
+| **INFO** | `cross_scan_shared_ip` | Shared IP across scans |
+| **INFO** | `cross_scan_shared_social` | Shared social media profile across scans |
+| **INFO** | `cross_scan_shared_ssl` | Shared SSL cert across scans |
+| **INFO** | `cross_scan_shared_technology` | Shared technology across scans |
+| **INFO** | `cross_scan_shared_username` | Shared username across scans |
+| **INFO** | `outlier_country` | Outlier country |
+| **INFO** | `outlier_email` | Outlier email address |
+| **INFO** | `outlier_hostname` | Outlier hostname |
+| **INFO** | `outlier_ipaddress` | Outlier IP address |
 ### Rule components
 
 The rules themselves are broken down into the following components:
@@ -363,67 +450,88 @@ aggregation:
 headline: "Internal service exposed to the Internet: {data}"
 ```
 
-#### `fofa_exposed_services.yaml`
+#### `darknet_mention.yaml`
 ```yaml
-id: fofa_exposed_services
+id: darknet_mention
 version: 1
 meta:
-  name: Exposed services detected using Fofa
+  name: Target mentioned on the dark web
   description: >
-    Services exposed to the internet were detected using the Fofa module.
-    This may pose a risk to the security of the service exposed and/or
-    cause connecting services to fail due to being unable to verify the certificate.
+    Content or URLs referencing the target were found on dark web
+    (Tor hidden services, .onion sites). This indicates the target
+    has a presence or is being discussed in underground forums or
+    marketplaces.
   risk: HIGH
 collections:
   collect:
-      - method: exact
+      - method: regex
         field: type
-        value: FOFA_SERVICE
+        value: DARKNET_MENTION_CONTENT|DARKNET_MENTION_URL
 aggregation:
-  field: data
-headline: "Exposed service detected using Fofa: {data}"
+  field: entity.data
+headline: "Target mentioned on the dark web: {entity.data}"
 ```
 
-#### `rocketreach_exposed_contacts.yaml`
+#### `password_compromised.yaml`
 ```yaml
-id: rocketreach_exposed_contacts
+id: password_compromised
 version: 1
 meta:
-  name: Exposed contacts detected using RocketReach
+  name: Compromised password discovered
   description: >
-    Contacts exposed to the internet were detected using the RocketReach module.
-    This may pose a risk to the privacy of the individuals whose contact information
-    is exposed.
+    One or more compromised passwords associated with the target
+    were found in data breach databases or paste sites.
   risk: HIGH
 collections:
   collect:
       - method: exact
         field: type
-        value: ROCKETREACH_CONTACT
+        value: PASSWORD_COMPROMISED
 aggregation:
-  field: data
-headline: "Exposed contact detected using RocketReach: {data}"
+  field: source.data
+headline: "Compromised password found for: {source.data}"
 ```
 
-#### `zoomeye_exposed_services.yaml`
+#### `subdomain_takeover.yaml`
 ```yaml
-id: zoomeye_exposed_services
+id: subdomain_takeover
 version: 1
 meta:
-  name: Exposed services detected using ZoomEye
+  name: Potential subdomain takeover candidate
   description: >
-    Services exposed to the internet were detected using the ZoomEye module.
-    This may pose a risk to the security of the service exposed and/or
-    cause connecting services to fail due to being unable to verify the certificate.
+    A subdomain was found that resolves but returns error responses,
+    indicating it may be a candidate for subdomain takeover.
   risk: HIGH
 collections:
   collect:
       - method: exact
         field: type
-        value: ZOOMEYE_SERVICE
+        value: INTERNET_NAME
+      - method: regex
+        field: child.type
+        value: HTTP_CODE
+  collect:
+      - method: exact
+        field: type
+        value: HTTP_CODE
+      - method: regex
+        field: data
+        value: not ^[2-3].*$
+      - method: regex
+        field: data
+        value: not 40[13]
+  collect:
+      - method: exact
+        field: type
+        value: ERROR_MESSAGE
 aggregation:
-  field: data
-headline: "Exposed service detected using ZoomEye: {data}"
+  field: entity.data
+analysis:
+  - method: threshold
+    minimum: 2
+    field: type
+    count_unique_only: true
+headline: "Potential subdomain takeover candidate: {entity.data}"
 ```
 
 ## Maintainers

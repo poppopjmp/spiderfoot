@@ -1,0 +1,19 @@
+id: crypto_address_found
+version: "1"
+meta:
+  name: Cryptocurrency address associated with target
+  description: >
+    Bitcoin or Ethereum wallet addresses were found associated
+    with the target. Cryptocurrency addresses linked to an
+    organisation or individual can reveal financial activity,
+    ransomware payment trails, or associations with illicit
+    services.
+  risk: MEDIUM
+collections:
+  collect:
+      - method: regex
+        field: type
+        value: BITCOIN_ADDRESS|ETHEREUM_ADDRESS|BITCOIN_BALANCE
+aggregation:
+  field: data
+headline: "Cryptocurrency address found: {data}"

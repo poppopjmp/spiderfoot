@@ -1,0 +1,23 @@
+id: cross_scan_shared_crypto
+version: "1"
+meta:
+  name: Shared cryptocurrency address across scans
+  description: >
+    The same cryptocurrency wallet address was found in multiple
+    scans. This strongly indicates a financial relationship between
+    the targets and may be relevant for fraud investigation,
+    ransomware tracking, or sanctions compliance.
+  risk: HIGH
+  scope: workspace
+collections:
+  collect:
+      - method: regex
+        field: type
+        value: BITCOIN_ADDRESS|ETHEREUM_ADDRESS
+aggregation:
+  field: data
+analysis:
+  - method: threshold
+    field: data
+    minimum: 2
+headline: "Cryptocurrency address {data} found in multiple scans"

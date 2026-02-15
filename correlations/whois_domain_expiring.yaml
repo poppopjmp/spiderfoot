@@ -1,0 +1,22 @@
+id: whois_domain_expiring
+version: "1"
+meta:
+  name: Domain WHOIS data reveals registration details
+  description: >
+    WHOIS data for target domains was retrieved, potentially
+    revealing registrant details, registration dates, and
+    nameserver configurations. This information can identify
+    related domains, upcoming domain expirations, or discrepancies
+    in ownership that may indicate domain hijacking risk.
+
+    Domains nearing expiration are at risk of being registered
+    by adversaries if not renewed in time.
+  risk: INFO
+collections:
+  collect:
+      - method: exact
+        field: type
+        value: DOMAIN_WHOIS
+aggregation:
+  field: entity.data
+headline: "WHOIS data retrieved for domain: {entity.data}"

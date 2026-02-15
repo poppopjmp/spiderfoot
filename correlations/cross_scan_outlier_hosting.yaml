@@ -1,0 +1,22 @@
+id: cross_scan_outlier_hosting
+version: "1"
+meta:
+  name: Outlier hosting provider across scans
+  description: >
+    A hosting provider that appeared in 10% or fewer of all scans.
+    Unusual hosting providers may indicate shadow IT, migrated
+    infrastructure, or acquired assets on non-standard platforms
+    that may have different security postures.
+  risk: INFO
+  scope: workspace
+collections:
+  collect:
+      - method: exact
+        field: type
+        value: PROVIDER_HOSTING
+aggregation:
+  field: data
+analysis:
+  - method: outlier
+    maximum_percent: 10
+headline: "Outlier hosting provider found: {data}"

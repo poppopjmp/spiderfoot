@@ -1,0 +1,21 @@
+id: dns_txt_sensitive
+version: "1"
+meta:
+  name: DNS TXT record with potentially sensitive data
+  description: >
+    DNS TXT records were found which may contain verification
+    tokens, API keys, internal configuration details, or other
+    sensitive information that could aid an attacker in
+    reconnaissance or exploitation.
+
+    DNS TXT records are publicly queryable and should not
+    contain secrets or internal infrastructure details.
+  risk: INFO
+collections:
+  collect:
+      - method: exact
+        field: type
+        value: DNS_TEXT
+aggregation:
+  field: entity.data
+headline: "DNS TXT record found for: {entity.data}"

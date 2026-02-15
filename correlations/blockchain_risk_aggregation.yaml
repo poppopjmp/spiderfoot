@@ -1,58 +1,33 @@
 id: blockchain_risk_aggregation
 version: "1"
 meta:
-  name: "High-Risk Cryptocurrency Activity Detection"
-  description: "Aggregates blockchain analysis results to identify high-risk cryptocurrency activities"
-  purpose: "Detect potential money laundering, sanctions violations, or other illicit cryptocurrency activities"
-  risk: "High"
-  type: "Financial Intelligence"
+  name: High-risk cryptocurrency activity detection
+  description: >
+    Aggregates blockchain analysis results to identify high-risk
+    cryptocurrency activities. This correlation fires when multiple
+    types of cryptocurrency risk indicators are found for the same
+    target, such as sanctions list matches combined with exchange
+    attributions or money laundering indicators.
 
+    The presence of multiple cryptocurrency risk signals strongly
+    suggests illicit financial activity requiring immediate
+    investigation and potential reporting to financial intelligence
+    units.
+  risk: HIGH
 collections:
-  - id: risk_assessments
-    name: "Cryptocurrency Risk Assessments"
-    condition:
-      event_type: "CRYPTOCURRENCY_RISK_ASSESSMENT"
-
-  - id: sanctions_matches
-    name: "Sanctions List Matches"
-    condition:
-      event_type: "SANCTIONS_LIST_MATCH"
-
-  - id: ml_indicators
-    name: "Money Laundering Indicators"
-    condition:
-      event_type: "MONEY_LAUNDERING_INDICATOR"
-
-  - id: exchange_attributions
-    name: "Exchange Attributions"
-    condition:
-      event_type: "CRYPTOCURRENCY_EXCHANGE_ATTRIBUTION"
-
-  - id: wallet_clusters
-    name: "Wallet Clusters"
-    condition:
-      event_type: "WALLET_CLUSTER"
-
+  collect:
+      - method: regex
+        field: type
+        value: BITCOIN_ADDRESS|ETHEREUM_ADDRESS|BITCOIN_BALANCE
+  collect:
+      - method: regex
+        field: type
+        value: MALICIOUS_.*|BLACKLIST_.*
 aggregation:
-  - collections: ["risk_assessments", "sanctions_matches", "ml_indicators"]
-    key: "source_event"
-    
-  - collections: ["exchange_attributions", "wallet_clusters"] 
-    key: "data"
-
+  field: entity.data
 analysis:
-  method: "risk_aggregation"
-  conditions:
-    - min_collections: 2
-    - min_events_per_collection: 1
-    - high_risk_threshold: 0.8
-
-headline: "Detected {count} high-risk cryptocurrency activities with potential sanctions violations or money laundering indicators"
-
-extra:
-  severity: "High"
-  tags: ["cryptocurrency", "money-laundering", "sanctions", "blockchain"]
-  references:
-    - "https://www.fincen.gov/resources/statutes-regulations/guidance/application-fincens-regulations-persons-administering"
-    - "https://home.treasury.gov/policy-issues/financial-sanctions/ofac-sanctioned-digital-currency-addresses"
-  remediation: "Report suspicious cryptocurrency activities to relevant financial intelligence units"
+  - method: threshold
+    minimum: 2
+    field: type
+    count_unique_only: true
+headline: "High-risk cryptocurrency activity detected for: {entity.data}"
