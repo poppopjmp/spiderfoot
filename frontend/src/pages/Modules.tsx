@@ -172,7 +172,7 @@ export default function ModulesPage() {
                         {/* Info */}
                         <div className="flex-1 min-w-0" onClick={() => setExpanded(isExpanded ? null : m.name)}>
                           <div className="flex items-center gap-2 cursor-pointer">
-                            <span className="text-sm font-medium text-white">{m.name.replace('sfp_', '')}</span>
+                            <span className="text-sm font-medium text-foreground">{m.name.replace('sfp_', '')}</span>
                             {hasApi && !apiOk && (
                               <span className="text-yellow-500" title="API key required but not configured">
                                 <Lock className="h-3 w-3" />

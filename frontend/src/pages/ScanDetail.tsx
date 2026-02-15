@@ -79,7 +79,7 @@ export default function ScanDetailPage() {
             ) : (
               <>
                 <div className="flex items-center gap-3 mb-1">
-                  <h1 className="text-2xl font-bold text-white">{scan?.name || 'Untitled Scan'}</h1>
+                  <h1 className="text-2xl font-bold text-foreground">{scan?.name || 'Untitled Scan'}</h1>
                   <StatusBadge status={scan?.status ?? ''} />
                 </div>
                 <div className="flex items-center gap-3 text-sm text-dark-400">
@@ -240,7 +240,7 @@ function SummaryTab({ scanId, scan }: { scanId: string; scan?: Scan }) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Doughnut chart (CSS-based) */}
         <div className="card">
-          <h3 className="text-sm font-semibold text-white mb-4">Event Distribution</h3>
+          <h3 className="text-sm font-semibold text-foreground mb-4">Event Distribution</h3>
           {isLoading ? (
             <Skeleton className="h-48 w-48 rounded-full mx-auto" />
           ) : top8.length > 0 ? (
@@ -271,7 +271,7 @@ function SummaryTab({ scanId, scan }: { scanId: string; scan?: Scan }) {
 
         {/* Full data types table */}
         <div className="lg:col-span-2 card">
-          <h3 className="text-sm font-semibold text-white mb-4">Data Types ({sorted.length})</h3>
+          <h3 className="text-sm font-semibold text-foreground mb-4">Data Types ({sorted.length})</h3>
           {isLoading ? (
             <TableSkeleton rows={6} cols={4} />
           ) : (
@@ -288,7 +288,7 @@ function SummaryTab({ scanId, scan }: { scanId: string; scan?: Scan }) {
                 <tbody className="divide-y divide-dark-700/30">
                   {sorted.map((d, i) => (
                     <tr key={d.key} className="table-row animate-fade-in" style={{ animationDelay: `${i * 15}ms` }}>
-                      <td className="table-cell text-white text-xs">{d.description || d.key}</td>
+                      <td className="table-cell text-foreground text-xs">{d.description || d.key}</td>
                       <td className="table-cell text-right tabular-nums text-dark-300">{d.total}</td>
                       <td className="table-cell text-right tabular-nums text-dark-400">{d.unique_total}</td>
                       <td className="table-cell text-right text-dark-500 text-xs whitespace-nowrap">{formatEpoch(d.last_in)}</td>
@@ -304,7 +304,7 @@ function SummaryTab({ scanId, scan }: { scanId: string; scan?: Scan }) {
       {/* Correlation Risk Breakdown */}
       {corrTotal > 0 && (
         <div className="card">
-          <h3 className="text-sm font-semibold text-white mb-4">Correlation Summary</h3>
+          <h3 className="text-sm font-semibold text-foreground mb-4">Correlation Summary</h3>
           <div className="flex flex-wrap gap-4">
             {Object.entries(corrBreakdown).map(([risk, count]) => {
               const bgClass = risk.toLowerCase() === 'critical' || risk.toLowerCase() === 'high'
@@ -381,7 +381,7 @@ function BrowseTab({ scanId }: { scanId: string }) {
       {/* Type list */}
       <div className="card p-0 overflow-hidden">
         <div className="p-3 border-b border-dark-700/50">
-          <h3 className="text-sm font-semibold text-white">Data Types</h3>
+          <h3 className="text-sm font-semibold text-foreground">Data Types</h3>
         </div>
         <div className="overflow-y-auto max-h-[600px]">
           {details.sort((a, b) => b.total - a.total).map((d) => (
@@ -406,7 +406,7 @@ function BrowseTab({ scanId }: { scanId: string }) {
         {selectedType ? (
           <>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-semibold text-white">{selectedType}</h3>
+              <h3 className="text-sm font-semibold text-foreground">{selectedType}</h3>
               <div className="flex items-center gap-2">
                 <SearchInput value={searchQuery} onChange={setSearchQuery} placeholder="Filter events..." className="w-60" />
                 <button
@@ -946,7 +946,7 @@ function GeoMapTab({ scanId }: { scanId: string }) {
         <>
           {/* Map visualization */}
           <div className="card">
-            <h3 className="text-sm font-semibold text-white mb-4">Geographic Distribution</h3>
+            <h3 className="text-sm font-semibold text-foreground mb-4">Geographic Distribution</h3>
             <div className="w-full overflow-x-auto">
               <svg viewBox={`0 0 ${mapWidth} ${mapHeight}`} className="w-full min-w-[600px] rounded-lg overflow-hidden">
                 {/* World map background image */}
@@ -1006,7 +1006,7 @@ function GeoMapTab({ scanId }: { scanId: string }) {
           {/* Country distribution */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="card">
-              <h3 className="text-sm font-semibold text-white mb-4">Country Distribution ({countryList.length})</h3>
+              <h3 className="text-sm font-semibold text-foreground mb-4">Country Distribution ({countryList.length})</h3>
               <div className="space-y-2.5 max-h-[400px] overflow-y-auto">
                 {countryList.map((c, i) => {
                   const pct = maxCount > 0 ? (c.count / maxCount) * 100 : 0;
@@ -1027,7 +1027,7 @@ function GeoMapTab({ scanId }: { scanId: string }) {
             </div>
 
             <div className="card">
-              <h3 className="text-sm font-semibold text-white mb-4">Locations & Addresses</h3>
+              <h3 className="text-sm font-semibold text-foreground mb-4">Locations & Addresses</h3>
               <div className="space-y-3 max-h-[400px] overflow-y-auto">
                 {coordinates.length > 0 && (
                   <div>
@@ -1547,8 +1547,8 @@ function ReportTab({ scanId, scan }: { scanId: string; scan?: Scan }) {
         if (inBlockquote) { html.push('</blockquote>'); inBlockquote = false; }
         const level = hMatch[1].length;
         const sizes: Record<number, string> = {
-          1: 'text-2xl font-bold text-white mt-6 mb-3 pb-2 border-b border-dark-700/40',
-          2: 'text-xl font-bold text-white mt-5 mb-2',
+          1: 'text-2xl font-bold text-foreground mt-6 mb-3 pb-2 border-b border-dark-700/40',
+          2: 'text-xl font-bold text-foreground mt-5 mb-2',
           3: 'text-lg font-semibold text-dark-100 mt-4 mb-2',
           4: 'text-base font-semibold text-dark-200 mt-3 mb-1',
           5: 'text-sm font-semibold text-dark-300 mt-2 mb-1',
@@ -1627,7 +1627,7 @@ function ReportTab({ scanId, scan }: { scanId: string; scan?: Scan }) {
 
   const inlineFormat = (text: string): string => {
     return text
-      .replace(/\*\*(.+?)\*\*/g, '<strong class="text-white font-semibold">$1</strong>')
+      .replace(/\*\*(.+?)\*\*/g, '<strong class="text-foreground font-semibold">$1</strong>')
       .replace(/\*(.+?)\*/g, '<em>$1</em>')
       .replace(/`(.+?)`/g, '<code class="bg-dark-700 px-1 py-0.5 rounded text-spider-400 text-xs font-mono">$1</code>');
   };
@@ -1802,7 +1802,7 @@ function SettingsTab({ scanId, scan }: { scanId: string; scan?: Scan }) {
     <div className="space-y-6">
       {/* Scan Meta */}
       <div className="card">
-        <h3 className="text-sm font-semibold text-white mb-4">Scan Information</h3>
+        <h3 className="text-sm font-semibold text-foreground mb-4">Scan Information</h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           {[
             ['Scan ID', scanId],
@@ -1964,7 +1964,7 @@ function LogTab({ scanId }: { scanId: string }) {
 function MiniStat({ label, value }: { label: string; value: number | string }) {
   return (
     <div className="card-hover text-center py-4">
-      <p className="text-xl font-bold text-white">{value}</p>
+      <p className="text-xl font-bold text-foreground">{value}</p>
       <p className="text-xs text-dark-400 mt-1">{label}</p>
     </div>
   );

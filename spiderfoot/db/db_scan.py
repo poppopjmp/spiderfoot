@@ -158,22 +158,44 @@ class ScanManager:
                     raise OSError("SQL error encountered when fetching scan list") from e
 
     def scanInstanceDelete(self, instanceId: str) -> bool:
-        """Delete a scan instance and all related records."""
+        """Delete a scan instance and all related records.
+
+        Delete order respects FK constraints:
+        1. tbl_scan_correlation_results_events (FK → tbl_scan_correlation_results)
+        2. tbl_scan_correlation_results        (FK → tbl_scan_instance)
+        3. tbl_scan_config                     (FK → tbl_scan_instance)
+        4. tbl_scan_results                    (FK → tbl_scan_instance)
+        5. tbl_scan_log                        (FK → tbl_scan_instance)
+        6. tbl_scan_instance                   (parent — deleted last)
+        """
         if not isinstance(instanceId, str):
             raise TypeError(f"instanceId is {type(instanceId)}; expected str()")
         ph = get_placeholder(self.db_type)
-        qry1 = f"DELETE FROM tbl_scan_instance WHERE guid = {ph}"
-        qry2 = f"DELETE FROM tbl_scan_config WHERE scan_instance_id = {ph}"
-        qry3 = f"DELETE FROM tbl_scan_results WHERE scan_instance_id = {ph}"
-        qry4 = f"DELETE FROM tbl_scan_log WHERE scan_instance_id = {ph}"
+
+        # Child tables first (respecting FK dependency order)
+        qry_corr_events = (
+            f"DELETE FROM tbl_scan_correlation_results_events "
+            f"WHERE correlation_id IN ("
+            f"  SELECT id FROM tbl_scan_correlation_results WHERE scan_instance_id = {ph}"
+            f")"
+        )
+        qry_corr = f"DELETE FROM tbl_scan_correlation_results WHERE scan_instance_id = {ph}"
+        qry_config = f"DELETE FROM tbl_scan_config WHERE scan_instance_id = {ph}"
+        qry_results = f"DELETE FROM tbl_scan_results WHERE scan_instance_id = {ph}"
+        qry_log = f"DELETE FROM tbl_scan_log WHERE scan_instance_id = {ph}"
+        # Parent table last
+        qry_instance = f"DELETE FROM tbl_scan_instance WHERE guid = {ph}"
+
         qvars = [instanceId]
         with self.dbhLock:
             for attempt in range(3):
                 try:
-                    self.dbh.execute(qry1, qvars)
-                    self.dbh.execute(qry2, qvars)
-                    self.dbh.execute(qry3, qvars)
-                    self.dbh.execute(qry4, qvars)
+                    self.dbh.execute(qry_corr_events, qvars)
+                    self.dbh.execute(qry_corr, qvars)
+                    self.dbh.execute(qry_config, qvars)
+                    self.dbh.execute(qry_results, qvars)
+                    self.dbh.execute(qry_log, qvars)
+                    self.dbh.execute(qry_instance, qvars)
                     self.conn.commit()
                     return True
                 except (sqlite3.Error, psycopg2.Error) as e:

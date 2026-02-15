@@ -8,9 +8,10 @@ import {
 import {
   Radar, PlusCircle, StopCircle, Trash2, RotateCcw, Copy as CopyIcon,
   Download, ChevronLeft, ChevronRight, MoreVertical, Eye, ClipboardCopy,
+  Activity, CheckCircle, XCircle,
 } from 'lucide-react';
 import {
-  PageHeader, SearchInput, StatusBadge, CopyButton,
+  PageHeader, StatCard, SearchInput, StatusBadge, CopyButton,
   EmptyState, TableSkeleton, ConfirmDialog, Toast, DropdownMenu, DropdownItem,
   type ToastType,
 } from '../components/ui';
@@ -73,7 +74,12 @@ export default function ScansPage() {
     mutationFn: scanApi.delete,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['scans'] });
+      queryClient.invalidateQueries({ queryKey: ['scan-stats-all'] });
       setToast({ type: 'success', message: 'Scan deleted' });
+    },
+    onError: (err: any) => {
+      const detail = err?.response?.data?.detail || err?.message || 'Delete failed';
+      setToast({ type: 'error', message: detail });
     },
   });
   const rerunMut = useMutation({
@@ -123,6 +129,17 @@ export default function ScansPage() {
 
   const isRunning = (s: Scan) => ['RUNNING', 'STARTING'].includes(s.status?.toUpperCase());
 
+  /* Status stats across all scans */
+  const { data: statsData } = useQuery({
+    queryKey: ['scan-stats-all'],
+    queryFn: () => scanApi.search({ limit: 1, offset: 0 }),
+    refetchInterval: 15_000,
+  });
+  const facets = statsData?.facets?.status ?? {};
+  const runningCount = (facets['RUNNING'] ?? 0) + (facets['STARTING'] ?? 0);
+  const finishedCount = facets['FINISHED'] ?? 0;
+  const failedCount = (facets['ERROR-FAILED'] ?? 0) + (facets['ABORTED'] ?? 0);
+
   return (
     <div className="space-y-6">
       <PageHeader title="Scans" subtitle={`${totalCount} scans total`}>
@@ -130,6 +147,14 @@ export default function ScansPage() {
           <PlusCircle className="h-4 w-4" /> New Scan
         </Link>
       </PageHeader>
+
+      {/* Stat Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <StatCard label="Total Scans" value={totalCount} icon={Radar} color="text-spider-400" loading={isLoading} delay={0} />
+        <StatCard label="Running" value={runningCount} icon={Activity} color="text-blue-400" loading={isLoading} delay={60} />
+        <StatCard label="Completed" value={finishedCount} icon={CheckCircle} color="text-green-400" loading={isLoading} delay={120} />
+        <StatCard label="Failed" value={failedCount} icon={XCircle} color="text-red-400" loading={isLoading} delay={180} />
+      </div>
 
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
@@ -182,11 +207,11 @@ export default function ScansPage() {
       </div>
 
       {/* Table */}
-      <div className="card p-0 overflow-visible">
+      <div className="card overflow-visible">
         {isLoading ? (
-          <div className="p-6"><TableSkeleton rows={8} cols={7} /></div>
+          <TableSkeleton rows={8} cols={7} />
         ) : filteredScans.length > 0 ? (
-          <div className="overflow-x-auto overflow-y-visible">
+          <div className="overflow-x-auto overflow-y-visible -mx-6 px-6">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-dark-700/60">
@@ -328,7 +353,7 @@ export default function ScansPage() {
             </table>
           </div>
         ) : (
-          <div className="p-8">
+          <div>
             <EmptyState
               icon={Radar}
               title="No scans found"

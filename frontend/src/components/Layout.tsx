@@ -19,9 +19,13 @@ import {
   Shield,
   Key,
   Lock,
+  Sun,
+  Moon,
+  Monitor,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useAuthStore } from '../lib/auth';
+import { useTheme, type Theme } from '../lib/theme';
 
 interface NavItem {
   name: string;
@@ -55,6 +59,13 @@ export default function Layout() {
   const [servicesOpen, setServicesOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const { user, isAuthenticated, logout, hasPermission } = useAuthStore();
+  const { theme, setTheme } = useTheme();
+
+  const themeOptions: { key: Theme; icon: typeof Sun; label: string }[] = [
+    { key: 'light', icon: Sun, label: 'Light' },
+    { key: 'dark', icon: Moon, label: 'Dark' },
+    { key: 'system', icon: Monitor, label: 'System' },
+  ];
 
   return (
     <div className="flex h-full">
@@ -78,7 +89,7 @@ export default function Layout() {
         >
           <img src="/spiderfoot-icon.png" alt="SpiderFoot" className="h-8 w-8" />
           <div>
-            <h1 className="text-lg font-bold text-white">SpiderFoot</h1>
+            <h1 className="text-lg font-bold text-foreground">SpiderFoot</h1>
             <p className="text-xs text-dark-400">OSINT Platform</p>
           </div>
         </div>
@@ -163,6 +174,28 @@ export default function Layout() {
           )}
         </nav>
 
+        {/* Theme toggle */}
+        <div className="px-3 pb-2 border-t border-dark-700">
+          <div className="flex items-center gap-1 p-1 mt-2 bg-dark-800/60 rounded-lg">
+            {themeOptions.map((opt) => (
+              <button
+                key={opt.key}
+                onClick={() => setTheme(opt.key)}
+                className={clsx(
+                  'flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs font-medium rounded-md transition-all duration-200',
+                  theme === opt.key
+                    ? 'bg-spider-600/20 text-spider-400 shadow-sm'
+                    : 'text-dark-400 hover:text-dark-200 hover:bg-dark-700/50',
+                )}
+                title={opt.label}
+              >
+                <opt.icon className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">{opt.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Services dropdown */}
         <div className="px-3 pb-2">
           <button
@@ -212,7 +245,7 @@ export default function Layout() {
                   <User className="h-4 w-4 text-spider-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white truncate">{user.username}</p>
+                  <p className="text-sm font-medium text-foreground truncate">{user.username}</p>
                   <div className="flex items-center gap-1">
                     <Shield className="h-3 w-3 text-dark-500" />
                     <p className="text-xs text-dark-500 capitalize">{user.role}</p>
@@ -238,11 +271,11 @@ export default function Layout() {
       <main className="flex-1 overflow-auto">
         {/* Mobile header */}
         <div className="lg:hidden flex items-center gap-3 px-4 py-3 border-b border-dark-700 bg-dark-900">
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-dark-300 hover:text-white">
+          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-dark-300 hover:text-foreground">
             <Menu className="h-5 w-5" />
           </button>
           <img src="/spiderfoot-icon.png" alt="SpiderFoot" className="h-5 w-5" />
-          <span className="text-sm font-bold text-white">SpiderFoot</span>
+          <span className="text-sm font-bold text-foreground">SpiderFoot</span>
         </div>
         <div className="px-6 py-8">
           <Outlet />
@@ -262,7 +295,7 @@ export default function Layout() {
             </button>
             <div className="text-center">
               <img src="/spiderfoot-header-dark.png" alt="SpiderFoot" className="h-16 mx-auto mb-4" />
-              <h2 className="text-xl font-bold text-white">SpiderFoot</h2>
+              <h2 className="text-xl font-bold text-foreground">SpiderFoot</h2>
               <p className="text-dark-400 text-sm mt-1">Open Source Intelligence Automation</p>
               <p className="text-spider-400 font-mono text-sm mt-3">v5.8.0</p>
               <div className="mt-6 space-y-2 text-sm text-dark-400">

@@ -177,7 +177,7 @@ export default function AgentsPage() {
       {toast && <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />}
 
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-white">AI Agents & Scan Intelligence</h1>
+        <h1 className="text-2xl font-bold text-foreground">AI Agents & Scan Intelligence</h1>
         <span className="badge badge-info flex items-center gap-1">
           <Sparkles className="h-3 w-3" /> {agentStatus?.total_agents ?? 0} Agents Online
         </span>
@@ -186,8 +186,8 @@ export default function AgentsPage() {
       {/* ── Live Agent Status ──────────────────────────── */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-white">Live Agent Status</h2>
-          <button className="text-dark-400 hover:text-white transition" onClick={() => refetchAgents()}>
+          <h2 className="text-lg font-semibold text-foreground">Live Agent Status</h2>
+          <button className="text-dark-400 hover:text-foreground transition" onClick={() => refetchAgents()}>
             <RefreshCw className="h-4 w-4" />
           </button>
         </div>
@@ -208,7 +208,7 @@ export default function AgentsPage() {
                       <Icon className={`h-5 w-5 ${meta.color.split(' ')[0]}`} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-white text-sm">{meta.label}</h3>
+                      <h3 className="font-semibold text-foreground text-sm">{meta.label}</h3>
                       <span className={`text-xs ${a.status === 'idle' ? 'text-green-400' : 'text-yellow-400'}`}>
                         {a.status}
                       </span>
@@ -241,7 +241,7 @@ export default function AgentsPage() {
 
       {/* ── Scan Presets ───────────────────────────────── */}
       <div className="mb-8">
-        <h2 className="text-lg font-semibold text-white mb-4">Scan Presets</h2>
+        <h2 className="text-lg font-semibold text-foreground mb-4">Scan Presets</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {presets.map((p) => (
             <button
@@ -251,7 +251,7 @@ export default function AgentsPage() {
                 objective === p.id ? 'border-spider-500 bg-spider-600/10' : 'border-transparent'
               }`}
             >
-              <h3 className="font-semibold text-white text-sm mb-1">{p.name}</h3>
+              <h3 className="font-semibold text-foreground text-sm mb-1">{p.name}</h3>
               <p className="text-xs text-dark-400 mb-2 line-clamp-2">{p.description}</p>
               <div className="flex items-center gap-3 text-[10px] text-dark-500">
                 <span><Clock className="h-3 w-3 inline mr-0.5" />{p.estimated_time}</span>
@@ -264,7 +264,7 @@ export default function AgentsPage() {
 
       {/* ── AI Recommendation Form ─────────────────────── */}
       <div className="mb-8">
-        <h2 className="text-lg font-semibold text-white mb-4">AI Scan Recommendation</h2>
+        <h2 className="text-lg font-semibold text-foreground mb-4">AI Scan Recommendation</h2>
         <div className="card">
           <p className="text-sm text-dark-300 mb-4">
             Get an AI-powered module selection and scan configuration optimized for your target and objective.
@@ -317,7 +317,7 @@ export default function AgentsPage() {
 
           {/* Advanced toggle */}
           <button
-            className="text-sm text-dark-400 hover:text-white flex items-center gap-1 mb-4"
+            className="text-sm text-dark-400 hover:text-foreground flex items-center gap-1 mb-4"
             onClick={() => setShowAdvanced(!showAdvanced)}
           >
             {showAdvanced ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -359,12 +359,12 @@ export default function AgentsPage() {
       {/* ── Recommendation Result ──────────────────────── */}
       {recommendation && (
         <div className="mb-8">
-          <h2 className="text-lg font-semibold text-white mb-4">Recommendation Result</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">Recommendation Result</h2>
           <div className="card border border-spider-600/30">
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-white font-semibold flex items-center gap-2">
+                <h3 className="text-foreground font-semibold flex items-center gap-2">
                   <Sparkles className="h-4 w-4 text-spider-400" />
                   {recommendation.target}
                 </h3>
@@ -382,19 +382,19 @@ export default function AgentsPage() {
             {/* Estimates */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
               <div className="bg-dark-700/50 rounded-lg p-3 text-center">
-                <div className="text-lg font-bold text-white">{recommendation.module_count}</div>
+                <div className="text-lg font-bold text-foreground">{recommendation.module_count}</div>
                 <div className="text-[10px] text-dark-500">Modules</div>
               </div>
               <div className="bg-dark-700/50 rounded-lg p-3 text-center">
-                <div className="text-lg font-bold text-white">{recommendation.estimates.duration_minutes}m</div>
+                <div className="text-lg font-bold text-foreground">{recommendation.estimates.duration_minutes}m</div>
                 <div className="text-[10px] text-dark-500">Est. Duration</div>
               </div>
               <div className="bg-dark-700/50 rounded-lg p-3 text-center">
-                <div className="text-lg font-bold text-white">{recommendation.estimates.events.toLocaleString()}</div>
+                <div className="text-lg font-bold text-foreground">{recommendation.estimates.events.toLocaleString()}</div>
                 <div className="text-[10px] text-dark-500">Est. Events</div>
               </div>
               <div className="bg-dark-700/50 rounded-lg p-3 text-center">
-                <div className="text-lg font-bold text-white">{recommendation.estimates.api_calls}</div>
+                <div className="text-lg font-bold text-foreground">{recommendation.estimates.api_calls}</div>
                 <div className="text-[10px] text-dark-500">API Calls</div>
               </div>
             </div>
@@ -431,7 +431,7 @@ export default function AgentsPage() {
 
             {/* Module list toggle */}
             <button
-              className="text-sm text-dark-400 hover:text-white flex items-center gap-1 mb-3"
+              className="text-sm text-dark-400 hover:text-foreground flex items-center gap-1 mb-3"
               onClick={() => setShowModules(!showModules)}
             >
               {showModules ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -448,7 +448,7 @@ export default function AgentsPage() {
                       className="flex items-center justify-between p-2 bg-dark-700/40 rounded-lg"
                     >
                       <div className="flex-1 min-w-0">
-                        <span className="text-sm text-white font-mono">{m.module}</span>
+                        <span className="text-sm text-foreground font-mono">{m.module}</span>
                         <p className="text-[10px] text-dark-400 truncate">{m.reason}</p>
                       </div>
                       <div className="flex items-center gap-2 ml-3 flex-shrink-0">

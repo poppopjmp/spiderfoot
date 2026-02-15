@@ -75,8 +75,7 @@ jobs:
             --cov=spiderfoot \
             --cov-report=xml:coverage.xml \
             --cov-report=term-missing \
-            -n auto \
-            --timeout=120
+            -n auto
 
       - name: Upload coverage
         uses: actions/upload-artifact@v4
@@ -141,5 +140,4 @@ jobs:
           pytest test/integration/ \
             -v \
             --tb=short \
-            --timeout=300 \
             || echo "Integration tests completed (some may be skipped)"

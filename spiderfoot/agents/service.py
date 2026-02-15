@@ -158,7 +158,8 @@ class DocumentRequest(BaseModel):
 
 
 class ReportRequest(BaseModel):
-    scan_id: str
+    scan_id: str = ""
+    scan_ids: List[str] = []
     target: str
     scan_name: str = ""
     findings: List[Dict[str, Any]] = []
@@ -236,6 +237,7 @@ async def generate_report(request: ReportRequest):
     event = {
         "event_type": "REPORT_REQUEST",
         "scan_id": request.scan_id,
+        "scan_ids": request.scan_ids,
         "target": request.target,
         "scan_name": request.scan_name,
         "findings": request.findings,

@@ -175,9 +175,12 @@ export default function NewScanPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-6">
       <PageHeader title="New Scan" subtitle="Configure and launch an OSINT reconnaissance scan" />
 
+      <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
+        {/* Left Column: Target & Config */}
+        <div className="xl:col-span-2 space-y-6">
       {/* Target Input */}
       <div className="card animate-fade-in-up" style={{ animationDelay: '50ms' }}>
         <label className="section-label mb-3 block">Target</label>
@@ -249,6 +252,31 @@ export default function NewScanPage() {
         </div>
       </div>
 
+      {/* Launch Button (also in left column) */}
+      <div className="card animate-fade-in-up flex items-center justify-between" style={{ animationDelay: '150ms' }}>
+        <div className="text-sm text-dark-400">
+          {tab === 'usecase' && useCase === 'all' ? (
+            <span>All available modules will be used</span>
+          ) : (
+            <span>{effectiveModules.length} module(s) selected</span>
+          )}
+        </div>
+        <button
+          className="btn-primary text-base px-8 py-3"
+          disabled={!target.trim() || createMut.isPending}
+          onClick={handleSubmit}
+        >
+          {createMut.isPending ? (
+            <><Loader2 className="h-5 w-5 animate-spin" /> Starting...</>
+          ) : (
+            <><Radar className="h-5 w-5" /> Launch Scan</>
+          )}
+        </button>
+      </div>
+        </div>
+
+        {/* Right Column: Module Selection */}
+        <div className="xl:col-span-3">
       {/* Module Selection */}
       <div className="card animate-fade-in-up" style={{ animationDelay: '100ms' }}>
         <label className="section-label mb-4 block">Module Selection</label>
@@ -284,7 +312,7 @@ export default function NewScanPage() {
                       {useCase === uc.key && <div className="w-1.5 h-1.5 rounded-full bg-spider-500" />}
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-white">{uc.label}</p>
+                      <p className="text-sm font-medium text-foreground">{uc.label}</p>
                       <p className="text-xs text-dark-400 mt-0.5">{uc.desc}</p>
                     </div>
                   </div>
@@ -305,7 +333,7 @@ export default function NewScanPage() {
                     key={et}
                     className={`flex items-center gap-2 p-2.5 rounded-lg border cursor-pointer transition-all text-sm ${
                       selectedTypes.has(et)
-                        ? 'border-spider-500/50 bg-spider-600/10 text-white'
+                        ? 'border-spider-500/50 bg-spider-600/10 text-foreground'
                         : 'border-dark-700/50 text-dark-300 hover:border-dark-600'
                     }`}
                   >
@@ -375,7 +403,7 @@ export default function NewScanPage() {
                             />
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
-                                <span className="text-sm text-white font-medium">{m.name.replace('sfp_', '')}</span>
+                                <span className="text-sm text-foreground font-medium">{m.name.replace('sfp_', '')}</span>
                                 {!apiOk && (
                                   <span className="text-yellow-500" title="API key required">
                                     <Lock className="h-3 w-3" />
@@ -408,27 +436,7 @@ export default function NewScanPage() {
           )}
         </div>
       </div>
-
-      {/* Launch */}
-      <div className="card animate-fade-in-up flex items-center justify-between" style={{ animationDelay: '150ms' }}>
-        <div className="text-sm text-dark-400">
-          {tab === 'usecase' && useCase === 'all' ? (
-            <span>All available modules will be used</span>
-          ) : (
-            <span>{effectiveModules.length} module(s) selected</span>
-          )}
         </div>
-        <button
-          className="btn-primary text-base px-8 py-3"
-          disabled={!target.trim() || createMut.isPending}
-          onClick={handleSubmit}
-        >
-          {createMut.isPending ? (
-            <><Loader2 className="h-5 w-5 animate-spin" /> Starting...</>
-          ) : (
-            <><Radar className="h-5 w-5" /> Launch Scan</>
-          )}
-        </button>
       </div>
 
       {toast && <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />}

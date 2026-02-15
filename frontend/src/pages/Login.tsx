@@ -113,7 +113,7 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
             <img src="/spiderfoot-icon.png" alt="SpiderFoot" className="h-12 w-12" />
-            <h1 className="text-3xl font-bold text-white">SpiderFoot</h1>
+            <h1 className="text-3xl font-bold text-foreground">SpiderFoot</h1>
           </div>
           <p className="text-dark-400 text-sm">OSINT Automation Platform</p>
         </div>
@@ -135,7 +135,7 @@ export default function LoginPage() {
                 className={clsx(
                   'flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors flex items-center justify-center gap-1.5',
                   loginMethod === 'local'
-                    ? 'bg-dark-700 text-white'
+                    ? 'bg-dark-700 text-foreground'
                     : 'text-dark-400 hover:text-dark-300'
                 )}
                 onClick={() => { setLoginMethod('local'); clearError(); }}
@@ -147,7 +147,7 @@ export default function LoginPage() {
                 className={clsx(
                   'flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors flex items-center justify-center gap-1.5',
                   loginMethod === 'ldap'
-                    ? 'bg-dark-700 text-white'
+                    ? 'bg-dark-700 text-foreground'
                     : 'text-dark-400 hover:text-dark-300'
                 )}
                 onClick={() => { setLoginMethod('ldap'); clearError(); }}
@@ -169,7 +169,7 @@ export default function LoginPage() {
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-dark-800 border border-dark-600 rounded-lg text-white placeholder-dark-500 focus:outline-none focus:border-spider-500 focus:ring-1 focus:ring-spider-500 transition-colors"
+                  className="w-full px-3 py-2.5 bg-dark-800 border border-dark-600 rounded-lg text-foreground placeholder-dark-500 focus:outline-none focus:border-spider-500 focus:ring-1 focus:ring-spider-500 transition-colors"
                   placeholder="Enter username"
                   autoFocus
                   autoComplete="username"
@@ -184,7 +184,7 @@ export default function LoginPage() {
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-3 py-2.5 bg-dark-800 border border-dark-600 rounded-lg text-white placeholder-dark-500 focus:outline-none focus:border-spider-500 focus:ring-1 focus:ring-spider-500 transition-colors pr-10"
+                    className="w-full px-3 py-2.5 bg-dark-800 border border-dark-600 rounded-lg text-foreground placeholder-dark-500 focus:outline-none focus:border-spider-500 focus:ring-1 focus:ring-spider-500 transition-colors pr-10"
                     placeholder="Enter password"
                     autoComplete="current-password"
                   />
@@ -222,7 +222,7 @@ export default function LoginPage() {
                 <select
                   value={selectedLdapProvider}
                   onChange={(e) => setSelectedLdapProvider(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-dark-800 border border-dark-600 rounded-lg text-white focus:outline-none focus:border-spider-500 focus:ring-1 focus:ring-spider-500 transition-colors"
+                  className="w-full px-3 py-2.5 bg-dark-800 border border-dark-600 rounded-lg text-foreground focus:outline-none focus:border-spider-500 focus:ring-1 focus:ring-spider-500 transition-colors"
                 >
                   <option value="">Select provider...</option>
                   {ldapProviders.map((p: SSOProvider) => (
@@ -238,7 +238,7 @@ export default function LoginPage() {
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-dark-800 border border-dark-600 rounded-lg text-white placeholder-dark-500 focus:outline-none focus:border-spider-500 focus:ring-1 focus:ring-spider-500 transition-colors"
+                  className="w-full px-3 py-2.5 bg-dark-800 border border-dark-600 rounded-lg text-foreground placeholder-dark-500 focus:outline-none focus:border-spider-500 focus:ring-1 focus:ring-spider-500 transition-colors"
                   placeholder="LDAP username"
                   autoComplete="username"
                 />
@@ -252,7 +252,7 @@ export default function LoginPage() {
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-3 py-2.5 bg-dark-800 border border-dark-600 rounded-lg text-white placeholder-dark-500 focus:outline-none focus:border-spider-500 focus:ring-1 focus:ring-spider-500 transition-colors pr-10"
+                    className="w-full px-3 py-2.5 bg-dark-800 border border-dark-600 rounded-lg text-foreground placeholder-dark-500 focus:outline-none focus:border-spider-500 focus:ring-1 focus:ring-spider-500 transition-colors pr-10"
                     placeholder="LDAP password"
                     autoComplete="current-password"
                   />
@@ -299,7 +299,7 @@ export default function LoginPage() {
                   <button
                     key={p.id}
                     onClick={() => handleOAuthLogin(p)}
-                    className="w-full py-2.5 bg-dark-800 hover:bg-dark-700 border border-dark-600 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+                    className="w-full py-2.5 bg-dark-800 hover:bg-dark-700 border border-dark-600 text-foreground font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
                   >
                     <Globe className="h-4 w-4 text-blue-400" />
                     {p.name}
@@ -309,7 +309,7 @@ export default function LoginPage() {
                   <button
                     key={p.id}
                     onClick={() => handleSamlLogin(p)}
-                    className="w-full py-2.5 bg-dark-800 hover:bg-dark-700 border border-dark-600 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+                    className="w-full py-2.5 bg-dark-800 hover:bg-dark-700 border border-dark-600 text-foreground font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
                   >
                     <Shield className="h-4 w-4 text-green-400" />
                     {p.name}

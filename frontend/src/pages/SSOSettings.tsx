@@ -159,7 +159,7 @@ export default function SSOSettingsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-3">
             <Shield className="h-7 w-7 text-spider-400" />
             SSO Settings
           </h1>
@@ -184,7 +184,7 @@ export default function SSOSettingsPage() {
           placeholder="Search providers..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-10 pr-10 py-2.5 bg-dark-800 border border-dark-700 rounded-lg text-sm text-white placeholder:text-dark-500 focus:outline-none focus:ring-2 focus:ring-spider-500/40 focus:border-spider-500/60"
+          className="w-full pl-10 pr-10 py-2.5 bg-dark-800 border border-dark-700 rounded-lg text-sm text-foreground placeholder:text-dark-500 focus:outline-none focus:ring-2 focus:ring-spider-500/40 focus:border-spider-500/60"
         />
         {search && (
           <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-500 hover:text-dark-300">
@@ -236,7 +236,7 @@ export default function SSOSettingsPage() {
                   {PROTOCOL_ICON[p.protocol]}
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="text-white font-medium">{p.name}</h3>
+                      <h3 className="text-foreground font-medium">{p.name}</h3>
                       <span className={clsx('inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border', PROTOCOL_COLOR[p.protocol] || 'bg-dark-600 text-dark-300 border-dark-600')}>
                         {PROTOCOL_LABELS[p.protocol] || p.protocol}
                       </span>
@@ -355,7 +355,7 @@ function ModalShell({ title, onClose, children, wide }: {
         wide ? 'max-w-2xl w-full' : 'max-w-lg w-full',
       )}>
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-bold text-white">{title}</h2>
+          <h2 className="text-lg font-bold text-foreground">{title}</h2>
           <button onClick={onClose} className="text-dark-500 hover:text-dark-300 transition-colors">
             <X className="h-5 w-5" />
           </button>
@@ -377,10 +377,10 @@ function FormField({ label, hint, children }: { label: string; hint?: string; ch
 }
 
 const inputClass =
-  'w-full px-3 py-2 bg-dark-900 border border-dark-600 rounded-lg text-sm text-white placeholder:text-dark-500 focus:outline-none focus:ring-2 focus:ring-spider-500/40 focus:border-spider-500/60';
+  'w-full px-3 py-2 bg-dark-900 border border-dark-600 rounded-lg text-sm text-foreground placeholder:text-dark-500 focus:outline-none focus:ring-2 focus:ring-spider-500/40 focus:border-spider-500/60';
 
 const selectClass =
-  'w-full px-3 py-2 bg-dark-900 border border-dark-600 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-spider-500/40 focus:border-spider-500/60 appearance-none';
+  'w-full px-3 py-2 bg-dark-900 border border-dark-600 rounded-lg text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-spider-500/40 focus:border-spider-500/60 appearance-none';
 
 
 // ══════════════════════════════════════════════════════════
@@ -763,7 +763,7 @@ function DeleteProviderModal({
         )}
         <p className="text-dark-300 text-sm">
           Are you sure you want to delete the SSO provider{' '}
-          <span className="text-white font-medium">{provider.name}</span>?
+          <span className="text-foreground font-medium">{provider.name}</span>?
           Users who authenticated via this provider will no longer be able to sign in through SSO.
         </p>
         <div className="flex justify-end gap-3 pt-2">

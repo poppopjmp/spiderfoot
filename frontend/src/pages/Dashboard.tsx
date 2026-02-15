@@ -68,7 +68,7 @@ export default function DashboardPage() {
         {/* Recent Scans */}
         <div className="lg:col-span-2 card animate-fade-in-up" style={{ animationDelay: '150ms' }}>
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+            <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-dark-400" /> Recent Scans
             </h2>
             <Link to="/scans" className="text-spider-400 hover:text-spider-300 text-sm flex items-center gap-1 group">
@@ -125,7 +125,7 @@ export default function DashboardPage() {
         <div className="space-y-6">
           {/* System Health */}
           <div className="card animate-fade-in-up" style={{ animationDelay: '200ms' }}>
-            <h2 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
+            <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
               <Server className="h-4 w-4 text-dark-400" /> System Health
             </h2>
             <div className="space-y-4">
@@ -135,7 +135,7 @@ export default function DashboardPage() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-dark-400 text-sm">Uptime</span>
-                <span className="text-white font-mono text-sm">{uptime}</span>
+                <span className="text-foreground font-mono text-sm">{uptime}</span>
               </div>
               {/* Always show core component status */}
               <div className="pt-3 border-t border-dark-700/50">
@@ -201,7 +201,7 @@ export default function DashboardPage() {
 
           {/* Quick Actions */}
           <div className="card animate-fade-in-up" style={{ animationDelay: '250ms' }}>
-            <h2 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
+            <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
               <Zap className="h-4 w-4 text-dark-400" /> Quick Actions
             </h2>
             <div className="space-y-2">

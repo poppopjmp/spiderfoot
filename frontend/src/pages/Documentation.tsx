@@ -35,7 +35,7 @@ export default function DocumentationPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <BookOpen className="h-6 w-6 text-spider-500" /> Documentation
           </h1>
           <p className="text-dark-400 text-sm mt-1">
@@ -46,7 +46,7 @@ export default function DocumentationPage() {
           href="https://www.spiderfoot.net/documentation/"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-2 px-4 py-2 text-sm bg-dark-800 border border-dark-700 rounded-lg text-dark-300 hover:text-white hover:border-dark-500 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 text-sm bg-dark-800 border border-dark-700 rounded-lg text-dark-300 hover:text-foreground hover:border-dark-500 transition-colors"
         >
           <ExternalLink className="h-4 w-4" /> Online Docs
         </a>
@@ -61,7 +61,7 @@ export default function DocumentationPage() {
             className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
               activeTab === tab
                 ? 'bg-spider-600 text-white'
-                : 'text-dark-400 hover:text-white'
+                : 'text-dark-400 hover:text-foreground'
             }`}
           >
             {tab === 'modules' ? 'Modules' : tab === 'events' ? 'Event Types' : 'Guides'}
@@ -77,7 +77,7 @@ export default function DocumentationPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search modules..."
-              className="w-full pl-10 pr-4 py-2.5 bg-dark-800 border border-dark-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-spider-500/50"
+              className="w-full pl-10 pr-4 py-2.5 bg-dark-800 border border-dark-700 rounded-lg text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-spider-500/50"
             />
           </div>
 
@@ -103,7 +103,7 @@ export default function DocumentationPage() {
               >
                 <Cpu className="h-5 w-5 text-spider-500 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white">{mod.name}</p>
+                  <p className="text-sm font-medium text-foreground">{mod.name}</p>
                   <p className="text-xs text-dark-400 truncate">{mod.descr ?? mod.description}</p>
                 </div>
                 {(mod.cats?.length) && (
@@ -134,7 +134,7 @@ export default function DocumentationPage() {
             <div className="flex items-start gap-4">
               <Cpu className="h-8 w-8 text-spider-500 mt-1" />
               <div>
-                <h2 className="text-xl font-bold text-white">{selectedModule.name}</h2>
+                <h2 className="text-xl font-bold text-foreground">{selectedModule.name}</h2>
                 <p className="text-dark-400 text-sm mt-1">
                   {selectedModule.descr ?? selectedModule.description}
                 </p>
@@ -375,8 +375,8 @@ function GuidesPanel() {
               }}
               className={`w-full flex items-center gap-3 p-4 rounded-xl border transition-all text-left ${
                 expandedGuide === guide.title
-                  ? 'bg-spider-600/10 border-spider-600/40 text-white'
-                  : 'bg-dark-800/60 border-dark-700 text-dark-300 hover:border-dark-500 hover:text-white'
+                  ? 'bg-spider-600/10 border-spider-600/40 text-foreground'
+                  : 'bg-dark-800/60 border-dark-700 text-dark-300 hover:border-dark-500 hover:text-foreground'
               }`}
             >
               <guide.icon className={`h-5 w-5 flex-shrink-0 ${expandedGuide === guide.title ? 'text-spider-400' : 'text-dark-500'}`} />
@@ -399,7 +399,7 @@ function GuidesPanel() {
                     onClick={() => setExpandedSection(expandedSection === section.title ? null : section.title)}
                     className="w-full flex items-center justify-between p-4 text-left hover:bg-dark-700/30 transition-colors"
                   >
-                    <span className="text-sm font-medium text-white">{section.title}</span>
+                    <span className="text-sm font-medium text-foreground">{section.title}</span>
                     <ChevronDown className={`h-4 w-4 text-dark-400 transition-transform ${expandedSection === section.title ? 'rotate-180' : ''}`} />
                   </button>
                   {expandedSection === section.title && (
@@ -409,7 +409,7 @@ function GuidesPanel() {
                           <p key={i} className="text-sm text-dark-300 leading-relaxed mb-3 last:mb-0">
                             {para.split(/(\*\*[^*]+\*\*|\`[^`]+\`)/).map((segment, j) => {
                               if (segment.startsWith('**') && segment.endsWith('**')) {
-                                return <strong key={j} className="text-white font-semibold">{segment.slice(2, -2)}</strong>;
+                                return <strong key={j} className="text-foreground font-semibold">{segment.slice(2, -2)}</strong>;
                               }
                               if (segment.startsWith('`') && segment.endsWith('`')) {
                                 return <code key={j} className="px-1.5 py-0.5 bg-dark-700 text-spider-400 rounded text-xs font-mono">{segment.slice(1, -1)}</code>;

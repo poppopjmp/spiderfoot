@@ -24,7 +24,7 @@ export function PageHeader({
   return (
     <div className={clsx('flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 animate-fade-in', className)}>
       <div>
-        <h1 className="text-2xl font-bold text-white tracking-tight">{title}</h1>
+        <h1 className="text-2xl font-bold text-foreground tracking-tight">{title}</h1>
         {subtitle && <p className="text-dark-400 mt-1 text-sm">{subtitle}</p>}
       </div>
       {children && <div className="flex items-center gap-3 flex-shrink-0">{children}</div>}
@@ -58,7 +58,7 @@ export function StatCard({
         {loading ? (
           <div className="skeleton h-7 w-16 mb-1" />
         ) : (
-          <p className="text-2xl font-bold text-white animate-count-up">{value}</p>
+          <p className="text-2xl font-bold text-foreground animate-count-up">{value}</p>
         )}
         <p className="text-xs text-dark-400 truncate">{label}</p>
       </div>
@@ -246,7 +246,7 @@ export function ConfirmDialog({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onCancel} />
       <div className="relative bg-dark-800 border border-dark-700 rounded-2xl p-6 max-w-md w-full shadow-2xl animate-fade-in-up">
-        <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-2">{title}</h3>
         <p className="text-sm text-dark-300 mb-6">{message}</p>
         <div className="flex justify-end gap-3">
           <button className="btn-secondary" onClick={onCancel}>Cancel</button>
@@ -371,6 +371,34 @@ export function RiskPills({
       {medium > 0 && <span className="risk-pill risk-pill-medium">{medium} M</span>}
       {low > 0 && <span className="risk-pill risk-pill-low">{low} L</span>}
       {info > 0 && <span className="risk-pill risk-pill-info">{info} I</span>}
+    </div>
+  );
+}
+
+/* ── Modal Shell (unified modal wrapper) ──────────────────── */
+export function ModalShell({
+  title, onClose, children, wide = false,
+}: {
+  title: string; onClose: () => void; children: React.ReactNode; wide?: boolean;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className={clsx(
+        'relative bg-dark-800 border border-dark-700 rounded-2xl p-6 shadow-2xl animate-fade-in-up max-h-[90vh] overflow-y-auto',
+        wide ? 'max-w-2xl w-full' : 'max-w-lg w-full',
+      )}>
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-lg font-bold text-foreground">{title}</h2>
+          <button
+            onClick={onClose}
+            className="text-dark-500 hover:text-dark-300 transition-colors"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        {children}
+      </div>
     </div>
   );
 }

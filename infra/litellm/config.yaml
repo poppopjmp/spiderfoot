@@ -43,6 +43,13 @@ model_list:
       api_key: "os.environ/OPENROUTER_API_KEY"
       max_tokens: 4096
 
+  # --- Gemma 3 27B (used for CTI report generation) ---
+  - model_name: "gemma3-27b"
+    litellm_params:
+      model: "openrouter/google/gemma-3-27b-it"
+      api_key: "os.environ/OPENROUTER_API_KEY"
+      max_tokens: 65536
+
   # --- Direct OpenAI Models (optional, if OPENAI_API_KEY set) ---
   - model_name: "openai/gpt-4o"
     litellm_params:

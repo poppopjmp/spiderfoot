@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import api from '../lib/api';
+import { ModalShell } from '../components/ui';
 import { useAuthStore } from '../lib/auth';
 
 // ── Types ────────────────────────────────────────────────
@@ -166,7 +167,7 @@ export default function ApiKeysPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-3">
             <Key className="h-7 w-7 text-spider-400" />
             API Keys
           </h1>
@@ -191,7 +192,7 @@ export default function ApiKeysPage() {
           placeholder="Search keys..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-10 pr-10 py-2.5 bg-dark-800 border border-dark-700 rounded-lg text-sm text-white placeholder:text-dark-500 focus:outline-none focus:ring-2 focus:ring-spider-500/40 focus:border-spider-500/60"
+          className="w-full pl-10 pr-10 py-2.5 bg-dark-800 border border-dark-700 rounded-lg text-sm text-foreground placeholder:text-dark-500 focus:outline-none focus:ring-2 focus:ring-spider-500/40 focus:border-spider-500/60"
         />
         {search && (
           <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-500 hover:text-dark-300">
@@ -252,7 +253,7 @@ export default function ApiKeysPage() {
                   return (
                     <tr key={k.id} className="border-b border-dark-700/50 hover:bg-dark-750 transition-colors">
                       <td className="px-4 py-3">
-                        <p className="text-white font-medium">{k.name}</p>
+                        <p className="text-foreground font-medium">{k.name}</p>
                         <p className="text-dark-500 text-xs">{formatDate(k.created_at)}</p>
                       </td>
                       <td className="px-4 py-3">
@@ -347,7 +348,7 @@ export default function ApiKeysPage() {
       {revokeKey && (
         <ConfirmModal
           title="Revoke API Key"
-          message={<>Are you sure you want to revoke <span className="text-white font-medium">{revokeKey.name}</span>? The key will immediately stop working.</>}
+          message={<>Are you sure you want to revoke <span className="text-foreground font-medium">{revokeKey.name}</span>? The key will immediately stop working.</>}
           confirmLabel="Revoke"
           confirmClass="bg-yellow-600 hover:bg-yellow-500"
           onConfirm={() => handleRevoke(revokeKey)}
@@ -357,7 +358,7 @@ export default function ApiKeysPage() {
       {deleteKey && (
         <ConfirmModal
           title="Delete API Key"
-          message={<>Are you sure you want to permanently delete <span className="text-white font-medium">{deleteKey.name}</span>? This cannot be undone.</>}
+          message={<>Are you sure you want to permanently delete <span className="text-foreground font-medium">{deleteKey.name}</span>? This cannot be undone.</>}
           confirmLabel="Delete"
           confirmClass="bg-red-600 hover:bg-red-500"
           onConfirm={() => handleDelete(deleteKey)}
@@ -373,28 +374,6 @@ export default function ApiKeysPage() {
 // Shared UI
 // ══════════════════════════════════════════════════════════
 
-function ModalShell({ title, onClose, children, wide }: {
-  title: string; onClose: () => void; children: React.ReactNode; wide?: boolean;
-}) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className={clsx(
-        'relative bg-dark-800 border border-dark-700 rounded-2xl p-6 shadow-2xl animate-fade-in-up max-h-[90vh] overflow-y-auto',
-        wide ? 'max-w-2xl w-full' : 'max-w-lg w-full',
-      )}>
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-bold text-white">{title}</h2>
-          <button onClick={onClose} className="text-dark-500 hover:text-dark-300 transition-colors">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        {children}
-      </div>
-    </div>
-  );
-}
-
 function FormField({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
@@ -406,10 +385,10 @@ function FormField({ label, hint, children }: { label: string; hint?: string; ch
 }
 
 const inputClass =
-  'w-full px-3 py-2 bg-dark-900 border border-dark-600 rounded-lg text-sm text-white placeholder:text-dark-500 focus:outline-none focus:ring-2 focus:ring-spider-500/40 focus:border-spider-500/60';
+  'w-full px-3 py-2 bg-dark-900 border border-dark-600 rounded-lg text-sm text-foreground placeholder:text-dark-500 focus:outline-none focus:ring-2 focus:ring-spider-500/40 focus:border-spider-500/60';
 
 const selectClass =
-  'w-full px-3 py-2 bg-dark-900 border border-dark-600 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-spider-500/40 focus:border-spider-500/60 appearance-none';
+  'w-full px-3 py-2 bg-dark-900 border border-dark-600 rounded-lg text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-spider-500/40 focus:border-spider-500/60 appearance-none';
 
 
 // ══════════════════════════════════════════════════════════
@@ -589,7 +568,7 @@ function KeyCreatedModal({ apiKey, onClose }: { apiKey: ApiKeyRecord; onClose: (
             Key generated successfully
           </div>
           <p className="text-xs text-dark-400 mb-3">
-            Copy this key now — it will <span className="text-white font-medium">not be shown again</span>.
+            Copy this key now — it will <span className="text-foreground font-medium">not be shown again</span>.
           </p>
           <div className="flex items-center gap-2">
             <code className={clsx(
@@ -621,11 +600,11 @@ function KeyCreatedModal({ apiKey, onClose }: { apiKey: ApiKeyRecord; onClose: (
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-dark-400">Name</span>
-            <span className="text-white">{apiKey.name}</span>
+            <span className="text-foreground">{apiKey.name}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-dark-400">Role</span>
-            <span className="text-white capitalize">{apiKey.role}</span>
+            <span className="text-foreground capitalize">{apiKey.role}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-dark-400">Prefix</span>
@@ -633,7 +612,7 @@ function KeyCreatedModal({ apiKey, onClose }: { apiKey: ApiKeyRecord; onClose: (
           </div>
           <div className="flex justify-between">
             <span className="text-dark-400">Expires</span>
-            <span className="text-white">{expiresLabel(apiKey.expires_at)}</span>
+            <span className="text-foreground">{expiresLabel(apiKey.expires_at)}</span>
           </div>
         </div>
 

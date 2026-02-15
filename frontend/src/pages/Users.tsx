@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import api from '../lib/api';
+import { ModalShell } from '../components/ui';
 import { useAuthStore } from '../lib/auth';
 
 // ── Types ────────────────────────────────────────────────
@@ -128,7 +129,7 @@ export default function UsersPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-3">
             <UsersIcon className="h-7 w-7 text-spider-400" />
             User Management
           </h1>
@@ -155,7 +156,7 @@ export default function UsersPage() {
           placeholder="Search users..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-10 pr-10 py-2.5 bg-dark-800 border border-dark-700 rounded-lg text-sm text-white placeholder:text-dark-500 focus:outline-none focus:ring-2 focus:ring-spider-500/40 focus:border-spider-500/60"
+          className="w-full pl-10 pr-10 py-2.5 bg-dark-800 border border-dark-700 rounded-lg text-sm text-foreground placeholder:text-dark-500 focus:outline-none focus:ring-2 focus:ring-spider-500/40 focus:border-spider-500/60"
         />
         {search && (
           <button
@@ -214,7 +215,7 @@ export default function UsersPage() {
                     {/* User info */}
                     <td className="px-4 py-3">
                       <div>
-                        <p className="text-white font-medium">{u.display_name || u.username}</p>
+                        <p className="text-foreground font-medium">{u.display_name || u.username}</p>
                         <p className="text-dark-500 text-xs">{u.email || u.username}</p>
                       </div>
                     </td>
@@ -337,34 +338,6 @@ export default function UsersPage() {
 // Modal Components
 // ══════════════════════════════════════════════════════════
 
-function ModalShell({
-  title,
-  onClose,
-  children,
-}: {
-  title: string;
-  onClose: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-dark-800 border border-dark-700 rounded-2xl p-6 max-w-lg w-full shadow-2xl animate-fade-in-up">
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-bold text-white">{title}</h2>
-          <button
-            onClick={onClose}
-            className="text-dark-500 hover:text-dark-300 transition-colors"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        {children}
-      </div>
-    </div>
-  );
-}
-
 function FormField({
   label,
   children,
@@ -381,10 +354,10 @@ function FormField({
 }
 
 const inputClass =
-  'w-full px-3 py-2 bg-dark-900 border border-dark-600 rounded-lg text-sm text-white placeholder:text-dark-500 focus:outline-none focus:ring-2 focus:ring-spider-500/40 focus:border-spider-500/60';
+  'w-full px-3 py-2 bg-dark-900 border border-dark-600 rounded-lg text-sm text-foreground placeholder:text-dark-500 focus:outline-none focus:ring-2 focus:ring-spider-500/40 focus:border-spider-500/60';
 
 const selectClass =
-  'w-full px-3 py-2 bg-dark-900 border border-dark-600 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-spider-500/40 focus:border-spider-500/60 appearance-none';
+  'w-full px-3 py-2 bg-dark-900 border border-dark-600 rounded-lg text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-spider-500/40 focus:border-spider-500/60 appearance-none';
 
 
 // ── Create User ──────────────────────────────────────────
@@ -761,7 +734,7 @@ function DeleteUserModal({
 
         <p className="text-dark-300 text-sm">
           Are you sure you want to delete user{' '}
-          <span className="text-white font-medium">{user.username}</span>? This
+          <span className="text-foreground font-medium">{user.username}</span>? This
           action cannot be undone and will revoke all active sessions.
         </p>
 

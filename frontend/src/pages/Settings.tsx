@@ -241,7 +241,7 @@ export default function SettingsPage() {
           {/* Module info header */}
           {activeSection !== '__global__' && activeModule && (
             <div className="card animate-fade-in">
-              <h3 className="text-sm font-semibold text-white">{activeModule.name}</h3>
+              <h3 className="text-sm font-semibold text-foreground">{activeModule.name}</h3>
               <p className="text-xs text-dark-400 mt-1">
                 {activeModule.descr || activeModule.description || 'No description available.'}
               </p>

@@ -122,24 +122,39 @@ class SpiderFootWorkspace:
     def _get_scan_row(self, scan_id: str):
         """Get a single scan info row, normalizing across DB and ApiClient.
 
-        SpiderFootDb.scanInstanceGet returns fetchall() → list of DictRow/tuples.
-        ApiClient.scanInstanceGet returns a single tuple (name, target, created, started, ended, status).
-        This method always returns a single tuple/row or None.
+        SpiderFootDb.scanInstanceGet returns a single row (DictRow or tuple):
+            (guid, name, seed_target, created, started, ended, status, result_count)
+        ApiClient.scanInstanceGet returns a single tuple:
+            (name, target, created, started, ended, status)
+
+        This method always returns a normalized 6-element tuple:
+            (name, seed_target, created, started, ended, status)
+        or None.
         """
         result = self.scan_db.scanInstanceGet(scan_id)
         if not result:
             return None
-        # If the result is a list of rows (direct DB), take the first row
-        if isinstance(result, list):
+
+        row = result
+
+        # DictRow (psycopg2) extends list, so don't unwrap via isinstance(list).
+        # Instead, check if it's a nested list-of-rows (plain list of tuples).
+        if isinstance(result, list) and not hasattr(result, 'keys'):
+            # Plain list (e.g. raw fetchall result not yet unwrapped)
             if len(result) == 0:
                 return None
             row = result[0]
-        else:
-            row = result
-        # Ensure it's a tuple/list for consistent integer indexing
+
+        # Convert DictRow / namedtuple to plain tuple for safe indexing
         if hasattr(row, 'keys'):
-            # DictRow or similar — convert to tuple for safe indexing
             row = tuple(row)
+
+        # Normalize: SpiderFootDb returns 8 cols starting with guid;
+        # strip guid prefix and result_count suffix → 6-element tuple
+        if len(row) >= 8 and str(row[0]) == scan_id:
+            # (guid, name, seed_target, created, started, ended, status, result_count)
+            row = tuple(row[1:7])  # → (name, seed_target, created, started, ended, status)
+
         return row
 
     def _generate_workspace_id(self) -> str:
@@ -611,12 +626,18 @@ class SpiderFootWorkspace:
                 'completed_scans': 0,
                 'running_scans': 0,
                 'failed_scans': 0,
-                'correlation_count': len(self.metadata.get('correlations', [])),
+                'correlation_count': 0,
+                'critical_count': 0,
+                'high_count': 0,
+                'medium_count': 0,
+                'low_count': 0,
+                'info_count': 0,
                 'cti_report_count': len(self.metadata.get('cti_reports', []))
             },
             'targets_by_type': {},
             'scans_by_status': {},
-            'recent_activity': []
+            'recent_activity': [],
+            'correlations': [],
         }
 
         # Analyze targets
@@ -649,6 +670,38 @@ class SpiderFootWorkspace:
                 # Count events
                 events = self.scan_db.scanResultEvent(scan_id, 'ALL')
                 summary['statistics']['total_events'] += len(events)
+
+                # Aggregate correlations from this scan
+                try:
+                    corr_by_risk = self.scan_db.scanCorrelationSummary(scan_id, by='risk')
+                    for row in (corr_by_risk or []):
+                        risk = str(row[0]).upper() if row[0] else 'INFO'
+                        count = int(row[1]) if row[1] else 0
+                        summary['statistics']['correlation_count'] += count
+                        if risk == 'CRITICAL':
+                            summary['statistics']['critical_count'] += count
+                        elif risk == 'HIGH':
+                            summary['statistics']['high_count'] += count
+                        elif risk == 'MEDIUM':
+                            summary['statistics']['medium_count'] += count
+                        elif risk == 'LOW':
+                            summary['statistics']['low_count'] += count
+                        else:
+                            summary['statistics']['info_count'] += count
+
+                    corr_list = self.scan_db.scanCorrelationList(scan_id)
+                    for row in (corr_list or []):
+                        summary['correlations'].append({
+                            'id': row[0],
+                            'title': row[1],
+                            'rule_id': row[2],
+                            'rule_risk': row[3],
+                            'rule_name': row[4],
+                            'scan_id': scan_id,
+                            'event_count': row[7] if len(row) > 7 else 0,
+                        })
+                except Exception as e:
+                    self.log.debug("Could not aggregate correlations for scan %s: %s", scan_id, e)
 
                 # Recent activity
                 summary['recent_activity'].append({

@@ -2,6 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Theme Variables ─────────────────────────────────────────── */
+:root {
+  /* Dark theme (default) — slate scale */
+  --c-dark-50:  248 250 252;
+  --c-dark-100: 241 245 249;
+  --c-dark-200: 226 232 240;
+  --c-dark-300: 203 213 225;
+  --c-dark-400: 148 163 184;
+  --c-dark-500: 100 116 139;
+  --c-dark-600: 71 85 105;
+  --c-dark-700: 51 65 85;
+  --c-dark-800: 30 41 59;
+  --c-dark-900: 15 23 42;
+  --c-dark-950: 2 6 23;
+  --c-foreground: 255 255 255;
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  /* Light theme — reversed semantic mapping */
+  --c-dark-50:  3 7 18;
+  --c-dark-100: 17 24 39;
+  --c-dark-200: 31 41 55;
+  --c-dark-300: 55 65 81;
+  --c-dark-400: 75 85 99;
+  --c-dark-500: 107 114 128;
+  --c-dark-600: 209 213 219;
+  --c-dark-700: 229 231 235;
+  --c-dark-800: 249 250 251;
+  --c-dark-900: 255 255 255;
+  --c-dark-950: 249 250 251;
+  --c-foreground: 17 24 39;
+  color-scheme: light;
+}
+
 /* ── Keyframes ───────────────────────────────────────────────── */
 @keyframes fade-in {
   from { opacity: 0; transform: translateY(8px); }
@@ -69,7 +104,7 @@
   .btn-secondary {
     @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg
            bg-dark-700/80 text-dark-100 border border-dark-600/50
-           hover:bg-dark-600 hover:border-dark-500 hover:text-white
+           hover:bg-dark-600 hover:border-dark-500 hover:text-foreground
            active:scale-[0.97]
            focus:outline-none focus:ring-2 focus:ring-dark-400/50 focus:ring-offset-2 focus:ring-offset-dark-900
            transition-all duration-200 ease-out;
@@ -84,13 +119,13 @@
   }
   .btn-ghost {
     @apply inline-flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-lg
-           text-dark-300 hover:text-white hover:bg-dark-700/60
+           text-dark-300 hover:text-foreground hover:bg-dark-700/60
            active:scale-[0.97]
            transition-all duration-150;
   }
   .btn-icon {
     @apply inline-flex items-center justify-center p-2 rounded-lg
-           text-dark-400 hover:text-white hover:bg-dark-700/60
+           text-dark-400 hover:text-foreground hover:bg-dark-700/60
            active:scale-[0.95]
            transition-all duration-150;
   }
@@ -147,13 +182,13 @@
 
   /* ── Tables ──────────────────────────────────────────────── */
   .table-header {
-    @apply text-left text-[11px] font-semibold uppercase tracking-wider text-dark-400 pb-3;
+    @apply text-left text-[11px] font-semibold uppercase tracking-wider text-dark-400 pb-3 px-3 first:pl-0 last:pr-0;
   }
   .table-row {
     @apply hover:bg-dark-700/40 transition-colors duration-100;
   }
   .table-cell {
-    @apply py-3.5 text-sm;
+    @apply py-3.5 px-3 text-sm first:pl-0 last:pr-0;
   }
 
   /* ── Tabs ────────────────────────────────────────────────── */
@@ -217,7 +252,7 @@
 
   /* ── Tooltips / Popovers ─────────────────────────────────── */
   .tooltip {
-    @apply absolute z-50 px-3 py-1.5 text-xs font-medium text-white
+    @apply absolute z-50 px-3 py-1.5 text-xs font-medium text-foreground
            bg-dark-700 border border-dark-600 rounded-lg shadow-xl
            pointer-events-none;
     animation: fade-in 0.15s ease-out;

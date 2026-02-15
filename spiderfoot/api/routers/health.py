@@ -20,6 +20,7 @@ Endpoints:
 from __future__ import annotations
 
 import logging
+import os
 import platform
 import sys
 import time
@@ -113,8 +114,14 @@ def _check_eventbus() -> dict[str, Any]:
 def _check_vector() -> dict[str, Any]:
     """Vector.dev log pipeline health."""
     try:
-        from spiderfoot.vector_bootstrap import VectorBootstrap
-        vb = VectorBootstrap()
+        from spiderfoot.vector_bootstrap import VectorBootstrap, VectorBootstrapConfig
+        # Use VECTOR_API_URL env or Docker service name 'vector'
+        api_url = os.environ.get("VECTOR_API_URL", "http://vector:8686")
+        cfg = VectorBootstrapConfig(
+            vector_api_url=api_url,
+            vector_graphql_url=f"{api_url}/graphql",
+        )
+        vb = VectorBootstrap(config=cfg)
         health = vb.check_health()
         if health.reachable:
             return {
@@ -268,13 +275,18 @@ def _check_service_auth() -> dict[str, Any]:
     try:
         from spiderfoot.security.service_auth import ServiceTokenIssuer
         issuer = ServiceTokenIssuer()
-        if not issuer.enabled:
+        # Determine mode from private attributes
+        if getattr(issuer, '_static_token', None):
+            mode = 'static'
+        elif getattr(issuer, '_secret', None):
+            mode = 'hmac'
+        else:
             return {"status": "unknown", "message": "Service auth not configured"}
         # Verify we can issue a token
-        token = issuer.issue_token()
+        token = issuer.get_token()
         return {
             "status": "up",
-            "mode": issuer.mode,
+            "mode": mode,
             "service_name": issuer.service_name,
             "token_preview": token[:12] + "..." if len(token) > 12 else "***",
         }
@@ -313,7 +325,7 @@ def _check_module_timeout() -> dict[str, Any]:
             "default_timeout_s": guard.default_timeout,
             "total_guarded": stats.get("total_guarded", 0),
             "total_timeouts": stats.get("total_timeouts", 0),
-            "hard_mode": guard.hard_mode,
+            "hard_interrupt": guard.hard_interrupt,
         }
     except ImportError:
         return {"status": "unknown", "message": "module_timeout module not available"}
@@ -468,6 +480,14 @@ _startup_time = time.time()
 _startup_complete = False
 
 
+# Core subsystems whose failure should affect overall status.
+# Optional/auxiliary subsystems report individual status but
+# do not drag the overall health to "down".
+_CORE_SUBSYSTEMS = {
+    "postgresql", "redis", "celery", "minio",
+}
+
+
 def run_all_checks() -> dict[str, Any]:
     """Execute all registered subsystem checks and aggregate."""
     components: dict[str, Any] = {}
@@ -482,6 +502,10 @@ def run_all_checks() -> dict[str, Any]:
         elapsed = (time.monotonic() - t0) * 1000
         result["latency_ms"] = round(elapsed, 2)
         components[name] = result
+
+        # Only core subsystems affect the overall status
+        if name not in _CORE_SUBSYSTEMS:
+            continue
 
         status = result.get("status", "unknown")
         if status == "down":
