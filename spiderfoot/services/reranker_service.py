@@ -9,6 +9,8 @@ Backends:
 * **SentenceTransformer CrossEncoder** — local ``ms-marco-MiniLM-L-6-v2``
 * **Cohere** — Cohere Rerank API
 * **Jina** — Jina Reranker API
+* **LiteLLM** — gateway-routed LLM-based relevance scoring
+* **Ollama** — local LLM-based relevance scoring
 
 Features:
 
@@ -44,6 +46,8 @@ class RerankerProvider(Enum):
     CROSS_ENCODER = "cross_encoder"
     COHERE = "cohere"
     JINA = "jina"
+    LITELLM = "litellm"
+    OLLAMA = "ollama"
 
 
 class ScoreNormalization(Enum):
@@ -77,6 +81,7 @@ class RerankerConfig:
             provider=RerankerProvider(e.get("SF_RERANKER_PROVIDER", "mock")),
             model_name=e.get("SF_RERANKER_MODEL", "cross-encoder/ms-marco-MiniLM-L-6-v2"),
             api_key=e.get("SF_RERANKER_API_KEY", ""),
+            api_base=e.get("SF_RERANKER_API_BASE", ""),
             top_k=int(e.get("SF_RERANKER_TOP_K", "5")),
             score_threshold=float(e.get("SF_RERANKER_THRESHOLD", "0.0")),
         )
@@ -386,6 +391,127 @@ class JinaRerankerBackend(RerankerBackend):
 
 
 # ---------------------------------------------------------------------------
+# LiteLLM Gateway backend (rerank via LLM scoring)
+# ---------------------------------------------------------------------------
+
+class LiteLLMRerankerBackend(RerankerBackend):
+    """Reranker via LiteLLM gateway using LLM-based relevance scoring.
+
+    Uses the LiteLLM proxy to send a scoring prompt to any configured
+    LLM model. Each document is scored by asking the LLM to rate its
+    relevance to the query on a 0-10 scale.
+    """
+
+    def __init__(self, api_key: str = "", api_base: str = "",
+                 model: str = "gpt-4o-mini",
+                 timeout: float = 30.0) -> None:
+        """Initialize the LiteLLM reranker backend."""
+        self._api_key = api_key
+        self._api_base = (api_base or "http://litellm:4000").rstrip("/")
+        self._model = model
+        self._timeout = timeout
+
+    def score(self, query: str, documents: list[str]) -> list[float]:
+        """Score documents by LLM-based relevance assessment."""
+        import urllib.error
+        import urllib.request
+
+        scores = []
+        for doc in documents:
+            prompt = (
+                f"Rate the relevance of the following document to the query "
+                f"on a scale of 0 to 10. Respond with ONLY a number.\n\n"
+                f"Query: {query}\n\nDocument: {doc[:500]}\n\nScore:"
+            )
+            url = f"{self._api_base}/chat/completions"
+            body = json.dumps({
+                "model": self._model,
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": 5,
+                "temperature": 0.0,
+            }).encode()
+            headers: dict[str, str] = {"Content-Type": "application/json"}
+            if self._api_key:
+                headers["Authorization"] = f"Bearer {self._api_key}"
+            req = urllib.request.Request(url, data=body, headers=headers)
+            try:
+                with urllib.request.urlopen(req, timeout=self._timeout) as resp:
+                    data = json.loads(resp.read().decode())
+                content = data["choices"][0]["message"]["content"].strip()
+                # Extract numeric score
+                score_val = float("".join(c for c in content if c.isdigit() or c == ".") or "0")
+                scores.append(min(score_val / 10.0, 1.0))  # normalize to 0-1
+            except (urllib.error.URLError, json.JSONDecodeError,
+                    OSError, ValueError, KeyError, IndexError) as e:
+                log.warning("LiteLLM rerank scoring failed: %s", e)
+                scores.append(0.0)
+        return scores
+
+    def model_name(self) -> str:
+        """Return the model name."""
+        return f"litellm/{self._model}"
+
+
+# ---------------------------------------------------------------------------
+# Ollama backend (rerank via local LLM scoring)
+# ---------------------------------------------------------------------------
+
+class OllamaRerankerBackend(RerankerBackend):
+    """Reranker using Ollama local LLM for relevance scoring.
+
+    Similar to the LiteLLM backend but connects directly to an
+    Ollama instance for scoring.
+    """
+
+    def __init__(self, model: str = "llama3",
+                 api_base: str = "",
+                 timeout: float = 60.0) -> None:
+        """Initialize the Ollama reranker backend."""
+        from spiderfoot.config.constants import DEFAULT_OLLAMA_BASE_URL
+        self._model = model
+        self._api_base = (api_base or DEFAULT_OLLAMA_BASE_URL).rstrip("/")
+        self._timeout = timeout
+
+    def score(self, query: str, documents: list[str]) -> list[float]:
+        """Score documents using a local Ollama model."""
+        import urllib.error
+        import urllib.request
+
+        scores = []
+        for doc in documents:
+            prompt = (
+                f"Rate the relevance of the following document to the query "
+                f"on a scale of 0 to 10. Respond with ONLY a number.\n\n"
+                f"Query: {query}\n\nDocument: {doc[:500]}\n\nScore:"
+            )
+            # Use Ollama's OpenAI-compatible endpoint
+            url = f"{self._api_base}/v1/chat/completions"
+            body = json.dumps({
+                "model": self._model,
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": 5,
+                "temperature": 0.0,
+            }).encode()
+            headers = {"Content-Type": "application/json"}
+            req = urllib.request.Request(url, data=body, headers=headers)
+            try:
+                with urllib.request.urlopen(req, timeout=self._timeout) as resp:
+                    data = json.loads(resp.read().decode())
+                content = data["choices"][0]["message"]["content"].strip()
+                score_val = float("".join(c for c in content if c.isdigit() or c == ".") or "0")
+                scores.append(min(score_val / 10.0, 1.0))
+            except (urllib.error.URLError, json.JSONDecodeError,
+                    OSError, ValueError, KeyError, IndexError) as e:
+                log.warning("Ollama rerank scoring failed: %s", e)
+                scores.append(0.0)
+        return scores
+
+    def model_name(self) -> str:
+        """Return the model name."""
+        return f"ollama/{self._model}"
+
+
+# ---------------------------------------------------------------------------
 # Main reranker service
 # ---------------------------------------------------------------------------
 
@@ -413,6 +539,12 @@ class RerankerService:
             return CohereRerankerBackend(cfg.api_key, cfg.model_name, cfg.timeout)
         elif cfg.provider == RerankerProvider.JINA:
             return JinaRerankerBackend(cfg.api_key, cfg.model_name, cfg.timeout)
+        elif cfg.provider == RerankerProvider.LITELLM:
+            return LiteLLMRerankerBackend(cfg.api_key, cfg.api_base,
+                                          cfg.model_name, cfg.timeout)
+        elif cfg.provider == RerankerProvider.OLLAMA:
+            return OllamaRerankerBackend(cfg.model_name, cfg.api_base,
+                                         cfg.timeout)
         else:
             return MockRerankerBackend()
 

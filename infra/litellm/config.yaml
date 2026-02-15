@@ -84,6 +84,28 @@ model_list:
       model: "openai/text-embedding-3-large"
       api_key: "os.environ/OPENAI_API_KEY"
 
+  # --- Ollama Embedding Models (local) ---
+  - model_name: "ollama/nomic-embed-text"
+    litellm_params:
+      model: "ollama/nomic-embed-text"
+      api_base: "os.environ/OLLAMA_API_BASE"
+
+  - model_name: "ollama/mxbai-embed-large"
+    litellm_params:
+      model: "ollama/mxbai-embed-large"
+      api_base: "os.environ/OLLAMA_API_BASE"
+
+  - model_name: "ollama/all-minilm"
+    litellm_params:
+      model: "ollama/all-minilm"
+      api_base: "os.environ/OLLAMA_API_BASE"
+
+  # --- OpenRouter Embedding Models ---
+  - model_name: "openrouter/text-embedding-3-small"
+    litellm_params:
+      model: "openrouter/openai/text-embedding-3-small"
+      api_key: "os.environ/OPENROUTER_API_KEY"
+
 # --- General Settings ---
 litellm_settings:
   # Enable cost tracking
@@ -113,6 +135,9 @@ router_settings:
     "fast": "gpt-4o-mini"
     "smart": "claude-sonnet"
     "local": "ollama/llama3"
+    # Embedding aliases
+    "embed-default": "text-embedding-3-small"
+    "embed-local": "ollama/nomic-embed-text"
 
 # --- General Proxy Settings ---
 general_settings:

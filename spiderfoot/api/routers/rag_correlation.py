@@ -233,13 +233,58 @@ _multidim_analyzer = None
 
 
 def _get_vector_engine():
-    """Lazy-initialise VectorCorrelationEngine."""
+    """Lazy-initialise VectorCorrelationEngine with all services wired."""
     global _vector_engine
     if _vector_engine is None:
         try:
-            from spiderfoot.vector_correlation import VectorCorrelationEngine
-            _vector_engine = VectorCorrelationEngine()
-            log.info("Vector correlation engine initialised")
+            from spiderfoot.vector_correlation import (
+                VectorCorrelationConfig, VectorCorrelationEngine,
+            )
+            from spiderfoot.qdrant_client import get_qdrant_client
+            from spiderfoot.services.embedding_service import get_embedding_service
+            from spiderfoot.services.reranker_service import RerankerConfig, RerankerService
+
+            config = VectorCorrelationConfig.from_env()
+            if not config.enabled:
+                raise HTTPException(
+                    status_code=503,
+                    detail="Vector correlation is disabled (SF_VECTOR_CORRELATION_ENABLED=false)",
+                )
+
+            qdrant = get_qdrant_client()
+            embeddings = get_embedding_service()
+            reranker_cfg = RerankerConfig.from_env()
+            reranker = RerankerService(reranker_cfg)
+
+            # RAG pipeline (optional — graceful degradation)
+            rag = None
+            try:
+                from spiderfoot.rag_pipeline import RAGConfig, RAGPipeline
+                rag_cfg = RAGConfig.from_env()
+                if rag_cfg.llm_provider.value != "mock":
+                    rag = RAGPipeline(config=rag_cfg)
+                else:
+                    log.info("RAG pipeline using mock LLM provider, "
+                             "correlation will work without RAG analysis")
+            except Exception as e:
+                log.warning("RAG pipeline not available, correlation will "
+                            "work without RAG analysis: %s", e)
+
+            _vector_engine = VectorCorrelationEngine(
+                qdrant=qdrant,
+                embeddings=embeddings,
+                rag=rag,
+                reranker=reranker,
+                config=config,
+            )
+            log.info("Vector correlation engine initialised "
+                     "(qdrant=%s, embeddings=%s, reranker=%s, rag=%s)",
+                     type(qdrant).__name__,
+                     embeddings.provider.value,
+                     reranker_cfg.provider.value,
+                     "available" if rag else "unavailable")
+        except HTTPException:
+            raise
         except Exception as exc:
             log.error("Failed to init vector engine: %s", exc)
             raise HTTPException(status_code=503,

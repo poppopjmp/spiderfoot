@@ -6,6 +6,8 @@ from text, supporting multiple embedding backends:
 * **SentenceTransformer** — local models via ``sentence-transformers``
 * **OpenAI** — ``text-embedding-3-small/large`` via API
 * **HuggingFace API** — inference endpoints
+* **LiteLLM** — unified gateway routing to any configured provider
+* **Ollama** — local models via Ollama's embedding endpoints
 * **Mock** — deterministic embeddings for testing
 
 Features:
@@ -47,6 +49,8 @@ class EmbeddingProvider(Enum):
     SENTENCE_TRANSFORMER = "sentence_transformer"
     OPENAI = "openai"
     HUGGINGFACE = "huggingface"
+    LITELLM = "litellm"
+    OLLAMA = "ollama"
 
 
 @dataclass
@@ -354,6 +358,165 @@ class HuggingFaceEmbeddingBackend(EmbeddingBackend):
 
 
 # ---------------------------------------------------------------------------
+# LiteLLM Gateway
+# ---------------------------------------------------------------------------
+
+class LiteLLMEmbeddingBackend(EmbeddingBackend):
+    """Embedding via LiteLLM proxy gateway.
+
+    Routes embedding requests through the LiteLLM gateway which can
+    fan out to OpenAI, Ollama, HuggingFace, or any configured provider.
+    Uses the OpenAI-compatible ``/embeddings`` endpoint that LiteLLM exposes.
+    """
+
+    def __init__(self, model: str = "text-embedding-3-small",
+                 api_key: str = "", api_base: str = "",
+                 dims: int = 1536, timeout: float = 30.0) -> None:
+        """Initialize the LiteLLM embedding backend."""
+        self._model = model
+        self._api_key = api_key
+        self._api_base = (api_base or "http://litellm:4000").rstrip("/")
+        self._dims = dims
+        self._timeout = timeout
+
+    def embed(self, texts: list[str]) -> EmbeddingResult:
+        """Embed texts through the LiteLLM gateway."""
+        import urllib.error
+        import urllib.request
+        start = time.time()
+
+        url = f"{self._api_base}/embeddings"
+        body = json.dumps({
+            "input": texts,
+            "model": self._model,
+        }).encode()
+        headers: dict[str, str] = {"Content-Type": "application/json"}
+        if self._api_key:
+            headers["Authorization"] = f"Bearer {self._api_key}"
+        req = urllib.request.Request(url, data=body, headers=headers)
+        try:
+            with urllib.request.urlopen(req, timeout=self._timeout) as resp:
+                data = json.loads(resp.read().decode())
+        except (urllib.error.URLError, json.JSONDecodeError, OSError) as e:
+            log.error("LiteLLM embedding failed: %s", e)
+            return EmbeddingResult(vectors=[], model=self._model)
+
+        vectors = [item["embedding"] for item in data.get("data", [])]
+        usage = data.get("usage", {})
+        elapsed = (time.time() - start) * 1000
+
+        if vectors:
+            self._dims = len(vectors[0])
+
+        return EmbeddingResult(
+            vectors=vectors, model=self._model,
+            dimensions=self._dims, elapsed_ms=elapsed,
+            token_count=usage.get("total_tokens", 0),
+        )
+
+    def dimensions(self) -> int:
+        """Return the embedding dimensionality."""
+        return self._dims
+
+    def model_name(self) -> str:
+        """Return the model name."""
+        return self._model
+
+
+# ---------------------------------------------------------------------------
+# Ollama (local)
+# ---------------------------------------------------------------------------
+
+class OllamaEmbeddingBackend(EmbeddingBackend):
+    """Ollama local embedding backend.
+
+    Calls Ollama's OpenAI-compatible ``/v1/embeddings`` endpoint
+    or falls back to the native ``/api/embeddings`` endpoint.
+    """
+
+    def __init__(self, model: str = "nomic-embed-text",
+                 api_base: str = "", dims: int = 768,
+                 timeout: float = 60.0) -> None:
+        """Initialize the Ollama embedding backend."""
+        from spiderfoot.config.constants import DEFAULT_OLLAMA_BASE_URL
+        self._model = model
+        self._api_base = (api_base or DEFAULT_OLLAMA_BASE_URL).rstrip("/")
+        self._dims = dims
+        self._timeout = timeout
+
+    def embed(self, texts: list[str]) -> EmbeddingResult:
+        """Embed texts using Ollama's embedding endpoint."""
+        import urllib.error
+        import urllib.request
+        start = time.time()
+
+        # Try OpenAI-compatible endpoint first (/v1/embeddings)
+        vectors = self._embed_openai_compat(texts)
+        if vectors is None:
+            # Fallback to native Ollama endpoint (/api/embeddings)
+            vectors = self._embed_native(texts)
+
+        elapsed = (time.time() - start) * 1000
+        if vectors:
+            self._dims = len(vectors[0])
+
+        return EmbeddingResult(
+            vectors=vectors or [], model=self._model,
+            dimensions=self._dims, elapsed_ms=elapsed,
+            token_count=sum(len(t.split()) for t in texts),
+        )
+
+    def _embed_openai_compat(self, texts: list[str]) -> list[list[float]] | None:
+        """Try embedding via Ollama's OpenAI-compatible endpoint."""
+        import urllib.error
+        import urllib.request
+        url = f"{self._api_base}/v1/embeddings"
+        body = json.dumps({
+            "input": texts,
+            "model": self._model,
+        }).encode()
+        headers = {"Content-Type": "application/json"}
+        req = urllib.request.Request(url, data=body, headers=headers)
+        try:
+            with urllib.request.urlopen(req, timeout=self._timeout) as resp:
+                data = json.loads(resp.read().decode())
+            return [item["embedding"] for item in data.get("data", [])]
+        except (urllib.error.URLError, json.JSONDecodeError, OSError):
+            return None
+
+    def _embed_native(self, texts: list[str]) -> list[list[float]]:
+        """Embed via Ollama's native /api/embeddings endpoint (one at a time)."""
+        import urllib.error
+        import urllib.request
+        vectors = []
+        for text in texts:
+            url = f"{self._api_base}/api/embeddings"
+            body = json.dumps({
+                "model": self._model,
+                "prompt": text,
+            }).encode()
+            headers = {"Content-Type": "application/json"}
+            req = urllib.request.Request(url, data=body, headers=headers)
+            try:
+                with urllib.request.urlopen(req, timeout=self._timeout) as resp:
+                    data = json.loads(resp.read().decode())
+                embedding = data.get("embedding", [])
+                if embedding:
+                    vectors.append(embedding)
+            except (urllib.error.URLError, json.JSONDecodeError, OSError) as e:
+                log.error("Ollama native embedding failed for text: %s", e)
+        return vectors
+
+    def dimensions(self) -> int:
+        """Return the embedding dimensionality."""
+        return self._dims
+
+    def model_name(self) -> str:
+        """Return the model name."""
+        return self._model
+
+
+# ---------------------------------------------------------------------------
 # Utilities
 # ---------------------------------------------------------------------------
 
@@ -468,6 +631,15 @@ class EmbeddingService:
         elif cfg.provider == EmbeddingProvider.HUGGINGFACE:
             return HuggingFaceEmbeddingBackend(
                 cfg.model_name, cfg.api_key, cfg.dimensions, cfg.timeout,
+            )
+        elif cfg.provider == EmbeddingProvider.LITELLM:
+            return LiteLLMEmbeddingBackend(
+                cfg.model_name, cfg.api_key, cfg.api_base,
+                cfg.dimensions, cfg.timeout,
+            )
+        elif cfg.provider == EmbeddingProvider.OLLAMA:
+            return OllamaEmbeddingBackend(
+                cfg.model_name, cfg.api_base, cfg.dimensions, cfg.timeout,
             )
         else:
             return MockEmbeddingBackend(cfg.dimensions)

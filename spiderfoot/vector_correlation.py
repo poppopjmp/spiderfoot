@@ -58,9 +58,29 @@ class VectorCorrelationConfig:
     max_hops: int = 3
     rerank_top_k: int = 10
     min_cluster_size: int = 3
+    enabled: bool = True
+    rerank_accuracy: str = "high"
     strategies: list[CorrelationStrategy] = field(
         default_factory=lambda: [CorrelationStrategy.SIMILARITY]
     )
+
+    @classmethod
+    def from_env(cls, env: dict[str, str] | None = None) -> VectorCorrelationConfig:
+        """Create config from environment variables."""
+        import os
+        e = env or os.environ
+        return cls(
+            collection_name=e.get("SF_VECTOR_COLLECTION_NAME", "osint_events"),
+            vector_dimensions=int(e.get("SF_EMBEDDING_DIMENSIONS", "384")),
+            similarity_threshold=float(e.get("SF_VECTOR_SIMILARITY_THRESHOLD", "0.7")),
+            cross_scan_threshold=float(e.get("SF_VECTOR_CROSS_SCAN_THRESHOLD", "0.8")),
+            max_results=int(e.get("SF_VECTOR_MAX_RESULTS", "50")),
+            max_hops=int(e.get("SF_VECTOR_MAX_HOPS", "3")),
+            rerank_top_k=int(e.get("SF_RERANKER_TOP_K", "10")),
+            min_cluster_size=int(e.get("SF_VECTOR_MIN_CLUSTER_SIZE", "3")),
+            enabled=e.get("SF_VECTOR_CORRELATION_ENABLED", "true").lower() in ("1", "true"),
+            rerank_accuracy=e.get("SF_VECTOR_RERANK_ACCURACY", "high"),
+        )
 
 
 # ---------------------------------------------------------------------------
