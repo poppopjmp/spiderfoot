@@ -4,7 +4,7 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/poppopjmp/spiderfoot/master/LICENSE)
 [![Python](https://img.shields.io/badge/python-3.9+-blue)](https://www.python.org)
-[![Version](https://img.shields.io/badge/version-5.3.3-green)](VERSION)
+[![Version](https://img.shields.io/badge/version-5.8.0-green)](VERSION)
 [![Docker](https://img.shields.io/badge/docker-compose-2496ED?logo=docker)](docker-compose-microservices.yml)
 [![GraphQL](https://img.shields.io/badge/GraphQL-Strawberry-E10098?logo=graphql)](spiderfoot/api/graphql/)
 [![CI status](https://github.com/poppopjmp/spiderfoot/workflows/Tests/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"Tests")
@@ -13,7 +13,7 @@
 
 # SpiderFoot — OSINT Automation Platform
 
-SpiderFoot is an open-source intelligence (OSINT) automation platform. It integrates with **200+ data sources** to gather intelligence on IP addresses, domain names, hostnames, network subnets, ASNs, email addresses, phone numbers, usernames, Bitcoin addresses, and more. Written in **Python 3** and **MIT-licensed**.
+SpiderFoot is an open-source intelligence (OSINT) automation platform. It integrates with **280+ data sources** to gather intelligence on IP addresses, domain names, hostnames, network subnets, ASNs, email addresses, phone numbers, usernames, Bitcoin addresses, and more. Written in **Python 3** and **MIT-licensed**.
 
 ---
 
@@ -50,18 +50,24 @@ graph TB
         Browser[Browser / Client]
     end
 
-    subgraph Docker["Docker Compose Stack (17 containers)"]
-        NGINX[Nginx :80/:443<br/>Reverse Proxy]
+    subgraph Docker["Docker Compose Stack (21 containers)"]
+        TRAEFIK[Traefik v3 :443<br/>Reverse Proxy + TLS]
+        DSPROXY[Docker Socket Proxy<br/>Secure API Access]
 
         subgraph Application
+            FRONTEND[sf-frontend-ui :80<br/>React SPA + Nginx]
             API[sf-api :8001<br/>FastAPI + GraphQL]
-            WEBUI[sf-webui :5001<br/>CherryPy Web UI]
+        end
+
+        subgraph Workers["Task Processing"]
+            CELERY_W[sf-celery-worker<br/>Celery Task Workers]
+            CELERY_B[sf-celery-beat<br/>Periodic Scheduler]
+            FLOWER[sf-flower :5555<br/>Celery Monitoring]
         end
 
         subgraph Analysis["Analysis Services"]
             AGENTS[sf-agents :8100<br/>6 AI Agents]
-            ENRICHMENT[sf-enrichment :8200<br/>Document Pipeline]
-            USERINPUT[sf-user-input :8300<br/>User-Defined Input]
+            TIKA[Apache Tika :9998<br/>Document Parsing]
         end
 
         subgraph LLM["LLM Gateway"]
@@ -89,24 +95,26 @@ graph TB
         end
     end
 
-    Browser --> NGINX
-    NGINX --> API
-    NGINX --> WEBUI
-    NGINX --> AGENTS
-    NGINX --> ENRICHMENT
-    NGINX --> USERINPUT
-    NGINX --> GRAFANA
-    WEBUI --> API
+    Browser --> TRAEFIK
+    TRAEFIK --> FRONTEND
+    TRAEFIK --> API
+    TRAEFIK --> AGENTS
+    TRAEFIK --> GRAFANA
+    TRAEFIK --> FLOWER
+    TRAEFIK --> MINIO
+    TRAEFIK -.-> DSPROXY
+    FRONTEND --> API
     API --> PG
     API --> REDIS
     API --> QDRANT
     API --> MINIO
     API --> LITELLM
+    API --> TIKA
     AGENTS --> LITELLM
     AGENTS --> REDIS
-    USERINPUT --> ENRICHMENT
-    USERINPUT --> AGENTS
-    ENRICHMENT --> MINIO
+    CELERY_W --> PG
+    CELERY_W --> REDIS
+    CELERY_B --> REDIS
     VECTOR --> LOKI
     VECTOR --> MINIO
     VECTOR --> JAEGER
@@ -133,20 +141,19 @@ cd spiderfoot
 cp docker/env.example .env
 # Edit .env with your API keys (OpenAI, Anthropic, etc.)
 
-# Start the full 17-service stack
+# Start the full 21-service stack
 docker compose -f docker-compose-microservices.yml up --build -d
 ```
 
 | URL | Service |
-|-----|---------|
-| `http://localhost` | Web UI (via Nginx) |
-| `http://localhost/api/docs` | Swagger / OpenAPI |
-| `http://localhost/api/graphql` | GraphiQL IDE |
-| `http://localhost:3000` | Grafana Dashboards |
-| `http://localhost:9090` | Prometheus |
-| `http://localhost:16686` | Jaeger Tracing |
-| `http://localhost:4000` | LiteLLM Gateway |
-| `http://localhost:9001` | MinIO Console |
+|-----|--------|
+| `https://localhost` | React SPA (via Traefik) |
+| `https://localhost/api/docs` | Swagger / OpenAPI |
+| `https://localhost/api/graphql` | GraphiQL IDE |
+| `https://localhost/grafana/` | Grafana Dashboards |
+| `https://localhost/flower/` | Celery Flower Monitoring |
+| `https://localhost/minio/` | MinIO Console |
+| `https://localhost/traefik/` | Traefik Dashboard |
 
 ### Option 2 — Standalone (Monolith)
 
@@ -162,26 +169,29 @@ python3 sf.py -l 127.0.0.1:5001
 | Mode | Command | Description |
 |------|---------|-------------|
 | **Monolith** | `python3 sf.py -l 0.0.0.0:5001` | Single process, SQLite, zero dependencies |
-| **Docker Compose** | `docker compose -f docker-compose-microservices.yml up -d` | 10 services, PostgreSQL, Redis, Qdrant, MinIO |
+| **Docker Compose** | `docker compose -f docker-compose-microservices.yml up -d` | 21 services, PostgreSQL, Redis, Qdrant, MinIO, Celery, Traefik |
 | **Kubernetes** | `helm install sf helm/` | Horizontal scaling with Helm chart |
 
 ---
 
 ## Services
 
-The microservices deployment runs **17 containers** on two Docker networks (`sf-frontend`, `sf-backend`):
+The microservices deployment runs **21 containers** on two Docker networks (`sf-frontend`, `sf-backend`):
 
 | Service | Image | Port | Purpose |
 |---------|-------|------|---------|
-| **sf-nginx** | nginx:alpine | 80 / 443 | Reverse proxy, TLS termination, rate limiting |
-| **sf-api** | spiderfoot | 8001 | FastAPI REST + GraphQL API, scan orchestration |
-| **sf-webui** | spiderfoot | 5001 | CherryPy web UI, proxies all data through API |
-| **sf-agents** | spiderfoot | 8100 | 6 AI-powered analysis agents (LLM-backed) |
-| **sf-enrichment** | spiderfoot | 8200 | Document conversion + entity extraction pipeline |
-| **sf-user-input** | spiderfoot | 8300 | User-defined document/IOC/report ingestion |
-| **sf-litellm** | litellm | 4000 | Unified LLM proxy (OpenAI, Anthropic, Ollama) |
-| **sf-postgres** | postgres:15 | 5432 | Primary relational data store |
-| **sf-redis** | redis:7-alpine | 6379 | EventBus pub/sub, caching, session store |
+| **sf-traefik** | traefik:v3 | 443 | Reverse proxy, auto-TLS, routing, rate limiting |
+| **sf-docker-proxy** | tecnativa/docker-socket-proxy | — | Secure Docker API access for Traefik |
+| **sf-frontend-ui** | spiderfoot-frontend | 80 | React SPA served by Nginx |
+| **sf-api** | spiderfoot-micro | 8001 | FastAPI REST + GraphQL API, scan orchestration |
+| **sf-agents** | spiderfoot-micro | 8100 | 6 AI-powered analysis agents (LLM-backed) |
+| **sf-celery-worker** | spiderfoot-micro | — | Celery distributed task workers |
+| **sf-celery-beat** | spiderfoot-micro | — | Celery periodic task scheduler |
+| **sf-flower** | spiderfoot-micro | 5555 | Celery monitoring dashboard |
+| **sf-tika** | apache/tika | 9998 | Document parsing (PDF, DOCX, XLSX, etc.) |
+| **sf-litellm** | ghcr.io/berriai/litellm | 4000 | Unified LLM proxy (OpenAI, Anthropic, Ollama) |
+| **sf-postgres** | postgres:15-alpine | 5432 | Primary relational data store |
+| **sf-redis** | redis:7-alpine | 6379 | EventBus pub/sub, caching, Celery broker |
 | **sf-qdrant** | qdrant/qdrant | 6333 | Vector similarity search for semantic OSINT correlation |
 | **sf-minio** | minio/minio | 9000 / 9001 | S3-compatible object storage (logs, reports, backups) |
 | **sf-vector** | timberio/vector | 8686 / 4317 / 9598 | Unified telemetry pipeline (logs, metrics, traces) |
@@ -189,20 +199,21 @@ The microservices deployment runs **17 containers** on two Docker networks (`sf-
 | **sf-grafana** | grafana/grafana | 3000 | Dashboards, alerting, data exploration |
 | **sf-prometheus** | prom/prometheus | 9090 | Metrics collection and alerting |
 | **sf-jaeger** | jaegertracing/jaeger | 16686 | Distributed tracing UI |
-| **sf-pg-backup** | spiderfoot | — | Cron sidecar: pg_dump → MinIO (`sf-pg-backups` bucket) |
-| **sf-minio-init** | minio/mc | — | One-shot: creates 8 MinIO buckets on first boot |
+| **sf-pg-backup** | postgres:15-alpine | — | Cron sidecar: pg_dump → MinIO (`sf-pg-backups` bucket) |
+| **sf-minio-init** | minio/mc | — | One-shot: creates MinIO buckets on first boot |
 
 ### Docker Volumes
 
 | Volume | Mounted By | Purpose |
 |--------|-----------|---------|
-| `sf-postgres-data` | sf-postgres | Database files |
-| `sf-redis-data` | sf-redis | RDB/AOF persistence |
-| `sf-qdrant-data` | sf-qdrant | Vector index storage |
-| `sf-minio-data` | sf-minio | Object storage files |
-| `sf-vector-data` | sf-vector | Buffer / checkpoints |
-| `sf-api-data` | sf-api | Application state |
-| `sf-webui-data` | sf-webui | Session / cache |
+| `postgres-data` | sf-postgres | Database files |
+| `redis-data` | sf-redis | RDB/AOF persistence |
+| `qdrant-data` | sf-qdrant | Vector index storage |
+| `minio-data` | sf-minio | Object storage files |
+| `vector-data` | sf-vector | Buffer / checkpoints |
+| `grafana-data` | sf-grafana | Dashboard state |
+| `prometheus-data` | sf-prometheus | Metrics TSDB |
+| `traefik-logs` | sf-traefik | Access logs |
 
 ### MinIO Buckets
 
@@ -211,17 +222,16 @@ The microservices deployment runs **17 containers** on two Docker networks (`sf-
 | `sf-logs` | Vector.dev log archive |
 | `sf-reports` | Generated scan reports (HTML, PDF, JSON, CSV) |
 | `sf-pg-backups` | PostgreSQL daily pg_dump files |
-| `sf-qdrant` | Qdrant vector DB snapshots |
+| `sf-qdrant-snapshots` | Qdrant vector DB snapshots |
 | `sf-data` | General application artefacts |
 | `sf-loki-data` | Loki chunk/index storage |
 | `sf-loki-ruler` | Loki ruler data |
-| `sf-enrichment` | Enrichment pipeline documents |
 
 ---
 
 ## Monitoring & Observability
 
-SpiderFoot v5.3.3 includes a complete observability stack, with **Vector.dev** serving as the unified telemetry pipeline (replacing both Promtail and OpenTelemetry Collector).
+SpiderFoot includes a complete observability stack, with **Vector.dev** serving as the unified telemetry pipeline (replacing both Promtail and OpenTelemetry Collector).
 
 | Component | Purpose | Access |
 |-----------|---------|--------|
@@ -521,7 +531,7 @@ All services are configured via environment variables (see `docker/env.example`)
 
 ## Modules
 
-SpiderFoot has **200+ modules**, most of which do not require API keys. Modules feed each other in a publisher/subscriber model for maximum data extraction.
+SpiderFoot has **283 modules**, most of which do not require API keys. Modules feed each other in a publisher/subscriber model for maximum data extraction.
 
 ### Module Categories
 
@@ -531,7 +541,7 @@ SpiderFoot has **200+ modules**, most of which do not require API keys. Modules 
 | **Social Media** | Twitter, Instagram, Reddit, Telegram, TikTok | ~15 |
 | **Threat Intelligence** | Shodan, VirusTotal, AlienVault, GreyNoise | ~30 |
 | **Search Engines** | Google, Bing, DuckDuckGo, Baidu | ~10 |
-| **Data Breaches** | HaveIBeenPwned, LeakCheck, Dehashed | ~10 |
+| **Data Breaches** | HaveIBeenPwned, LeakCheck, Dehashed, Hudson Rock | ~11 |
 | **Crypto & Blockchain** | Bitcoin, Ethereum, Tron, BNB | ~8 |
 | **Reputation / Blacklists** | Spamhaus, SURBL, PhishTank, DNSBL | ~30 |
 | **Internal Analysis** | Extractors, validators, identifiers | ~25 |
@@ -544,7 +554,7 @@ For the full module list, see [documentation/modules.md](documentation/modules.m
 
 ## Correlation Engine
 
-SpiderFoot includes a YAML-configurable rule engine with **37+ pre-defined correlation rules**.
+SpiderFoot includes a YAML-configurable rule engine with **52 pre-defined correlation rules**.
 
 ```bash
 # View all rules
@@ -626,8 +636,9 @@ infra/                    # Infrastructure configs
 ├── loki/                 # Loki local config (MinIO S3 backend)
 ├── litellm/              # LiteLLM model config
 └── prometheus/           # Scrape targets config
-modules/                  # 200+ OSINT modules
-correlations/             # 37+ YAML correlation rules
+frontend/                 # React SPA (TypeScript + Vite + Tailwind)
+modules/                  # 283 OSINT modules
+correlations/             # 52 YAML correlation rules
 documentation/            # Comprehensive docs
 scripts/                  # Utility and maintenance scripts
 docker/                   # Docker build files + nginx config
@@ -665,4 +676,4 @@ SpiderFoot is licensed under the [MIT License](LICENSE).
 
 ---
 
-*Actively developed since 2012 — 200+ modules, 37+ correlation rules, 17-service Docker deployment with AI agents, document enrichment, and full observability.*
+*Actively developed since 2012 — 283 modules, 52 correlation rules, 21-service Docker deployment with AI agents, Celery task processing, and full observability.*

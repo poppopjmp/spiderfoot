@@ -2,28 +2,36 @@
 
 ## Overview
 
-SpiderFoot v5.3.3 implements a modular microservices architecture that can run
+SpiderFoot v5.8.0 implements a modular microservices architecture that can run
 in two modes:
 
 - **Monolith mode**: All services run in a single process (default, backward-compatible)
-- **Microservices mode**: 17 containers behind an Nginx gateway with full observability, AI agents, and document enrichment
+- **Microservices mode**: 21 containers behind a Traefik v3 reverse proxy with full observability, AI agents, Celery task processing, and React SPA frontend
 
-## Service Topology (v5.3.3)
+## Service Topology (v5.8.0)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                        Nginx Gateway (:80)                              │
-│         Rate limiting · WebSocket · Reverse proxy · Path routing        │
-├──────────┬──────────────┬──────────────┬──────────────┬─────────────────┤
-│ WebUI    │ REST API     │  Agents      │ Enrichment   │ User Input      │
-│ :5001    │ :8001        │  :8100       │ :8200        │ :8300           │
-├──────────┴──────────────┴──────────────┴──────────────┴─────────────────┤
+│                     Traefik v3 Gateway (:443)                           │
+│       Auto-TLS · Rate limiting · Reverse proxy · Path routing           │
+├──────────────┬──────────────┬──────────────┬───────────────┬────────────┤
+│ Frontend     │ REST API     │  Agents      │ Celery Flower │ Grafana    │
+│ React SPA    │ :8001        │  :8100       │ :5555         │ :3000      │
+├──────────────┴──────────────┴──────────────┴───────────────┴────────────┤
+│                    Task Processing                                      │
+│  ┌────────────┐ ┌────────────┐ ┌────────────┐                          │
+│  │ Celery     │ │ Celery     │ │ Apache     │                          │
+│  │ Worker     │ │ Beat       │ │ Tika :9998 │                          │
+│  │ (async)    │ │ (scheduler)│ │ (document) │                          │
+│  └────────────┘ └────────────┘ └────────────┘                          │
+├───────────────────────────────────────────────────────────────────────┤
 │                       Data Layer                                        │
 │  ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐          │
 │  │ PostgreSQL │ │   Redis    │ │  Qdrant    │ │   MinIO    │          │
 │  │ :5432      │ │  :6379     │ │ :6333      │ │ :9000/9001 │          │
 │  │ (Primary)  │ │ (EventBus, │ │ (Vector    │ │ (S3 Object │          │
-│  │            │ │  Cache)    │ │  Search)   │ │  Storage)  │          │
+│  │            │ │ Cache,     │ │  Search)   │ │  Storage)  │          │
+│  │            │ │ Broker)    │ │            │ │            │          │
 │  └────────────┘ └────────────┘ └────────────┘ └────────────┘          │
 ├───────────────────────────────────────────────────────────────────────┤
 │                     LLM Gateway                                        │
@@ -44,12 +52,12 @@ in two modes:
 │                 │  :3000     │                                          │
 │                 └────────────┘                                          │
 ├───────────────────────────────────────────────────────────────────────┤
-│                   Sidecars & Pipelines                                  │
-│  ┌────────────┐ ┌────────────┐                                         │
-│  │ pg-backup  │ │ minio-init │                                         │
-│  │ (cron)     │ │ (one-shot) │                                         │
-│  │ → MinIO    │ │ 8 buckets  │                                         │
-│  └────────────┘ └────────────┘                                         │
+│                   Sidecars & Infrastructure                             │
+│  ┌────────────┐ ┌────────────┐ ┌─────────────────┐                     │
+│  │ pg-backup  │ │ minio-init │ │ Docker Socket   │                     │
+│  │ (cron)     │ │ (one-shot) │ │ Proxy (Traefik) │                     │
+│  │ → MinIO    │ │            │ │                 │                     │
+│  └────────────┘ └────────────┘ └─────────────────┘                     │
 └───────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -96,11 +104,11 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                        Nginx Gateway (:80)                         │
-│               Rate limiting · WebSocket · Reverse proxy            │
+│                    Traefik v3 Gateway (:443)                        │
+│            Auto-TLS · Rate limiting · Reverse proxy                │
 ├──────────┬──────────────┬──────────────┬──────────────┬────────────┤
-│ WebUI    │ REST API     │  Agents      │ Enrichment   │ User Input │
-│ :5001    │ :8001        │  :8100       │ :8200        │ :8300      │
+│ Frontend │ REST API     │  Agents      │ Celery       │ Tika       │
+│ React SPA│ :8001        │  :8100       │ Workers/Beat │ :9998      │
 ├──────────┴──────────────┴──────────────┴──────────────┴────────────┤
 │                      Service Layer                                 │
 │  ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐      │
@@ -140,7 +148,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 │                     Module Layer                                   │
 │  ┌──────────────────────┐ ┌──────────────────────┐                 │
 │  │ SpiderFootPlugin     │ │SpiderFootModernPlugin│                 │
-│  │ (legacy, 200+        │ │(service-aware, new   │                 │
+│  │ (legacy, 283         │ │(service-aware, new   │                 │
 │  │  modules)            │ │ modules)             │                 │
 │  └──────────────────────┘ └──────────────────────┘                 │
 └───────────────────────────────────────────────────────────────────┘
@@ -283,32 +291,35 @@ Inter-service communication:
 
 ## Docker Microservices
 
-The `docker-compose-microservices.yml` defines 17 containers:
+The `docker-compose-microservices.yml` defines 21 containers:
 
 | Container | Image | Purpose |
 |---|---|---|
-| sf-api | spiderfoot-api | REST API + GraphQL (:8001) |
-| sf-webui | spiderfoot-webui | CherryPy Web UI (:5001) |
-| sf-nginx | nginx:alpine | Reverse proxy + TLS + WebSocket (:80) |
+| sf-traefik | traefik:v3 | Reverse proxy + auto-TLS + routing (:443) |
+| sf-docker-proxy | tecnativa/docker-socket-proxy | Secure Docker API access for Traefik |
+| sf-frontend-ui | spiderfoot-frontend | React SPA served by Nginx (:80) |
+| sf-api | spiderfoot-micro | REST API + GraphQL (:8001) |
+| sf-agents | spiderfoot-micro | AI analysis agents — 6 agents (:8100) |
+| sf-celery-worker | spiderfoot-micro | Celery distributed task workers |
+| sf-celery-beat | spiderfoot-micro | Celery periodic task scheduler |
+| sf-flower | spiderfoot-micro | Celery monitoring dashboard (:5555) |
+| sf-tika | apache/tika | Document parsing — PDF, DOCX, XLSX (:9998) |
+| sf-litellm | ghcr.io/berriai/litellm | Unified LLM gateway (:4000) |
 | sf-postgres | postgres:15-alpine | Primary database (:5432) |
-| sf-redis | redis:7-alpine | Event bus + cache (:6379) |
-| sf-qdrant | qdrant/qdrant:v1.12.4 | Vector similarity search (:6333) |
-| sf-vector | timberio/vector:0.39.0-alpine | Telemetry pipeline (:8686/:4317/:4318/:9598) |
+| sf-redis | redis:7-alpine | Event bus + cache + Celery broker (:6379) |
+| sf-qdrant | qdrant/qdrant | Vector similarity search (:6333) |
 | sf-minio | minio/minio | S3-compatible object storage (:9000/9001) |
-| sf-minio-init | minio/mc | One-shot bucket provisioner (8 buckets) |
+| sf-minio-init | minio/mc | One-shot bucket provisioner |
 | sf-pg-backup | postgres:15-alpine | Scheduled PG backup → MinIO |
-| sf-agents | spiderfoot-agents | AI analysis agents — 6 agents (:8100) |
-| sf-enrichment | spiderfoot-enrichment | Document conversion + entity extraction (:8200) |
-| sf-user-input | spiderfoot-user-input | User-defined data ingestion (:8300) |
-| sf-litellm | ghcr.io/berriai/litellm:main-v1.74.0 | Unified LLM gateway (:4000) |
-| sf-loki | grafana/loki:3.3.2 | Log aggregation (:3100) |
-| sf-grafana | grafana/grafana:11.4.0 | Dashboards & visualization (:3000) |
-| sf-prometheus | prom/prometheus:v2.54.1 | Metrics collection (:9090) |
-| sf-jaeger | jaegertracing/jaeger:2.4.0 | Distributed tracing (:16686) |
+| sf-vector | timberio/vector | Telemetry pipeline (:8686/:4317/:9598) |
+| sf-loki | grafana/loki | Log aggregation (:3100) |
+| sf-grafana | grafana/grafana | Dashboards & visualization (:3000) |
+| sf-prometheus | prom/prometheus | Metrics collection (:9090) |
+| sf-jaeger | jaegertracing/jaeger | Distributed tracing (:16686) |
 
 ### Networks
 
-- **sf-frontend**: Nginx ↔ WebUI/API (external-facing)
+- **sf-frontend**: Traefik ↔ Frontend/API (external-facing)
 - **sf-backend**: All services ↔ PostgreSQL/Redis/Qdrant/MinIO (internal)
 
 ### Volumes
@@ -321,7 +332,8 @@ The `docker-compose-microservices.yml` defines 17 containers:
 | sf-qdrant-snapshots | sf-qdrant | /qdrant/snapshots |
 | sf-vector-data | sf-vector | /var/lib/vector |
 | sf-minio-data | sf-minio | /data |
-| sf-logs | sf-api, sf-webui | /app/logs |
+| sf-logs | sf-api | /app/logs |
+| traefik-logs | sf-traefik | /var/log/traefik |
 
 ## AI Agents Service (`spiderfoot/agents/`)
 
@@ -586,7 +598,7 @@ Protocols: `graphql-transport-ws`, `graphql-ws`
 
 ### Legacy Modules (`SpiderFootPlugin`)
 
-All 200+ existing modules continue to work unchanged. They use `self.sf`
+All 283 existing modules continue to work unchanged. They use `self.sf`
 (the SpiderFoot god object) for HTTP, DNS, and other operations.
 
 ### Modern Modules (`SpiderFootModernPlugin`)

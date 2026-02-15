@@ -1,6 +1,6 @@
 # Docker Deployment Guide
 
-This guide covers deploying SpiderFoot using Docker Compose with the full 10-service microservices stack.
+This guide covers deploying SpiderFoot using Docker Compose with the full 21-service microservices stack.
 
 ---
 
@@ -24,46 +24,61 @@ docker compose -f docker-compose-microservices.yml down
 
 | URL | Service |
 |-----|---------|
-| `http://localhost` | Web UI (via Nginx) |
-| `http://localhost/api/docs` | Swagger / OpenAPI |
-| `http://localhost/api/graphql` | GraphiQL IDE |
-| `http://localhost:9001` | MinIO Console (admin/minioadmin) |
+| `https://localhost` | React SPA (via Traefik) |
+| `https://localhost/api/docs` | Swagger / OpenAPI |
+| `https://localhost/api/graphql` | GraphiQL IDE |
+| `https://localhost/flower/` | Celery Flower Monitoring |
+| `https://localhost/grafana/` | Grafana Dashboards |
+| `https://localhost/minio/` | MinIO Console |
+| `https://localhost/traefik/` | Traefik Dashboard |
 
 ---
 
 ## Service Architecture
 
-The stack runs **10 containers** across two Docker networks:
+The stack runs **21 containers** across two Docker networks:
 
 | Service | Image | Port | Purpose |
-|---------|-------|------|---------|
-| **sf-nginx** | nginx:alpine | 80 / 443 | Reverse proxy, TLS, rate limiting |
-| **sf-api** | spiderfoot | 8001 | FastAPI REST + GraphQL API |
-| **sf-webui** | spiderfoot | 5001 | CherryPy web UI |
-| **sf-postgres** | postgres:16 | 5432 | Primary relational store |
-| **sf-redis** | redis:7-alpine | 6379 | EventBus, cache, sessions |
+|---------|-------|------|--------|
+| **sf-traefik** | traefik:v3 | 443 | Reverse proxy, auto-TLS, routing, rate limiting |
+| **sf-docker-proxy** | tecnativa/docker-socket-proxy | — | Secure Docker API access for Traefik |
+| **sf-frontend-ui** | spiderfoot-frontend | 80 | React SPA served by Nginx |
+| **sf-api** | spiderfoot-micro | 8001 | FastAPI REST + GraphQL API |
+| **sf-agents** | spiderfoot-micro | 8100 | 6 AI-powered analysis agents |
+| **sf-celery-worker** | spiderfoot-micro | — | Celery distributed task workers |
+| **sf-celery-beat** | spiderfoot-micro | — | Celery periodic task scheduler |
+| **sf-flower** | spiderfoot-micro | 5555 | Celery monitoring dashboard |
+| **sf-tika** | apache/tika | 9998 | Document parsing (PDF, DOCX, XLSX, etc.) |
+| **sf-litellm** | ghcr.io/berriai/litellm | 4000 | Unified LLM proxy (OpenAI, Anthropic, Ollama) |
+| **sf-postgres** | postgres:15-alpine | 5432 | Primary relational store |
+| **sf-redis** | redis:7-alpine | 6379 | EventBus, cache, Celery broker |
 | **sf-qdrant** | qdrant/qdrant | 6333 | Vector similarity search |
 | **sf-minio** | minio/minio | 9000 / 9001 | S3-compatible object storage |
-| **sf-vector** | timberio/vector | 8686 | Log collection pipeline |
-| **sf-pg-backup** | spiderfoot | — | Cron sidecar for pg_dump → MinIO |
+| **sf-vector** | timberio/vector | 8686 | Telemetry pipeline |
+| **sf-loki** | grafana/loki | 3100 | Log aggregation |
+| **sf-grafana** | grafana/grafana | 3000 | Dashboards, alerting, data exploration |
+| **sf-prometheus** | prom/prometheus | 9090 | Metrics collection |
+| **sf-jaeger** | jaegertracing/jaeger | 16686 | Distributed tracing UI |
+| **sf-pg-backup** | postgres:15-alpine | — | Cron sidecar for pg_dump → MinIO |
 | **sf-minio-init** | minio/mc | — | One-shot bucket creation |
 
 ### Networks
 
-- **sf-frontend** — Browser-facing (Nginx, WebUI, API)
+- **sf-frontend** — Browser-facing (Traefik, Frontend, API)
 - **sf-backend** — Internal only (PostgreSQL, Redis, Qdrant, MinIO)
 
 ### Volumes
 
 | Volume | Service | Purpose |
 |--------|---------|---------|
-| `sf-postgres-data` | sf-postgres | Database files |
-| `sf-redis-data` | sf-redis | RDB/AOF persistence |
-| `sf-qdrant-data` | sf-qdrant | Vector index storage |
-| `sf-minio-data` | sf-minio | Object store files |
-| `sf-vector-data` | sf-vector | Log buffer / checkpoints |
-| `sf-api-data` | sf-api | Application state |
-| `sf-webui-data` | sf-webui | Session / cache |
+| `postgres-data` | sf-postgres | Database files |
+| `redis-data` | sf-redis | RDB/AOF persistence |
+| `qdrant-data` | sf-qdrant | Vector index storage |
+| `minio-data` | sf-minio | Object store files |
+| `vector-data` | sf-vector | Log buffer / checkpoints |
+| `grafana-data` | sf-grafana | Dashboard state |
+| `prometheus-data` | sf-prometheus | Metrics TSDB |
+| `traefik-logs` | sf-traefik | Access logs |
 
 ---
 
@@ -79,7 +94,7 @@ Five buckets are auto-created by `sf-minio-init` on first boot:
 | `sf-qdrant` | Qdrant vector DB snapshots |
 | `sf-data` | General artefacts |
 
-Access the MinIO Console at `http://localhost:9001` (default credentials: `minioadmin` / `minioadmin`).
+Access the MinIO Console at `https://localhost/minio/` (default credentials: `minioadmin` / `minioadmin`).
 
 ---
 
@@ -117,14 +132,14 @@ Key variables:
 
 ## TLS / HTTPS
 
-To enable TLS, place your certificate and key files and configure Nginx:
+To enable TLS, Traefik handles certificate management automatically:
 
 ```bash
 # Generate a self-signed cert (testing)
 ./generate-certificate
 
-# Mount certs in docker-compose override
-# See docker/nginx/ for template configurations
+# Traefik auto-discovers TLS certificates from the mounted certs directory
+# See docker-compose-microservices.yml for Traefik TLS configuration
 ```
 
 ---
@@ -177,7 +192,7 @@ For production deployments, consider the Helm chart in `helm/` for Kubernetes.
 
 | Problem | Solution |
 |---------|----------|
-| Port 80 in use | Change Nginx port mapping in compose file |
+| Port 443 in use | Change Traefik port mapping in compose file |
 | MinIO init fails | Check `sf-minio` is healthy before `sf-minio-init` runs |
 | Qdrant OOM | Increase memory limit for `sf-qdrant` service |
 | DB connection refused | Wait for `sf-postgres` healthcheck to pass |
@@ -193,5 +208,5 @@ docker compose -f docker-compose-microservices.yml logs -f
 docker logs -f sf-api
 
 # Archived logs in MinIO
-# Access via MinIO Console at http://localhost:9001
+# Access via MinIO Console at https://localhost/minio/
 ```

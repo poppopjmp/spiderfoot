@@ -2,7 +2,7 @@
 
 *Author: poppopjmp*
 
-SpiderFoot includes over **277 modules** for data gathering, enrichment, and analysis. Modules can be combined to create powerful OSINT workflows tailored to your needs.
+SpiderFoot includes **283 modules** for data gathering, enrichment, and analysis. Modules can be combined to create powerful OSINT workflows tailored to your needs.
 
 ---
 
@@ -60,6 +60,7 @@ Modules are plugins that collect, enrich, or analyze data from various sources. 
 - **sfp_haveibeen**: HaveIBeenPwned integration
 - **sfp_hunter**: Hunter.io email discovery
 - **sfp_emailrep**: Email reputation checking
+- **sfp_hudsonrock**: Hudson Rock Cavalier infostealer intelligence
 
 ---
 
@@ -83,6 +84,7 @@ Below is a complete list of all documented modules. Click a module name to view 
 | [sfp_github](modules/sfp_github.md) | Searches GitHub for code, repositories, and mentions. |
 | [sfp_gravatar](modules/sfp_gravatar.md) | Searches Gravatar for avatars, profile data, and associated emails. |
 | [sfp_hibp](modules/sfp_hibp.md) | Checks HaveIBeenPwned for breaches and exposures. |
+| [sfp_hudsonrock](modules/sfp_hudsonrock.md) | Queries Hudson Rock Cavalier API for infostealer-compromised credentials and machine data. |
 | [sfp_ipinfo](modules/sfp_ipinfo.md) | Queries IPinfo for geolocation, ASN, and network information. |
 | [sfp_pastebin](modules/sfp_pastebin.md) | Searches Pastebin for leaks, credentials, and mentions. |
 | [sfp_performance_optimizer](modules/sfp_performance_optimizer.md) | Performance optimization with intelligent caching, rate limiting, and resource monitoring. |
