@@ -811,19 +811,8 @@ const COUNTRY_COORDS: Record<string, [number, number]> = {
   PE: [-9.1900, -75.0152], VE: [6.4238, -66.5897],
 };
 
-/* Simplified world map outlines for equirectangular projection (800x400 viewport).
- * Each path traces a continent's external coastline with pre-calculated pixel coordinates.
- * Projection: x = ((lon + 180) / 360) * 800,  y = ((90 - lat) / 180) * 400 */
-const WORLD_MAP_PATHS: { d: string; label: string }[] = [
-  { d: 'M27 56 L53 42 L102 47 L156 40 L222 40 L276 82 L260 102 L244 107 L231 122 L222 140 L220 144 L204 133 L184 142 L184 156 L207 153 L204 162 L211 167 L224 182 L213 178 L198 169 L167 156 L156 149 L136 124 L122 93 L111 78 L71 67Z', label: 'North America' },
-  { d: 'M227 184 L222 202 L220 213 L233 233 L244 240 L240 267 L238 293 L244 322 L256 320 L273 284 L282 278 L304 251 L313 229 L322 211 L289 200 L273 184 L251 176Z', label: 'South America' },
-  { d: 'M378 116 L380 104 L389 93 L411 82 L420 76 L429 76 L444 51 L462 42 L489 58 L462 71 L442 80 L462 102 L453 122 L436 116 L427 107 L411 104 L400 113 L389 120Z', label: 'Europe' },
-  { d: 'M389 71 L396 76 L404 84 L402 87 L389 89 L387 76Z', label: 'British Isles' },
-  { d: 'M387 120 L422 118 L456 129 L476 131 L489 164 L496 176 L500 196 L489 209 L489 233 L458 276 L444 278 L440 273 L431 249 L429 220 L422 191 L400 189 L382 189 L367 178 L362 167 L364 147Z', label: 'Africa' },
-  { d: 'M467 118 L462 107 L493 93 L533 78 L562 49 L622 38 L711 38 L778 53 L760 76 L693 104 L682 116 L671 129 L660 149 L640 151 L637 178 L631 198 L618 182 L613 164 L602 151 L578 167 L571 182 L564 173 L553 151 L540 144 L529 149 L498 169 L487 156 L473 136 L478 127Z', label: 'Asia' },
-  { d: 'M653 249 L671 240 L691 227 L702 233 L711 238 L716 233 L716 224 L729 244 L740 260 L736 276 L722 284 L707 278 L689 276 L662 278 L658 271 L656 264Z', label: 'Australia' },
-  { d: 'M238 31 L322 16 L360 29 L304 67 L300 67 L280 51Z', label: 'Greenland' },
-];
+/* World map SVG background (equirectangular projection, served from /public) */
+const WORLD_MAP_IMAGE = '/world-map.svg';
 
 function GeoMapTab({ scanId }: { scanId: string }) {
   /* Fetch all geo-related event types */
@@ -929,9 +918,9 @@ function GeoMapTab({ scanId }: { scanId: string }) {
   const maxCount = countryList[0]?.count ?? 1;
   const totalGeoEvents = countryList.reduce((s, c) => s + c.count, 0) + coordinates.length + addresses.length;
 
-  /* SVG World Map (equirectangular projection) */
-  const mapWidth = 800;
-  const mapHeight = 400;
+  /* SVG World Map — viewport matches world-map.svg viewBox (2000×857) */
+  const mapWidth = 2000;
+  const mapHeight = 857;
   const projectLon = (lon: number) => ((lon + 180) / 360) * mapWidth;
   const projectLat = (lat: number) => ((90 - lat) / 180) * mapHeight;
 
@@ -959,24 +948,18 @@ function GeoMapTab({ scanId }: { scanId: string }) {
           <div className="card">
             <h3 className="text-sm font-semibold text-white mb-4">Geographic Distribution</h3>
             <div className="w-full overflow-x-auto">
-              <svg viewBox={`0 0 ${mapWidth} ${mapHeight}`} className="w-full min-w-[600px]" style={{ background: '#0c1222' }}>
-                {/* Grid lines */}
+              <svg viewBox={`0 0 ${mapWidth} ${mapHeight}`} className="w-full min-w-[600px] rounded-lg overflow-hidden">
+                {/* World map background image */}
+                <image href={WORLD_MAP_IMAGE} x={0} y={0} width={mapWidth} height={mapHeight} preserveAspectRatio="xMidYMid slice" opacity={0.55} />
+
+                {/* Subtle grid overlay */}
                 {[-60, -30, 0, 30, 60].map((lat) => (
                   <line key={`lat-${lat}`} x1={0} y1={projectLat(lat)} x2={mapWidth} y2={projectLat(lat)}
-                    stroke="#1e293b" strokeWidth={0.5} />
+                    stroke="#ffffff" strokeWidth={0.8} opacity={0.08} />
                 ))}
                 {[-120, -60, 0, 60, 120].map((lon) => (
                   <line key={`lon-${lon}`} x1={projectLon(lon)} y1={0} x2={projectLon(lon)} y2={mapHeight}
-                    stroke="#1e293b" strokeWidth={0.5} />
-                ))}
-                {/* Equator */}
-                <line x1={0} y1={projectLat(0)} x2={mapWidth} y2={projectLat(0)} stroke="#334155" strokeWidth={0.8} strokeDasharray="4,4" />
-                {/* Prime Meridian */}
-                <line x1={projectLon(0)} y1={0} x2={projectLon(0)} y2={mapHeight} stroke="#334155" strokeWidth={0.8} strokeDasharray="4,4" />
-
-                {/* Continental outlines */}
-                {WORLD_MAP_PATHS.map((p) => (
-                  <path key={p.label} d={p.d} fill="#1a2744" stroke="#2d4a7c" strokeWidth={0.8} strokeLinejoin="round" />
+                    stroke="#ffffff" strokeWidth={0.8} opacity={0.08} />
                 ))}
 
                 {/* Country markers */}
@@ -984,15 +967,15 @@ function GeoMapTab({ scanId }: { scanId: string }) {
                   const pos = COUNTRY_COORDS[c.code];
                   if (!pos) return null;
                   const [lat, lon] = pos;
-                  const r = 4 + (c.count / maxCount) * 16;
+                  const r = 10 + (c.count / maxCount) * 40;
                   return (
                     <g key={c.code}>
                       <circle cx={projectLon(lon)} cy={projectLat(lat)} r={r}
-                        fill="#6366f1" fillOpacity={0.3} stroke="#6366f1" strokeWidth={1} />
-                      <circle cx={projectLon(lon)} cy={projectLat(lat)} r={3}
+                        fill="#6366f1" fillOpacity={0.3} stroke="#6366f1" strokeWidth={2} />
+                      <circle cx={projectLon(lon)} cy={projectLat(lat)} r={7}
                         fill="#818cf8" />
-                      <text x={projectLon(lon)} y={projectLat(lat) - r - 4}
-                        textAnchor="middle" fill="#c7d2fe" fontSize={10} fontFamily="Inter, system-ui, sans-serif">
+                      <text x={projectLon(lon)} y={projectLat(lat) - r - 8}
+                        textAnchor="middle" fill="#c7d2fe" fontSize={24} fontFamily="Inter, system-ui, sans-serif">
                         {c.code} ({c.count})
                       </text>
                     </g>
@@ -1002,9 +985,9 @@ function GeoMapTab({ scanId }: { scanId: string }) {
                 {/* Coordinate pins */}
                 {coordinates.map((c, i) => (
                   <g key={`coord-${i}`}>
+                    <circle cx={projectLon(c.lon)} cy={projectLat(c.lat)} r={12}
+                      fill="#f59e0b" fillOpacity={0.5} stroke="#f59e0b" strokeWidth={3} />
                     <circle cx={projectLon(c.lon)} cy={projectLat(c.lat)} r={5}
-                      fill="#f59e0b" fillOpacity={0.5} stroke="#f59e0b" strokeWidth={1.5} />
-                    <circle cx={projectLon(c.lon)} cy={projectLat(c.lat)} r={2}
                       fill="#fbbf24" />
                   </g>
                 ))}
