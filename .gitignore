@@ -18,7 +18,7 @@ spiderfoot/static/react/
 frontend/node_modules/
 frontend/dist/
 frontend/.git
-
+node_modules/
 # Ad-hoc test scripts & outputs (local debugging)
 e2e_*.py
 e2e_*.txt

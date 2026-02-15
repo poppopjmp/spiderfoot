@@ -18,24 +18,77 @@ This guide covers the main features, workflows, and best practices for SpiderFoo
 
 ## Web Interface
 
-- **Start the server:**
-  ```sh
-  python sf.py -l 127.0.0.1:5001
-  ```
-- **Access via browser:** [http://127.0.0.1:5001](http://127.0.0.1:5001)
-- **Log in:** Use your admin account (created on first launch).
-- **New Scan:**
-  - Click **New Scan** to scan a single target.
-  - Enter the target, select type and modules, and run.
-  - Use the module search to quickly find and enable/disable modules.
-- **Workspaces:**
-  - Use **Workspaces** to manage multiple targets and scans.
-  - Organize scans, view history, and collaborate with team members.
-  - Workspaces are ideal for large projects, recurring assessments, or team-based investigations.
-- **Results:**
-  - View results in real time, filter by event type, and export data.
-  - Use the graph view to visualize relationships between entities.
-  - Export results as CSV, Excel, or JSON for further analysis.
+SpiderFoot features a modern React SPA with a dark theme, real-time updates, and comprehensive scan management.
+
+### Getting Started
+
+**Docker Microservices (Recommended):**
+```bash
+docker compose -f docker-compose-microservices.yml up --build -d
+```
+Access the UI at [https://localhost](https://localhost) and log in with your admin credentials.
+
+![Login](images/login.png)
+
+### Dashboard
+
+The dashboard provides at-a-glance statistics — active scans, total events, risk distribution, and recent activity.
+
+![Dashboard](images/dashboard.png)
+
+### New Scan
+
+Click **New Scan** to configure and launch an OSINT scan:
+- Enter the target (domain, IP, email, etc.)
+- Select the target type and choose module categories
+- Click **Run Scan**
+
+![New Scan](images/new_scan.png)
+
+### Scans
+
+View all scans with status, target, event counts, and duration. Filter, search, and manage scans from one place.
+
+![Scans](images/scans.png)
+
+### Scan Detail
+
+Each scan has a detailed view with tabbed navigation:
+
+- **Summary** — Key metrics, risk distribution, top modules, event type breakdown
+- **Browse** — Filter results by event type, risk level, and source module
+- **Graph** — Interactive force-directed graph of entity relationships
+- **GeoMap** — World map plotting discovered IP address locations
+- **Correlations** — Automated findings from the 94-rule YAML engine
+- **AI Report** — LLM-generated Cyber Threat Intelligence report
+- **Scan Settings** — Module configuration used for the scan
+- **Log** — Execution logs and module output
+
+![Scan Detail - Summary](images/scan_detail_summary.png)
+
+![Scan Detail - Browse](images/scan_detail_browse.png)
+
+![Scan Detail - Graph](images/scan_detail_graph.png)
+
+![Scan Detail - GeoMap](images/scan_detail_geomap.png)
+
+![Scan Detail - Correlations](images/scan_detail_correlations.png)
+
+![Scan Detail - AI Report](images/scan_detail_ai_report.png)
+
+### Workspaces
+
+Organize related scans into **Workspaces** for multi-target campaigns. Each workspace groups scans, tracks notes, and provides workspace-level analytics and AI-generated reports.
+
+![Workspaces](images/workspaces.png)
+
+### Settings & Agents
+
+Configure global settings, module API keys, and monitor the 6 AI-powered analysis agents.
+
+![Settings](images/settings.png)
+
+![Agents](images/agents.png)
 
 ---
 

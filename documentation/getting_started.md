@@ -11,35 +11,54 @@ Welcome to SpiderFoot! This guide will help you set up, configure, and run your 
 See the [Installation Guide](installation.md) for detailed steps. In summary:
 
 - **Clone the repository:**
-  ```sh
+  ```bash
   git clone https://github.com/poppopjmp/spiderfoot.git
   cd spiderfoot
   ```
-- **Install dependencies:**
-  ```sh
-  pip install -r requirements.txt
-  ```
-- **(Optional) Use Docker:**
-  Docker provides an easy, isolated way to run SpiderFoot. See the [Docker section](installation.md#docker-installation) for details.
+
+### Docker Microservices (Recommended)
+
+```bash
+cp docker/env.example .env
+# Edit .env with your API keys (OpenAI, Anthropic, etc.)
+docker compose -f docker-compose-microservices.yml up --build -d
+```
+
+Access the UI at [https://localhost](https://localhost).
+
+### Standalone Mode
+
+```bash
+pip install -r requirements.txt
+python sf.py -l 127.0.0.1:5001
+```
+
+Access at [http://127.0.0.1:5001](http://127.0.0.1:5001).
 
 ## 2. Launching the Web Interface
 
-Start the web server:
-```sh
-python sf.py -l 127.0.0.1:5001
-```
-Then open [http://127.0.0.1:5001](http://127.0.0.1:5001) in your browser.
+Open your browser and navigate to the SpiderFoot URL. Log in with the default credentials (`admin` / `admin`) or your configured admin account.
 
-- The default admin account will be created on first launch. Set a strong password.
-- You can change the listening address and port in the command above.
+![Login](images/login.png)
+
+The **Dashboard** provides at-a-glance statistics — active scans, total events, risk distribution, and recent scan activity.
+
+![Dashboard](images/dashboard.png)
 
 ## 3. Running Your First Scan
 
-- Click **New Scan** in the web UI.
-- Enter a target (e.g., example.com).
-- Select the target type (e.g., DOMAIN_NAME) and choose which modules to run.
+- Click **New Scan** from the sidebar or dashboard.
+- Enter a target (e.g., `example.com`).
+- Select the target type and choose module categories.
 - Click **Run Scan**.
-- Results will appear in real time. Use the sidebar to navigate between scans and workspaces.
+
+![New Scan](images/new_scan.png)
+
+Results appear in real time. Click any scan to open the **Scan Detail** view with 8 tabs: Summary, Browse, Correlations, Graph, GeoMap, AI Report, Scan Settings, and Log.
+
+![Scans](images/scans.png)
+
+![Scan Detail - Summary](images/scan_detail_summary.png)
 
 ## 4. Using the CLI
 
@@ -52,9 +71,9 @@ python sf.py -s example.com -t DOMAIN_NAME -m sfp_dnsresolve,sfp_ssl,sfp_whois
 
 ## 5. Workspaces and Multi-Target Scans
 
-Workspaces allow you to organize and manage multiple scans:
+Organize related scans into **Workspaces** for multi-target campaigns, recurring assessments, or team collaboration. Each workspace groups scans, tracks notes, and provides workspace-level analytics and AI-generated reports.
 
-- Workspaces are ideal for large projects, team collaboration, or recurring assessments.
+![Workspaces](images/workspaces.png)
 
 ## 6. Configuration
 

@@ -6,7 +6,7 @@ SpiderFoot is a powerful open source intelligence (OSINT) automation platform de
 
 ## What is SpiderFoot?
 
-SpiderFoot automates the process of collecting OSINT by leveraging over **277 modules** to gather information about IP addresses, domains, subdomains, emails, usernames, cryptocurrency addresses, social media profiles, and more. It is suitable for:
+SpiderFoot automates the process of collecting OSINT by leveraging over **283 modules** to gather information about IP addresses, domains, subdomains, emails, usernames, cryptocurrency addresses, social media profiles, and more. It is suitable for:
 
 - **Threat intelligence and digital footprinting:** Gain visibility into your organization's or target's online presence, uncovering exposed data and potential risks.
 - **Attack surface mapping and asset discovery:** Identify all internet-facing assets, including forgotten or shadow IT, to reduce your exposure to attacks.
@@ -14,21 +14,27 @@ SpiderFoot automates the process of collecting OSINT by leveraging over **277 mo
 - **Brand protection and fraud detection:** Monitor for brand abuse, phishing, and fraudulent activity across the web and dark web.
 - **Third-party risk assessment:** Evaluate the security posture of vendors, partners, or acquisitions by mapping their digital footprint.
 
-SpiderFoot is designed for both beginners and advanced users, offering a user-friendly web interface as well as a powerful command-line tool for automation and scripting.
+SpiderFoot is designed for both beginners and advanced users, offering a modern dark-themed React web interface as well as a powerful command-line tool for automation and scripting.
+
+<p align="center">
+<img src="images/dashboard.png" alt="SpiderFoot Dashboard" width="800" />
+</p>
 
 ---
 
 ## Key Features
 
 - **Automated OSINT Collection:** Schedule and run scans to collect intelligence from a wide range of sources with minimal manual effort. SpiderFoot can run unattended, making it ideal for continuous monitoring.
-- **277+ Data Gathering Modules:** Integrate with threat feeds, search engines, social media, DNS, WHOIS, breach databases, paste sites, blockchain analytics, dark web sources, and more. Modules are regularly updated and community contributions are welcome.
-- **Enhanced OSINT Capabilities:** New advanced modules for TikTok intelligence, blockchain analytics, advanced correlation, and performance optimization provide cutting-edge OSINT capabilities.
-- **AI-Powered Analysis:** Built-in AI threat intelligence summarization using OpenAI's GPT models for automated threat analysis and pattern recognition.
+- **283+ Data Gathering Modules:** Integrate with threat feeds, search engines, social media, DNS, WHOIS, breach databases, paste sites, blockchain analytics, dark web sources, and more. Modules are regularly updated and community contributions are welcome.
+- **Enhanced OSINT Capabilities:** Advanced modules for TikTok intelligence, blockchain analytics, advanced correlation, and performance optimization provide cutting-edge OSINT capabilities.
+- **AI-Powered Analysis:** Built-in AI agents and LLM-generated CTI reports using configurable models via LiteLLM (OpenAI, Anthropic, Ollama, OpenRouter).
+- **Modern Web UI:** Dark-themed React SPA with real-time updates, interactive graph visualization, geographic mapping, and comprehensive scan management.
+- **94 Correlation Rules:** YAML-configurable correlation engine for automated finding and risk identification.
 - **Web UI and CLI:** Use the intuitive web interface for interactive investigations, visualization, and reporting, or the command-line interface for automation, scripting, and integration with other tools.
 - **Enterprise Security Features:** Comprehensive security implementation including CSRF protection, input validation, rate limiting, session management, API security, and structured security logging.
 - **Workspaces and Multi-Target Support:** Organize scans, targets, and results into workspaces for collaborative investigations and large-scale assessments. Workspaces allow you to manage multiple projects and share findings with your team.
 - **API for Integration:** Integrate SpiderFoot with SIEM, SOAR, and other security tools using the RESTful API with enterprise-grade security features. Automate scans, retrieve results, and trigger actions based on findings.
-- **Correlation and Analysis:** Built-in correlation engine with 40+ YAML-based rules to identify relationships, patterns, and risks across collected data. Advanced correlation engine provides cross-platform identity resolution, temporal analysis, and geospatial clustering. Visualize connections between entities and uncover hidden threats.
+- **Correlation and Analysis:** Built-in correlation engine with 94 YAML-based rules to identify relationships, patterns, and risks across collected data. Advanced correlation engine provides cross-platform identity resolution, temporal analysis, and geospatial clustering. Visualize connections between entities and uncover hidden threats.
 - **Custom Module Support:** Easily extend SpiderFoot with your own modules to support new data sources, custom logic, or proprietary integrations. The modular architecture makes development and maintenance straightforward.
 - **Notifications and Alerts:** Receive real-time notifications for critical findings, such as data breaches, exposed credentials, or new assets discovered.
 - **Export and Reporting:** Export scan results in multiple formats (CSV, JSON, HTML) for further analysis or reporting to stakeholders.
@@ -39,19 +45,22 @@ SpiderFoot is designed for both beginners and advanced users, offering a user-fr
 
 ## Current Version and Capabilities
 
-**SpiderFoot v5.246.0** represents a significant advancement in OSINT automation with the following enhanced capabilities:
+**SpiderFoot v5.8.0** represents a significant advancement in OSINT automation with the following enhanced capabilities:
 
 ### Module Count and Categories
-- **277 Total Modules**: Comprehensive coverage across all major OSINT categories
+- **283 Total Modules**: Comprehensive coverage across all major OSINT categories
 - **Core Investigation Modules**: DNS/Network (45+), Threat Intelligence (35+), Social Media (25+)
-- **Enhanced Modules**: TikTok OSINT, Blockchain Analytics, AI Analysis, Advanced Correlation
+- **Enhanced Modules**: TikTok OSINT, Blockchain Analytics, Hudson Rock, AI Analysis, Advanced Correlation
 - **Performance Modules**: Caching optimization, rate limiting, resource management
 
-### Microservices Architecture (10 containers)
+### Microservices Architecture (21 containers)
 - **REST + GraphQL API**: FastAPI with Strawberry GraphQL (queries, mutations, subscriptions)
 - **Vector Search**: Qdrant-powered semantic search over scan events
 - **Object Storage**: MinIO S3-compatible storage for reports, exports, backups
-- **Log Pipeline**: Vector.dev aggregation and routing
+- **Task Processing**: Celery workers + beat scheduler with Flower monitoring
+- **LLM Gateway**: LiteLLM multi-provider proxy (OpenAI, Anthropic, Ollama, OpenRouter)
+- **Observability**: Vector.dev → Loki + Prometheus + Grafana + Jaeger
+- **Reverse Proxy**: Traefik v3 with auto-TLS and routing
 - **Automated Backups**: PG backup sidecar with MinIO archival
 
 ### New Advanced Features

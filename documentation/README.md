@@ -2,6 +2,14 @@
 
 Welcome to the SpiderFoot documentation! This wiki provides a structured, up-to-date, and webapp-aligned reference for users, developers, and administrators.
 
+## Web UI Preview
+
+SpiderFoot features a modern dark-themed React SPA with real-time scan updates, interactive graph visualization, geographic mapping, AI-generated CTI reports, and comprehensive scan management.
+
+![Dashboard](images/dashboard.png)
+
+![Scan Detail](images/scan_detail_summary.png)
+
 ## Sections
 
 | Section | Link |

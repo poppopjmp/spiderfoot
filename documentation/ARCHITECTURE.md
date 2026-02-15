@@ -337,6 +337,32 @@ The `docker-compose-microservices.yml` defines 21 containers:
 
 ## AI Agents Service (`spiderfoot/agents/`)
 
+### Frontend (React SPA)
+
+The web interface is a modern React SPA built with TypeScript, Vite, and Tailwind CSS. It features a dark theme with cyan accents, responsive layout, and real-time scan updates via GraphQL subscriptions.
+
+**Key pages and features:**
+
+| Page | Description |
+|------|-------------|
+| Dashboard | Active scans, event totals, risk distribution, recent activity |
+| New Scan | Target input, module category selection, scan configuration |
+| Scans | Paginated scan list with status, target, events, duration |
+| Scan Detail | 8-tab view: Summary, Browse, Graph, GeoMap, Correlations, AI Report, Scan Settings, Log |
+| Workspaces | Multi-scan campaign management with notes and analytics |
+| Settings | Global settings, module API keys, notification preferences |
+| Agents | AI agent status monitoring and analysis results |
+| Users / SSO | User management and SSO configuration (OIDC/SAML) |
+| API Keys | API key management for programmatic access |
+
+![Dashboard](images/dashboard.png)
+
+![Scan Detail](images/scan_detail_summary.png)
+
+![Graph Visualization](images/scan_detail_graph.png)
+
+---
+
 Six LLM-powered analysis agents that subscribe to Redis event bus
 events and produce structured intelligence. All agents extend `BaseAgent`
 with concurrency control, timeout handling, and Prometheus metrics.

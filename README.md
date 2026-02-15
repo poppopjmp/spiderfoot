@@ -36,6 +36,7 @@ SpiderFoot is an open-source intelligence (OSINT) automation platform. It integr
 - [Documentation](#documentation)
 - [Modules](#modules)
 - [Correlation Engine](#correlation-engine)
+- [Web UI](#web-ui)
 - [Use Cases](#use-cases)
 - [Development](#development)
 - [Community](#community)
@@ -554,7 +555,7 @@ For the full module list, see [documentation/modules.md](documentation/modules.m
 
 ## Correlation Engine
 
-SpiderFoot includes a YAML-configurable rule engine with **52 pre-defined correlation rules**.
+SpiderFoot includes a YAML-configurable rule engine with **94 pre-defined correlation rules**.
 
 ```bash
 # View all rules
@@ -567,6 +568,116 @@ cat correlations/template.yaml
 Rule categories: vulnerability severity, exposure detection, cross-scan outliers, stale hosts, infrastructure analysis, blockchain risk aggregation.
 
 See [correlations/README.md](correlations/README.md) for the full reference.
+
+---
+
+## Web UI
+
+SpiderFoot ships with a modern **React SPA** built with TypeScript, Vite, and Tailwind CSS. The UI features a dark theme with cyan accents, responsive layout, and real-time scan updates via WebSocket subscriptions.
+
+### Login
+
+Secure JWT-based authentication with SSO support (OIDC/SAML).
+
+<p align="center">
+<img src="documentation/images/login.png" alt="Login" width="800" />
+</p>
+
+### Dashboard
+
+The main dashboard provides at-a-glance statistics — active scans, total events, risk distribution, and recent activity.
+
+<p align="center">
+<img src="documentation/images/dashboard.png" alt="Dashboard" width="800" />
+</p>
+
+### New Scan
+
+Configure and launch OSINT scans against domains, IPs, email addresses, usernames, and more. Select module categories, set scan options, and start with a single click.
+
+<p align="center">
+<img src="documentation/images/new_scan.png" alt="New Scan" width="800" />
+</p>
+
+### Scans List
+
+View all scans with status, target, event counts, and duration. Filter, search, and manage scans from one place.
+
+<p align="center">
+<img src="documentation/images/scans.png" alt="Scans List" width="800" />
+</p>
+
+### Scan Detail — Summary
+
+Each scan has a detailed view with tabbed navigation. The Summary tab shows key metrics, risk distribution, top modules, and event type breakdown.
+
+<p align="center">
+<img src="documentation/images/scan_detail_summary.png" alt="Scan Detail - Summary" width="800" />
+</p>
+
+### Scan Detail — Browse
+
+Browse all discovered data elements with filtering by event type, risk level, and source module. Expand rows to see full detail and provenance chain.
+
+<p align="center">
+<img src="documentation/images/scan_detail_browse.png" alt="Scan Detail - Browse" width="800" />
+</p>
+
+### Scan Detail — Graph
+
+Interactive force-directed graph visualization of entity relationships. Explore how discovered domains, IPs, emails, and other entities connect to each other.
+
+<p align="center">
+<img src="documentation/images/scan_detail_graph.png" alt="Scan Detail - Graph" width="800" />
+</p>
+
+### Scan Detail — GeoMap
+
+World map view plotting the geographic locations of discovered IP addresses, with country-level aggregation and risk coloring.
+
+<p align="center">
+<img src="documentation/images/scan_detail_geomap.png" alt="Scan Detail - GeoMap" width="800" />
+</p>
+
+### Scan Detail — Correlations
+
+Automated correlation findings from the YAML rule engine. Each finding includes severity, description, matched evidence, and remediation guidance.
+
+<p align="center">
+<img src="documentation/images/scan_detail_correlations.png" alt="Scan Detail - Correlations" width="800" />
+</p>
+
+### Scan Detail — AI Report
+
+LLM-generated Cyber Threat Intelligence (CTI) report with executive summary, key findings, risk assessment, recommendations, and technical details — produced by the AI report generator using scan data.
+
+<p align="center">
+<img src="documentation/images/scan_detail_ai_report.png" alt="Scan Detail - AI Report" width="800" />
+</p>
+
+### Workspaces
+
+Organize scans into workspaces for multi-target campaigns. Each workspace groups related scans, tracks notes, and provides workspace-level analytics and AI-generated reports.
+
+<p align="center">
+<img src="documentation/images/workspaces.png" alt="Workspaces" width="800" />
+</p>
+
+### Settings
+
+Configure global application settings, module API keys, notification preferences, and scan defaults.
+
+<p align="center">
+<img src="documentation/images/settings.png" alt="Settings" width="800" />
+</p>
+
+### Agents
+
+Monitor and manage the 6 AI-powered analysis agents. View agent status, processed event counts, and recent analysis results.
+
+<p align="center">
+<img src="documentation/images/agents.png" alt="Agents" width="800" />
+</p>
 
 ---
 
@@ -676,4 +787,4 @@ SpiderFoot is licensed under the [MIT License](LICENSE).
 
 ---
 
-*Actively developed since 2012 — 283 modules, 52 correlation rules, 21-service Docker deployment with AI agents, Celery task processing, and full observability.*
+*Actively developed since 2012 — 283 modules, 94 correlation rules, 21-service Docker deployment with AI agents, vector search, and full observability.*
