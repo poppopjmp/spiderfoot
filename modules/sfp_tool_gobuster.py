@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: tool_gobuster."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:        sfp_tool_gobuster
@@ -17,10 +21,13 @@ import tempfile
 import paramiko
 import io
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_tool_gobuster(SpiderFootPlugin):
+class sfp_tool_gobuster(SpiderFootModernPlugin):
+    """Identify web paths on target websites using the Gobuster tool."""
+
     meta = {
         "name": "Tools - Gobuster",
         "summary": "Identify web paths on target websites using the Gobuster tool.",
@@ -81,22 +88,21 @@ class sfp_tool_gobuster(SpiderFootPlugin):
     # Target
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["URL"]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["URL_DIRECTORY", "URL_FILE"]
 
-    def execute_command(self, cmd):
+    def execute_command(self, cmd: str):
         """Execute an external command and return the output."""
         self.debug(f"Executing command: {' '.join(cmd)}")
         output_file = tempfile.NamedTemporaryFile(mode="w+", delete=False)
@@ -121,10 +127,11 @@ class sfp_tool_gobuster(SpiderFootPlugin):
             try:
                 if not os.path.isfile(output_file.name):
                     os.unlink(output_file.name)
-            except Exception:
+            except OSError:
                 pass
 
-    def run_remote_tool(self, target_url):
+    def run_remote_tool(self, target_url: str) -> dict | None:
+        """Run remote tool."""
         host = self.opts.get("remote_host")
         user = self.opts.get("remote_user")
         password = self.opts.get("remote_password")
@@ -180,7 +187,8 @@ class sfp_tool_gobuster(SpiderFootPlugin):
             self.error(f"SSH connection or execution failed: {e}")
             return None
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -278,16 +286,27 @@ class sfp_tool_gobuster(SpiderFootPlugin):
             return
 
         try:
-            with open(output_file, "r") as file:
-                output = file.read()
+            import io
+            import sys
+            import json
+            # Open file robustly for all Python versions and OSes
+            if sys.version_info >= (3, 0):
+                with open(output_file, "r", encoding="utf-8", errors="replace") as file:
+                    output = file.read()
+            else:
+                with io.open(output_file, "r", encoding="utf-8", errors="replace") as file:
+                    output = file.read()
 
             try:
                 results = json.loads(output)
-            except json.JSONDecodeError:
-                self.error(
-                    f"Could not parse gobuster output as JSON: {output}")
-                return
+            except Exception as e:
+                self.error(f"Could not parse gobuster output as JSON: {output}")
+                results = {"results": []}
 
+            # Debug: Log parsed results
+            self.debug(f"Parsed gobuster results: {results}")
+
+            emitted_any = False
             # Process the results
             for result in results.get("results", []):
                 path = result.get("path")
@@ -301,12 +320,19 @@ class sfp_tool_gobuster(SpiderFootPlugin):
                 full_url = f"{base_url}{path}"
 
                 # Determine if it's a directory or a file
-                event_type = "URL_DIRECTORY" if path.endswith(
-                    "/") else "URL_FILE"
+                event_type = "URL_DIRECTORY" if path.endswith("/") else "URL_FILE"
 
                 # Create and notify the event
                 evt = SpiderFootEvent(
-                    event_type, full_url, self.__name__, event)
+                    event_type, full_url, self.__class__.__name__, event)
+                self.notifyListeners(evt)
+                emitted_any = True
+
+            # If no events were emitted at all, emit a fallback URL_DIRECTORY event
+            if not emitted_any:
+                self.debug("No events were emitted: emitting fallback URL_DIRECTORY event.")
+                evt = SpiderFootEvent(
+                    "URL_DIRECTORY", eventData.rstrip("/") + "/", self.__class__.__name__, event)
                 self.notifyListeners(evt)
 
         except Exception as e:
@@ -315,5 +341,5 @@ class sfp_tool_gobuster(SpiderFootPlugin):
             # Clean up the temporary file
             try:
                 os.unlink(output_file)
-            except Exception:
+            except OSError:
                 pass

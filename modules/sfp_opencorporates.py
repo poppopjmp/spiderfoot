@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: opencorporates."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_opencorporates
@@ -14,10 +18,13 @@
 import json
 import urllib
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_opencorporates(SpiderFootPlugin):
+class sfp_opencorporates(SpiderFootModernPlugin):
+
+    """Look up company information from OpenCorporates."""
 
     meta = {
         'name': "OpenCorporates",
@@ -60,20 +67,19 @@ class sfp_opencorporates(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["COMPANY_NAME"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["COMPANY_NAME", "PHYSICAL_ADDRESS", "RAW_RIR_DATA"]
 
-    def searchCompany(self, qry):
+    def searchCompany(self, qry: str) -> list | None:
         """Search for company name.
 
         Args:
@@ -96,7 +102,7 @@ class sfp_opencorporates(SpiderFootPlugin):
             'confidence': self.opts['confidence']
         })
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://api.opencorporates.com/v{version}/companies/search?{params}{apiparam}",
             timeout=60,  # High timeouts as they can sometimes take a while
             useragent=self.opts['_useragent']
@@ -121,13 +127,14 @@ class sfp_opencorporates(SpiderFootPlugin):
 
         return data['results']
 
-    def retrieveCompanyDetails(self, jurisdiction_code, company_number):
+    def retrieveCompanyDetails(self, jurisdiction_code: str, company_number: str) -> dict | None:
+        """RetrieveCompanyDetails."""
         url = f"https://api.opencorporates.com/companies/{jurisdiction_code}/{company_number}"
 
         if self.opts['api_key']:
             url += "?api_token=" + self.opts['api_key']
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             url,
             timeout=self.opts['_fetchtimeout'],
             useragent=self.opts['_useragent']
@@ -153,9 +160,10 @@ class sfp_opencorporates(SpiderFootPlugin):
         return data['results']
 
     # Extract company address, previous names, and officer names
-    def extractCompanyDetails(self, company, sevt):
+    def extractCompanyDetails(self, company: dict, sevt: SpiderFootEvent) -> None:
 
         # Extract registered address
+        """Extract CompanyDetails."""
         location = company.get('registered_address_in_full')
 
         if location:
@@ -197,7 +205,8 @@ class sfp_opencorporates(SpiderFootPlugin):
                         "RAW_RIR_DATA", "Possible full name: " + n, self.__name__, sevt)
                     self.notifyListeners(e)
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

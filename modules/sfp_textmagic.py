@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: textmagic."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_textmagic
@@ -12,10 +16,13 @@
 # -------------------------------------------------------------------------------
 import json
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_textmagic(SpiderFootPlugin):
+class sfp_textmagic(SpiderFootModernPlugin):
+
+    """Obtain phone number type from TextMagic API"""
 
     meta = {
         "name": "TextMagic",
@@ -55,28 +62,32 @@ class sfp_textmagic(SpiderFootPlugin):
 
     errorState = False
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
         if userOpts is None:
             userOpts = {}
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.opts.update(userOpts)
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             "PHONE_NUMBER"
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "PHONE_NUMBER_TYPE",
             "RAW_RIR_DATA"
         ]
 
-    def handle_error_response(self, qry, res):
+    def handle_error_response(self, qry: str, res: dict) -> None:
+        """Handle error response."""
         try:
             error_info = json.loads(res["content"])
-        except Exception:
+        except Exception as e:
             error_info = None
         if error_info:
             error_message = error_info.get("message")
@@ -89,13 +100,14 @@ class sfp_textmagic(SpiderFootPlugin):
         self.error(
             f"Failed to get results for {qry}, code {res['code']}{error_str}")
 
-    def queryPhoneNumber(self, qry):
+    def queryPhoneNumber(self, qry: str) -> dict | None:
+        """Query PhoneNumber."""
         headers = {
             'X-TM-Username': self.opts['api_key_username'],
             'X-TM-Key': self.opts['api_key']
         }
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://rest.textmagic.com/api/v2/lookups/{qry}",
             headers=headers,
             timeout=self.opts["_fetchtimeout"],
@@ -117,7 +129,8 @@ class sfp_textmagic(SpiderFootPlugin):
 
         return None
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

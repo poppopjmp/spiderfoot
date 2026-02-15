@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: deepinfo."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_deepinfo
@@ -12,10 +16,12 @@
 
 import json
 import time
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_deepinfo(SpiderFootPlugin):
+class sfp_deepinfo(SpiderFootModernPlugin):
+    """Deepinfo API integration for SpiderFoot"""
     meta = {
         'name': "Deepinfo",
         'summary': "Obtain Passive DNS and other information from Deepinfo",
@@ -59,30 +65,30 @@ class sfp_deepinfo(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
 
         # Clear / reset any other class member variables here
         # or you risk them persisting between threads.
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME", "INTERNET_NAME"]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["DOMAIN_NAME", "INTERNET_NAME", "INTERNET_NAME_UNRESOLVED"]
 
     # Search Deepinfo
-    def query(self, qry, page=1, accum=None):
+    def query(self, qry: str, page: int = 1, accum: list = None):
+        """Query the data source."""
         url = f"https://api.deepinfo.com/v1/discovery/subdomain-finder?domain={qry}&page={page}"
         request = None
         headers = {"apikey": self.opts['api_key']}
-        res = self.sf.fetchUrl(url,
+        res = self.fetch_url(url,
                                useragent="SpiderFoot", headers=headers,
                                postData=request)
 
@@ -122,10 +128,11 @@ class sfp_deepinfo(SpiderFootPlugin):
             return None
 
     # Search Deepinfo for Passive DNS
-    def query_passive_dns(self, qry):
+    def query_passive_dns(self, qry: str) -> dict | None:
+        """Query passive dns."""
         url = f"https://api.deepinfo.com/v1/discovery/passive-dns?domain={qry}"
         headers = {"apikey": self.opts['api_key']}
-        res = self.sf.fetchUrl(url,
+        res = self.fetch_url(url,
                                useragent="SpiderFoot", headers=headers)
 
         if res['code'] not in ["200"]:
@@ -146,7 +153,8 @@ class sfp_deepinfo(SpiderFootPlugin):
             return None
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -194,7 +202,7 @@ class sfp_deepinfo(SpiderFootPlugin):
                     if not host:
                         continue
                     evtType = "INTERNET_NAME"
-                    if not self.sf.resolveHost(host) and not self.sf.resolveHost6(host):
+                    if not self.resolve_host(host) and not self.resolve_host6(host):
                         evtType = "INTERNET_NAME_UNRESOLVED"
                     e = SpiderFootEvent(evtType, host, self.__name__, event)
                     self.notifyListeners(e)

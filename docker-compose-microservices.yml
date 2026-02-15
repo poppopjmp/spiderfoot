@@ -1,0 +1,1085 @@
+# =============================================================================
+# SpiderFoot Microservices Docker Compose
+# Decomposes SpiderFoot into individual services:
+#   - api           : FastAPI REST API  (data layer, scan management)
+#   - frontend      : React web UI      (served via Nginx)
+#   - redis         : event bus + cache + Celery broker
+#   - postgres      : persistent data store
+#   - traefik       : reverse proxy / API gateway  (replaces nginx since v5.3.17)
+#   - tika          : Apache Tika full — document text/metadata extraction
+#   - agents        : AI-powered analysis agents  (LLM via LiteLLM)
+#   - celery-worker : async task execution  (scans, reports, exports)
+#   - celery-beat   : periodic task scheduler
+#   - flower        : Celery monitoring dashboard
+#   - litellm       : unified LLM gateway (OpenAI, Anthropic, Ollama, …)
+#   - vector        : telemetry pipeline  (logs → Loki, traces → Jaeger)
+#   - loki          : log aggregation
+#   - grafana       : dashboards & observability
+#   - prometheus    : metrics collection
+#   - jaeger        : distributed tracing
+#   - qdrant        : vector DB for RAG / correlations
+#   - minio         : S3-compatible object storage
+#
+# Usage:
+#   cp docker/env.example .env         # customise settings
+#   docker compose -f docker-compose-microservices.yml up --build -d
+#
+# Access:
+#   Web UI           -> https://localhost               (via Traefik)
+#   API (Swagger)    -> https://localhost/api/docs
+#   Dashboard        -> https://localhost/dashboard/     (basic auth)
+#   Grafana          -> https://localhost/grafana/
+#   Jaeger           -> https://localhost/jaeger/
+#   Prometheus       -> https://localhost/prometheus/
+#   Flower           -> https://localhost/flower/        (basic auth)
+#   MinIO Console    -> https://localhost/minio/
+#
+# All SpiderFoot services share the same Docker image built from /Dockerfile.
+# The service role is selected via SF_SERVICE env var + command override.
+#
+# Document analysis is handled by the sfp_document_analyzer plugin which
+# communicates with the Tika container — no separate enrichment/user-input
+# services are needed.
+# =============================================================================
+
+# Shared build definition (anchored for YAML reuse)
+x-sf-build: &sf-build
+  build:
+    context: .
+    dockerfile: Dockerfile
+
+networks:
+  sf-frontend:
+    name: sf-frontend
+    driver: bridge
+  sf-backend:
+    name: sf-backend
+    driver: bridge
+    internal: true
+
+services:
+  # ---------------------------------------------------------------------------
+  # Infrastructure Services
+  # ---------------------------------------------------------------------------
+
+  # ---------------------------------------------------------------------------
+  # MinIO — S3-compatible Object Storage
+  # ---------------------------------------------------------------------------
+  # Central persistent storage for all SpiderFoot data:
+  #   - sf-logs       : Vector.dev log & event archive
+  #   - sf-reports    : Generated scan reports (HTML, PDF, JSON, CSV)
+  #   - sf-pg-backups : PostgreSQL WAL & pg_dump backups
+  #   - sf-qdrant     : Qdrant vector DB snapshots
+  #   - sf-data       : General application data / artefacts
+  # ---------------------------------------------------------------------------
+
+  minio:
+    image: minio/minio:RELEASE.2024-11-07T00-52-20Z
+    container_name: sf-minio
+    restart: unless-stopped
+    networks:
+      - sf-frontend
+      - sf-backend
+    labels:
+      - "traefik.enable=true"
+      # MinIO Console (admin UI)
+      - "traefik.http.routers.minio-console.rule=PathPrefix(`/minio`)"
+      - "traefik.http.routers.minio-console.entrypoints=websecure"
+      - "traefik.http.routers.minio-console.tls=true"
+      - "traefik.http.routers.minio-console.middlewares=strip-minio@file,security-headers@file"
+      - "traefik.http.routers.minio-console.service=minio-console"
+      - "traefik.http.services.minio-console.loadbalancer.server.port=9001"
+      # MinIO API (S3) — internal services use minio:9000, this route is for external S3 clients
+      - "traefik.http.routers.minio-api.rule=PathPrefix(`/s3`)"
+      - "traefik.http.routers.minio-api.entrypoints=websecure"
+      - "traefik.http.routers.minio-api.tls=true"
+      - "traefik.http.middlewares.strip-s3.stripprefix.prefixes=/s3"
+      - "traefik.http.routers.minio-api.middlewares=strip-s3,security-headers@file"
+      - "traefik.http.routers.minio-api.service=minio-api"
+      - "traefik.http.services.minio-api.loadbalancer.server.port=9000"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_PROMETHEUS_AUTH_TYPE: public
+      MINIO_BROWSER_REDIRECT_URL: ${SF_MINIO_CONSOLE_URL:-https://localhost/minio/}
+    volumes:
+      - minio-data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "${MINIO_CPUS:-1.0}"
+          memory: "${MINIO_MEMORY:-512M}"
+
+  # MinIO bucket initializer — creates required buckets on first start
+  # Also copies the mc binary to a shared volume for the pg-backup sidecar.
+  minio-init:
+    image: minio/mc:RELEASE.2024-11-17T19-35-25Z
+    container_name: sf-minio-init
+    networks:
+      - sf-backend
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - mc-bin:/opt/mc-share
+    entrypoint: >
+      /bin/sh -c "
+        mc alias set sfminio http://minio:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD};
+        mc mb --ignore-existing sfminio/sf-logs;
+        mc mb --ignore-existing sfminio/sf-reports;
+        mc mb --ignore-existing sfminio/sf-pg-backups;
+        mc mb --ignore-existing sfminio/sf-qdrant-snapshots;
+        mc mb --ignore-existing sfminio/sf-data;
+        mc mb --ignore-existing sfminio/sf-loki-data;
+        mc mb --ignore-existing sfminio/sf-loki-ruler;
+        mc anonymous set download sfminio/sf-reports;
+        cp /usr/bin/mc /opt/mc-share/mc && chmod +x /opt/mc-share/mc;
+        echo 'MinIO buckets initialized + mc binary shared';
+      "
+
+  redis:
+    image: redis:7-alpine
+    container_name: sf-redis
+    restart: unless-stopped
+    networks:
+      - sf-backend
+    command: >
+      redis-server
+        --appendonly yes
+        --maxmemory 512mb
+        --maxmemory-policy allkeys-lru
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: sf-postgres
+    restart: unless-stopped
+    networks:
+      - sf-backend
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-spiderfoot}
+      POSTGRES_USER: ${POSTGRES_USER:-spiderfoot}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    command: ["postgres", "-c", "max_connections=500"]
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres-initdb.d:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U spiderfoot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # SpiderFoot API Service (FastAPI)
+  # ---------------------------------------------------------------------------
+
+  api:
+    <<: *sf-build
+    image: spiderfoot-micro:latest
+    container_name: sf-api
+    restart: unless-stopped
+    networks:
+      - sf-frontend
+      - sf-backend
+    labels:
+      - "traefik.enable=true"
+      # REST API routes
+      - "traefik.http.routers.api.rule=PathPrefix(`/api`)"
+      - "traefik.http.routers.api.entrypoints=websecure"
+      - "traefik.http.routers.api.tls=true"
+      - "traefik.http.routers.api.middlewares=rate-limit-api@file,security-headers@file,gzip-compress@file,body-limit@file"
+      - "traefik.http.services.api.loadbalancer.server.port=8001"
+      # WebSocket for real-time updates
+      - "traefik.http.routers.api-ws.rule=PathPrefix(`/api/ws`)"
+      - "traefik.http.routers.api-ws.entrypoints=websecure"
+      - "traefik.http.routers.api-ws.tls=true"
+      - "traefik.http.services.api-ws.loadbalancer.server.port=8001"
+    environment:
+      SF_SERVICE: api
+      SF_SERVICE_ROLE: api
+      SF_DEPLOYMENT_MODE: microservice
+      SF_REDIS_URL: redis://redis:6379/0
+      SF_POSTGRES_DSN: postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-spiderfoot}
+      SF_API_HOST: "0.0.0.0"
+      SF_API_PORT: "8001"
+      SF_API_WORKERS: ${SF_API_WORKERS:-2}
+      SF_LOG_LEVEL: ${SF_LOG_LEVEL:-INFO}
+      SF_API_KEY: ${SF_API_KEY:-}
+      SF_VECTOR_URL: "http://vector:${SF_VECTOR_HTTP_PORT:-8686}"
+      # Apache Tika for document analysis (used by sfp_document_analyzer module)
+      SF_TIKA_URL: "http://tika:9998"
+      # OTEL tracing to Vector → Jaeger
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://vector:4317"
+      OTEL_SERVICE_NAME: "spiderfoot-api"
+      # Qdrant vector DB settings
+      SF_QDRANT_BACKEND: "http"
+      SF_QDRANT_HOST: "qdrant"
+      SF_QDRANT_PORT: "6333"
+      SF_QDRANT_GRPC_PORT: "6334"
+      SF_QDRANT_PREFIX: "sf_"
+      # Embedding model settings
+      SF_EMBEDDING_PROVIDER: ${SF_EMBEDDING_PROVIDER:-litellm}
+      SF_EMBEDDING_MODEL: ${SF_EMBEDDING_MODEL:-text-embedding-3-small}
+      SF_EMBEDDING_DIMENSIONS: ${SF_EMBEDDING_DIMENSIONS:-1536}
+      SF_EMBEDDING_API_KEY: ${SF_LLM_API_KEY}
+      SF_EMBEDDING_API_BASE: ${SF_EMBEDDING_API_BASE:-http://litellm:4000}
+      # Reranker settings
+      SF_RERANKER_PROVIDER: ${SF_RERANKER_PROVIDER:-litellm}
+      SF_RERANKER_MODEL: ${SF_RERANKER_MODEL:-gpt-4o-mini}
+      SF_RERANKER_API_KEY: ${SF_LLM_API_KEY}
+      SF_RERANKER_API_BASE: ${SF_RERANKER_API_BASE:-http://litellm:4000}
+      SF_RERANKER_TOP_K: ${SF_RERANKER_TOP_K:-10}
+      SF_RERANKER_SCORE_THRESHOLD: ${SF_RERANKER_SCORE_THRESHOLD:-0.3}
+      # RAG / LLM settings (routed through LiteLLM proxy)
+      SF_LLM_PROVIDER: ${SF_LLM_PROVIDER:-mock}
+      SF_LLM_MODEL: ${SF_LLM_MODEL:-}
+      SF_LLM_API_KEY: ${SF_LLM_API_KEY}
+      SF_LLM_API_BASE: ${SF_LLM_API_BASE:-http://litellm:4000}
+      # Vector correlation settings
+      SF_VECTOR_CORRELATION_ENABLED: ${SF_VECTOR_CORRELATION_ENABLED:-true}
+      SF_VECTOR_SIMILARITY_THRESHOLD: ${SF_VECTOR_SIMILARITY_THRESHOLD:-0.7}
+      SF_VECTOR_CROSS_SCAN_THRESHOLD: ${SF_VECTOR_CROSS_SCAN_THRESHOLD:-0.8}
+      SF_VECTOR_RERANK_ACCURACY: ${SF_VECTOR_RERANK_ACCURACY:-high}
+      # MinIO / S3-compatible object storage
+      SF_MINIO_ENDPOINT: "minio:9000"
+      SF_MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      SF_MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      SF_MINIO_SECURE: "false"
+      SF_MINIO_REPORTS_BUCKET: ${SF_MINIO_REPORTS_BUCKET:-sf-reports}
+      SF_MINIO_DATA_BUCKET: ${SF_MINIO_DATA_BUCKET:-sf-data}
+      SF_MINIO_LOGS_BUCKET: ${SF_MINIO_LOGS_BUCKET:-sf-logs}
+      # ── Auth / RBAC ──
+      SF_JWT_SECRET: ${SF_JWT_SECRET}
+      SF_JWT_EXPIRY_HOURS: ${SF_JWT_EXPIRY_HOURS:-24}
+      SF_JWT_REFRESH_EXPIRY_HOURS: ${SF_JWT_REFRESH_EXPIRY_HOURS:-168}
+      SF_AUTH_REQUIRED: ${SF_AUTH_REQUIRED:-true}
+      SF_RBAC_ENFORCE: ${SF_RBAC_ENFORCE:-true}
+      SF_ADMIN_USERNAME: ${SF_ADMIN_USERNAME:-admin}
+      SF_ADMIN_PASSWORD: ${SF_ADMIN_PASSWORD}
+      SF_ADMIN_EMAIL: ${SF_ADMIN_EMAIL:-admin@spiderfoot.local}
+      SF_MAX_LOGIN_ATTEMPTS: ${SF_MAX_LOGIN_ATTEMPTS:-5}
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      tika:
+        condition: service_healthy
+    entrypoint: ["/usr/local/bin/docker-entrypoint.sh"]
+    command: ["python", "-m", "spiderfoot.service_runner", "--service", "api", "--port", "8001"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/api/docs')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: "${API_CPUS:-2.0}"
+          memory: "${API_MEMORY:-2G}"
+
+  # ---------------------------------------------------------------------------
+  # SpiderFoot React SPA Frontend  (self-contained Nginx container)
+  # ---------------------------------------------------------------------------
+  # Serves the production-built React SPA and reverse-proxies /api/* and /ws/*
+  # to the backend API container.  Completely self-contained — no Python, no
+  # CherryPy.  Uses envsubst to inject the API URL at container startup.
+  # ---------------------------------------------------------------------------
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: spiderfoot-frontend:latest
+    container_name: sf-frontend-ui
+    restart: unless-stopped
+    networks:
+      - sf-frontend
+    ports:
+      - "3000:80"
+    labels:
+      - "traefik.enable=true"
+      # Catch-all for the SPA (lowest priority — API routes take precedence)
+      - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.routers.frontend.tls=true"
+      - "traefik.http.routers.frontend.priority=1"
+      - "traefik.http.routers.frontend.middlewares=rate-limit-web@file,security-headers@file,gzip-compress@file"
+      - "traefik.http.services.frontend.loadbalancer.server.port=80"
+    environment:
+      # Nginx reverse-proxy targets (envsubst'd into nginx.conf at startup)
+      SF_API_URL: "http://api:8001"
+      SF_WS_URL: "http://api:8001"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "${FRONTEND_CPUS:-0.5}"
+          memory: "${FRONTEND_MEMORY:-128M}"
+
+  # ---------------------------------------------------------------------------
+  # Docker Socket Proxy — Secure Docker API access for Traefik
+  # ---------------------------------------------------------------------------
+  # Required on Docker Desktop (Windows/macOS) where the Docker socket may
+  # not work directly.  Also improves security by limiting API access.
+  # ---------------------------------------------------------------------------
+
+  docker-socket-proxy:
+    image: tecnativa/docker-socket-proxy:latest
+    container_name: sf-docker-proxy
+    restart: unless-stopped
+    networks:
+      - sf-backend
+    environment:
+      CONTAINERS: 1
+      NETWORKS: 1
+      SERVICES: 1
+      TASKS: 1
+      POST: 0
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: "64M"
+
+  # ---------------------------------------------------------------------------
+  # Traefik Reverse Proxy / API Gateway  (replaces Nginx since v5.3.17)
+  # ---------------------------------------------------------------------------
+  # Routing is driven by Docker labels on each service — no separate config
+  # file needed for adding/removing routes.  Static config lives in
+  # infra/traefik/traefik.yml; shared middlewares in infra/traefik/dynamic.yml.
+  # ---------------------------------------------------------------------------
+
+  traefik:
+    image: traefik:v3
+    container_name: sf-traefik
+    restart: unless-stopped
+    networks:
+      - sf-frontend
+      - sf-backend
+    environment:
+      # Docker Engine v29+ requires API v1.44+; Traefik defaults to v1.24
+      DOCKER_API_VERSION: "1.44"
+      DOCKER_HOST: "tcp://docker-socket-proxy:2375"
+    ports:
+      - "${SF_HTTP_PORT:-80}:80"
+      - "${SF_HTTPS_PORT:-443}:443"
+    volumes:
+      - ./infra/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./infra/traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
+      - ./infra/traefik/certs:/certs:ro
+      - traefik-logs:/var/log/traefik
+      # Uncomment for Let's Encrypt (and remove certs volume above):
+      # - traefik-acme:/letsencrypt
+    depends_on:
+      docker-socket-proxy:
+        condition: service_started
+      api:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "${TRAEFIK_CPUS:-0.5}"
+          memory: "${TRAEFIK_MEMORY:-128M}"
+
+  # ---------------------------------------------------------------------------
+  # Qdrant — Vector Database for RAG / Rerank Correlations
+  # ---------------------------------------------------------------------------
+  # Provides per-scan and per-workspace vector collections for semantic
+  # similarity search, cross-scan correlation, and multi-hop analysis.
+  # Events are embedded and indexed during scans; workspace meta-collections
+  # aggregate multiple scan collections for cross-scan discovery.
+  # ---------------------------------------------------------------------------
+
+  qdrant:
+    image: qdrant/qdrant:v1.12.4
+    container_name: sf-qdrant
+    restart: unless-stopped
+    networks:
+      - sf-backend
+    volumes:
+      - qdrant-data:/qdrant/storage
+    environment:
+      QDRANT__SERVICE__GRPC_PORT: "6334"
+      QDRANT__SERVICE__HTTP_PORT: "6333"
+      # S3 snapshot storage via MinIO
+      QDRANT__STORAGE__SNAPSHOTS_PATH: "/qdrant/snapshots"
+    depends_on:
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/6333'"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "${QDRANT_CPUS:-1.0}"
+          memory: "${QDRANT_MEMORY:-1G}"
+
+  # ---------------------------------------------------------------------------
+  # Vector.dev — Data Pipeline (logs, events, metrics)
+  # ---------------------------------------------------------------------------
+  # Integration point for shipping scan data to external storage/analytics:
+  #   - Loki: centralized log aggregation
+  #   - Prometheus: metrics via exporter
+  #   - S3/Minio: long-term archival of all scan events
+  #   - Webhooks: real-time high-severity alerts
+  #
+  # Vector.dev replaces Promtail + OTel Collector, serving as the unified
+  # telemetry pipeline (logs, metrics, traces).
+  #
+  # Enable sinks via env vars — see config/vector.toml for details.
+  # ---------------------------------------------------------------------------
+
+  vector:
+    image: timberio/vector:0.53.0-alpine
+    container_name: sf-vector
+    restart: unless-stopped
+    networks:
+      - sf-backend
+    volumes:
+      - ./config/vector.toml:/etc/vector/vector.toml:ro
+      - vector-data:/var/lib/vector
+      - vector-logs:/var/log/vector
+    environment:
+      VECTOR_CONFIG: /etc/vector/vector.toml
+      SF_VECTOR_HTTP_PORT: ${SF_VECTOR_HTTP_PORT:-8686}
+      SF_ES_ENDPOINT: ${SF_ES_ENDPOINT:-http://elasticsearch:9200}
+      SF_LOKI_ENDPOINT: ${SF_LOKI_ENDPOINT:-http://loki:3100}
+      SF_ALERT_WEBHOOK_URL: ${SF_ALERT_WEBHOOK_URL:-http://localhost:9999/alert}
+      SF_S3_BUCKET: ${SF_S3_BUCKET:-spiderfoot-data-archive}
+      SF_S3_REGION: ${SF_S3_REGION:-us-east-1}
+      # MinIO S3-compatible endpoint for log/event archival
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
+      SF_MINIO_ENDPOINT: "http://minio:9000"
+      SF_MINIO_LOGS_BUCKET: ${SF_MINIO_LOGS_BUCKET:-sf-logs}
+    depends_on:
+      docker-socket-proxy:
+        condition: service_started
+      api:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      loki:
+        condition: service_started
+      jaeger:
+        condition: service_started
+    deploy:
+      resources:
+        limits:
+          cpus: "${VECTOR_CPUS:-0.5}"
+          memory: "${VECTOR_MEMORY:-256M}"
+
+  # ---------------------------------------------------------------------------
+  # Loki — Log Aggregation (Grafana-native)
+  # ---------------------------------------------------------------------------
+  # Receives logs from Vector.dev (replaces Promtail).  Uses MinIO for
+  # chunk/index storage so logs survive container restarts.
+  # ---------------------------------------------------------------------------
+
+  loki:
+    image: grafana/loki:3.3.2
+    container_name: sf-loki
+    restart: unless-stopped
+    networks:
+      - sf-backend
+    volumes:
+      - ./infra/loki/local-config.yaml:/etc/loki/local-config.yaml:ro
+    command: -config.file=/etc/loki/local-config.yaml
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    depends_on:
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3100/ready || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: "${LOKI_CPUS:-1.0}"
+          memory: "${LOKI_MEMORY:-512M}"
+
+  # ---------------------------------------------------------------------------
+  # Grafana — Dashboards & Observability UI
+  # ---------------------------------------------------------------------------
+  # Pre-provisioned with datasources (Loki, Prometheus, PostgreSQL) and
+  # dashboards for scan monitoring, event analytics, and service health.
+  # ---------------------------------------------------------------------------
+
+  grafana:
+    image: grafana/grafana:11.4.0
+    container_name: sf-grafana
+    restart: unless-stopped
+    networks:
+      - sf-frontend
+      - sf-backend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.rule=PathPrefix(`/grafana`)"
+      - "traefik.http.routers.grafana.entrypoints=websecure"
+      - "traefik.http.routers.grafana.tls=true"
+      - "traefik.http.routers.grafana.middlewares=security-headers@file"
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GF_SECURITY_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD}
+      GF_SERVER_ROOT_URL: ${GF_SERVER_ROOT_URL:-https://localhost/grafana/}
+      GF_SERVER_SERVE_FROM_SUB_PATH: "true"
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: "Viewer"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_INSTALL_PLUGINS: "grafana-piechart-panel"
+      # Database connection for PostgreSQL datasource
+      SF_POSTGRES_DSN: postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-spiderfoot}
+    volumes:
+      - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infra/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      loki:
+        condition: service_healthy
+      prometheus:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3000/grafana/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: "${GRAFANA_CPUS:-1.0}"
+          memory: "${GRAFANA_MEMORY:-512M}"
+
+  # ---------------------------------------------------------------------------
+  # Prometheus — Metrics Collection & Storage
+  # ---------------------------------------------------------------------------
+  # Scrapes metrics from SpiderFoot API, Vector.dev, Qdrant, MinIO, and
+  # future services (agents, enrichment, LiteLLM, Jaeger).
+  # ---------------------------------------------------------------------------
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: sf-prometheus
+    restart: unless-stopped
+    networks:
+      - sf-frontend
+      - sf-backend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.prometheus.rule=PathPrefix(`/prometheus`)"
+      - "traefik.http.routers.prometheus.entrypoints=websecure"
+      - "traefik.http.routers.prometheus.tls=true"
+      - "traefik.http.routers.prometheus.middlewares=security-headers@file"
+      - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
+      - "traefik.docker.network=sf-frontend"
+    volumes:
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-lifecycle'
+      - '--web.external-url=/prometheus/'
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:9090/prometheus/-/healthy || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: "${PROMETHEUS_CPUS:-1.0}"
+          memory: "${PROMETHEUS_MEMORY:-512M}"
+
+  # ---------------------------------------------------------------------------
+  # Apache Tika — Document Text / Metadata Extraction  (new in v5.3.17)
+  # ---------------------------------------------------------------------------
+  # Full Tika image with OCR (Tesseract) — handles 1 000+ file types:
+  #   PDF, DOCX, XLSX, PPTX, RTF, HTML, images (OCR), e-mail, archives …
+  # The sfp_document_analyzer plug-in sends files here via HTTP PUT.
+  # No authentication needed — Tika is on the internal backend network only.
+  # ---------------------------------------------------------------------------
+
+  tika:
+    image: apache/tika:3.1.0.0-full
+    container_name: sf-tika
+    restart: unless-stopped
+    networks:
+      - sf-backend
+    environment:
+      # Tika runs on port 9998 by default; the -full image includes Tesseract OCR
+      TIKA_SERVER_JAVA_OPTS: "-Xmx${TIKA_HEAP:-512m}"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:9998/tika || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: "${TIKA_CPUS:-2.0}"
+          memory: "${TIKA_MEMORY:-1G}"
+
+  # ---------------------------------------------------------------------------
+  # SpiderFoot Agents Service (AI analysis agents)
+  # ---------------------------------------------------------------------------
+  # Hosts AI-powered analysis agents that process scan events:
+  #   - FindingValidator: Validates high-risk findings via LLM
+  #   - CredentialAnalyzer: Assesses exposed credential risk
+  #   - TextSummarizer: Summarizes large content for intelligence
+  #   - ReportGenerator: Generates comprehensive scan reports
+  #   - DocumentAnalyzer: Analyzes user-uploaded documents
+  #   - ThreatIntelAnalyzer: Cross-references findings with threat intel
+  # ---------------------------------------------------------------------------
+
+  agents:
+    <<: *sf-build
+    image: spiderfoot-micro:latest
+    container_name: sf-agents
+    restart: unless-stopped
+    networks:
+      - sf-frontend
+      - sf-backend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.agents.rule=PathPrefix(`/api/agents`)"
+      - "traefik.http.routers.agents.entrypoints=websecure"
+      - "traefik.http.routers.agents.tls=true"
+      - "traefik.http.routers.agents.priority=110"
+      - "traefik.http.middlewares.agents-strip.stripprefix.prefixes=/api"
+      - "traefik.http.routers.agents.middlewares=agents-strip,rate-limit-api@file,security-headers@file,body-limit@file"
+      - "traefik.http.services.agents.loadbalancer.server.port=8100"
+    environment:
+      SF_SERVICE: agents
+      SF_AGENTS_HOST: "0.0.0.0"
+      SF_AGENTS_PORT: "8100"
+      SF_AGENTS_WORKERS: ${SF_AGENTS_WORKERS:-1}
+      SF_LOG_LEVEL: ${SF_LOG_LEVEL:-INFO}
+      SF_REDIS_URL: redis://redis:6379/0
+      # LLM via LiteLLM proxy
+      SF_LLM_PROVIDER: ${SF_LLM_PROVIDER:-mock}
+      SF_LLM_API_BASE: ${SF_LLM_API_BASE:-http://litellm:4000}
+      SF_LLM_API_KEY: ${SF_LLM_API_KEY}
+      SF_LLM_MODEL: ${SF_LLM_MODEL:-gpt-4o-mini}
+      # Qdrant vector DB for report context
+      SF_QDRANT_BACKEND: "http"
+      SF_QDRANT_HOST: "qdrant"
+      SF_QDRANT_PORT: "6333"
+      SF_QDRANT_GRPC_PORT: "6334"
+      SF_QDRANT_PREFIX: "sf_"
+      # Embedding model for semantic search
+      SF_EMBEDDING_PROVIDER: ${SF_EMBEDDING_PROVIDER:-litellm}
+      SF_EMBEDDING_MODEL: ${SF_EMBEDDING_MODEL:-text-embedding-3-small}
+      SF_EMBEDDING_DIMENSIONS: ${SF_EMBEDDING_DIMENSIONS:-1536}
+      SF_EMBEDDING_API_KEY: ${SF_LLM_API_KEY}
+      SF_EMBEDDING_API_BASE: ${SF_EMBEDDING_API_BASE:-http://litellm:4000}
+      # Reranker settings
+      SF_RERANKER_PROVIDER: ${SF_RERANKER_PROVIDER:-litellm}
+      SF_RERANKER_MODEL: ${SF_RERANKER_MODEL:-gpt-4o-mini}
+      SF_RERANKER_API_KEY: ${SF_LLM_API_KEY}
+      SF_RERANKER_API_BASE: ${SF_RERANKER_API_BASE:-http://litellm:4000}
+      # OTEL tracing to Vector → Jaeger
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://vector:4317"
+      OTEL_SERVICE_NAME: "spiderfoot-agents"
+    entrypoint: ["/usr/local/bin/docker-entrypoint.sh"]
+    command: ["python", "-m", "spiderfoot.agents.service"]
+    depends_on:
+      redis:
+        condition: service_healthy
+      litellm:
+        condition: service_started
+      qdrant:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8100/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: "${AGENTS_CPUS:-2.0}"
+          memory: "${AGENTS_MEMORY:-2G}"
+
+  # ---------------------------------------------------------------------------
+  # Celery Worker — Async Task Execution  (new in v5.4.0)
+  # ---------------------------------------------------------------------------
+  # Processes background tasks: scan execution, report generation, exports,
+  # AI agent tasks, and monitoring jobs.  Uses the same SpiderFoot image with
+  # Celery worker entrypoint.  Redis serves as both broker and result backend.
+  # ---------------------------------------------------------------------------
+
+  celery-worker:
+    <<: *sf-build
+    image: spiderfoot-micro:latest
+    container_name: sf-celery-worker
+    restart: unless-stopped
+    networks:
+      - sf-backend
+      - sf-frontend
+    environment:
+      SF_SERVICE: celery-worker
+      SF_REDIS_URL: redis://redis:6379/0
+      SF_POSTGRES_DSN: postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-spiderfoot}
+      SF_LOG_LEVEL: ${SF_LOG_LEVEL:-INFO}
+      SF_TIKA_URL: "http://tika:9998"
+      SF_MINIO_ENDPOINT: "minio:9000"
+      SF_MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      SF_MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      SF_MINIO_SECURE: "false"
+      SF_MINIO_REPORTS_BUCKET: ${SF_MINIO_REPORTS_BUCKET:-sf-reports}
+      SF_MINIO_DATA_BUCKET: ${SF_MINIO_DATA_BUCKET:-sf-data}
+      SF_LLM_PROVIDER: ${SF_LLM_PROVIDER:-mock}
+      SF_LLM_API_BASE: ${SF_LLM_API_BASE:-http://litellm:4000}
+      SF_LLM_API_KEY: ${SF_LLM_API_KEY}
+      SF_LLM_MODEL: ${SF_LLM_MODEL:-}
+      SF_QDRANT_BACKEND: "http"
+      SF_QDRANT_HOST: "qdrant"
+      SF_QDRANT_PORT: "6333"
+      SF_QDRANT_GRPC_PORT: "6334"
+      SF_QDRANT_PREFIX: "sf_"
+      # Embedding model settings
+      SF_EMBEDDING_PROVIDER: ${SF_EMBEDDING_PROVIDER:-litellm}
+      SF_EMBEDDING_MODEL: ${SF_EMBEDDING_MODEL:-text-embedding-3-small}
+      SF_EMBEDDING_DIMENSIONS: ${SF_EMBEDDING_DIMENSIONS:-1536}
+      SF_EMBEDDING_API_KEY: ${SF_LLM_API_KEY}
+      SF_EMBEDDING_API_BASE: ${SF_EMBEDDING_API_BASE:-http://litellm:4000}
+      # Reranker settings
+      SF_RERANKER_PROVIDER: ${SF_RERANKER_PROVIDER:-litellm}
+      SF_RERANKER_MODEL: ${SF_RERANKER_MODEL:-gpt-4o-mini}
+      SF_RERANKER_API_KEY: ${SF_LLM_API_KEY}
+      SF_RERANKER_API_BASE: ${SF_RERANKER_API_BASE:-http://litellm:4000}
+      SF_RERANKER_TOP_K: ${SF_RERANKER_TOP_K:-10}
+      # Vector correlation
+      SF_VECTOR_CORRELATION_ENABLED: ${SF_VECTOR_CORRELATION_ENABLED:-true}
+      # OTEL tracing
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://vector:4317"
+      OTEL_SERVICE_NAME: "spiderfoot-celery-worker"
+      # Worker concurrency (default 4 — one per queue priority)
+      CELERY_WORKER_CONCURRENCY: ${CELERY_WORKER_CONCURRENCY:-4}
+    entrypoint: ["/usr/local/bin/docker-entrypoint.sh"]
+    command:
+      - "python"
+      - "-m"
+      - "celery"
+      - "-A"
+      - "spiderfoot.celery_app:celery_app"
+      - "worker"
+      - "--loglevel=info"
+      - "--queues=default,scan,report,export,agents,monitor"
+      - "--concurrency=${CELERY_WORKER_CONCURRENCY:-4}"
+      - "--hostname=worker@%h"
+      - "--without-heartbeat"
+      - "--without-mingle"
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-m", "celery", "-A", "spiderfoot.celery_app:celery_app", "inspect", "ping", "--timeout", "5"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: "${CELERY_WORKER_CPUS:-2.0}"
+          memory: "${CELERY_WORKER_MEMORY:-2G}"
+
+  # ---------------------------------------------------------------------------
+  # Celery Beat — Periodic Task Scheduler  (new in v5.4.0)
+  # ---------------------------------------------------------------------------
+  # Runs periodic tasks defined in celery_app.py beat_schedule:
+  #   - Cleanup expired results (hourly)
+  #   - Service health checks (every 5 min)
+  #   - Recurring scan triggers
+  # ---------------------------------------------------------------------------
+
+  celery-beat:
+    <<: *sf-build
+    image: spiderfoot-micro:latest
+    container_name: sf-celery-beat
+    restart: unless-stopped
+    networks:
+      - sf-backend
+    environment:
+      SF_SERVICE: celery-beat
+      SF_REDIS_URL: redis://redis:6379/0
+      SF_POSTGRES_DSN: postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-spiderfoot}
+      SF_LOG_LEVEL: ${SF_LOG_LEVEL:-INFO}
+    entrypoint: ["/usr/local/bin/docker-entrypoint.sh"]
+    command:
+      - "python"
+      - "-m"
+      - "celery"
+      - "-A"
+      - "spiderfoot.celery_app:celery_app"
+      - "beat"
+      - "--loglevel=info"
+      - "--schedule=/tmp/celerybeat-schedule"
+    depends_on:
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "${CELERY_BEAT_CPUS:-0.25}"
+          memory: "${CELERY_BEAT_MEMORY:-128M}"
+
+  # ---------------------------------------------------------------------------
+  # Flower — Celery Monitoring Dashboard  (new in v5.4.0)
+  # ---------------------------------------------------------------------------
+  # Real-time Celery worker/task monitoring. Accessible via Traefik at /flower/.
+  # ---------------------------------------------------------------------------
+
+  flower:
+    <<: *sf-build
+    image: spiderfoot-micro:latest
+    container_name: sf-flower
+    restart: unless-stopped
+    networks:
+      - sf-frontend
+      - sf-backend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.flower.rule=PathPrefix(`/flower`)"
+      - "traefik.http.routers.flower.entrypoints=websecure"
+      - "traefik.http.routers.flower.tls=true"
+      - "traefik.http.routers.flower.middlewares=security-headers@file"
+      - "traefik.http.services.flower.loadbalancer.server.port=5555"
+      - "traefik.docker.network=sf-frontend"
+    environment:
+      SF_REDIS_URL: redis://redis:6379/0
+      FLOWER_BROKER_URL: redis://redis:6379/0
+      FLOWER_URL_PREFIX: /flower
+      FLOWER_BASIC_AUTH: ${FLOWER_BASIC_AUTH}
+    entrypoint: ["/usr/local/bin/docker-entrypoint.sh"]
+    command:
+      - "python"
+      - "-m"
+      - "celery"
+      - "-A"
+      - "spiderfoot.celery_app:celery_app"
+      - "flower"
+      - "--port=5555"
+      - "--url_prefix=flower"
+      - "--broker_api=redis://redis:6379/0"
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import socket; s=socket.create_connection(('localhost',5555),2); s.close()\""]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: "${FLOWER_CPUS:-0.5}"
+          memory: "${FLOWER_MEMORY:-256M}"
+
+  # ---------------------------------------------------------------------------
+  # LiteLLM Proxy — Unified LLM Gateway
+  # ---------------------------------------------------------------------------
+  # Routes all LLM requests through a single API endpoint with:
+  #   - Multi-provider support (OpenAI, Anthropic, Ollama, Azure)
+  #   - Cost tracking & usage analytics
+  #   - Redis-backed response caching
+  #   - Prometheus metrics for LLM operations
+  #   - Model fallback chains
+  # All SpiderFoot services connect to litellm:4000 instead of
+  # individual LLM providers.
+  # ---------------------------------------------------------------------------
+
+  litellm:
+    image: ghcr.io/berriai/litellm:main-latest
+    container_name: sf-litellm
+    restart: unless-stopped
+    networks:
+      - sf-frontend
+      - sf-backend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.litellm.rule=PathPrefix(`/litellm`)"
+      - "traefik.http.routers.litellm.entrypoints=websecure"
+      - "traefik.http.routers.litellm.tls=true"
+      - "traefik.http.routers.litellm.middlewares=strip-litellm@file,security-headers@file"
+      - "traefik.http.services.litellm.loadbalancer.server.port=4000"
+    volumes:
+      - ./infra/litellm/config.yaml:/app/config.yaml:ro
+    environment:
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
+      LITELLM_DATABASE_URL: postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD}@postgres:5432/litellm
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OLLAMA_API_BASE: ${OLLAMA_API_BASE:-http://host.docker.internal:11434}
+      # OTEL tracing to Vector
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://vector:4317"
+      OTEL_SERVICE_NAME: "litellm"
+    command: ["--config", "/app/config.yaml", "--port", "4000", "--num_workers", "1"]
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:4000/health/liveliness')\" || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: "${LITELLM_CPUS:-1.0}"
+          memory: "${LITELLM_MEMORY:-1G}"
+
+  # ---------------------------------------------------------------------------
+  # Jaeger — Distributed Tracing
+  # ---------------------------------------------------------------------------
+  # All-in-one Jaeger instance for trace collection and visualization.
+  # Services send traces via OTLP (gRPC/HTTP) through Vector.dev or directly.
+  # UI accessible via Traefik at /jaeger/ or direct port 16686.
+  # ---------------------------------------------------------------------------
+
+  jaeger:
+    image: jaegertracing/jaeger:2.4.0
+    container_name: sf-jaeger
+    restart: unless-stopped
+    networks:
+      - sf-frontend
+      - sf-backend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.jaeger.rule=PathPrefix(`/jaeger`)"
+      - "traefik.http.routers.jaeger.entrypoints=websecure"
+      - "traefik.http.routers.jaeger.tls=true"
+      - "traefik.http.routers.jaeger.middlewares=security-headers@file"
+      - "traefik.http.services.jaeger.loadbalancer.server.port=16686"
+    volumes:
+      - ./infra/jaeger/config.yaml:/etc/jaeger/config.yaml:ro
+    command: ["--config", "/etc/jaeger/config.yaml"]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:16686/jaeger/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "${JAEGER_CPUS:-1.0}"
+          memory: "${JAEGER_MEMORY:-512M}"
+
+  # ---------------------------------------------------------------------------
+  # PostgreSQL Backup Sidecar — pg_dump to MinIO
+  # ---------------------------------------------------------------------------
+  # Runs pg_dump on a schedule and uploads to MinIO sf-pg-backups bucket.
+  # Default: every 6 hours. Override with SF_PG_BACKUP_SCHEDULE.
+  # ---------------------------------------------------------------------------
+
+  pg-backup:
+    image: postgres:15-alpine
+    container_name: sf-pg-backup
+    restart: unless-stopped
+    networks:
+      - sf-backend
+    environment:
+      PGHOST: postgres
+      PGPORT: "5432"
+      PGUSER: ${POSTGRES_USER:-spiderfoot}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB:-spiderfoot}
+      MINIO_ENDPOINT: "http://minio:9000"
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      BACKUP_BUCKET: sf-pg-backups
+      BACKUP_SCHEDULE_HOURS: ${SF_PG_BACKUP_SCHEDULE:-6}
+      BACKUP_RETENTION_DAYS: ${SF_PG_BACKUP_RETENTION:-30}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    volumes:
+      - ./scripts/pg_backup_minio.sh:/usr/local/bin/pg_backup_minio.sh:ro
+      - mc-bin:/opt/mc-share:ro
+    entrypoint: ["/bin/sh", "/usr/local/bin/pg_backup_minio.sh"]
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: "128M"
+
+volumes:
+  redis-data:
+  postgres-data:
+  qdrant-data:
+  vector-data:
+  vector-logs:
+  minio-data:
+  mc-bin:
+  grafana-data:
+  prometheus-data:
+  traefik-logs:

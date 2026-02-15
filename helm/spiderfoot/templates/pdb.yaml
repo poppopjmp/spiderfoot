@@ -1,0 +1,43 @@
+{{- if .Values.podDisruptionBudget.enabled }}
+{{- if .Values.api.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "spiderfoot.fullname" . }}-api
+  labels:
+    {{- include "spiderfoot.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+spec:
+  {{- if .Values.podDisruptionBudget.minAvailable }}
+  minAvailable: {{ .Values.podDisruptionBudget.minAvailable }}
+  {{- end }}
+  {{- if .Values.podDisruptionBudget.maxUnavailable }}
+  maxUnavailable: {{ .Values.podDisruptionBudget.maxUnavailable }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "spiderfoot.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: api
+{{- end }}
+---
+{{- if .Values.celery.worker.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "spiderfoot.fullname" . }}-celery-worker
+  labels:
+    {{- include "spiderfoot.labels" . | nindent 4 }}
+    app.kubernetes.io/component: celery-worker
+spec:
+  {{- if .Values.podDisruptionBudget.minAvailable }}
+  minAvailable: {{ .Values.podDisruptionBudget.minAvailable }}
+  {{- end }}
+  {{- if .Values.podDisruptionBudget.maxUnavailable }}
+  maxUnavailable: {{ .Values.podDisruptionBudget.maxUnavailable }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "spiderfoot.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: celery-worker
+{{- end }}
+{{- end }}

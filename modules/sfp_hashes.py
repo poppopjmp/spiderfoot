@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: hashes."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_hashes
@@ -11,10 +15,13 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
-from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_hashes(SpiderFootPlugin):
+class sfp_hashes(SpiderFootModernPlugin):
+
+    """Identify MD5 and SHA hashes in web content, files and more."""
 
     meta = {
         'name': "Hash Extractor",
@@ -33,14 +40,12 @@ class sfp_hashes(SpiderFootPlugin):
     optdescs = {
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
-
-        for opt in userOpts.keys():
-            self.opts[opt] = userOpts[opt]
-
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["TARGET_WEB_CONTENT", "BASE64_DATA",
                 "LEAKSITE_CONTENT", "RAW_DNS_RECORDS",
                 "RAW_FILE_META_DATA"]
@@ -48,11 +53,13 @@ class sfp_hashes(SpiderFootPlugin):
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["HASH"]
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

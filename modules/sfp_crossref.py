@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: crossref."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_crossref
@@ -15,11 +19,12 @@
 
 import re
 
-from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_crossref(SpiderFootPlugin):
-
+class sfp_crossref(SpiderFootModernPlugin):
+    """SpiderFoot plugin to identify potential affiliate domains."""
     meta = {
         'name': "Cross-Referencer",
         'summary': "Identify whether other domains are associated ('Affiliates') of the target by looking for links back to the target site(s).",
@@ -38,14 +43,12 @@ class sfp_crossref(SpiderFootPlugin):
 
     fetched = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.fetched = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             'LINKED_URL_EXTERNAL',
             'SIMILARDOMAIN',
@@ -53,13 +56,15 @@ class sfp_crossref(SpiderFootPlugin):
             'DARKNET_MENTION_URL'
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             'AFFILIATE_INTERNET_NAME',
             'AFFILIATE_WEB_CONTENT'
         ]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -86,7 +91,7 @@ class sfp_crossref(SpiderFootPlugin):
             self.debug(f"Ignoring {url} as already tested")
             return
 
-        if not self.sf.resolveHost(fqdn) and not self.sf.resolveHost6(fqdn):
+        if not self.resolve_host(fqdn) and not self.resolve_host6(fqdn):
             self.debug(f"Ignoring {url} as {fqdn} does not resolve")
             return
 
@@ -94,7 +99,7 @@ class sfp_crossref(SpiderFootPlugin):
 
         self.debug(f"Testing URL for affiliation: {url}")
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             url,
             timeout=self.opts['_fetchtimeout'],
             useragent=self.opts['_useragent'],
@@ -130,7 +135,7 @@ class sfp_crossref(SpiderFootPlugin):
 
                 self.fetched[url] = True
 
-                res = self.sf.fetchUrl(
+                res = self.fetch_url(
                     url,
                     timeout=self.opts['_fetchtimeout'],
                     useragent=self.opts['_useragent'],

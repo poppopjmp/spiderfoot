@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: tool_onesixtyone."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:        sfp_tool_onesixtyone
@@ -17,10 +21,13 @@ import tempfile
 from netaddr import IPNetwork
 from subprocess import PIPE, Popen, TimeoutExpired
 
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent, SpiderFootHelpers
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_tool_onesixtyone(SpiderFootPlugin):
+class sfp_tool_onesixtyone(SpiderFootModernPlugin):
+
+    """Fast scanner to find publicly exposed SNMP services."""
 
     meta = {
         "name": "Tool - onesixtyone",
@@ -54,19 +61,16 @@ class sfp_tool_onesixtyone(SpiderFootPlugin):
     errorState = False
     communitiesFile = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = dict()
         self.errorState = False
         self.__dataSource__ = "Target Website"
-
-        for opt in userOpts.keys():
-            self.opts[opt] = userOpts[opt]
-
         # Write communities to file for use later on
         try:
             _, self.communitiesFile = tempfile.mkstemp("communities")
-            with open(self.communitiesFile, "w") as f:
+            with open(self.communitiesFile, "w", encoding="utf-8") as f:
                 for community in self.opts['communities'].split(","):
                     f.write(community.strip() + "\n")
         except Exception as e:
@@ -74,17 +78,20 @@ class sfp_tool_onesixtyone(SpiderFootPlugin):
                 f"Unable to write communities file ({self.communitiesFile}): {e}")
             self.errorState = True
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ['IP_ADDRESS', 'NETBLOCK_OWNER']
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             'UDP_PORT_OPEN_INFO',
             'UDP_PORT_OPEN',
             'IP_ADDRESS'
         ]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

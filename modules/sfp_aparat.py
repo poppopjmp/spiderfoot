@@ -1,6 +1,12 @@
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent
+from __future__ import annotations
 
-class sfp_aparat(SpiderFootPlugin):
+"""SpiderFoot plug-in module: aparat."""
+
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+
+class sfp_aparat(SpiderFootModernPlugin):
+    """Monitors Aparat for new videos and emits events."""
     meta = {
         'name': "Aparat Monitor",
         'summary': "Monitors Aparat for new videos and emits events.",
@@ -28,14 +34,17 @@ class sfp_aparat(SpiderFootPlugin):
         "max_videos": "Maximum number of videos to fetch per user."
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["ROOT"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["APARAT_VIDEO"]
 
     def handleEvent(self, event: 'SpiderFootEvent') -> None:
@@ -62,7 +71,7 @@ class sfp_aparat(SpiderFootPlugin):
             url = f"https://www.aparat.com/{username}/videos"
             self.debug(f"Fetching Aparat videos for user: {username} from {url}")
             try:
-                res = self.sf.fetchUrl(url, timeout=15)
+                res = self.fetch_url(url, timeout=15)
                 if not res or res.get('code') != '200' or not res.get('content'):
                     self.error(f"Failed to fetch Aparat videos for user {username}. HTTP code: {res.get('code') if res else 'None'}")
                     continue
@@ -100,5 +109,6 @@ class sfp_aparat(SpiderFootPlugin):
         if total_found == 0:
             self.info("No Aparat videos found for any configured user.")
 
-    def shutdown(self):
+    def shutdown(self) -> None:
+        """Shutdown."""
         pass

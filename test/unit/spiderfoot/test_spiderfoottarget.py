@@ -1,10 +1,17 @@
+from __future__ import annotations
+
+"""Tests for spiderfoottarget module."""
+
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from spiderfoot.target import SpiderFootTarget
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_base import TestModuleBase
+from test.unit.utils.resource_manager import get_test_resource_manager
+from test.unit.utils.thread_registry import get_test_thread_registry
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestSpiderFootTarget(SpiderFootTestBase):
+class TestSpiderFootTarget(TestModuleBase):
 
     def setUp(self):
         super().setUp()

@@ -1,14 +1,18 @@
+from __future__ import annotations
+
+"""Tests for sfp_leakcheck module."""
+
 # filepath: spiderfoot/test/unit/modules/test_sfp_leakcheck.py
 from unittest.mock import patch, MagicMock
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent
 from modules.sfp_leakcheck import sfp_leakcheck
 import unittest
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModuleLeakcheck(SpiderFootTestBase):
+class TestModuleLeakcheck(TestModuleBase):
     """Test Leakcheck module."""
 
     def setUp(self):

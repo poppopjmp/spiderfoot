@@ -1,0 +1,37 @@
+id: udp_service_exposed
+version: "1"
+meta:
+  name: UDP service exposed to the Internet
+  description: >
+    A UDP service was found open on the Internet. Exposed UDP
+    services such as DNS (53), SNMP (161/162), NTP (123),
+    TFTP (69), or memcached (11211) can be exploited for
+    amplification DDoS attacks, information disclosure,
+    or unauthorised access.
+  risk: HIGH
+collections:
+  collect:
+      - method: exact
+        field: type
+        value: UDP_PORT_OPEN
+      - method: regex
+        field: data
+        value:
+          # DNS
+          - .*:53$
+          # SNMP
+          - .*:161$
+          - .*:162$
+          # NTP
+          - .*:123$
+          # TFTP
+          - .*:69$
+          # memcached
+          - .*:11211$
+          # SSDP
+          - .*:1900$
+          # chargen
+          - .*:19$
+aggregation:
+  field: data
+headline: "UDP service exposed to the Internet: {data}"

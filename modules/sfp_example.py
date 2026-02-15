@@ -1,6 +1,11 @@
-from spiderfoot import SpiderFootPlugin
+from __future__ import annotations
 
-class sfp_example(SpiderFootPlugin):
+"""SpiderFoot plug-in module: example."""
+
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+
+class sfp_example(SpiderFootModernPlugin):
+    """Example SpiderFoot plugin."""
     meta = {
         'name': 'sfp_example',
         'title': 'Example',
@@ -10,24 +15,33 @@ class sfp_example(SpiderFootPlugin):
         'labels': ['test'],
         'targetType': 'INTERNET_NAME',
     }
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize the sfp example."""
         super().__init__()
         self.opts = {'example_option': 'default_value'}
         self.optdescs = {'example_option': 'Example option description'}
         self.errorState = False
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ['ROOT']
-    def enrichTarget(self, target):
+    def enrichTarget(self, target: SpiderFootTarget) -> None:
+        """Enrich the target with additional data."""
         return None
-    def setup(self, sf, opts):
+    def setup(self, sf: SpiderFoot, opts: dict) -> None:
+        """Set up the module."""
         pass
-    def clearListeners(self):
+    def clearListeners(self) -> None:
+        """ClearListeners."""
         pass
-    def setScanId(self, scan_id):
+    def setScanId(self, scan_id: str) -> None:
+        """Set ScanId."""
         pass
-    def setSharedThreadPool(self, pool):
+    def setSharedThreadPool(self, pool: object) -> None:
+        """Set SharedThreadPool."""
         pass
-    def setDbh(self, dbh):
+    def setDbh(self, dbh: object) -> None:
+        """Set Dbh."""
         pass
-    def setTarget(self, target):
+    def setTarget(self, target: SpiderFootTarget) -> None:
+        """Set Target."""
         pass

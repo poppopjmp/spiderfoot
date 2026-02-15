@@ -1,13 +1,17 @@
+from __future__ import annotations
+
+"""Tests for sfp_emergingthreats module."""
+
 import pytest
 import unittest
 
 from modules.sfp_emergingthreats import sfp_emergingthreats
-from sflib import SpiderFoot
-from test.unit.utils.test_base import SpiderFootTestBase
+from spiderfoot.sflib import SpiderFoot
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModuleEmergingthreats(SpiderFootTestBase):
+class TestModuleEmergingthreats(TestModuleBase):
 
     def test_opts(self):
         module = sfp_emergingthreats()

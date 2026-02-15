@@ -9,13 +9,20 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: punkspider."""
+
 import hashlib
 import json
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_punkspider(SpiderFootPlugin):
+class sfp_punkspider(SpiderFootModernPlugin):
+
+    """Check the QOMPLX punkspider.io service to see if the target is listed as vulnerable."""
 
     meta = {
         'name': "PunkSpider",
@@ -46,33 +53,34 @@ class sfp_punkspider(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
 
         # Clear / reset any other class member variables here
         # or you risk them persisting between threads.
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["INTERNET_NAME"]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["VULNERABILITY_GENERAL"]
 
-    def query(self, domain: str):
+    def query(self, domain: str) -> dict:
+        """Query the data source."""
         domain_hash = hashlib.md5(domain.encode('utf-8', errors='replace').lower()).hexdigest()  # noqa: DUO130
         url = f"https://api.punkspider.org/api/partial-hash/{domain_hash}"
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             url, timeout=30, useragent=self.opts['_useragent'])
 
         return self.parseApiResponse(res)
 
-    def parseApiResponse(self, res: dict):
+    def parseApiResponse(self, res: dict) -> dict | None:
+        """Parse ApiResponse."""
         if not res:
             self.error("No response from PunkSpider.")
             return None
@@ -102,7 +110,8 @@ class sfp_punkspider(SpiderFootPlugin):
 
         return None
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 

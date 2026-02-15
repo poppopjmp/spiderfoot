@@ -10,14 +10,21 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: abstractapi."""
+
 import json
 import time
 import urllib
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_abstractapi(SpiderFootPlugin):
+class sfp_abstractapi(SpiderFootModernPlugin):
+    """Look up domain, phone and IP address information from AbstractAPI."""
+
     meta = {
         "name": "AbstractAPI",
         "summary": "Look up domain, phone and IP address information from AbstractAPI.",
@@ -58,18 +65,17 @@ class sfp_abstractapi(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.errorState = False
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME", "PHONE_NUMBER", "IP_ADDRESS", "IPV6_ADDRESS"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "COMPANY_NAME",
             "SOCIAL_MEDIA",
@@ -79,7 +85,8 @@ class sfp_abstractapi(SpiderFootPlugin):
             "RAW_RIR_DATA",
         ]
 
-    def parseApiResponse(self, res: dict):
+    def parseApiResponse(self, res: dict) -> dict | None:
+        """Parse ApiResponse."""
         if not res:
             self.error("No response from Abstract API.")
             return None
@@ -122,7 +129,7 @@ class sfp_abstractapi(SpiderFootPlugin):
 
         return None
 
-    def queryCompanyEnrichment(self, qry):
+    def queryCompanyEnrichment(self, qry: str) -> dict | None:
         """Enrich domain with company information.
 
         Args:
@@ -145,7 +152,7 @@ class sfp_abstractapi(SpiderFootPlugin):
             }
         )
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://companyenrichment.abstractapi.com/v1/?{params}",
             useragent=self.opts["_useragent"],
         )
@@ -159,7 +166,7 @@ class sfp_abstractapi(SpiderFootPlugin):
 
         return self.parseApiResponse(res)
 
-    def queryPhoneValidation(self, qry):
+    def queryPhoneValidation(self, qry: str) -> dict | None:
         """Verify phone number and enrich with carrier and location
         information.
 
@@ -183,7 +190,7 @@ class sfp_abstractapi(SpiderFootPlugin):
             }
         )
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://phonevalidation.abstractapi.com/v1/?{params}",
             useragent=self.opts["_useragent"],
         )
@@ -197,7 +204,7 @@ class sfp_abstractapi(SpiderFootPlugin):
 
         return self.parseApiResponse(res)
 
-    def queryIpGeolocation(self, qry):
+    def queryIpGeolocation(self, qry: str) -> dict | None:
         """Enrich IP address with geolocation information.
 
         Args:
@@ -220,7 +227,7 @@ class sfp_abstractapi(SpiderFootPlugin):
             }
         )
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://ipgeolocation.abstractapi.com/v1/?{params}",
             useragent=self.opts["_useragent"],
         )
@@ -234,7 +241,8 @@ class sfp_abstractapi(SpiderFootPlugin):
 
         return self.parseApiResponse(res)
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

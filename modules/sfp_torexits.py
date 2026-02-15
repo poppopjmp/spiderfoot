@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: torexits."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:        sfp_torexits
@@ -15,10 +19,13 @@ import json
 
 from netaddr import IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_torexits(SpiderFootPlugin):
+class sfp_torexits(SpiderFootModernPlugin):
+
+    """Check if an IP adddress or netblock appears on the Tor Metrics exit node list."""
 
     meta = {
         'name': "TOR Exit Nodes",
@@ -53,16 +60,14 @@ class sfp_torexits(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
         self.__dataSource__ = "torproject.org"
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             "IP_ADDRESS",
             "IPV6_ADDRESS",
@@ -72,14 +77,16 @@ class sfp_torexits(SpiderFootPlugin):
             "NETBLOCKV6_OWNER",
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "IP_ADDRESS",
             "IPV6_ADDRESS",
             "TOR_EXIT_NODE",
         ]
 
-    def queryExitNodes(self, ip):
+    def queryExitNodes(self, ip: str) -> bool:
+        """Query ExitNodes."""
         exit_addresses = self.retrieveExitNodes()
 
         if not exit_addresses:
@@ -92,14 +99,15 @@ class sfp_torexits(SpiderFootPlugin):
 
         return False
 
-    def retrieveExitNodes(self):
-        exit_addresses = self.sf.cacheGet(
+    def retrieveExitNodes(self) -> list | None:
+        """RetrieveExitNodes."""
+        exit_addresses = self.cache_get(
             'torexitnodes', self.opts.get('cacheperiod', 1))
 
         if exit_addresses is not None:
             return self.parseExitNodes(exit_addresses)
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             "https://onionoo.torproject.org/details?search=flag:exit",
             timeout=self.opts['_fetchtimeout'],
             useragent=self.opts['_useragent'],
@@ -116,11 +124,11 @@ class sfp_torexits(SpiderFootPlugin):
             self.errorState = True
             return None
 
-        self.sf.cachePut("torexitnodes", res['content'])
+        self.cache_put("torexitnodes", res['content'])
 
         return self.parseExitNodes(res['content'])
 
-    def parseExitNodes(self, data):
+    def parseExitNodes(self, data: str) -> list | None:
         """Extract exit node IP addresses from TOR relay search results.
 
         Args:
@@ -171,7 +179,8 @@ class sfp_torexits(SpiderFootPlugin):
 
         return list(set(ips))
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 

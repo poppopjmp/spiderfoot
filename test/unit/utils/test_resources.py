@@ -1,6 +1,7 @@
 """
 Utilities for managing test resources and preventing hangs.
 """
+from __future__ import annotations
 
 import threading
 import time
@@ -31,7 +32,7 @@ class ResourceManager:
         for callback in self._cleanup_callbacks:
             try:
                 callback()
-            except Exception:
+            except Exception as e:
                 pass  # Ignore cleanup errors
         
         # Stop all threads

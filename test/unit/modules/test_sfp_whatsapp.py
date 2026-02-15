@@ -1,8 +1,13 @@
+from __future__ import annotations
+
+"""Tests for sfp_whatsapp module."""
+
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from spiderfoot import SpiderFootEvent
 from modules.sfp_whatsapp import sfp_whatsapp
 
-class TestSfpWhatsApp(unittest.TestCase):
+class TestSfpWhatsApp(TestModuleBase):
     def setUp(self):
         self.plugin = sfp_whatsapp()
         self.plugin.setup(None, {})

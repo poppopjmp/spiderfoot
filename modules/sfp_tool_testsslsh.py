@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: tool_testsslsh."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:        sfp_tool_testsslsh
@@ -18,10 +22,13 @@ import tempfile
 from netaddr import IPNetwork
 from subprocess import PIPE, Popen, TimeoutExpired
 
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent, SpiderFootHelpers
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_tool_testsslsh(SpiderFootPlugin):
+class sfp_tool_testsslsh(SpiderFootModernPlugin):
+
+    """Identify various TLS/SSL weaknesses, including Heartbleed, CRIME and ROBOT."""
 
     meta = {
         'name': "Tool - testssl.sh",
@@ -57,19 +64,18 @@ class sfp_tool_testsslsh(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = dict()
         self.errorState = False
         self.__dataSource__ = "Target Website"
-
-        for opt in userOpts.keys():
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ['INTERNET_NAME', 'IP_ADDRESS', 'NETBLOCK_OWNER']
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             'VULNERABILITY_CVE_CRITICAL',
             'VULNERABILITY_CVE_HIGH',
@@ -79,7 +85,8 @@ class sfp_tool_testsslsh(SpiderFootPlugin):
             'IP_ADDRESS'
         ]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -146,7 +153,7 @@ class sfp_tool_testsslsh(SpiderFootPlugin):
                         self.debug(
                             f"Skipping {eventData} as already within a scanned range.")
                         return
-                except Exception:
+                except Exception as e:
                     # self.results will also contain hostnames
                     continue
 
@@ -204,7 +211,7 @@ class sfp_tool_testsslsh(SpiderFootPlugin):
                 continue
 
             try:
-                with open(fname, "r") as f:
+                with open(fname, "r", encoding="utf-8") as f:
                     result_json = json.loads(f.read())
                 os.unlink(fname)
             except Exception as e:

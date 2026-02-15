@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: cleanbrowsing."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:        sfp_cleanbrowsing
@@ -14,11 +18,12 @@
 
 import dns.resolver
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_cleanbrowsing(SpiderFootPlugin):
-
+class sfp_cleanbrowsing(SpiderFootModernPlugin):
+    """SpiderFoot plugin to check if a host would be blocked by CleanBrowsing.org DNS content filters."""
     meta = {
         'name': "CleanBrowsing.org",
         'summary': "Check if a host would be blocked by CleanBrowsing.org DNS content filters.",
@@ -56,21 +61,20 @@ class sfp_cleanbrowsing(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             "INTERNET_NAME",
             "AFFILIATE_INTERNET_NAME",
             "CO_HOSTED_SITE"
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "BLACKLISTED_INTERNET_NAME",
             "BLACKLISTED_AFFILIATE_INTERNET_NAME",
@@ -80,14 +84,15 @@ class sfp_cleanbrowsing(SpiderFootPlugin):
             "MALICIOUS_COHOST",
         ]
 
-    def queryFamilyDNS(self, qaddr):
+    def queryFamilyDNS(self, qaddr: str) -> bool:
+        """Query FamilyDNS."""
         res = dns.resolver.Resolver()
         res.nameservers = ["185.228.168.168", "185.228.168.169"]
 
         try:
             addrs = res.resolve(qaddr)
             self.debug(f"Addresses returned: {addrs}")
-        except Exception:
+        except Exception as e:
             self.debug(f"Unable to resolve {qaddr}")
             return False
 
@@ -95,14 +100,15 @@ class sfp_cleanbrowsing(SpiderFootPlugin):
             return True
         return False
 
-    def queryAdultDNS(self, qaddr):
+    def queryAdultDNS(self, qaddr: str) -> bool:
+        """Query AdultDNS."""
         res = dns.resolver.Resolver()
         res.nameservers = ["185.228.168.10", "185.228.169.11"]
 
         try:
             addrs = res.resolve(qaddr)
             self.debug(f"Addresses returned: {addrs}")
-        except Exception:
+        except Exception as e:
             self.debug(f"Unable to resolve {qaddr}")
             return False
 
@@ -110,14 +116,15 @@ class sfp_cleanbrowsing(SpiderFootPlugin):
             return True
         return False
 
-    def querySecurityDNS(self, qaddr):
+    def querySecurityDNS(self, qaddr: str) -> bool:
+        """Query SecurityDNS."""
         res = dns.resolver.Resolver()
         res.nameservers = ["185.228.168.9", "185.228.169.9"]
 
         try:
             addrs = res.resolve(qaddr)
             self.debug(f"Addresses returned: {addrs}")
-        except Exception:
+        except Exception as e:
             self.debug(f"Unable to resolve {qaddr}")
             return False
 
@@ -125,7 +132,8 @@ class sfp_cleanbrowsing(SpiderFootPlugin):
             return True
         return False
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 
@@ -151,7 +159,7 @@ class sfp_cleanbrowsing(SpiderFootPlugin):
 
         # Check that it resolves first, as it becomes a valid
         # malicious host only if NOT resolved by CleanBrowsing DNS.
-        if not self.sf.resolveHost(eventData) and not self.sf.resolveHost6(eventData):
+        if not self.resolve_host(eventData) and not self.resolve_host6(eventData):
             return
 
         family = self.queryFamilyDNS(eventData)

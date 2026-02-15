@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: debounce."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_debounce
@@ -13,11 +17,12 @@
 
 import json
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_debounce(SpiderFootPlugin):
-
+class sfp_debounce(SpiderFootModernPlugin):
+    """SpiderFoot plugin to check whether an email is disposable using Debounce API."""
     meta = {
         'name': "Debounce",
         'summary': "Check whether an email is disposable",
@@ -48,26 +53,26 @@ class sfp_debounce(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             "EMAILADDR"
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "EMAILADDR_DISPOSABLE",
             "RAW_RIR_DATA"
         ]
 
-    def queryEmailAddr(self, qry):
-        res = self.sf.fetchUrl(
+    def queryEmailAddr(self, qry: str) -> dict | None:
+        """Query EmailAddr."""
+        res = self.fetch_url(
             f"https://disposable.debounce.io?email={qry}",
             timeout=self.opts['_fetchtimeout'],
             useragent="SpiderFoot"
@@ -85,7 +90,8 @@ class sfp_debounce(SpiderFootPlugin):
         return None
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

@@ -1,6 +1,13 @@
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent
+from __future__ import annotations
 
-class sfp_xiaohongshu(SpiderFootPlugin):
+"""SpiderFoot plug-in module: xiaohongshu."""
+
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+
+class sfp_xiaohongshu(SpiderFootModernPlugin):
+    """Monitors Xiaohongshu for new posts and emits events."""
+
     meta = {
         'name': "Xiaohongshu (Little Red Book) Monitor",
         'summary': "Monitors Xiaohongshu for new posts and emits events.",
@@ -28,17 +35,20 @@ class sfp_xiaohongshu(SpiderFootPlugin):
         "max_posts": "Maximum number of posts to fetch per user."
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["ROOT"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["XIAOHONGSHU_POST"]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """
         Handle a SpiderFoot event by fetching recent Xiaohongshu posts for each configured username.
         Emits XIAOHONGSHU_POST events with enriched data (username, content, timestamp).
@@ -91,5 +101,6 @@ class sfp_xiaohongshu(SpiderFootPlugin):
             except Exception as e:
                 self.error(f"Error fetching posts for user {username}: {e}")
 
-    def shutdown(self):
+    def shutdown(self) -> None:
+        """Shutdown."""
         pass

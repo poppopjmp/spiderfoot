@@ -1,11 +1,16 @@
+from __future__ import annotations
+
+"""Tests for sfp_ahmia module."""
+
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 
 from modules.sfp_ahmia import sfp_ahmia
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
-class TestModuleIntegrationAhmia(unittest.TestCase):
+class TestModuleIntegrationAhmia(TestModuleBase):
 
     def setUp(self):
         self.default_options = {

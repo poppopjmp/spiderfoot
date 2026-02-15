@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: accounts."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_accounts
@@ -18,11 +22,12 @@ import time
 from queue import Empty as QueueEmpty
 from queue import Queue
 
-from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_accounts(SpiderFootPlugin):
-
+class sfp_accounts(SpiderFootModernPlugin):
+    """Look for possible associated accounts on over 500 social and other websites such as Instagram, Reddit, etc."""
     meta = {
         'name': "Account Finder",
         'summary': "Look for possible associated accounts on over 500 social and other websites such as Instagram, Reddit, etc.",
@@ -60,8 +65,9 @@ class sfp_accounts(SpiderFootPlugin):
     distrustedChecked = False
     lock = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.commonNames = list()
         self.reportedUsers = list()
@@ -69,25 +75,21 @@ class sfp_accounts(SpiderFootPlugin):
         self.distrustedChecked = False
         self.__dataSource__ = "Social Media"
         self.lock = threading.Lock()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
         self.commonNames = SpiderFootHelpers.humanNamesFromWordlists()
         self.words = SpiderFootHelpers.dictionaryWordsFromWordlists()
 
-        content = self.sf.cacheGet("sfaccountsv2", 48)
+        content = self.cache_get("sfaccountsv2", 48)
         if content is None:
             url = "https://raw.githubusercontent.com/WebBreacher/WhatsMyName/main/wmn-data.json"
-            data = self.sf.fetchUrl(url, useragent="SpiderFoot")
+            data = self.fetch_url(url, useragent="SpiderFoot")
 
-            if data['content'] is None:
+            if data is None or data['content'] is None:
                 self.error(f"Unable to fetch {url}")
                 self.errorState = True
                 return
 
             content = data['content']
-            self.sf.cachePut("sfaccountsv2", content)
+            self.cache_put("sfaccountsv2", content)
 
         try:
             self.sites = [site for site in json.loads(
@@ -97,14 +99,17 @@ class sfp_accounts(SpiderFootPlugin):
             self.errorState = True
             return
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["EMAILADDR", "DOMAIN_NAME", "HUMAN_NAME", "USERNAME"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["USERNAME", "ACCOUNT_EXTERNAL_OWNED",
                 "SIMILAR_ACCOUNT_EXTERNAL"]
 
-    def checkSite(self, name, site):
+    def checkSite(self, name: str, site: dict) -> None:
+        """Check Site."""
         if 'uri_check' not in site:
             return
 
@@ -119,7 +124,7 @@ class sfp_accounts(SpiderFootPlugin):
         if site.get('post_body'):
             post = site['post_body']
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             url,
             postData=post,
             timeout=self.opts['_fetchtimeout'],
@@ -128,7 +133,7 @@ class sfp_accounts(SpiderFootPlugin):
             verify=False
         )
 
-        if not res['content']:
+        if res is None or not res.get('content'):
             with self.lock:
                 self.siteResults[retname] = False
             return
@@ -153,7 +158,7 @@ class sfp_accounts(SpiderFootPlugin):
                 return
 
         # Some sites can't handle periods so treat bob.abc and bob as the same
-        # TODO: fix this once WhatsMyName has support for usernames with '.'
+        # NOTE: WhatsMyName does not yet support usernames containing '.'
         if "." in name:
             firstname = name.split(".")[0]
             if firstname + "<" in res['content'] or firstname + '"' in res['content']:
@@ -164,8 +169,10 @@ class sfp_accounts(SpiderFootPlugin):
         with self.lock:
             self.siteResults[retname] = True
 
-    def checkSites(self, username, sites=None):
-        def processSiteQueue(username, queue):
+    def checkSites(self, username: str, sites: list = None) -> list | None:
+        """Check Sites."""
+        def processSiteQueue(username: str, queue: list) -> None:
+            """Process SiteQueue."""
             try:
                 while True:
                     site = queue.get(timeout=0.1)
@@ -211,7 +218,8 @@ class sfp_accounts(SpiderFootPlugin):
 
         return [site for site, found in self.siteResults.items() if found]
 
-    def generatePermutations(self, username):
+    def generatePermutations(self, username: str) -> list:
+        """GeneratePermutations."""
         permutations = list()
         prefixsuffix = ['_', '-']
         replacements = {
@@ -292,7 +300,8 @@ class sfp_accounts(SpiderFootPlugin):
 
         return list(set(permutations))
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -317,7 +326,7 @@ class sfp_accounts(SpiderFootPlugin):
         # sites are by attempting to fetch a garbage user.
         if not self.distrustedChecked:
             # Check if a state cache exists first, to not have to do this all the time
-            content = self.sf.cacheGet("sfaccounts_state_v3", 72)
+            content = self.cache_get("sfaccounts_state_v3", 72)
             if content:
                 if content != "None":  # "None" is written to the cached file when no sites are distrusted
                     delsites = list()
@@ -343,7 +352,7 @@ class sfp_accounts(SpiderFootPlugin):
                 else:
                     # The caching code needs *some* content
                     delsites = "None"
-                self.sf.cachePut("sfaccounts_state_v3", delsites)
+                self.cache_put("sfaccounts_state_v3", delsites)
 
             self.distrustedChecked = True
 

@@ -1,0 +1,65 @@
+# =============================================================================
+# Jaeger 2.x Configuration — SpiderFoot
+# =============================================================================
+# Jaeger 2.x is built on the OpenTelemetry Collector framework.
+# This config defines receivers, exporters, processors, and extensions.
+# Docs: https://www.jaegertracing.io/docs/2.4/configuration/
+# =============================================================================
+
+extensions:
+  # Healthcheck on port 13133 (used by Docker healthcheck)
+  healthcheckv2:
+    http:
+      endpoint: "0.0.0.0:13133"
+
+  # Jaeger UI query service
+  jaeger_query:
+    # Serve UI under /jaeger subpath (matches nginx location ^~ /jaeger/)
+    storage:
+      traces: memstore
+    base_path: /jaeger
+    ui:
+      config_file: ""
+
+  # In-memory trace storage
+  jaeger_storage:
+    backends:
+      memstore:
+        memory:
+          max_traces: 50000
+
+  # Internal diagnostics
+  zpages:
+    endpoint: "0.0.0.0:55679"
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: "0.0.0.0:4317"
+      http:
+        endpoint: "0.0.0.0:4318"
+
+processors:
+  batch:
+    send_batch_size: 1024
+    timeout: 1s
+
+exporters:
+  # In-memory storage (all-in-one mode)
+  jaeger_storage_exporter:
+    trace_storage: memstore
+
+service:
+  extensions: [healthcheckv2, jaeger_query, jaeger_storage, zpages]
+  telemetry:
+    metrics:
+      address: "0.0.0.0:8888"
+      level: basic
+    logs:
+      level: info
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [jaeger_storage_exporter]

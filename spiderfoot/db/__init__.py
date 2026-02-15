@@ -1,0 +1,918 @@
+# -------------------------------------------------------------------------------
+# Name:         Modular SpiderFoot Database Module
+# Purpose:      Common functions for working with the database back-end.
+#
+# Author:      Agostino Panico @poppopjmp
+#
+# Created:     30/06/2025
+# Copyright:   (c) Agostino Panico 2025
+# Licence:     MIT
+# -------------------------------------------------------------------------------
+"""SpiderFoot database package.
+
+Exposes :class:`SpiderFootDb`, the high-level facade that delegates to
+specialised sub-modules (``db_core``, ``db_scan``, ``db_event``,
+``db_config``, ``db_correlation``).  Handles connection lifecycle,
+schema migrations, and retry logic for SQLite operations.
+"""
+
+from __future__ import annotations
+
+__all__ = ["SpiderFootDb", "get_schema_queries"]
+
+from pathlib import Path
+import logging
+import re
+import sqlite3
+import threading
+import psycopg2
+import psycopg2.extras
+from typing import Any
+
+from .db_core import DbCore
+from .db_scan import ScanManager
+from .db_event import EventManager
+from .db_config import ConfigManager
+
+log = logging.getLogger(__name__)
+from .db_correlation import CorrelationManager
+
+
+def get_schema_queries(db_type: str) -> list[str]:
+    """
+    Return a list of schema creation queries appropriate for the backend.
+    """
+    if db_type == 'sqlite':
+        return [
+            "CREATE TABLE IF NOT EXISTS tbl_schema_version (\n    version INTEGER NOT NULL,\n    applied_at INTEGER NOT NULL\n)",
+            "PRAGMA journal_mode=WAL",
+            "CREATE TABLE IF NOT EXISTS tbl_event_types ( \
+                event       VARCHAR NOT NULL PRIMARY KEY, \
+                event_descr VARCHAR NOT NULL, \
+                event_raw   INT NOT NULL DEFAULT 0, \
+                event_type  VARCHAR NOT NULL \
+            )",
+            "CREATE TABLE IF NOT EXISTS tbl_config ( \
+                scope   VARCHAR NOT NULL, \
+                opt     VARCHAR NOT NULL, \
+                val     VARCHAR NOT NULL, \
+                PRIMARY KEY (scope, opt) \
+            )",
+            "CREATE TABLE IF NOT EXISTS tbl_scan_instance ( \
+                guid        VARCHAR NOT NULL PRIMARY KEY, \
+                name        VARCHAR NOT NULL, \
+                seed_target VARCHAR NOT NULL, \
+                created     INT DEFAULT 0, \
+                started     INT DEFAULT 0, \
+                ended       INT DEFAULT 0, \
+                status      VARCHAR NOT NULL \
+            )",
+            "CREATE TABLE IF NOT EXISTS tbl_scan_log ( \
+                scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
+                generated           INT NOT NULL, \
+                component           VARCHAR, \
+                type                VARCHAR NOT NULL, \
+                message             VARCHAR \
+            )",
+            "CREATE TABLE IF NOT EXISTS tbl_scan_config ( \
+                scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
+                component           VARCHAR NOT NULL, \
+                opt                 VARCHAR NOT NULL, \
+                val                 VARCHAR NOT NULL, \
+                UNIQUE (scan_instance_id, component, opt) \
+            )",
+            "CREATE TABLE IF NOT EXISTS tbl_scan_results ( \
+                scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
+                hash                VARCHAR NOT NULL, \
+                type                VARCHAR NOT NULL REFERENCES tbl_event_types(event), \
+                generated           INT NOT NULL, \
+                confidence          INT NOT NULL DEFAULT 100, \
+                visibility          INT NOT NULL DEFAULT 100, \
+                risk                INT NOT NULL DEFAULT 0, \
+                module              VARCHAR NOT NULL, \
+                data                TEXT, \
+                false_positive      INT NOT NULL DEFAULT 0, \
+                source_event_hash  VARCHAR DEFAULT 'ROOT' \
+            )",
+            "CREATE TABLE IF NOT EXISTS tbl_scan_correlation_results ( \
+                id                  VARCHAR NOT NULL PRIMARY KEY, \
+                scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
+                title               VARCHAR NOT NULL, \
+                rule_risk           VARCHAR NOT NULL, \
+                rule_id             VARCHAR NOT NULL, \
+                rule_name           VARCHAR NOT NULL, \
+                rule_descr          VARCHAR NOT NULL, \
+                rule_logic          VARCHAR NOT NULL \
+            )",
+            "CREATE TABLE IF NOT EXISTS tbl_scan_correlation_results_events ( \
+                correlation_id      VARCHAR NOT NULL REFERENCES tbl_scan_correlation_results(id), \
+                event_hash          VARCHAR NOT NULL \
+            )",
+            "CREATE INDEX IF NOT EXISTS idx_scan_results_id ON tbl_scan_results (scan_instance_id)",
+            "CREATE INDEX IF NOT EXISTS idx_scan_results_type ON tbl_scan_results (scan_instance_id, type)",
+            "CREATE INDEX IF NOT EXISTS idx_scan_results_hash ON tbl_scan_results (scan_instance_id, hash)",
+            "CREATE INDEX IF NOT EXISTS idx_scan_results_module ON tbl_scan_results(scan_instance_id, module)",
+            "CREATE INDEX IF NOT EXISTS idx_scan_results_srchash ON tbl_scan_results (scan_instance_id, source_event_hash)",
+            "CREATE INDEX IF NOT EXISTS idx_scan_logs ON tbl_scan_log (scan_instance_id)",
+            "CREATE INDEX IF NOT EXISTS idx_scan_correlation ON tbl_scan_correlation_results (scan_instance_id, id)",
+            "CREATE INDEX IF NOT EXISTS idx_scan_correlation_events ON tbl_scan_correlation_results_events (correlation_id)"
+        ]
+    elif db_type == 'postgresql':
+        return [
+            "CREATE TABLE IF NOT EXISTS tbl_schema_version (\n    version INTEGER NOT NULL,\n    applied_at BIGINT NOT NULL\n)",
+            "CREATE TABLE IF NOT EXISTS tbl_event_types ( \
+                event       VARCHAR NOT NULL PRIMARY KEY, \
+                event_descr VARCHAR NOT NULL, \
+                event_raw   INT NOT NULL DEFAULT 0, \
+                event_type  VARCHAR NOT NULL \
+            )",
+            "CREATE TABLE IF NOT EXISTS tbl_config ( \
+                scope   VARCHAR NOT NULL, \
+                opt     VARCHAR NOT NULL, \
+                val     VARCHAR NOT NULL, \
+                PRIMARY KEY (scope, opt) \
+            )",
+            "CREATE TABLE IF NOT EXISTS tbl_scan_instance ( \
+                guid        VARCHAR NOT NULL PRIMARY KEY, \
+                name        VARCHAR NOT NULL, \
+                seed_target VARCHAR NOT NULL, \
+                created     BIGINT DEFAULT 0, \
+                started     BIGINT DEFAULT 0, \
+                ended       BIGINT DEFAULT 0, \
+                status      VARCHAR NOT NULL \
+            )",
+            "CREATE TABLE IF NOT EXISTS tbl_scan_log ( \
+                scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
+                generated           BIGINT NOT NULL, \
+                component           VARCHAR, \
+                type                VARCHAR NOT NULL, \
+                message             VARCHAR \
+            )",
+            "CREATE TABLE IF NOT EXISTS tbl_scan_config ( \
+                scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
+                component           VARCHAR NOT NULL, \
+                opt                 VARCHAR NOT NULL, \
+                val                 VARCHAR NOT NULL, \
+                UNIQUE (scan_instance_id, component, opt) \
+            )",
+            "CREATE TABLE IF NOT EXISTS tbl_scan_results ( \
+                scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
+                hash                VARCHAR NOT NULL, \
+                type                VARCHAR NOT NULL REFERENCES tbl_event_types(event), \
+                generated           BIGINT NOT NULL, \
+                confidence          INT NOT NULL DEFAULT 100, \
+                visibility          INT NOT NULL DEFAULT 100, \
+                risk                INT NOT NULL DEFAULT 0, \
+                module              VARCHAR NOT NULL, \
+                data                TEXT, \
+                false_positive      INT NOT NULL DEFAULT 0, \
+                source_event_hash  VARCHAR DEFAULT 'ROOT' \
+            )",
+            "CREATE TABLE IF NOT EXISTS tbl_scan_correlation_results ( \
+                id                  VARCHAR NOT NULL PRIMARY KEY, \
+                scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
+                title               VARCHAR NOT NULL, \
+                rule_risk           VARCHAR NOT NULL, \
+                rule_id             VARCHAR NOT NULL, \
+                rule_name           VARCHAR NOT NULL, \
+                rule_descr          VARCHAR NOT NULL, \
+                rule_logic          VARCHAR NOT NULL \
+            )",
+            "CREATE TABLE IF NOT EXISTS tbl_scan_correlation_results_events ( \
+                correlation_id      VARCHAR NOT NULL REFERENCES tbl_scan_correlation_results(id), \
+                event_hash          VARCHAR NOT NULL \
+            )",
+            "CREATE INDEX IF NOT EXISTS idx_scan_results_id ON tbl_scan_results (scan_instance_id)",
+            "CREATE INDEX IF NOT EXISTS idx_scan_results_type ON tbl_scan_results (scan_instance_id, type)",
+            "CREATE INDEX IF NOT EXISTS idx_scan_results_hash ON tbl_scan_results (scan_instance_id, hash)",
+            "CREATE INDEX IF NOT EXISTS idx_scan_results_module ON tbl_scan_results(scan_instance_id, module)",
+            "CREATE INDEX IF NOT EXISTS idx_scan_results_srchash ON tbl_scan_results (scan_instance_id, source_event_hash)",
+            "CREATE INDEX IF NOT EXISTS idx_scan_logs ON tbl_scan_log (scan_instance_id)",
+            "CREATE INDEX IF NOT EXISTS idx_scan_correlation ON tbl_scan_correlation_results (scan_instance_id, id)",
+            "CREATE INDEX IF NOT EXISTS idx_scan_correlation_events ON tbl_scan_correlation_results_events (correlation_id)"
+        ]
+    else:
+        raise ValueError(f"Unsupported database type: {db_type}")
+
+class SpiderFootDb:
+    """SpiderFoot database.
+    Attributes:
+        conn: Database connection
+        dbh: Database cursor
+        dbhLock (_thread.RLock): thread lock on database handle
+    """
+    dbh = None
+    conn = None
+    dbhLock = threading.RLock()
+    eventDetails = [
+        ['ROOT', 'Internal SpiderFoot Root event', 1, 'INTERNAL'],
+        ['ACCOUNT_EXTERNAL_OWNED', 'Account on External Site', 0, 'ENTITY'],
+        ['ACCOUNT_EXTERNAL_OWNED_COMPROMISED',
+            'Hacked Account on External Site', 0, 'DESCRIPTOR'],
+        ['ACCOUNT_EXTERNAL_USER_SHARED_COMPROMISED',
+            'Hacked User Account on External Site', 0, 'DESCRIPTOR'],
+        ['AFFILIATE_EMAILADDR', 'Affiliate - Email Address', 0, 'ENTITY'],
+        ['AFFILIATE_INTERNET_NAME', 'Affiliate - Internet Name', 0, 'ENTITY'],
+        ['AFFILIATE_INTERNET_NAME_HIJACKABLE',
+            'Affiliate - Internet Name Hijackable', 0, 'ENTITY'],
+        ['AFFILIATE_INTERNET_NAME_UNRESOLVED',
+            'Affiliate - Internet Name - Unresolved', 0, 'ENTITY'],
+        ['AFFILIATE_IPADDR', 'Affiliate - IP Address', 0, 'ENTITY'],
+        ['AFFILIATE_IPV6_ADDRESS', 'Affiliate - IPv6 Address', 0, 'ENTITY'],
+        ['AFFILIATE_WEB_CONTENT', 'Affiliate - Web Content', 1, 'DATA'],
+        ['AFFILIATE_DOMAIN_NAME', 'Affiliate - Domain Name', 0, 'ENTITY'],
+        ['AFFILIATE_DOMAIN_UNREGISTERED',
+            'Affiliate - Domain Name Unregistered', 0, 'ENTITY'],
+        ['AFFILIATE_COMPANY_NAME', 'Affiliate - Company Name', 0, 'ENTITY'],
+        ['AFFILIATE_DOMAIN_WHOIS', 'Affiliate - Domain Whois', 1, 'DATA'],
+        ['AFFILIATE_DESCRIPTION_CATEGORY',
+            'Affiliate Description - Category', 0, 'DESCRIPTOR'],
+        ['AFFILIATE_DESCRIPTION_ABSTRACT',
+            'Affiliate Description - Abstract', 0, 'DESCRIPTOR'],
+        ['APPSTORE_ENTRY', 'App Store Entry', 0, 'ENTITY'],
+        ['CLOUD_STORAGE_BUCKET', 'Cloud Storage Bucket', 0, 'ENTITY'],
+        ['CLOUD_STORAGE_BUCKET_OPEN', 'Cloud Storage Bucket Open', 0, 'DESCRIPTOR'],
+        ['COMPANY_NAME', 'Company Name', 0, 'ENTITY'],
+        ['CREDIT_CARD_NUMBER', 'Credit Card Number', 0, 'ENTITY'],
+        ['BASE64_DATA', 'Base64-encoded Data', 1, 'DATA'],
+        ['BITCOIN_ADDRESS', 'Bitcoin Address', 0, 'ENTITY'],
+        ['BITCOIN_BALANCE', 'Bitcoin Balance', 0, 'DESCRIPTOR'],
+        ['BGP_AS_OWNER', 'BGP AS Ownership', 0, 'ENTITY'],
+        ['BGP_AS_MEMBER', 'BGP AS Membership', 0, 'ENTITY'],
+        ['BLACKLISTED_COHOST', 'Blacklisted Co-Hosted Site', 0, 'DESCRIPTOR'],
+        ['BLACKLISTED_INTERNET_NAME', 'Blacklisted Internet Name', 0, 'DESCRIPTOR'],
+        ['BLACKLISTED_AFFILIATE_INTERNET_NAME',
+            'Blacklisted Affiliate Internet Name', 0, 'DESCRIPTOR'],
+        ['BLACKLISTED_IPADDR', 'Blacklisted IP Address', 0, 'DESCRIPTOR'],
+        ['BLACKLISTED_AFFILIATE_IPADDR',
+            'Blacklisted Affiliate IP Address', 0, 'DESCRIPTOR'],
+        ['BLACKLISTED_SUBNET', 'Blacklisted IP on Same Subnet', 0, 'DESCRIPTOR'],
+        ['BLACKLISTED_NETBLOCK', 'Blacklisted IP on Owned Netblock', 0, 'DESCRIPTOR'],
+        ['COUNTRY_NAME', 'Country Name', 0, 'ENTITY'],
+        ['CO_HOSTED_SITE', 'Co-Hosted Site', 0, 'ENTITY'],
+        ['CO_HOSTED_SITE_DOMAIN', 'Co-Hosted Site - Domain Name', 0, 'ENTITY'],
+        ['CO_HOSTED_SITE_DOMAIN_WHOIS', 'Co-Hosted Site - Domain Whois', 1, 'DATA'],
+        ['DARKNET_MENTION_URL', 'Darknet Mention URL', 0, 'DESCRIPTOR'],
+        ['DARKNET_MENTION_CONTENT', 'Darknet Mention Web Content', 1, 'DATA'],
+        ['DATE_HUMAN_DOB', 'Date of Birth', 0, 'ENTITY'],
+        ['DEFACED_INTERNET_NAME', 'Defaced', 0, 'DESCRIPTOR'],
+        ['DEFACED_IPADDR', 'Defaced IP Address', 0, 'DESCRIPTOR'],
+        ['DEFACED_AFFILIATE_INTERNET_NAME', 'Defaced Affiliate', 0, 'DESCRIPTOR'],
+        ['DEFACED_COHOST', 'Defaced Co-Hosted Site', 0, 'DESCRIPTOR'],
+        ['DEFACED_AFFILIATE_IPADDR', 'Defaced Affiliate IP Address', 0, 'DESCRIPTOR'],
+        ['DESCRIPTION_CATEGORY', 'Description - Category', 0, 'DESCRIPTOR'],
+        ['DESCRIPTION_ABSTRACT', 'Description - Abstract', 0, 'DESCRIPTOR'],
+        ['DEVICE_TYPE', 'Device Type', 0, 'DESCRIPTOR'],
+        ['DNS_TEXT', 'DNS TXT Record', 0, 'DATA'],
+        ['DNS_SRV', 'DNS SRV Record', 0, 'DATA'],
+        ['DNS_SPF', 'DNS SPF Record', 0, 'DATA'],
+        ['DOMAIN_NAME', 'Domain Name', 0, 'ENTITY'],
+        ['DOMAIN_NAME_PARENT', 'Domain Name (Parent)', 0, 'ENTITY'],
+        ['DOMAIN_REGISTRAR', 'Domain Registrar', 0, 'ENTITY'],
+        ['DOMAIN_WHOIS', 'Domain Whois', 1, 'DATA'],
+        ['EMAILADDR', 'Email Address', 0, 'ENTITY'],
+        ['EMAILADDR_COMPROMISED', 'Hacked Email Address', 0, 'DESCRIPTOR'],
+        ['EMAILADDR_DELIVERABLE', 'Deliverable Email Address', 0, 'DESCRIPTOR'],
+        ['EMAILADDR_DISPOSABLE', 'Disposable Email Address', 0, 'DESCRIPTOR'],
+        ['EMAILADDR_GENERIC', 'Email Address - Generic', 0, 'ENTITY'],
+        ['EMAILADDR_UNDELIVERABLE', 'Undeliverable Email Address', 0, 'DESCRIPTOR'],
+        ['ERROR_MESSAGE', 'Error Message', 0, 'DATA'],
+        ['ETHEREUM_ADDRESS', 'Ethereum Address', 0, 'ENTITY'],
+        ['ETHEREUM_BALANCE', 'Ethereum Balance', 0, 'DESCRIPTOR'],
+        ['GEOINFO', 'Physical Location', 0, 'DESCRIPTOR'],
+        ['HASH', 'Hash', 0, 'DATA'],
+        ['HASH_COMPROMISED', 'Compromised Password Hash', 0, 'DATA'],
+        ['HTTP_CODE', 'HTTP Status Code', 0, 'DATA'],
+        ['HUMAN_NAME', 'Human Name', 0, 'ENTITY'],
+        ['IBAN_NUMBER', 'IBAN Number', 0, 'ENTITY'],
+        ['INTERESTING_FILE', 'Interesting File', 0, 'DESCRIPTOR'],
+        ['INTERESTING_FILE_HISTORIC', 'Historic Interesting File', 0, 'DESCRIPTOR'],
+        ['JUNK_FILE', 'Junk File', 0, 'DESCRIPTOR'],
+        ['INTERNAL_IP_ADDRESS', 'IP Address - Internal Network', 0, 'ENTITY'],
+        ['INTERNET_NAME', 'Internet Name', 0, 'ENTITY'],
+        ['INTERNET_NAME_UNRESOLVED', 'Internet Name - Unresolved', 0, 'ENTITY'],
+        ['IP_ADDRESS', 'IP Address', 0, 'ENTITY'],
+        ['IPV6_ADDRESS', 'IPv6 Address', 0, 'ENTITY'],
+        ['LEI', 'Legal Entity Identifier', 0, 'ENTITY'],
+        ['JOB_TITLE', 'Job Title', 0, 'DESCRIPTOR'],
+        ['LINKED_URL_INTERNAL', 'Linked URL - Internal', 0, 'SUBENTITY'],
+        ['LINKED_URL_EXTERNAL', 'Linked URL - External', 0, 'SUBENTITY'],
+        ['MALICIOUS_ASN', 'Malicious AS', 0, 'DESCRIPTOR'],
+        ['MALICIOUS_BITCOIN_ADDRESS', 'Malicious Bitcoin Address', 0, 'DESCRIPTOR'],
+        ['MALICIOUS_IPADDR', 'Malicious IP Address', 0, 'DESCRIPTOR'],
+        ['MALICIOUS_COHOST', 'Malicious Co-Hosted Site', 0, 'DESCRIPTOR'],
+        ['MALICIOUS_EMAILADDR', 'Malicious E-mail Address', 0, 'DESCRIPTOR'],
+        ['MALICIOUS_INTERNET_NAME', 'Malicious Internet Name', 0, 'DESCRIPTOR'],
+        ['MALICIOUS_AFFILIATE_INTERNET_NAME',
+            'Malicious Affiliate', 0, 'DESCRIPTOR'],
+        ['MALICIOUS_AFFILIATE_IPADDR',
+            'Malicious Affiliate IP Address', 0, 'DESCRIPTOR'],
+        ['MALICIOUS_NETBLOCK', 'Malicious IP on Owned Netblock', 0, 'DESCRIPTOR'],
+        ['MALICIOUS_PHONE_NUMBER', 'Malicious Phone Number', 0, 'DESCRIPTOR'],
+        ['MALICIOUS_SUBNET', 'Malicious IP on Same Subnet', 0, 'DESCRIPTOR'],
+        ['NETBLOCK_OWNER', 'Netblock Ownership', 0, 'ENTITY'],
+        ['NETBLOCKV6_OWNER', 'Netblock IPv6 Ownership', 0, 'ENTITY'],
+        ['NETBLOCK_MEMBER', 'Netblock Membership', 0, 'ENTITY'],
+        ['NETBLOCKV6_MEMBER', 'Netblock IPv6 Membership', 0, 'ENTITY'],
+        ['NETBLOCK_WHOIS', 'Netblock Whois', 1, 'DATA'],
+        ['OPERATING_SYSTEM', 'Operating System', 0, 'DESCRIPTOR'],
+        ['LEAKSITE_URL', 'Leak Site URL', 0, 'ENTITY'],
+        ['LEAKSITE_CONTENT', 'Leak Site Content', 1, 'DATA'],
+        ['PASSWORD_COMPROMISED', 'Compromised Password', 0, 'DATA'],
+        ['PERSON_NAME', 'Person Name', 0, 'ENTITY'],
+        ['PHONE_NUMBER', 'Phone Number', 0, 'ENTITY'],
+        ['PHONE_NUMBER_COMPROMISED', 'Phone Number Compromised', 0, 'DESCRIPTOR'],
+        ['PHONE_NUMBER_TYPE', 'Phone Number Type', 0, 'DESCRIPTOR'],
+        ['PHYSICAL_ADDRESS', 'Physical Address', 0, 'ENTITY'],
+        ['PHYSICAL_COORDINATES', 'Physical Coordinates', 0, 'ENTITY'],
+        ['PGP_KEY', 'PGP Public Key', 0, 'DATA'],
+        ['PROXY_HOST', 'Proxy Host', 0, 'DESCRIPTOR'],
+        ['PROVIDER_DNS', 'Name Server (DNS ''NS'' Records)', 0, 'ENTITY'],
+        ['PROVIDER_JAVASCRIPT', 'Externally Hosted Javascript', 0, 'ENTITY'],
+        ['PROVIDER_MAIL', 'Email Gateway (DNS ''MX'' Records)', 0, 'ENTITY'],
+        ['PROVIDER_HOSTING', 'Hosting Provider', 0, 'ENTITY'],
+        ['PROVIDER_TELCO', 'Telecommunications Provider', 0, 'ENTITY'],
+        ['PUBLIC_CODE_REPO', 'Public Code Repository', 0, 'ENTITY'],
+        ['RAW_RIR_DATA', 'Raw Data from RIRs/APIs', 1, 'DATA'],
+        ['RAW_DNS_RECORDS', 'Raw DNS Records', 1, 'DATA'],
+        ['RAW_FILE_META_DATA', 'Raw File Meta Data', 1, 'DATA'],
+        ['SEARCH_ENGINE_WEB_CONTENT', 'Search Engine Web Content', 1, 'DATA'],
+        ['SOCIAL_MEDIA', 'Social Media Presence', 0, 'ENTITY'],
+        ['SIMILAR_ACCOUNT_EXTERNAL', 'Similar Account on External Site', 0, 'ENTITY'],
+        ['SIMILARDOMAIN', 'Similar Domain', 0, 'ENTITY'],
+        ['SIMILARDOMAIN_WHOIS', 'Similar Domain - Whois', 1, 'DATA'],
+        ['SOFTWARE_USED', 'Software Used', 0, 'SUBENTITY'],
+        ['SSL_CERTIFICATE_RAW', 'SSL Certificate - Raw Data', 1, 'DATA'],
+        ['SSL_CERTIFICATE_ISSUED', 'SSL Certificate - Issued to', 0, 'ENTITY'],
+        ['SSL_CERTIFICATE_ISSUER', 'SSL Certificate - Issued by', 0, 'ENTITY'],
+        ['SSL_CERTIFICATE_MISMATCH', 'SSL Certificate Host Mismatch', 0, 'DESCRIPTOR'],
+        ['SSL_CERTIFICATE_EXPIRED', 'SSL Certificate Expired', 0, 'DESCRIPTOR'],
+        ['SSL_CERTIFICATE_EXPIRING', 'SSL Certificate Expiring', 0, 'DESCRIPTOR'],
+        ['TARGET_WEB_CONTENT', 'Web Content', 1, 'DATA'],
+        ['TARGET_WEB_COOKIE', 'Cookies', 0, 'DATA'],
+        ['TCP_PORT_OPEN', 'Open TCP Port', 0, 'SUBENTITY'],
+        ['TCP_PORT_OPEN_BANNER', 'Open TCP Port Banner', 0, 'DATA'],
+        ['TOR_EXIT_NODE', 'TOR Exit Node', 0, 'DESCRIPTOR'],
+        ['UDP_PORT_OPEN', 'Open UDP Port', 0, 'SUBENTITY'],
+        ['UDP_PORT_OPEN_INFO', 'Open UDP Port Information', 0, 'DATA'],
+        ['URL_ADBLOCKED_EXTERNAL',
+            'URL (AdBlocked External)', 0, 'DESCRIPTOR'],
+        ['URL_ADBLOCKED_INTERNAL',
+            'URL (AdBlocked Internal)', 0, 'DESCRIPTOR'],
+        ['URL_FORM', 'URL (Form)', 0, 'DESCRIPTOR'],
+        ['URL_FLASH', 'URL (Uses Flash)', 0, 'DESCRIPTOR'],
+        ['URL_JAVASCRIPT', 'URL (Uses Javascript)', 0, 'DESCRIPTOR'],
+        ['URL_WEB_FRAMEWORK', 'URL (Uses a Web Framework)', 0, 'DESCRIPTOR'],
+        ['URL_JAVA_APPLET', 'URL (Uses Java Applet)', 0, 'DESCRIPTOR'],
+        ['URL_STATIC', 'URL (Purely Static)', 0, 'DESCRIPTOR'],
+        ['URL_PASSWORD', 'URL (Accepts Passwords)', 0, 'DESCRIPTOR'],
+        ['URL_UPLOAD', 'URL (Accepts Uploads)', 0, 'DESCRIPTOR'],
+        ['URL_FORM_HISTORIC', 'Historic URL (Form)', 0, 'DESCRIPTOR'],
+        ['URL_FLASH_HISTORIC', 'Historic URL (Uses Flash)', 0, 'DESCRIPTOR'],
+        ['URL_JAVASCRIPT_HISTORIC',
+            'Historic URL (Uses Javascript)', 0, 'DESCRIPTOR'],
+        ['URL_WEB_FRAMEWORK_HISTORIC',
+            'Historic URL (Uses a Web Framework)', 0, 'DESCRIPTOR'],
+        ['URL_JAVA_APPLET_HISTORIC',
+            'Historic URL (Uses Java Applet)', 0, 'DESCRIPTOR'],
+        ['URL_STATIC_HISTORIC',
+            'Historic URL (Purely Static)', 0, 'DESCRIPTOR'],
+        ['URL_PASSWORD_HISTORIC',
+            'Historic URL (Accepts Passwords)', 0, 'DESCRIPTOR'],
+        ['URL_UPLOAD_HISTORIC',
+            'Historic URL (Accepts Uploads)', 0, 'DESCRIPTOR'],
+        ['USERNAME', 'Username', 0, 'ENTITY'],
+        ['VPN_HOST', 'VPN Host', 0, 'DESCRIPTOR'],
+        ['VULNERABILITY_DISCLOSURE',
+            'Vulnerability - Third Party Disclosure', 0, 'DESCRIPTOR'],
+        ['VULNERABILITY_CVE_CRITICAL', 'Vulnerability - CVE Critical', 0, 'DESCRIPTOR'],
+        ['VULNERABILITY_CVE_HIGH', 'Vulnerability - CVE High', 0, 'DESCRIPTOR'],
+        ['VULNERABILITY_CVE_MEDIUM', 'Vulnerability - CVE Medium', 0, 'DESCRIPTOR'],
+        ['VULNERABILITY_CVE_LOW', 'Vulnerability - CVE Low', 0, 'DESCRIPTOR'],
+        ['VULNERABILITY_GENERAL', 'Vulnerability - General', 0, 'DESCRIPTOR'],
+        ['WEB_ANALYTICS_ID', 'Web Analytics', 0, 'ENTITY'],
+        ['WEBSERVER_BANNER', 'Web Server', 0, 'DATA'],
+        ['WEBSERVER_HTTPHEADERS', 'HTTP Headers', 1, 'DATA'],
+        ['WEBSERVER_STRANGEHEADER', 'Non-Standard HTTP Header', 0, 'DATA'],
+        ['WEBSERVER_TECHNOLOGY', 'Web Technology', 0, 'DESCRIPTOR'],
+        ['WIFI_ACCESS_POINT', 'WiFi Access Point Nearby', 0, 'ENTITY'],
+        ['WIKIPEDIA_PAGE_EDIT', 'Wikipedia Page Edit', 0, 'DESCRIPTOR'],
+    ]
+
+    def __init__(self, *args, **kwargs) -> None:
+        """
+        Initialize database and create handle to the database file.
+        Supports both legacy positional and new dict-based signatures.
+        """
+        # Modular signature: SpiderFootDb(opts, init=True)
+        if len(args) >= 1 and isinstance(args[0], dict):
+            opts = args[0]
+            init = kwargs.get('init', False)
+        # Legacy signature: SpiderFootDb(dbhost, dbport, dbname, dbuser, dbpass, ...)
+        else:
+            # Accept at least 5 positional args for legacy
+            if len(args) < 5:
+                raise TypeError(
+                    "SpiderFootDb() missing required positional arguments:"
+                    " 'dbhost', 'dbport', 'dbname', 'dbuser', and 'dbpass'"
+                )
+            dbhost, dbport, dbname, dbuser, dbpass = args[:5]
+            opts = {
+                '__dbtype': 'sqlite',  # or 'postgresql' if you want to support both
+                '__database': dbname,
+                '__dbhost': dbhost,
+                '__dbport': dbport,
+                '__dbuser': dbuser,
+                '__dbpass': dbpass
+            }
+            # If more args, allow override of dbtype
+            if len(args) > 5:
+                opts['__dbtype'] = args[5]
+            init = kwargs.get('init', False)
+        self._core = DbCore(opts, init)
+        self.dbh = self._core.dbh
+        self.conn = self._core.conn
+        self.dbhLock = self._core.dbhLock
+        self.db_type = self._core.db_type
+        self._scan = ScanManager(self.dbh, self.conn, self.dbhLock, self.db_type)
+        self._event = EventManager(self.dbh, self.conn, self.dbhLock, self.db_type)
+        self._config = ConfigManager(self.dbh, self.conn, self.dbhLock, self.db_type)
+        self._correlation = CorrelationManager(self.dbh, self.conn, self.dbhLock, self.db_type)
+
+        # DbCore creates the schema but uses its own generic eventDetails.
+        # We must populate tbl_event_types with the REAL SpiderFoot event
+        # types (ROOT, DOMAIN_NAME, IP_ADDRESS, etc.) so that the foreign
+        # key constraint on tbl_scan_results.type is satisfiable.
+        self._populate_event_types()
+
+    @staticmethod
+    def build_config_from_env() -> dict:
+        """Build a database config dict from environment variables.
+
+        Prefers PostgreSQL (SF_POSTGRES_DSN) over SQLite.
+
+        Returns:
+            dict: Configuration suitable for SpiderFootDb(opts).
+        """
+        import os
+        pg_dsn = os.environ.get('SF_POSTGRES_DSN', '')
+        if pg_dsn:
+            return {
+                '__database': pg_dsn,
+                '__dbtype': 'postgresql',
+            }
+        from spiderfoot import SpiderFootHelpers
+        return {
+            '__database': f"{SpiderFootHelpers.dataPath()}/spiderfoot.db",
+            '__dbtype': 'sqlite',
+        }
+
+    def _populate_event_types(self) -> None:
+        """Upsert the canonical SpiderFoot event types into tbl_event_types.
+
+        DbCore populates generic placeholder rows; this replaces/extends them
+        with the real event types that modules actually emit (ROOT,
+        DOMAIN_NAME, IP_ADDRESS, INTERNET_NAME …).
+        """
+        from spiderfoot.db.db_utils import get_placeholder, get_upsert_clause
+
+        ph = get_placeholder(self.db_type)
+        upsert = get_upsert_clause(
+            self.db_type, 'tbl_event_types', ['event'],
+            ['event_descr', 'event_raw', 'event_type'],
+        )
+        qry = (f"INSERT INTO tbl_event_types "
+               f"(event, event_descr, event_raw, event_type) "
+               f"VALUES ({ph}, {ph}, {ph}, {ph}) {upsert}")
+
+        with self.dbhLock:
+            try:
+                for row in self.eventDetails:
+                    try:
+                        self.dbh.execute(qry, (row[0], row[1], row[2], row[3]))
+                        self.conn.commit()
+                    except Exception:
+                        try:
+                            self.conn.rollback()
+                        except Exception:
+                            pass
+                        continue
+            except Exception as e:
+                log.error("Failed to populate canonical event types: %s", e)
+                try:
+                    self.conn.rollback()
+                except Exception:
+                    pass
+
+    def _setup_managers(self) -> None:
+        """
+        Set up the various manager instances for interacting with the database.
+        """
+        self.managers['config'] = ConfigManager(self)
+        self.managers['event'] = EventManager(self)
+        self.managers['scan'] = ScanManager(self)
+        self.managers['correlation'] = CorrelationManager(self)
+        # self.managers['utils'] = DbUtils(self)  # Removed: DbUtils class no longer exists, use get_placeholder instead
+
+    def execute(self, sql: str, params=None):
+        """Execute a raw SQL query with proper placeholder handling.
+
+        This is a low-level method for direct SQL execution (e.g., API key management).
+        For standard operations, use the dedicated manager methods instead.
+        """
+        from spiderfoot.db.db_utils import get_placeholder
+        # Convert ? placeholders to %s for PostgreSQL
+        if self.db_type == 'postgresql' and '?' in sql:
+            sql = sql.replace('?', '%s')
+        with self.dbhLock:
+            try:
+                if params:
+                    self.dbh.execute(sql, params)
+                else:
+                    self.dbh.execute(sql)
+                self.conn.commit()
+                return self.dbh
+            except Exception as e:
+                try:
+                    self.conn.rollback()
+                except Exception:
+                    pass
+                raise
+
+    def close(self) -> None:
+        """
+        Close the database connection and release all resources.
+        """
+        import gc
+        try:
+            # Close all manager resources if they exist
+            if hasattr(self, 'managers') and isinstance(self.managers, dict):
+                for key, mgr in self.managers.items():
+                    if hasattr(mgr, 'close'):
+                        try:
+                            mgr.close()
+                        except Exception as e:
+                            log.debug("Cleanup failed: %s", e)
+                    self.managers[key] = None
+                self.managers = None
+            # Dereference all manager attributes
+            for attr in ['_event', '_scan', '_config', '_correlation', '_core']:
+                if hasattr(self, attr):
+                    setattr(self, attr, None)
+            if hasattr(self, 'cursor') and self.cursor:
+                try:
+                    self.cursor.close()
+                except Exception as e:
+                    log.debug("Cleanup failed: %s", e)
+                self.cursor = None
+            if hasattr(self, 'conn') and self.conn:
+                try:
+                    self.conn.close()
+                except Exception as e:
+                    log.debug("Cleanup failed: %s", e)
+                self.conn = None
+        except Exception as e:
+            log.debug("Cleanup failed: %s", e)
+        gc.collect()
+
+    # --- Back-end database operations ---
+    def vacuumDB(self) -> bool:
+        """Vacuum the database to reclaim space."""
+        return self._core.vacuumDB()
+    # --- SCAN INSTANCE MANAGEMENT ---
+    def scanInstanceCreate(self, *args, **kwargs) -> None:
+        """Create a new scan instance record."""
+        return self._scan.scanInstanceCreate(*args, **kwargs)
+    def scanInstanceGet(self, scan_id: str) -> list | None:
+        """Retrieve a scan instance by ID, or None if not found."""
+        result = self._scan.scanInstanceGet(scan_id)
+        if not result or result == []:
+            return None
+        return result[0]
+    def scanInstanceUpdate(self, *args, **kwargs) -> None:
+        """Update a scan instance record."""
+        return self._scan.scanInstanceUpdate(*args, **kwargs)
+    def scanInstanceDelete(self, *args, **kwargs) -> None:
+        """Delete a scan instance and all associated data."""
+        return self._scan.scanInstanceDelete(*args, **kwargs)
+    def scanInstanceList(self) -> list:
+        """List all scan instances."""
+        return self._scan.scanInstanceList()
+    def scanInstanceSet(self, instanceId: str, started: str = None, ended: str = None, status: str = None) -> bool:
+        """
+        Direct pass-through to the underlying _scan.scanInstanceSet method.
+
+        Args:
+            instanceId (str): The unique identifier of the scan instance.
+            started (int): The timestamp when the scan started.
+            ended (int): The timestamp when the scan ended.
+            status (str): The status of the scan instance.
+
+        Returns:
+            bool: True if the update was successful, False otherwise.
+
+        Note:
+            If additional validation or transformation is needed, implement it here for future maintainability.
+        """
+        return self._scan.scanInstanceSet(instanceId, started, ended, status)
+    # --- CONFIGURATION MANAGEMENT ---
+    def configSet(self, *args, **kwargs) -> None:
+        """Save configuration key-value pairs."""
+        return self._config.configSet(*args, **kwargs)
+    def configGet(self, *args, **kwargs) -> dict | None:
+        """Retrieve the current configuration."""
+        return self._config.configGet(*args, **kwargs)
+    def configGetAll(self, *args, **kwargs) -> dict:
+        """Retrieve all configuration values."""
+        return self._config.configGetAll(*args, **kwargs)
+    def scanConfigSet(self, scan_id: str, optMap: dict) -> None:
+        """Save scan-specific configuration."""
+        return self._config.scanConfigSet(scan_id, optMap)
+    def scanConfigGet(self, scan_id: str) -> dict | None:
+        """Retrieve scan-specific configuration."""
+        return self._config.scanConfigGet(scan_id)
+    def scanConfigDelete(self, *args: Any, **kwargs: Any) -> bool:
+        """Stub for API/test compatibility. Does nothing."""
+        return True
+    # --- EVENT TYPES ---
+    def eventTypes(self, *args, **kwargs) -> list:
+        """Return the list of known event types."""
+        return self._core.eventTypes(*args, **kwargs)
+    # --- EVENT MANAGEMENT ---
+    def eventAdd(self, *args, **kwargs) -> None:
+        """Add an event to the database."""
+        return self._event.eventAdd(*args, **kwargs)
+    def eventGet(self, *args, **kwargs) -> list | None:
+        """Retrieve events from the database."""
+        return self._event.eventGet(*args, **kwargs)
+    def scanEventStore(self, instanceId: str, sfEvent: Any, truncateSize: int = 0) -> None:
+        """Store a scan event in the database."""
+        return self._event.scanEventStore(instanceId, sfEvent, truncateSize)
+    # --- CORRELATION MANAGEMENT ---
+    def correlationAdd(self, *args, **kwargs) -> None:
+        """Add a correlation record to the database."""
+        return self._correlation.correlationAdd(*args, **kwargs)
+    def correlationGet(self, *args, **kwargs) -> list | None:
+        """Retrieve correlation records from the database."""
+        return self._correlation.correlationGet(*args, **kwargs)
+    # --- LOGGING ---
+    def scanLogEvent(self, instanceId: str, classification: str, message: str, component: str | None = None) -> None:
+        """Log a single scan event."""
+        return self._event.scanLogEvent(instanceId, classification, message, component)
+    def scanLogEvents(self, batch: list) -> bool:
+        """Log a batch of scan events."""
+        return self._event.scanLogEvents(batch)
+    def scanLogs(self, instanceId: str, limit: int = None, fromRowId: int = 0, reverse: bool = False) -> list:
+        """Retrieve log entries for a scan instance."""
+        return self._event.scanLogs(instanceId, limit, fromRowId, reverse)
+    def scanErrors(self, instanceId: str, limit: int = 0) -> list:
+        """Retrieve error log entries for a scan instance."""
+        return self._event.scanErrors(instanceId, limit)
+    # --- SEARCH ---
+    def search(self, criteria: dict, filterFp: bool = False) -> list:
+        """Search scan results by criteria."""
+        return self._event.search(criteria, filterFp)
+    # --- SCAN RESULT / EVENT FUNCTIONS ---
+    def scanResultEvent(
+        self, instanceId: str, eventType: str = 'ALL',
+        srcModule: str = None, data: list = None,
+        sourceId: list = None, correlationId: str = None,
+        filterFp: bool = False,
+    ) -> list:
+        """Retrieve scan result events, optionally filtered by type or module."""
+        return self._event.scanResultEvent(
+            instanceId, eventType, srcModule, data,
+            sourceId, correlationId, filterFp,
+        )
+    def scanResultEventUnique(self, instanceId: str, eventType: str = 'ALL', filterFp: bool = False) -> list:
+        """Retrieve unique scan result events."""
+        return self._event.scanResultEventUnique(instanceId, eventType, filterFp)
+    def scanResultSummary(self, instanceId: str, by: str = "type") -> list:
+        """Retrieve a summary of scan results."""
+        return self._event.scanResultSummary(instanceId, by)
+    def scanResultHistory(self, instanceId: str) -> list:
+        """Retrieve the scan result history."""
+        return self._event.scanResultHistory(instanceId)
+    def scanResultsUpdateFP(self, instanceId: str, resultHashes: list, fpFlag: int) -> bool:
+        """Update the false positive flag for scan results."""
+        return self._event.scanResultsUpdateFP(instanceId, resultHashes, fpFlag)
+
+    # --- SCAN ELEMENT METHODS ---
+    def scanElementSourcesDirect(self, instanceId: str, elementIdList: list) -> list:
+        """Retrieve direct source elements for the given element IDs."""
+        return self._event.scanElementSourcesDirect(instanceId, elementIdList)
+
+    def scanElementChildrenDirect(self, instanceId: str, elementIdList: list) -> list:
+        """Retrieve direct child elements for the given element IDs."""
+        return self._event.scanElementChildrenDirect(instanceId, elementIdList)
+
+    def scanElementSourcesAll(self, instanceId: str, childData: list) -> list:
+        """Retrieve all source elements recursively."""
+        return self._event.scanElementSourcesAll(instanceId, childData)
+
+    def scanElementChildrenAll(self, instanceId: str, parentIds: list) -> list:
+        """Retrieve all child elements recursively."""
+        return self._event.scanElementChildrenAll(instanceId, parentIds)
+    # --- CORRELATION RESULTS ---
+    def correlationResultCreate(
+        self, instanceId: str, event_hash: str,
+        ruleId: str, ruleName: str, ruleDescr: str,
+        ruleRisk: str, ruleYaml: str,
+        correlationTitle: str, eventHashes: list,
+    ) -> str:
+        """Create a correlation result record."""
+        return self._correlation.correlationResultCreate(
+            instanceId, event_hash, ruleId, ruleName, ruleDescr,
+            ruleRisk, ruleYaml, correlationTitle, eventHashes,
+        )
+    def scanCorrelationSummary(self, instanceId: str, by: str = "rule") -> list:
+        """Retrieve a summary of scan correlations."""
+        return self._correlation.scanCorrelationSummary(instanceId, by)
+    def scanCorrelationList(self, instanceId: str) -> list:
+        """List all correlation results for a scan instance."""
+        return self._correlation.scanCorrelationList(instanceId)
+
+    # --- Backend-aware schema generation ---
+    def get_schema_queries(self, db_type: str) -> list[str]:
+        """
+        Generate schema DDL queries for the specified backend.
+        Args:
+            db_type (str): 'sqlite' or 'postgresql'
+        Returns:
+            list: List of DDL queries for schema creation.
+        """
+        # SQLite and PostgreSQL type mapping
+        if db_type == 'sqlite':
+            int_type = 'INT'
+            bigint_type = 'INT'
+            text_type = 'TEXT'
+            varchar_type = 'VARCHAR'
+            pk_autoinc = 'INTEGER PRIMARY KEY AUTOINCREMENT'
+            pragma = ["PRAGMA journal_mode=WAL"]
+            if_not_exists = ''
+            index_if_not_exists = ''
+        elif db_type == 'postgresql':
+            int_type = 'INT'
+            bigint_type = 'BIGINT'
+            text_type = 'TEXT'
+            varchar_type = 'VARCHAR'
+            pk_autoinc = 'SERIAL PRIMARY KEY'
+            pragma = []
+            if_not_exists = 'IF NOT EXISTS '
+            index_if_not_exists = 'IF NOT EXISTS '
+        else:
+            raise ValueError(f"Unsupported db_type: {db_type}")
+
+        queries = []
+        queries.extend(pragma)
+        queries.append(f"CREATE TABLE {if_not_exists}tbl_event_types ( \
+            event       {varchar_type} NOT NULL PRIMARY KEY, \
+            event_descr {varchar_type} NOT NULL, \
+            event_raw   {int_type} NOT NULL DEFAULT 0, \
+            event_type  {varchar_type} NOT NULL \
+        )")
+        queries.append(f"CREATE TABLE {if_not_exists}tbl_config ( \
+            scope   {varchar_type} NOT NULL, \
+            opt     {varchar_type} NOT NULL, \
+            val     {varchar_type} NOT NULL, \
+            PRIMARY KEY (scope, opt) \
+        )")
+        queries.append(f"CREATE TABLE {if_not_exists}tbl_scan_instance ( \
+            guid        {varchar_type} NOT NULL PRIMARY KEY, \
+            name        {varchar_type} NOT NULL, \
+            seed_target {varchar_type} NOT NULL, \
+            created     {bigint_type} DEFAULT 0, \
+            started     {bigint_type} DEFAULT 0, \
+            ended       {bigint_type} DEFAULT 0, \
+            status      {varchar_type} NOT NULL \
+        )")
+        queries.append(f"CREATE TABLE {if_not_exists}tbl_scan_log ( \
+            scan_instance_id    {varchar_type} NOT NULL REFERENCES tbl_scan_instance(guid), \
+            generated           {bigint_type} NOT NULL, \
+            component           {varchar_type}, \
+            type                {varchar_type} NOT NULL, \
+            message             {varchar_type} \
+        )")
+        queries.append(f"CREATE TABLE {if_not_exists}tbl_scan_config ( \
+            scan_instance_id    {varchar_type} NOT NULL REFERENCES tbl_scan_instance(guid), \
+            component           {varchar_type} NOT NULL, \
+            opt                 {varchar_type} NOT NULL, \
+            val                 {varchar_type} NOT NULL, \
+            UNIQUE (scan_instance_id, component, opt) \
+        )")
+        queries.append(f"CREATE TABLE {if_not_exists}tbl_scan_results ( \
+            scan_instance_id    {varchar_type} NOT NULL REFERENCES tbl_scan_instance(guid), \
+            hash                {varchar_type} NOT NULL, \
+            type                {varchar_type} NOT NULL REFERENCES tbl_event_types(event), \
+            generated           {bigint_type} NOT NULL, \
+            confidence          {int_type} NOT NULL DEFAULT 100, \
+            visibility          {int_type} NOT NULL DEFAULT 100, \
+            risk                {int_type} NOT NULL DEFAULT 0, \
+            module              {varchar_type} NOT NULL, \
+            data                {text_type}, \
+            false_positive      {int_type} NOT NULL DEFAULT 0, \
+            source_event_hash  {varchar_type} DEFAULT 'ROOT' \
+        )")
+        queries.append(f"CREATE TABLE {if_not_exists}tbl_scan_correlation_results ( \
+            id                  {varchar_type} NOT NULL PRIMARY KEY, \
+            scan_instance_id    {varchar_type} NOT NULL REFERENCES tbl_scan_instance(guid), \
+            title               {varchar_type} NOT NULL, \
+            rule_risk           {varchar_type} NOT NULL, \
+            rule_id             {varchar_type} NOT NULL, \
+            rule_name           {varchar_type} NOT NULL, \
+            rule_descr          {varchar_type} NOT NULL, \
+            rule_logic          {varchar_type} NOT NULL \
+        )")
+        queries.append(f"CREATE TABLE {if_not_exists}tbl_scan_correlation_results_events ( \
+            correlation_id      {varchar_type} NOT NULL REFERENCES tbl_scan_correlation_results(id), \
+            event_hash          {varchar_type} NOT NULL REFERENCES tbl_scan_results(hash) \
+        )")
+        # Indexes
+        queries.append(f"CREATE INDEX {index_if_not_exists}idx_scan_results_id ON tbl_scan_results (scan_instance_id)")
+        queries.append(f"CREATE INDEX {index_if_not_exists}idx_scan_results_type ON tbl_scan_results (scan_instance_id, type)")
+        queries.append(f"CREATE INDEX {index_if_not_exists}idx_scan_results_hash ON tbl_scan_results (scan_instance_id, hash)")
+        queries.append(f"CREATE INDEX {index_if_not_exists}idx_scan_results_module ON tbl_scan_results(scan_instance_id, module)")
+        queries.append(f"CREATE INDEX {index_if_not_exists}idx_scan_results_srchash ON tbl_scan_results (scan_instance_id, source_event_hash)")
+        queries.append(f"CREATE INDEX {index_if_not_exists}idx_scan_logs ON tbl_scan_log (scan_instance_id)")
+        queries.append(f"CREATE INDEX {index_if_not_exists}idx_scan_correlation ON tbl_scan_correlation_results (scan_instance_id, id)")
+        queries.append(f"CREATE INDEX {index_if_not_exists}idx_scan_correlation_events ON tbl_scan_correlation_results_events (correlation_id)")
+        return queries
+
+    def create(self) -> None:
+        """
+        Create the database schema for the current backend.
+        """
+        queries = self.get_schema_queries(self.db_type)
+        with self.dbhLock:
+            for query in queries:
+                try:
+                    self.dbh.execute(query)
+                except Exception as e:
+                    # Ignore index/table exists errors, raise others
+                    if self.db_type == 'sqlite' and 'already exists' in str(e):
+                        continue
+                    if self.db_type == 'postgresql' and 'already exists' in str(e):
+                        continue
+                    raise
+            self.conn.commit()
+
+    def scanResultDelete(self, *args: Any, **kwargs: Any) -> bool:
+        """Stub for API/test compatibility. Does nothing."""
+        return True
+
+    # --- EVENT ENRICHMENT METHODS ---
+    def get_sources(self, scan_id: str, event_hash: str) -> list:
+        """
+        Get source events for a given event hash.
+
+        Args:
+            scan_id: The scan instance ID
+            event_hash: The event hash to get sources for
+
+        Returns:
+            list: List of source event dictionaries
+        """
+        return self._event.get_sources(scan_id, event_hash)
+
+    def get_entities(self, scan_id: str, event_hash: str) -> list:
+        """
+        Get entity events for a given event hash.
+
+        Args:
+            scan_id: The scan instance ID
+            event_hash: The event hash to get entities for
+
+        Returns:
+            list: List of entity event dictionaries
+        """
+        return self._event.get_entities(scan_id, event_hash)
+
+    def get_children(self, scan_id: str, event_hash: str) -> list:
+        """
+        Get child events for a given event hash.
+
+        Args:
+            scan_id: The scan instance ID
+            event_hash: The event hash to get children for
+
+        Returns:
+            list: List of child event dictionaries
+        """
+        # Use existing scanElementChildrenAll method to get children
+        # Return them in the format expected by the enricher
+        children_data = self.scanElementChildrenAll(scan_id, [event_hash])
+        if not children_data:
+            return []
+
+        # Convert to the expected format
+        children = []
+        for event in children_data:
+            children.append({
+                'hash': event[8],  # hash
+                'type': event[4],  # type
+                'data': event[1],  # data
+                'module': event[3],  # module
+                'generated': event[0],  # generated
+                'source_event_hash': event[9]  # source_event_hash
+            })
+        return children

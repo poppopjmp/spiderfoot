@@ -1,9 +1,14 @@
+from __future__ import annotations
+
+"""Tests for sfp_4chan module."""
+
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch, MagicMock
 from modules.sfp_4chan import sfp_4chan
 from spiderfoot import SpiderFootEvent
 
-class TestSfp4chanIntegration(unittest.TestCase):
+class TestSfp4chanIntegration(TestModuleBase):
     def setUp(self):
         self.plugin = sfp_4chan()
         self.plugin.setup(MagicMock(), {

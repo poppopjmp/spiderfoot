@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: opennic."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:        sfp_opnenic
@@ -13,10 +17,13 @@
 
 import dns.resolver
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_opennic(SpiderFootPlugin):
+class sfp_opennic(SpiderFootModernPlugin):
+
+    """Resolves host names in the OpenNIC alternative DNS system."""
 
     meta = {
         'name': "OpenNIC DNS",
@@ -46,14 +53,12 @@ class sfp_opennic(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             "INTERNET_NAME",
             "INTERNET_NAME_UNRESOLVED",
@@ -61,7 +66,8 @@ class sfp_opennic(SpiderFootPlugin):
             "AFFILIATE_INTERNET_NAME_UNRESOLVED",
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "IP_ADDRESS",
             "IPV6_ADDRESS",
@@ -69,7 +75,8 @@ class sfp_opennic(SpiderFootPlugin):
             "AFFILIATE_IPV6_ADDRESS",
         ]
 
-    def queryOpenNIC(self, qaddr):
+    def queryOpenNIC(self, qaddr: str):
+        """Query OpenNIC."""
         res = dns.resolver.Resolver()
         # https://servers.opennicproject.org/
         res.nameservers = [
@@ -82,12 +89,12 @@ class sfp_opennic(SpiderFootPlugin):
 
         try:
             return res.resolve(qaddr)
-        except Exception:
+        except Exception as e:
             self.debug(f"Unable to resolve {qaddr}")
 
         return None
 
-    def tlds(self):
+    def tlds(self) -> list:
         """Valid OpenNIC top-level domains.
 
         Returns:
@@ -126,7 +133,8 @@ class sfp_opennic(SpiderFootPlugin):
             'uu',
         ]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 

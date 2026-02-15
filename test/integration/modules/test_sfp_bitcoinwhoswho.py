@@ -1,12 +1,27 @@
+from __future__ import annotations
+
+"""Tests for sfp_bitcoinwhoswho module."""
+
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 
 from modules.sfp_bitcoinwhoswho import sfp_bitcoinwhoswho
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
-class TestModuleIntegrationBitcoinwhoswho(unittest.TestCase):
+class TestModuleIntegrationBitcoinwhoswho(TestModuleBase):
 
+
+    def setUp(self):
+        """Enhanced setUp with ThreadReaper module tracking."""
+        super().setUp()
+        # ThreadReaper infrastructure is automatically initialized
+        
+    def tearDown(self):
+        """Enhanced tearDown with ThreadReaper cleanup."""
+        # ThreadReaper infrastructure automatically cleans up
+        super().tearDown()
     def test_handleEvent(self):
         sf = SpiderFoot(self.default_options)
 

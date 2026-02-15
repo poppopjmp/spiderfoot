@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""Tests for correlation_engine_integration module."""
+
 import pytest
 from spiderfoot import SpiderFootDb
 from spiderfoot.correlation.rule_executor import RuleExecutor

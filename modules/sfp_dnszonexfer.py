@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: dnszonexfer."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_dnszonexfer
@@ -15,11 +19,12 @@ import re
 import dns.query
 import dns.zone
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_dnszonexfer(SpiderFootPlugin):
-
+class sfp_dnszonexfer(SpiderFootModernPlugin):
+    """SpiderFoot plugin for attempting a DNS zone transfer."""
     meta = {
         'name': "DNS Zone Transfer",
         'summary': "Attempts to perform a full DNS zone transfer.",
@@ -38,21 +43,21 @@ class sfp_dnszonexfer(SpiderFootPlugin):
 
     events = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.events = self.tempStorage()
         self.__dataSource__ = "DNS"
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ['PROVIDER_DNS']
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["RAW_DNS_RECORDS", "INTERNET_NAME"]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -79,7 +84,7 @@ class sfp_dnszonexfer(SpiderFootPlugin):
         # when attempting to resolve the name server during
         # the zone transfer.
         if not self.sf.validIP(eventData) and not self.sf.validIP6(eventData):
-            nsips = self.sf.resolveHost(eventData)
+            nsips = self.resolve_host(eventData)
             if not nsips:
                 return
 

@@ -1,13 +1,17 @@
+from __future__ import annotations
+
+"""Tests for sfp_subdomain_takeover module."""
+
 import pytest
 import unittest
 
 from modules.sfp_subdomain_takeover import sfp_subdomain_takeover
-from sflib import SpiderFoot
-from test.unit.utils.test_base import SpiderFootTestBase
+from spiderfoot.sflib import SpiderFoot
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModuleSubdomain_takeover(SpiderFootTestBase):
+class TestModuleSubdomain_takeover(TestModuleBase):
 
     def test_opts(self):
         module = sfp_subdomain_takeover()

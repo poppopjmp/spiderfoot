@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: abusech."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:        sfp_abusech
@@ -14,11 +18,12 @@
 import requests
 from netaddr import IPAddress, IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_abusech(SpiderFootPlugin):
-
+class sfp_abusech(SpiderFootModernPlugin):
+    """SpiderFoot plugin to check if a host/domain, IP address or netblock is malicious according to Abuse.ch."""
     meta = {
         'name': "abuse.ch",
         'summary': "Check if a host/domain, IP address or netblock is malicious according to Abuse.ch.",
@@ -80,16 +85,14 @@ class sfp_abusech(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             "INTERNET_NAME",
             "IP_ADDRESS",
@@ -101,7 +104,8 @@ class sfp_abusech(SpiderFootPlugin):
         ]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "MALICIOUS_IPADDR",
             "MALICIOUS_INTERNET_NAME",
@@ -112,7 +116,8 @@ class sfp_abusech(SpiderFootPlugin):
             "MALICIOUS_NETBLOCK"
         ]
 
-    def queryFeodoTrackerBlacklist(self, target, targetType):
+    def queryFeodoTrackerBlacklist(self, target: str, targetType: str) -> bool:
+        """Query FeodoTrackerBlacklist."""
         blacklist = self.retrieveFeodoTrackerBlacklist()
 
         if not blacklist:
@@ -133,13 +138,14 @@ class sfp_abusech(SpiderFootPlugin):
 
         return False
 
-    def retrieveFeodoTrackerBlacklist(self):
-        blacklist = self.sf.cacheGet('abusech_feodo', 24)
+    def retrieveFeodoTrackerBlacklist(self) -> list | None:
+        """RetrieveFeodoTrackerBlacklist."""
+        blacklist = self.cache_get('abusech_feodo', 24)
 
         if blacklist is not None:
             return self.parseFeodoTrackerBlacklist(blacklist)
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             "https://feodotracker.abuse.ch/downloads/ipblocklist.txt",
             timeout=self.opts['_fetchtimeout'],
             useragent=self.opts['_useragent'],
@@ -156,11 +162,11 @@ class sfp_abusech(SpiderFootPlugin):
             self.errorState = True
             return None
 
-        self.sf.cachePut("abusech_feodo", res['content'])
+        self.cache_put("abusech_feodo", res['content'])
 
         return self.parseFeodoTrackerBlacklist(res['content'])
 
-    def parseFeodoTrackerBlacklist(self, blacklist):
+    def parseFeodoTrackerBlacklist(self, blacklist: str) -> list:
         """Parse plaintext blacklist.
 
         Args:
@@ -186,7 +192,8 @@ class sfp_abusech(SpiderFootPlugin):
 
         return ips
 
-    def querySslBlacklist(self, target, targetType):
+    def querySslBlacklist(self, target: str, targetType: str) -> bool:
+        """Query SslBlacklist."""
         blacklist = self.retrieveSslBlacklist()
 
         if not blacklist:
@@ -207,13 +214,14 @@ class sfp_abusech(SpiderFootPlugin):
 
         return False
 
-    def retrieveSslBlacklist(self):
-        blacklist = self.sf.cacheGet('abusech_ssl', 24)
+    def retrieveSslBlacklist(self) -> list | None:
+        """RetrieveSslBlacklist."""
+        blacklist = self.cache_get('abusech_ssl', 24)
 
         if blacklist is not None:
             return self.parseSslBlacklist(blacklist)
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             "https://sslbl.abuse.ch/blacklist/sslipblacklist.csv",
             timeout=self.opts['_fetchtimeout'],
             useragent=self.opts['_useragent'],
@@ -230,11 +238,11 @@ class sfp_abusech(SpiderFootPlugin):
             self.errorState = True
             return None
 
-        self.sf.cachePut("abusech_ssl", res['content'])
+        self.cache_put("abusech_ssl", res['content'])
 
         return self.parseSslBlacklist(res['content'])
 
-    def parseSslBlacklist(self, blacklist):
+    def parseSslBlacklist(self, blacklist: str) -> list:
         """Parse plaintext blacklist.
 
         Args:
@@ -264,7 +272,8 @@ class sfp_abusech(SpiderFootPlugin):
 
         return ips
 
-    def queryUrlHausBlacklist(self, target, targetType):
+    def queryUrlHausBlacklist(self, target: str, targetType: str) -> bool:
+        """Query UrlHausBlacklist."""
         blacklist = self.retrieveUrlHausBlacklist()
 
         if not blacklist:
@@ -290,13 +299,14 @@ class sfp_abusech(SpiderFootPlugin):
 
         return False
 
-    def retrieveUrlHausBlacklist(self):
-        blacklist = self.sf.cacheGet('abusech_urlhaus', 24)
+    def retrieveUrlHausBlacklist(self) -> list | None:
+        """RetrieveUrlHausBlacklist."""
+        blacklist = self.cache_get('abusech_urlhaus', 24)
 
         if blacklist is not None:
             return self.parseUrlHausBlacklist(blacklist)
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             "https://urlhaus.abuse.ch/downloads/csv_recent/",
             timeout=self.opts['_fetchtimeout'],
             useragent=self.opts['_useragent'],
@@ -313,11 +323,11 @@ class sfp_abusech(SpiderFootPlugin):
             self.errorState = True
             return None
 
-        self.sf.cachePut("abusech_urlhaus", res['content'])
+        self.cache_put("abusech_urlhaus", res['content'])
 
         return self.parseUrlHausBlacklist(res['content'])
 
-    def parseUrlHausBlacklist(self, blacklist):
+    def parseUrlHausBlacklist(self, blacklist: str) -> list:
         """Parse plaintext blacklist.
 
         Args:
@@ -350,7 +360,8 @@ class sfp_abusech(SpiderFootPlugin):
 
         return hosts
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: binaryedge."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_binaryedge
@@ -15,10 +19,12 @@ import time
 
 from netaddr import IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_binaryedge(SpiderFootPlugin):
+class sfp_binaryedge(SpiderFootModernPlugin):
+    """SpiderFoot plugin to query BinaryEdge API."""
 
     meta = {
         'name': "BinaryEdge",
@@ -84,18 +90,16 @@ class sfp_binaryedge(SpiderFootPlugin):
     reportedhosts = None
     checkedips = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.reportedhosts = self.tempStorage()
         self.checkedips = self.tempStorage()
         self.cohostcount = 0
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             "IP_ADDRESS",
             "DOMAIN_NAME",
@@ -104,7 +108,8 @@ class sfp_binaryedge(SpiderFootPlugin):
             "NETBLOCK_MEMBER"
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "INTERNET_NAME",
             "DOMAIN_NAME",
@@ -122,7 +127,8 @@ class sfp_binaryedge(SpiderFootPlugin):
             "MALICIOUS_IPADDR"
         ]
 
-    def query(self, qry, querytype, page=1):
+    def query(self, qry: str, querytype: str, page: int = 1) -> list | None:
+        """Query the data source."""
         retarr = list()
 
         if self.errorState:
@@ -148,7 +154,7 @@ class sfp_binaryedge(SpiderFootPlugin):
             'X-Key': self.opts['binaryedge_api_key']
         }
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://api.binaryedge.io/v2/query/{queryurl}/{qry}?page={page}",
             timeout=self.opts['_fetchtimeout'],
             useragent="SpiderFoot",
@@ -186,7 +192,8 @@ class sfp_binaryedge(SpiderFootPlugin):
 
         return retarr
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -273,7 +280,7 @@ class sfp_binaryedge(SpiderFootPlugin):
                         continue
 
                     if self.getTarget().matches(host, includeParents=True):
-                        if self.opts['verify'] and not self.sf.resolveHost(host) and not self.sf.resolveHost6(host):
+                        if self.opts['verify'] and not self.resolve_host(host) and not self.resolve_host6(host):
                             continue
 
                         evt = SpiderFootEvent(
@@ -311,7 +318,7 @@ class sfp_binaryedge(SpiderFootPlugin):
 
                     self.reportedhosts[rec] = True
 
-                    if self.opts['verify'] and not self.sf.resolveHost(rec) and not self.sf.resolveHost6(rec):
+                    if self.opts['verify'] and not self.resolve_host(rec) and not self.resolve_host6(rec):
                         self.debug(f"Couldn't resolve {rec}, so skipping.")
                         continue
 
@@ -463,7 +470,7 @@ class sfp_binaryedge(SpiderFootPlugin):
                                 # We don't want the content after HTTP banners
                                 banner = banner.split('\\r\\n\\r\\n')[0]
                                 banner = banner.replace("\\r\\n", "\n")
-                        except Exception:
+                        except Exception as e:
                             self.debug("No banner information found.")
                             continue
 

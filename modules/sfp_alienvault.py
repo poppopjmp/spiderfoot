@@ -10,6 +10,10 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: alienvault."""
+
 import json
 import time
 import urllib.error
@@ -19,11 +23,12 @@ from datetime import datetime
 
 from netaddr import IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_alienvault(SpiderFootPlugin):
-
+class sfp_alienvault(SpiderFootModernPlugin):
+    """SpiderFoot plug-in to obtain information from AlienVault Open Threat Exchange (OTX)."""
     meta = {
         'name': "AlienVault OTX",
         'summary': "Obtain information from AlienVault Open Threat Exchange (OTX)",
@@ -103,17 +108,15 @@ class sfp_alienvault(SpiderFootPlugin):
     errorState = False
     cohostcount = 0
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.cohostcount = 0
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             "INTERNET_NAME",
             "IP_ADDRESS",
@@ -129,7 +132,8 @@ class sfp_alienvault(SpiderFootPlugin):
         ]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "IP_ADDRESS",
             "IPV6_ADDRESS",
@@ -145,7 +149,8 @@ class sfp_alienvault(SpiderFootPlugin):
         ]
 
     # Parse API response
-    def parseApiResponse(self, res: dict):
+    def parseApiResponse(self, res: dict) -> dict | None:
+        """Parse ApiResponse."""
         if not res:
             self.error("No response from AlienVault OTX.")
             return None
@@ -173,7 +178,8 @@ class sfp_alienvault(SpiderFootPlugin):
 
         return None
 
-    def queryReputation(self, qry):
+    def queryReputation(self, qry: str) -> dict | None:
+        """Query Reputation."""
         if ":" in qry:
             target_type = "IPv6"
         elif self.sf.validIP(qry):
@@ -187,7 +193,7 @@ class sfp_alienvault(SpiderFootPlugin):
             'X-OTX-API-KEY': self.opts['api_key']
         }
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://otx.alienvault.com/api/v1/indicators/{target_type}/{qry}/reputation",
             timeout=self.opts['_fetchtimeout'],
             useragent="SpiderFoot",
@@ -195,7 +201,8 @@ class sfp_alienvault(SpiderFootPlugin):
 
         return self.parseApiResponse(res)
 
-    def queryPassiveDns(self, qry):
+    def queryPassiveDns(self, qry: str) -> dict | None:
+        """Query PassiveDns."""
         if ":" in qry:
             target_type = "IPv6"
         elif self.sf.validIP(qry):
@@ -209,7 +216,7 @@ class sfp_alienvault(SpiderFootPlugin):
             'X-OTX-API-KEY': self.opts['api_key']
         }
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://otx.alienvault.com/api/v1/indicators/{target_type}/{qry}/passive_dns",
             timeout=self.opts['_fetchtimeout'],
             useragent="SpiderFoot",
@@ -217,7 +224,8 @@ class sfp_alienvault(SpiderFootPlugin):
 
         return self.parseApiResponse(res)
 
-    def queryDomainUrlList(self, qry, page=1, per_page=50):
+    def queryDomainUrlList(self, qry: str, page: int = 1, per_page: int = 50) -> dict:
+        """Query DomainUrlList."""
         params = urllib.parse.urlencode({
             'page': page,
             'limit': per_page
@@ -227,7 +235,7 @@ class sfp_alienvault(SpiderFootPlugin):
             'Accept': 'application/json',
             'X-OTX-API-KEY': self.opts['api_key']
         }
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://otx.alienvault.com/api/v1/indicators/domain/{qry}/url_list?{params}",
             timeout=self.opts['_fetchtimeout'],
             useragent="SpiderFoot",
@@ -235,7 +243,8 @@ class sfp_alienvault(SpiderFootPlugin):
 
         return self.parseApiResponse(res)
 
-    def queryHostnameUrlList(self, qry, page=1, per_page=50):
+    def queryHostnameUrlList(self, qry: str, page: int = 1, per_page: int = 50) -> dict:
+        """Query HostnameUrlList."""
         params = urllib.parse.urlencode({
             'page': page,
             'limit': per_page
@@ -245,7 +254,7 @@ class sfp_alienvault(SpiderFootPlugin):
             'Accept': 'application/json',
             'X-OTX-API-KEY': self.opts['api_key']
         }
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://otx.alienvault.com/api/v1/indicators/hostname/{qry}/url_list?{params}",
             timeout=self.opts['_fetchtimeout'],
             useragent="SpiderFoot",
@@ -254,7 +263,8 @@ class sfp_alienvault(SpiderFootPlugin):
         return self.parseApiResponse(res)
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -400,7 +410,7 @@ class sfp_alienvault(SpiderFootPlugin):
 
                         if self.getTarget().matches(host, includeParents=True):
                             evtType = "INTERNET_NAME"
-                            if not self.sf.resolveHost(host) and not self.sf.resolveHost6(host):
+                            if not self.resolve_host(host) and not self.resolve_host6(host):
                                 evtType = "INTERNET_NAME_UNRESOVLED"
                             evt = SpiderFootEvent(
                                 evtType, host, self.__class__.__name__, event)
@@ -419,7 +429,7 @@ class sfp_alienvault(SpiderFootPlugin):
                                     self.debug(
                                         f"Passive DNS record {host} found for {eventData} is too old ({last_dt}), skipping.")
                                     continue
-                            except Exception:
+                            except Exception as e:
                                 self.info(
                                     "Could not parse date from AlienVault data, so ignoring cohost_age_limit_days")
 
@@ -493,7 +503,7 @@ class sfp_alienvault(SpiderFootPlugin):
                                 self.debug(
                                     f"Reputation record found for {addr} is too old ({created_dt}), skipping.")
                                 continue
-                        except Exception:
+                        except Exception as e:
                             self.info(
                                 "Could not parse date from AlienVault data, so ignoring reputation_age_limit_days")
 

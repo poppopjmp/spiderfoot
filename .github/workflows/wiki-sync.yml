@@ -3,12 +3,12 @@
 name: Sync Documentation to GitHub Wiki
 on:
   push:
-    branches: [master, "docs*"]
+    branches: [master]
     paths:
       - 'documentation/**'
       - '.github/workflows/wiki-sync.yml'          
   pull_request:
-    branches: [master, "docs*"]
+    branches: [master]
     paths:
       - 'documentation/**'
       - '.github/workflows/wiki-sync.yml'
@@ -44,6 +44,10 @@ jobs:
         run: |
           cp -rf documentation/ wiki/
           if [ -f wiki/README.md ]; then mv wiki/README.md wiki/Home.md; fi
+
+      - name: Strip .md extensions from links in wiki
+        run: |
+          python3 scripts/strip_md_links.py wiki
 
       - name: Commit and push changes to Wiki
         env:

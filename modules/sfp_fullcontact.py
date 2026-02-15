@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: fullcontact."""
+
 # -------------------------------------------------------------------------------
 # Name:        sfp_fullcontact
 # Purpose:     Gather domain and e-mail information from FullContact.com API.
@@ -13,11 +17,13 @@ import json
 import time
 from datetime import datetime
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_fullcontact(SpiderFootPlugin):
-
+class sfp_fullcontact(SpiderFootModernPlugin):
+    """SpiderFoot plugin to gather domain and e-mail information from FullContact.com API."""
+    __name__ = "sfp_fullcontact"
     meta = {
         'name': "FullContact",
         'summary': "Gather domain and e-mail information from FullContact.com API.",
@@ -66,18 +72,17 @@ class sfp_fullcontact(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME", "EMAILADDR"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "EMAILADDR",
             "EMAILADDR_GENERIC",
@@ -87,12 +92,13 @@ class sfp_fullcontact(SpiderFootPlugin):
             "PHYSICAL_ADDRESS"
         ]
 
-    def query(self, url, data, failcount=0):
+    def query(self, url: str, data: str, failcount: int = 0):
+        """Query the data source."""
         headers = {
             'Authorization': f"Bearer {self.opts['api_key']}"
         }
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             url,
             timeout=self.opts['_fetchtimeout'],
             useragent="SpiderFoot",
@@ -136,7 +142,8 @@ class sfp_fullcontact(SpiderFootPlugin):
 
         return ret
 
-    def queryCompany(self, domain):
+    def queryCompany(self, domain: str) -> dict | None:
+        """Query Company."""
         url = "https://api.fullcontact.com/v3/company.enrich"
 
         if not domain:
@@ -144,7 +151,8 @@ class sfp_fullcontact(SpiderFootPlugin):
 
         return self.query(url, {"domain": domain})
 
-    def queryPersonByEmail(self, email):
+    def queryPersonByEmail(self, email: str) -> dict | None:
+        """Query PersonByEmail."""
         url = "https://api.fullcontact.com/v3/person.enrich"
 
         if not email:
@@ -152,7 +160,8 @@ class sfp_fullcontact(SpiderFootPlugin):
 
         return self.query(url, {'email': email})
 
-    def queryPersonByName(self, name):
+    def queryPersonByName(self, name: str) -> dict | None:
+        """Query PersonByName."""
         url = "https://api.fullcontact.com/v3/person.enrich"
 
         if not name:
@@ -160,7 +169,8 @@ class sfp_fullcontact(SpiderFootPlugin):
 
         return self.query(url, {'fullName': name})
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

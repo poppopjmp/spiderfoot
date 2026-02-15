@@ -1,8 +1,14 @@
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: discord."""
+
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 import json
 import requests
 
-class sfp_discord(SpiderFootPlugin):
+class sfp_discord(SpiderFootModernPlugin):
+    """Discord Channel Monitor"""
     meta = {
         'name': "Discord Channel Monitor",
         'summary': "Monitors specified Discord channels for new messages and emits events.",
@@ -34,8 +40,9 @@ class sfp_discord(SpiderFootPlugin):
         "max_messages": "Maximum number of messages to fetch per channel."
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
         # Option validation
         if not self.opts.get("bot_token"):
@@ -48,13 +55,15 @@ class sfp_discord(SpiderFootPlugin):
             self.error("max_messages must be a positive integer.")
             raise ValueError("max_messages must be a positive integer.")
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["ROOT"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["DISCORD_MESSAGE"]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """
         Handle event: fetch Discord messages for each channel and emit DISCORD_MESSAGE events.
         """
@@ -103,5 +112,6 @@ class sfp_discord(SpiderFootPlugin):
                 )
                 self.notifyListeners(evt)
 
-    def shutdown(self):
+    def shutdown(self) -> None:
+        """Shutdown."""
         self.debug("[shutdown] Shutting down Discord module.")

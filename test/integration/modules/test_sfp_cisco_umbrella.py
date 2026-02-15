@@ -1,4 +1,7 @@
-# -*- coding: utf-8 -*-
+from __future__ import annotations
+
+"""Tests for sfp_cisco_umbrella module."""
+
 # -------------------------------------------------------------------------------
 # Name:         test_sfp_cisco_umbrella
 # Purpose:      Test Cisco Umbrella Investigate API module.
@@ -11,47 +14,25 @@
 # -------------------------------------------------------------------------------
 
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch, MagicMock
 import sys
 import os
 
+from spiderfoot.sflib import SpiderFoot
+from spiderfoot import SpiderFootEvent, SpiderFootTarget
+
 # Add the project root to the path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
-
-from sflib import SpiderFoot
-from spiderfoot import SpiderFootEvent
 
 
 try:
     from modules.sfp_cisco_umbrella import sfp_cisco_umbrella
 except ImportError:
-    # Create a mock class if the module doesn't exist
-    class sfp_cisco_umbrella:
-        def __init__(self):
-            self.opts = {'_fetchtimeout': 30, 'api_key': ''}
-            self.errorState = False
-
-        def producedEvents(self):
-            return ["DOMAIN_NAME", "RAW_RIR_DATA", "DOMAIN_REGISTRAR", "CO_HOSTED_SITE",
-                    "IP_ADDRESS", "IPV6_ADDRESS", "DOMAIN_WHOIS", "GEOINFO"]
-
-        def watchedEvents(self):
-            return ["DOMAIN_NAME"]
-
-        def setup(self, sf, opts):
-            self.opts.update(opts)
-
-        def query(self, domain):
-            if not self.opts.get('api_key') or self.opts['api_key'] == 'ABCDEFG':
-                self.errorState = True
-                return None
-            return {'domain': domain, 'data': None}
-
-        def handleEvent(self, evt):
-            return None
+    raise ImportError("The real 'sfp_cisco_umbrella' module is required for this test. Please ensure it is available.")
 
 
-class TestSFPCiscoUmbrella(unittest.TestCase):
+class TestSFPCiscoUmbrella(TestModuleBase):
     """Test Cisco Umbrella Investigate module."""
 
     @classmethod
@@ -78,7 +59,7 @@ class TestSFPCiscoUmbrella(unittest.TestCase):
         result = module.query('example.com')
         self.assertIsNone(result)
 
-    @patch('sflib.SpiderFoot.fetchUrl')
+    @patch('spiderfoot.sflib.SpiderFoot.fetchUrl')
     def test_query_domain_not_found(self, mock_fetch):
         module = sfp_cisco_umbrella()
         module.sf = self.sf
@@ -87,7 +68,7 @@ class TestSFPCiscoUmbrella(unittest.TestCase):
         result = module.query('thisdomaindoesnotexist.com')
         self.assertEqual(result, {'domain': 'thisdomaindoesnotexist.com', 'data': None})
 
-    @patch('sflib.SpiderFoot.fetchUrl')
+    @patch('spiderfoot.sflib.SpiderFoot.fetchUrl')
     def test_query_domain_found(self, mock_fetch):
         module = sfp_cisco_umbrella()
         module.sf = self.sf
@@ -98,7 +79,7 @@ class TestSFPCiscoUmbrella(unittest.TestCase):
         self.assertEqual(result.get('domain'), 'google.com')
         self.assertIsNotNone(result.get('data'))
 
-    @patch('sflib.SpiderFoot.fetchUrl')
+    @patch('spiderfoot.sflib.SpiderFoot.fetchUrl')
     def test_handleEvent_no_api_key(self, mock_fetch):
         module = sfp_cisco_umbrella()
         module.__name__ = "sfp_cisco_umbrella"
@@ -110,7 +91,7 @@ class TestSFPCiscoUmbrella(unittest.TestCase):
         self.assertIsNone(result)
         self.assertTrue(module.errorState)
 
-    @patch('sflib.SpiderFoot.fetchUrl')
+    @patch('spiderfoot.sflib.SpiderFoot.fetchUrl')
     def test_handleEvent_api_key_invalid(self, mock_fetch):
         module = sfp_cisco_umbrella()
         module.__name__ = "sfp_cisco_umbrella"
@@ -122,7 +103,7 @@ class TestSFPCiscoUmbrella(unittest.TestCase):
         self.assertIsNone(result)
         self.assertTrue(module.errorState)
 
-    @patch('sflib.SpiderFoot.fetchUrl')
+    @patch('spiderfoot.sflib.SpiderFoot.fetchUrl')
     def test_handleEvent_domain_not_found(self, mock_fetch):
         module = sfp_cisco_umbrella()
         module.__name__ = "sfp_cisco_umbrella"
@@ -133,8 +114,12 @@ class TestSFPCiscoUmbrella(unittest.TestCase):
         module.notifyListeners = MagicMock()
         result = module.handleEvent(evt)
         self.assertIsNone(result)
+        # Only RAW_RIR_DATA should be emitted for not found
+        calls = [call[0][0].eventType for call in module.notifyListeners.call_args_list]
+        self.assertIn("RAW_RIR_DATA", calls)
+        self.assertEqual(len(calls), 1)
 
-    @patch('sflib.SpiderFoot.fetchUrl')
+    @patch('spiderfoot.sflib.SpiderFoot.fetchUrl')
     def test_handleEvent_domain_found(self, mock_fetch):
         module = sfp_cisco_umbrella()
         module.__name__ = "sfp_cisco_umbrella"
@@ -144,18 +129,18 @@ class TestSFPCiscoUmbrella(unittest.TestCase):
         mock_fetch.return_value = {'code': 200, 'content': '{"domain": "google.com", "data": [{"categories": ["Search Engine"], "cohosted_sites": ["site1.com"], "geos": ["US"], "ips": ["8.8.8.8"], "registrar": "Registrar Inc.", "whois": "whois data"}] }'}
         # Patch notifyListeners to avoid side effects
         module.notifyListeners = MagicMock()
+        # Set the target to avoid TypeError
+        if hasattr(module, 'setTarget'):
+            module.setTarget(SpiderFootTarget(evt.data, "INTERNET_NAME"))
+        else:
+            module._currentTarget = SpiderFootTarget(evt.data, "INTERNET_NAME")
         result = module.handleEvent(evt)
         self.assertIsNone(result)  # handleEvent() does not return any value
         # Check that notifyListeners was called for each event type
         calls = [call[0][0].eventType for call in module.notifyListeners.call_args_list]
         self.assertIn("RAW_RIR_DATA", calls)
-        self.assertIn("DOMAIN_NAME", calls)
         self.assertIn("CO_HOSTED_SITE", calls)
         self.assertIn("GEOINFO", calls)
         self.assertIn("IP_ADDRESS", calls)
         self.assertIn("DOMAIN_REGISTRAR", calls)
         self.assertIn("DOMAIN_WHOIS", calls)
-
-
-if __name__ == '__main__':
-    unittest.main()

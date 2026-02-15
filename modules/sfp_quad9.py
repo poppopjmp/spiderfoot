@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: quad9."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_quad9
@@ -13,10 +17,13 @@
 
 import dns.resolver
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_quad9(SpiderFootPlugin):
+class sfp_quad9(SpiderFootModernPlugin):
+
+    """Check if a host would be blocked by Quad9 DNS."""
 
     meta = {
         'name': "Quad9",
@@ -50,21 +57,20 @@ class sfp_quad9(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             "INTERNET_NAME",
             "AFFILIATE_INTERNET_NAME",
             "CO_HOSTED_SITE"
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "BLACKLISTED_INTERNET_NAME",
             "BLACKLISTED_AFFILIATE_INTERNET_NAME",
@@ -74,14 +80,15 @@ class sfp_quad9(SpiderFootPlugin):
             "MALICIOUS_COHOST",
         ]
 
-    def query(self, qry):
+    def query(self, qry: str) -> bool:
+        """Query the data source."""
         res = dns.resolver.Resolver()
         res.nameservers = ["9.9.9.9"]
 
         try:
             addrs = res.resolve(qry)
             self.debug(f"Addresses returned: {addrs}")
-        except Exception:
+        except Exception as e:
             self.debug(f"Unable to resolve {qry}")
             return False
 
@@ -89,7 +96,8 @@ class sfp_quad9(SpiderFootPlugin):
             return True
         return False
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -116,7 +124,7 @@ class sfp_quad9(SpiderFootPlugin):
 
         # Check that it resolves first, as it becomes a valid
         # malicious host only if NOT resolved by Quad9.
-        if not self.sf.resolveHost(eventData) and not self.sf.resolveHost6(eventData):
+        if not self.resolve_host(eventData) and not self.resolve_host6(eventData):
             return
 
         found = self.query(eventData)

@@ -1,0 +1,96 @@
+{{- if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "spiderfoot.fullname" . }}-default-deny
+  labels:
+    {{- include "spiderfoot.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "spiderfoot.selectorLabels" . | nindent 6 }}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress: []
+  egress:
+    # Allow DNS resolution
+    - ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+---
+# Allow API ingress from ingress controller and internal services
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "spiderfoot.fullname" . }}-api-ingress
+  labels:
+    {{- include "spiderfoot.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "spiderfoot.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: api
+  policyTypes:
+    - Ingress
+  ingress:
+    - ports:
+        - port: {{ .Values.api.port }}
+          protocol: TCP
+---
+# Allow WebUI ingress
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "spiderfoot.fullname" . }}-webui-ingress
+  labels:
+    {{- include "spiderfoot.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "spiderfoot.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: webui
+  policyTypes:
+    - Ingress
+  ingress:
+    - ports:
+        - port: {{ .Values.webui.port }}
+          protocol: TCP
+---
+# Allow internal services to reach Redis and PostgreSQL
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "spiderfoot.fullname" . }}-backend-egress
+  labels:
+    {{- include "spiderfoot.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "spiderfoot.selectorLabels" . | nindent 6 }}
+  policyTypes:
+    - Egress
+  egress:
+    # DNS
+    - ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+    # Redis
+    - ports:
+        - port: 6379
+          protocol: TCP
+    # PostgreSQL
+    - ports:
+        - port: 5432
+          protocol: TCP
+    # HTTPS for external API calls (Shodan, VirusTotal, etc.)
+    - ports:
+        - port: 443
+          protocol: TCP
+        - port: 80
+          protocol: TCP
+{{- end }}

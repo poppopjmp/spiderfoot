@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: hostio."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_hostio
@@ -11,10 +15,13 @@
 # -------------------------------------------------------------------------------
 import json
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_hostio(SpiderFootPlugin):
+class sfp_hostio(SpiderFootModernPlugin):
+
+    """Obtain information about domain names from host.io."""
 
     meta = {
         "name": "Host.io",
@@ -52,20 +59,23 @@ class sfp_hostio(SpiderFootPlugin):
 
     errorState = False
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
         if userOpts is None:
             userOpts = {}
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.opts.update(userOpts)
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             "DOMAIN_NAME",
         ]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "IP_ADDRESS",
             "RAW_RIR_DATA",
@@ -79,10 +89,11 @@ class sfp_hostio(SpiderFootPlugin):
 
     # When querying third parties, it's best to have a dedicated function
     # to do so and avoid putting it in handleEvent()
-    def handle_error_response(self, qry, res):
+    def handle_error_response(self, qry: str, res: dict) -> None:
+        """Handle error response."""
         try:
             error_info = json.loads(res["content"])
-        except Exception:
+        except Exception as e:
             error_info = None
         if error_info:
             error_message = error_info.get("error")
@@ -95,8 +106,9 @@ class sfp_hostio(SpiderFootPlugin):
         self.info(
             f"Failed to get results for {qry}, code {res['code']}{error_str}")
 
-    def query(self, qry):
-        res = self.sf.fetchUrl(
+    def query(self, qry: str) -> dict | None:
+        """Query the data source."""
+        res = self.fetch_url(
             f"https://host.io/api/full/{qry}",
             headers={"Authorization": f"Bearer {self.opts['api_key']}"},
             timeout=self.opts["_fetchtimeout"],
@@ -117,7 +129,8 @@ class sfp_hostio(SpiderFootPlugin):
 
         return None
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

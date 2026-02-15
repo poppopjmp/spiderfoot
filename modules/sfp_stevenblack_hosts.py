@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: stevenblack_hosts."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:        sfp_stevenblackhosts
@@ -11,10 +15,13 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_stevenblack_hosts(SpiderFootPlugin):
+class sfp_stevenblack_hosts(SpiderFootModernPlugin):
+
+    """Check if a domain is malicious (malware or adware) according to Steven Black Hosts list."""
 
     meta = {
         'name': "Steven Black Hosts",
@@ -45,22 +52,21 @@ class sfp_stevenblack_hosts(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             "INTERNET_NAME",
             "AFFILIATE_INTERNET_NAME",
             "CO_HOSTED_SITE"
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "BLACKLISTED_INTERNET_NAME",
             "BLACKLISTED_AFFILIATE_INTERNET_NAME",
@@ -70,7 +76,8 @@ class sfp_stevenblack_hosts(SpiderFootPlugin):
             "MALICIOUS_COHOST"
         ]
 
-    def queryBlocklist(self, target):
+    def queryBlocklist(self, target: str) -> bool:
+        """Query Blocklist."""
         blocklist = self.retrieveBlocklist()
 
         if not blocklist:
@@ -83,14 +90,15 @@ class sfp_stevenblack_hosts(SpiderFootPlugin):
 
         return False
 
-    def retrieveBlocklist(self):
-        blocklist = self.sf.cacheGet('stevenblack_hosts', 24)
+    def retrieveBlocklist(self) -> list | None:
+        """RetrieveBlocklist."""
+        blocklist = self.cache_get('stevenblack_hosts', 24)
 
         if blocklist is not None:
             return self.parseBlocklist(blocklist)
 
         url = "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts"
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             url,
             timeout=self.opts['_fetchtimeout'],
             useragent=self.opts['_useragent'],
@@ -107,11 +115,11 @@ class sfp_stevenblack_hosts(SpiderFootPlugin):
             self.errorState = True
             return None
 
-        self.sf.cachePut("stevenblack_hosts", res['content'])
+        self.cache_put("stevenblack_hosts", res['content'])
 
         return self.parseBlocklist(res['content'])
 
-    def parseBlocklist(self, blocklist):
+    def parseBlocklist(self, blocklist: str) -> list:
         """Parse plaintext block list.
 
         Args:
@@ -140,7 +148,8 @@ class sfp_stevenblack_hosts(SpiderFootPlugin):
 
         return hosts
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 

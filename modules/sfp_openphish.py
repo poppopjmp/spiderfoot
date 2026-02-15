@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: openphish."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_openphish
@@ -10,10 +14,13 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_openphish(SpiderFootPlugin):
+class sfp_openphish(SpiderFootModernPlugin):
+
+    """Check if a host/domain is malicious according to OpenPhish.com."""
 
     meta = {
         'name': "OpenPhish",
@@ -52,22 +59,21 @@ class sfp_openphish(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             "INTERNET_NAME",
             "AFFILIATE_INTERNET_NAME",
             "CO_HOSTED_SITE",
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "BLACKLISTED_INTERNET_NAME",
             "BLACKLISTED_AFFILIATE_INTERNET_NAME",
@@ -77,7 +83,8 @@ class sfp_openphish(SpiderFootPlugin):
             "MALICIOUS_COHOST",
         ]
 
-    def queryBlacklist(self, target):
+    def queryBlacklist(self, target: str) -> bool:
+        """Query Blacklist."""
         blacklist = self.retrieveBlacklist()
 
         if not blacklist:
@@ -89,13 +96,14 @@ class sfp_openphish(SpiderFootPlugin):
 
         return False
 
-    def retrieveBlacklist(self):
-        blacklist = self.sf.cacheGet('openphish', 24)
+    def retrieveBlacklist(self) -> list | None:
+        """RetrieveBlacklist."""
+        blacklist = self.cache_get('openphish', 24)
 
         if blacklist is not None:
             return self.parseBlacklist(blacklist)
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             "https://www.openphish.com/feed.txt",
             timeout=10,
             useragent=self.opts['_useragent'],
@@ -112,11 +120,11 @@ class sfp_openphish(SpiderFootPlugin):
             self.errorState = True
             return None
 
-        self.sf.cachePut("openphish", res['content'])
+        self.cache_put("openphish", res['content'])
 
         return self.parseBlacklist(res['content'])
 
-    def parseBlacklist(self, blacklist):
+    def parseBlacklist(self, blacklist: str) -> list:
         """Parse plaintext blacklist.
 
         Args:
@@ -149,7 +157,8 @@ class sfp_openphish(SpiderFootPlugin):
 
         return hosts
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 

@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: hosting."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_hosting
@@ -13,10 +17,13 @@
 
 from netaddr import IPAddress
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_hosting(SpiderFootPlugin):
+class sfp_hosting(SpiderFootModernPlugin):
+
+    """Find out if any IP addresses identified fall within known 3rd party hosting ranges, e.g. Amazon, Azure, etc."""
 
     meta = {
         'name': "Hosting Provider Identifier",
@@ -37,44 +44,44 @@ class sfp_hosting(SpiderFootPlugin):
     # Target
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.__dataSource__ = "DNS"
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ['IP_ADDRESS']
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["PROVIDER_HOSTING"]
 
-    def queryAddr(self, qaddr):
+    def queryAddr(self, qaddr: str) -> list | None:
+        """Query Addr."""
         data = dict()
         url = "https://raw.githubusercontent.com/client9/ipcat/master/datacenters.csv"
 
-        data['content'] = self.sf.cacheGet("sfipcat", 48)
+        data['content'] = self.cache_get("sfipcat", 48)
         if data['content'] is None:
-            data = self.sf.fetchUrl(url, useragent=self.opts['_useragent'])
+            data = self.fetch_url(url, useragent=self.opts['_useragent'])
 
             if data['content'] is None:
                 self.error("Unable to fetch " + url)
                 return None
 
-            self.sf.cachePut("sfipcat", data['content'])
+            self.cache_put("sfipcat", data['content'])
 
         for line in data['content'].split('\n'):
             if "," not in line:
                 continue
             try:
                 [start, end, title, url] = line.split(",")
-            except Exception:
+            except Exception as e:
                 continue
 
             try:
@@ -87,7 +94,8 @@ class sfp_hosting(SpiderFootPlugin):
         return None
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: builtwith."""
+
 # -------------------------------------------------------------------------------
 # Name:         sfp_builtwith
 # Purpose:      Query builtwith.com using their API.
@@ -12,11 +16,12 @@
 import json
 import time
 
-from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_builtwith(SpiderFootPlugin):
-
+class sfp_builtwith(SpiderFootModernPlugin):
+    """SpiderFoot plugin to query BuiltWith.com's Domain API for information about your target's web technology stack, e-mail addresses and more."""
     meta = {
         'name': "BuiltWith",
         'summary': "Query BuiltWith.com's Domain API for information about your target's web technology stack, e-mail addresses and more.",
@@ -67,31 +72,31 @@ class sfp_builtwith(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
 
         # Clear / reset any other class member variables here
         # or you risk them persisting between threads.
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME"]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["INTERNET_NAME", "EMAILADDR", "EMAILADDR_GENERIC", "RAW_RIR_DATA",
                 "WEBSERVER_TECHNOLOGY", "PHONE_NUMBER", "DOMAIN_NAME",
                 "CO_HOSTED_SITE", "IP_ADDRESS", "WEB_ANALYTICS_ID"]
 
-    def queryRelationships(self, t):
+    def queryRelationships(self, t: str):
+        """Query Relationships."""
         url = f"https://api.builtwith.com/rv1/api.json?LOOKUP={t}&KEY={self.opts['api_key']}"
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             url, timeout=self.opts['_fetchtimeout'], useragent="SpiderFoot")
 
         if res['code'] == "404":
@@ -108,10 +113,11 @@ class sfp_builtwith(SpiderFootPlugin):
 
         return None
 
-    def queryDomainInfo(self, t):
+    def queryDomainInfo(self, t: str):
+        """Query DomainInfo."""
         url = f"https://api.builtwith.com/rv1/api.json?LOOKUP={t}&KEY={self.opts['api_key']}"
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             url, timeout=self.opts['_fetchtimeout'], useragent="SpiderFoot")
 
         if res['code'] == "404":
@@ -129,7 +135,8 @@ class sfp_builtwith(SpiderFootPlugin):
         return None
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

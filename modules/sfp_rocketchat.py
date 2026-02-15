@@ -1,6 +1,13 @@
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent
+from __future__ import annotations
 
-class sfp_rocketchat(SpiderFootPlugin):
+"""SpiderFoot plug-in module: rocketchat."""
+
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+
+class sfp_rocketchat(SpiderFootModernPlugin):
+    """Monitors Rocket.Chat servers for messages and emits events."""
+
     meta = {
         'name': "Rocket.Chat Server Monitor",
         'summary': "Monitors Rocket.Chat servers for messages and emits events.",
@@ -38,8 +45,9 @@ class sfp_rocketchat(SpiderFootPlugin):
         "output_format": "Output format: summary (default) or full."
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
         self.debug(f"[setup] Options: {self.opts}")
         # Option validation
@@ -56,13 +64,16 @@ class sfp_rocketchat(SpiderFootPlugin):
             self.error("[setup] output_format must be 'summary' or 'full'.")
             raise ValueError("output_format must be 'summary' or 'full'.")
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["INTERNET_NAME", "ROOT"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["ROCKETCHAT_MESSAGE"]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         self.debug(f"[handleEvent] Received event: {event.eventType}")
         allowed_types = [t.strip() for t in self.opts.get("event_types", "").split(",") if t.strip()]
         if event.eventType.lower() not in [t.lower() for t in allowed_types]:
@@ -71,5 +82,6 @@ class sfp_rocketchat(SpiderFootPlugin):
         self.debug("[handleEvent] (stub) Would process and emit Rocket.Chat events here.")
         return None
 
-    def shutdown(self):
+    def shutdown(self) -> None:
+        """Shutdown."""
         self.debug("[shutdown] Shutting down Rocket.Chat module.")

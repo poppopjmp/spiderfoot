@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: myspace."""
+
 # -------------------------------------------------------------------------------
 # Name:         sfp_myspace
 # Purpose:      Query MySpace for username and location information.
@@ -11,10 +15,13 @@
 
 import re
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_myspace(SpiderFootPlugin):
+class sfp_myspace(SpiderFootModernPlugin):
+
+    """Gather username and location from MySpace.com profiles."""
 
     meta = {
         'name': "MySpace",
@@ -46,21 +53,21 @@ class sfp_myspace(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.__dataSource__ = "MySpace.com"
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["EMAILADDR", "SOCIAL_MEDIA"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["SOCIAL_MEDIA", "GEOINFO"]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -75,7 +82,7 @@ class sfp_myspace(SpiderFootPlugin):
         # Search by email address
         if eventName == "EMAILADDR":
             email = eventData
-            res = self.sf.fetchUrl("https://myspace.com/search/people?q=" + email,
+            res = self.fetch_url("https://myspace.com/search/people?q=" + email,
                                    timeout=self.opts['_fetchtimeout'],
                                    useragent=self.opts['_useragent'])
 
@@ -98,7 +105,7 @@ class sfp_myspace(SpiderFootPlugin):
             try:
                 matches = re.findall(r'<a href=\"\/([a-zA-Z0-9_]+)\".*[\&; :\"\#\*\(\"\'\;\,\>\.\?\!]+' +
                                      email + r'[\&; :\"\#\*\)\"\'\;\,\<\.\?\!]+', profile, re.IGNORECASE)
-            except Exception:
+            except Exception as e:
                 self.debug("Malformed e-mail address, skipping.")
                 return
 
@@ -130,7 +137,7 @@ class sfp_myspace(SpiderFootPlugin):
                     f"Skipping social network profile, {url}, as not a MySpace profile")
                 return
 
-            res = self.sf.fetchUrl(url, timeout=self.opts['_fetchtimeout'],
+            res = self.fetch_url(url, timeout=self.opts['_fetchtimeout'],
                                    useragent=self.opts['_useragent'])
 
             if res['content'] is None:

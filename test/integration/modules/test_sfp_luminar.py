@@ -1,11 +1,16 @@
+from __future__ import annotations
+
+"""Tests for sfp_luminar module."""
+
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch
 from modules.sfp_luminar import sfp_luminar
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
-class TestModuleLuminar(unittest.TestCase):
+class TestModuleLuminar(TestModuleBase):
 
     def setUp(self):
         self.default_options = {
@@ -23,7 +28,7 @@ class TestModuleLuminar(unittest.TestCase):
         self.module.__name__ = "sfp_luminar"
 
     @patch("modules.sfp_luminar.sfp_luminar.notifyListeners")
-    @patch("sflib.SpiderFoot.fetchUrl")
+    @patch("spiderfoot.sflib.SpiderFoot.fetchUrl")
     def test_handleEvent(self, mock_fetchUrl, mock_notifyListeners):
         target_value = 'example.com'
         target_type = 'INTERNET_NAME'
@@ -49,7 +54,7 @@ class TestModuleLuminar(unittest.TestCase):
         assert 'THREAT_INTELLIGENCE' in calls
         self.assertTrue(self.module.results)
 
-    @patch("sflib.SpiderFoot.fetchUrl")
+    @patch("spiderfoot.sflib.SpiderFoot.fetchUrl")
     def test_query(self, mock_fetchUrl):
         self.module.opts['api_key'] = 'test_api_key'
         self.module.opts.update(self.default_options)

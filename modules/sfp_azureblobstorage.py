@@ -11,14 +11,20 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: azureblobstorage."""
+
 import random
 import threading
 import time
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_azureblobstorage(SpiderFootPlugin):
+class sfp_azureblobstorage(SpiderFootModernPlugin):
+    """Search for potential Azure blobs associated with the target and attempt to list their contents."""
     meta = {
         "name": "Azure Blob Finder",
         "summary": "Search for potential Azure blobs associated with the target and attempt to list their contents.",
@@ -50,39 +56,42 @@ class sfp_azureblobstorage(SpiderFootPlugin):
     results = None
     s3results = None
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize the sfp azureblobstorage."""
         super().__init__()
         self.lock = threading.Lock()
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-        # Debug: print options to ensure suffixes is set
-        print("DEBUG sfp_azureblobstorage opts:", self.opts)
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-        print("DEBUG sfp_azureblobstorage opts after userOpts:", self.opts)
 
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME", "LINKED_URL_EXTERNAL"]
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["CLOUD_STORAGE_BUCKET"]
 
-    def checkSite(self, url):
-        res = self.sf.fetchUrl(
+    def checkSite(self, url: str) -> None:
+        """Check Site."""
+        res = self.fetch_url(
             url, timeout=10, useragent="SpiderFoot", noLog=True)
 
+        if res is None:
+            return
+
         if res["code"]:
-            print(f"DEBUG: Emitting CLOUD_STORAGE_BUCKET for {url}")
             with self.lock:
                 self.s3results[url] = True
 
-    def threadSites(self, siteList):
+    def threadSites(self, siteList: list) -> None:
+        """ThreadSites."""
         self.s3results = dict()
         running = True
         i = 0
@@ -119,7 +128,8 @@ class sfp_azureblobstorage(SpiderFootPlugin):
         # Return once the scanning has completed
         return self.s3results
 
-    def batchSites(self, sites):
+    def batchSites(self, sites: list) -> None:
+        """BatchSites."""
         i = 0
         res = list()
         siteList = list()
@@ -142,7 +152,8 @@ class sfp_azureblobstorage(SpiderFootPlugin):
         return res
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

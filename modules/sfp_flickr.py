@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: flickr."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:        sfp_flickr
@@ -18,11 +22,12 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_flickr(SpiderFootPlugin):
-
+class sfp_flickr(SpiderFootModernPlugin):
+    """SpiderFoot plugin for searching Flickr API for domains, URLs and emails related to the specified domain."""
     meta = {
         'name': "Flickr",
         'summary': "Search Flickr for domains, URLs and emails related to the specified domain.",
@@ -68,25 +73,25 @@ class sfp_flickr(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME"]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["EMAILADDR", "EMAILADDR_GENERIC", "INTERNET_NAME",
                 "DOMAIN_NAME", "LINKED_URL_INTERNAL"]
 
     # Retrieve API key
-    def retrieveApiKey(self):
-        res = self.sf.fetchUrl(
+    def retrieveApiKey(self) -> str | None:
+        """RetrieveApiKey."""
+        res = self.fetch_url(
             "https://www.flickr.com/", timeout=self.opts['_fetchtimeout'], useragent=self.opts['_useragent'])
 
         if res['content'] is None:
@@ -101,7 +106,8 @@ class sfp_flickr(SpiderFootPlugin):
         return keys[0]
 
     # Query the REST API
-    def query(self, qry, api_key, page=1, per_page=200):
+    def query(self, qry: str, api_key: str, page: int = 1, per_page: int = 200) -> dict | None:
+        """Query the data source."""
         params = {
             "sort": "relevance",
             "parse_tags": "1",
@@ -122,7 +128,7 @@ class sfp_flickr(SpiderFootPlugin):
             "format": "json"
         }
 
-        res = self.sf.fetchUrl("https://api.flickr.com/services/rest?" + urllib.parse.urlencode(params),
+        res = self.fetch_url("https://api.flickr.com/services/rest?" + urllib.parse.urlencode(params),
                                useragent=self.opts['_useragent'],
                                timeout=self.opts['_fetchtimeout'])
 
@@ -136,7 +142,8 @@ class sfp_flickr(SpiderFootPlugin):
         return None
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -254,7 +261,7 @@ class sfp_flickr(SpiderFootPlugin):
             if self.errorState:
                 return
 
-            if self.opts['dns_resolve'] and not self.sf.resolveHost(host) and not self.sf.resolveHost6(host):
+            if self.opts['dns_resolve'] and not self.resolve_host(host) and not self.resolve_host6(host):
                 self.debug(f"Host {host} could not be resolved")
                 evt = SpiderFootEvent(
                     "INTERNET_NAME_UNRESOLVED", host, self.__name__, event)

@@ -1,0 +1,21 @@
+id: social_media_exposure
+version: "1"
+meta:
+  name: Social media profiles discovered
+  description: >
+    Social media profiles associated with the target were found.
+    These profiles may reveal organisational structure, employee
+    information, technology stack details, or other intelligence
+    useful for social engineering or reconnaissance.
+
+    Multiple profiles across different platforms increase the
+    attack surface for phishing and impersonation attacks.
+  risk: INFO
+collections:
+  collect:
+      - method: exact
+        field: type
+        value: SOCIAL_MEDIA
+aggregation:
+  field: data
+headline: "Social media profile discovered: {data}"

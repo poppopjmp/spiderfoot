@@ -1,16 +1,30 @@
+from __future__ import annotations
+
+"""Tests for sfp_virustotal module."""
+
 import json
 import time
 import unittest.mock as mock
 
 from modules.sfp_virustotal import sfp_virustotal
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModuleVirustotal(SpiderFootTestBase):
+class TestModuleVirustotal(TestModuleBase):
 
+
+    def setUp(self):
+        """Enhanced setUp with ThreadReaper module tracking."""
+        super().setUp()
+        # ThreadReaper infrastructure is automatically initialized
+        
+    def tearDown(self):
+        """Enhanced tearDown with ThreadReaper cleanup."""
+        # ThreadReaper infrastructure automatically cleans up
+        super().tearDown()
     def test_opts(self):
         module = sfp_virustotal()
         self.assertEqual(len(module.opts), len(module.optdescs))
@@ -93,7 +107,7 @@ class TestModuleVirustotal(SpiderFootTestBase):
             module.errorState = False
             try:
                 module.handleEvent(event)
-            except Exception:
+            except Exception as e:
                 pass
             # Should not set errorState unless JSON decode fails
 

@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: whoisology."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_whoisology
@@ -12,10 +16,13 @@
 
 import json
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_whoisology(SpiderFootPlugin):
+class sfp_whoisology(SpiderFootModernPlugin):
+
+    """Reverse Whois lookups using Whoisology.com."""
 
     meta = {
         'name': "Whoisology",
@@ -61,32 +68,32 @@ class sfp_whoisology(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
 
         # Clear / reset any other class member variables here
         # or you risk them persisting between threads.
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["EMAILADDR"]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ['AFFILIATE_INTERNET_NAME', 'AFFILIATE_DOMAIN_NAME']
 
     # Search Whoisology
-    def query(self, qry, querytype):
+    def query(self, qry: str, querytype: str):
+        """Query the data source."""
         url = "https://whoisology.com/api?auth=" + \
             self.opts['api_key'] + "&request=flat"
         url += "&field=" + querytype + "&value=" + qry + \
             "&level=Registrant|Admin|Tec|Billing|Other"
 
-        res = self.sf.fetchUrl(url, timeout=self.opts['_fetchtimeout'],
+        res = self.fetch_url(url, timeout=self.opts['_fetchtimeout'],
                                useragent="SpiderFoot")
 
         if res['code'] in ["400", "429", "500", "403"]:
@@ -116,7 +123,8 @@ class sfp_whoisology(SpiderFootPlugin):
             return None
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

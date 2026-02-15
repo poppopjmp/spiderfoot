@@ -1,0 +1,33 @@
+id: tiktok_user_correlation
+version: "1"
+meta:
+  name: TikTok user cross-platform correlation
+  description: >
+    Correlates TikTok social media profiles with other digital
+    identities discovered during the scan, such as usernames,
+    email addresses, or profiles on other social platforms.
+
+    Cross-platform identity correlation helps build a complete
+    picture of a target's digital footprint and can reveal
+    connections between seemingly unrelated online identities.
+  risk: MEDIUM
+collections:
+  collect:
+      - method: exact
+        field: type
+        value: SOCIAL_MEDIA
+      - method: regex
+        field: data
+        value: .*tiktok.*
+  collect:
+      - method: regex
+        field: type
+        value: USERNAME|HUMAN_NAME|EMAILADDR
+aggregation:
+  field: entity.data
+analysis:
+  - method: threshold
+    minimum: 2
+    field: type
+    count_unique_only: true
+headline: "TikTok profile correlated with other identities: {entity.data}"

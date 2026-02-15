@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: wikipediaedits."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:        sfp_wikipediaedits
@@ -18,10 +22,13 @@ import urllib.parse
 import urllib.request
 from html.parser import HTMLParser
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_wikipediaedits(SpiderFootPlugin):
+class sfp_wikipediaedits(SpiderFootModernPlugin):
+
+    """Identify edits to Wikipedia articles made from a given IP address or username."""
 
     meta = {
         'name': "Wikipedia Edits",
@@ -54,21 +61,21 @@ class sfp_wikipediaedits(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.__dataSource__ = "Wikipedia"
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["IP_ADDRESS", "USERNAME"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["WIKIPEDIA_PAGE_EDIT"]
 
-    def query(self, qry):
+    def query(self, qry: str) -> set | None:
+        """Query the data source."""
         params = {
             "action": "feedcontributions",
             "user": qry.encode('raw_unicode_escape').decode("ascii", errors='replace')
@@ -80,7 +87,7 @@ class sfp_wikipediaedits(SpiderFootPlugin):
             params["year"] = dt.strftime("%Y")
             params["month"] = dt.strftime("%m")
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://en.wikipedia.org/w/api.php?{urllib.parse.urlencode(params)}",
             timeout=self.opts['_fetchtimeout'],
             useragent="SpiderFoot"
@@ -111,7 +118,8 @@ class sfp_wikipediaedits(SpiderFootPlugin):
             self.error(f"Error processing response from Wikipedia: {e}")
             return None
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

@@ -1,11 +1,16 @@
+from __future__ import annotations
+
+"""Tests for correlation_engine module."""
+
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import MagicMock, patch
 from spiderfoot.correlation.rule_loader import RuleLoader
 from spiderfoot.correlation.rule_executor import RuleExecutor
 from spiderfoot.correlation.event_enricher import EventEnricher
 from spiderfoot.correlation.result_aggregator import ResultAggregator
 
-class TestCorrelationEngineUnit(unittest.TestCase):
+class TestCorrelationEngineUnit(TestModuleBase):
     def setUp(self):
         # Mock DB handle
         self.dbh = MagicMock()

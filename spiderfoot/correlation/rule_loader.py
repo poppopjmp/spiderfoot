@@ -1,3 +1,17 @@
+# -------------------------------------------------------------------------------
+# Name:         Modular SpiderFoot Correlation Engine
+# Purpose:      Common functions for enriching events with contextual information.
+#
+# Author:      Agostino Panico @poppopjmp
+#
+# Created:     30/06/2025
+# Copyright:   (c) Agostino Panico 2025
+# Licence:     MIT
+# -------------------------------------------------------------------------------
+from __future__ import annotations
+
+"""Loads and validates YAML-based correlation rules against a JSON schema."""
+
 import yaml
 import os
 import jsonschema
@@ -28,29 +42,35 @@ RULE_SCHEMA = {
 }
 
 class RuleLoader:
-    def __init__(self, rule_dir):
+    """Loads and validates YAML correlation rules from a directory."""
+    def __init__(self, rule_dir: str) -> None:
+        """Initialize the rule loader with the given rules directory."""
         self.rule_dir = rule_dir
         self.rules = []
         self.errors = []
 
-    def load_rules(self):
+    def load_rules(self) -> list:
+        """Load and validate all YAML rule files from the configured directory."""
         for fname in os.listdir(self.rule_dir):
             if not fname.endswith('.yaml'):
                 continue
             path = os.path.join(self.rule_dir, fname)
-            with open(path, 'r', encoding='utf-8') as f:
+            with open(path, encoding='utf-8') as f:
                 try:
-                    rule = yaml.safe_load(f)
+                    raw = f.read()
+                    rule = yaml.safe_load(raw)
                     jsonschema.validate(instance=rule, schema=RULE_SCHEMA)
-                    rule['rawYaml'] = open(path, 'r', encoding='utf-8').read()
+                    rule['rawYaml'] = raw
                     rule['filename'] = fname
                     self.rules.append(rule)
                 except Exception as e:
                     self.errors.append((fname, str(e)))
         return self.rules
 
-    def get_errors(self):
+    def get_errors(self) -> list:
+        """Return the list of errors encountered during rule loading."""
         return self.errors
 
-    def get_rules(self):
+    def get_rules(self) -> list:
+        """Return the list of successfully loaded and validated rules."""
         return self.rules

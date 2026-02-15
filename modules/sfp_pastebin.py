@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: pastebin."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_pastebin
@@ -13,10 +17,13 @@
 
 import re
 
-from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_pastebin(SpiderFootPlugin):
+class sfp_pastebin(SpiderFootModernPlugin):
+
+    """PasteBin search (via Google Search API) to identify related content."""
 
     meta = {
         'name': "PasteBin",
@@ -66,25 +73,25 @@ class sfp_pastebin(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME", "INTERNET_NAME", "EMAILADDR"]
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["LEAKSITE_CONTENT", "LEAKSITE_URL"]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventData = event.data
 
         if self.errorState:
@@ -134,7 +141,7 @@ class sfp_pastebin(SpiderFootPlugin):
                 if self.checkForStop():
                     return
 
-                res = self.sf.fetchUrl(link, timeout=self.opts['_fetchtimeout'],
+                res = self.fetch_url(link, timeout=self.opts['_fetchtimeout'],
                                        useragent=self.opts['_useragent'])
 
                 if res['content'] is None:

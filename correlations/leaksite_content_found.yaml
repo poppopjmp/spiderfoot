@@ -1,0 +1,21 @@
+id: leaksite_content_found
+version: "1"
+meta:
+  name: Target data found on leak/paste site
+  description: >
+    Content mentioning or belonging to the target was discovered
+    on a paste or leak site. This may include credentials,
+    source code, configuration files, internal documents, or
+    other sensitive data that has been publicly exposed.
+
+    Data found on leak sites should be treated as compromised
+    and any associated credentials should be rotated immediately.
+  risk: HIGH
+collections:
+  collect:
+      - method: exact
+        field: type
+        value: LEAKSITE_CONTENT
+aggregation:
+  field: source.data
+headline: "Target data found on leak site: {source.data}"

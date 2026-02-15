@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: tool_wappalyzer."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_tool_wappalyzer
@@ -10,13 +14,15 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
-import sys
 import json
 import requests
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent, SpiderFootHelpers
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_tool_wappalyzer(SpiderFootPlugin):
+class sfp_tool_wappalyzer(SpiderFootModernPlugin):
+    """Wappalyzer identifies technologies on websites using the official API."""
+
     meta = {
         "name": "Tool - Wappalyzer (API)",
         "summary": "Wappalyzer identifies technologies on websites using the official API.",
@@ -53,19 +59,20 @@ class sfp_tool_wappalyzer(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-        for opt in userOpts.keys():
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["INTERNET_NAME"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["OPERATING_SYSTEM", "SOFTWARE_USED", "WEBSERVER_TECHNOLOGY"]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

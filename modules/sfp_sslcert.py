@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: sslcert."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_sslcert
@@ -12,10 +16,14 @@
 
 from urllib.parse import urlparse
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin, SpiderFootHelpers
+from spiderfoot import SpiderFootEvent
+from spiderfoot import SpiderFootHelpers
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_sslcert(SpiderFootPlugin):
+class sfp_sslcert(SpiderFootModernPlugin):
+
+    """Gather information about SSL certificates used by the target"""
 
     meta = {
         'name': "SSL Certificate Analyzer",
@@ -46,25 +54,24 @@ class sfp_sslcert(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
 
         # Clear / reset any other class member variables here
         # or you risk them persisting between threads.
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     # * = be notified about all events.
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["INTERNET_NAME", "LINKED_URL_INTERNAL", "IP_ADDRESS"]
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ['TCP_PORT_OPEN', 'INTERNET_NAME', 'INTERNET_NAME_UNRESOLVED',
                 'CO_HOSTED_SITE', 'CO_HOSTED_SITE_DOMAIN',
                 "SSL_CERTIFICATE_ISSUED", "SSL_CERTIFICATE_ISSUER",
@@ -73,7 +80,8 @@ class sfp_sslcert(SpiderFootPlugin):
                 "DOMAIN_NAME"]
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -91,7 +99,7 @@ class sfp_sslcert(SpiderFootPlugin):
                 if u.port:
                     port = u.port
                 fqdn = self.sf.urlFQDN(eventData.lower())
-            except Exception:
+            except Exception as e:
                 self.debug("Couldn't parse URL: " + eventData)
                 return
         else:
@@ -151,7 +159,7 @@ class sfp_sslcert(SpiderFootPlugin):
 
             if self.getTarget().matches(domain, includeChildren=True):
                 evt_type = 'INTERNET_NAME'
-                if self.opts['verify'] and not self.sf.resolveHost(domain) and not self.sf.resolveHost6(domain):
+                if self.opts['verify'] and not self.resolve_host(domain) and not self.resolve_host6(domain):
                     self.debug(f"Host {domain} could not be resolved")
                     evt_type += '_UNRESOLVED'
             else:

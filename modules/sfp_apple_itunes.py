@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: apple_itunes."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:        sfp_apple_itunes
@@ -16,11 +20,12 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_apple_itunes(SpiderFootPlugin):
-
+class sfp_apple_itunes(SpiderFootModernPlugin):
+    """Query Apple iTunes for mobile apps."""
     meta = {
         'name': "Apple iTunes",
         'summary': "Search Apple iTunes for mobile apps.",
@@ -45,19 +50,18 @@ class sfp_apple_itunes(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             'DOMAIN_NAME'
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             'APPSTORE_ENTRY',
             'INTERNET_NAME',
@@ -66,7 +70,8 @@ class sfp_apple_itunes(SpiderFootPlugin):
             'RAW_RIR_DATA'
         ]
 
-    def query(self, qry, limit=100):
+    def query(self, qry: str, limit: int = 100) -> list | None:
+        """Query the data source."""
         params = urllib.parse.urlencode({
             'media': 'software',
             'entity': 'software,iPadSoftware,softwareDeveloper',
@@ -74,7 +79,7 @@ class sfp_apple_itunes(SpiderFootPlugin):
             'term': qry.encode('raw_unicode_escape').decode("ascii", errors='replace')
         })
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://itunes.apple.com/search?{params}",
             useragent=self.opts['_useragent'],
             timeout=self.opts['_fetchtimeout']
@@ -100,7 +105,8 @@ class sfp_apple_itunes(SpiderFootPlugin):
 
         return results
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

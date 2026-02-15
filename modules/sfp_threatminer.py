@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: threatminer."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_threatminer
@@ -16,10 +20,13 @@ from datetime import datetime
 
 from netaddr import IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_threatminer(SpiderFootPlugin):
+class sfp_threatminer(SpiderFootModernPlugin):
+
+    """Obtain information from ThreatMiner"""
 
     meta = {
         'name': "ThreatMiner",
@@ -73,8 +80,9 @@ class sfp_threatminer(SpiderFootPlugin):
     reportedhosts = None
     checkedips = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.reportedhosts = self.tempStorage()
         self.checkedips = self.tempStorage()
@@ -82,20 +90,19 @@ class sfp_threatminer(SpiderFootPlugin):
 
         # Clear / reset any other class member variables here
         # or you risk them persisting between threads.
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["IP_ADDRESS", "DOMAIN_NAME", "NETBLOCK_OWNER",
                 "NETBLOCK_MEMBER"]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["INTERNET_NAME", "CO_HOSTED_SITE"]
 
-    def query(self, qry, querytype):
+    def query(self, qry: str, querytype: str) -> dict | None:
+        """Query the data source."""
         if self.sf.validIP(qry):
             tgttype = "host"
         else:
@@ -108,7 +115,7 @@ class sfp_threatminer(SpiderFootPlugin):
 
         threatminerurl = "https://api.threatminer.org"
         url = threatminerurl + queryurl.format(qry)
-        res = self.sf.fetchUrl(url, timeout=10, useragent="SpiderFoot")
+        res = self.fetch_url(url, timeout=10, useragent="SpiderFoot")
 
         if res['content'] is None:
             self.info("No ThreatMiner info found for " + qry)
@@ -126,7 +133,8 @@ class sfp_threatminer(SpiderFootPlugin):
         return None
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -198,7 +206,7 @@ class sfp_threatminer(SpiderFootPlugin):
                 if host == eventData:
                     continue
                 if self.getTarget().matches(host, includeParents=True):
-                    if self.opts['verify'] and not self.sf.resolveHost(host) and not self.sf.resolveHost6(host):
+                    if self.opts['verify'] and not self.resolve_host(host) and not self.resolve_host6(host):
                         evt = SpiderFootEvent(
                             "INTERNET_NAME_UNRESOLVED", host, self.__name__, event)
                     else:
@@ -232,7 +240,7 @@ class sfp_threatminer(SpiderFootPlugin):
 
                 self.reportedhosts[host] = True
 
-                if self.opts['verify'] and not self.sf.resolveHost(host) and not self.sf.resolveHost6(host):
+                if self.opts['verify'] and not self.resolve_host(host) and not self.resolve_host6(host):
                     evt = SpiderFootEvent(
                         "INTERNET_NAME_UNRESOLVED", host, self.__name__, event)
                 else:

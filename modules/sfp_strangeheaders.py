@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: strangeheaders."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_strangeheaders
@@ -13,7 +17,8 @@
 
 import json
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 # Standard headers, taken from http://en.wikipedia.org/wiki/List_of_HTTP_header_fields
 headers = [
@@ -79,7 +84,9 @@ headers = [
 ]
 
 
-class sfp_strangeheaders(SpiderFootPlugin):
+class sfp_strangeheaders(SpiderFootModernPlugin):
+    """Obtain non-standard HTTP headers returned by web servers."""
+
     __name__ = "sfp_strangeheaders"
 
     meta = {
@@ -95,24 +102,24 @@ class sfp_strangeheaders(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.__dataSource__ = "Target Website"
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["WEBSERVER_HTTPHEADERS"]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["WEBSERVER_STRANGEHEADER"]
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -132,7 +139,7 @@ class sfp_strangeheaders(SpiderFootPlugin):
 
         try:
             data = json.loads(eventData)
-        except Exception:
+        except Exception as e:
             self.error(
                 "Received HTTP headers from another module in an unexpected format.")
             return

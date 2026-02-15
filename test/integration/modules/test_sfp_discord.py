@@ -1,9 +1,14 @@
+from __future__ import annotations
+
+"""Tests for sfp_discord module."""
+
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch, MagicMock
 from modules.sfp_discord import sfp_discord
 from spiderfoot import SpiderFootEvent
 
-class TestSfpDiscordIntegration(unittest.TestCase):
+class TestSfpDiscordIntegration(TestModuleBase):
     def setUp(self):
         self.plugin = sfp_discord()
         self.plugin.setup(None, {

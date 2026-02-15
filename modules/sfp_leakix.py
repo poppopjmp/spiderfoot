@@ -10,13 +10,20 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: leakix."""
+
 import json
 import time
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_leakix(SpiderFootPlugin):
+class sfp_leakix(SpiderFootModernPlugin):
+
+    """Search LeakIX for host data leaks, open ports, software and geoip."""
 
     meta = {
         'name': "LeakIX",
@@ -63,32 +70,32 @@ class sfp_leakix(SpiderFootPlugin):
     errorState = False
 
     # Initialize module and module options
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in userOpts.keys():
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["IP_ADDRESS", "DOMAIN_NAME"]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["RAW_RIR_DATA", "GEOINFO", "TCP_PORT_OPEN",
                 "OPERATING_SYSTEM", "SOFTWARE_USED", "WEBSERVER_BANNER",
                 "LEAKSITE_CONTENT", "INTERNET_NAME"]
 
     # Query host
     # https://leakix.net/api-documentation
-    def queryApi(self, qryType, qry):
+    def queryApi(self, qryType: str, qry: str) -> dict:
+        """Query Api."""
         headers = {
             "Accept": "application/json",
             "api-key": self.opts["api_key"]
         }
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             'https://leakix.net/' + qryType + '/' + qry,
             headers=headers,
             timeout=15,
@@ -100,7 +107,8 @@ class sfp_leakix(SpiderFootPlugin):
         return self.parseApiResponse(res)
 
     # Parse API response
-    def parseApiResponse(self, res: dict):
+    def parseApiResponse(self, res: dict) -> dict | None:
+        """Parse ApiResponse."""
         if not res:
             self.error("No response from LeakIX.")
             return None
@@ -132,7 +140,8 @@ class sfp_leakix(SpiderFootPlugin):
         return None
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -179,7 +188,7 @@ class sfp_leakix(SpiderFootPlugin):
                     ipevt = None
                     hostname = service.get('host')
                     if hostname and eventName == "DOMAIN_NAME" and self.getTarget().matches(hostname) and hostname not in hosts:
-                        if self.opts["verify"] and not self.sf.resolveHost(hostname) and not self.sf.resolveHost6(hostname):
+                        if self.opts["verify"] and not self.resolve_host(hostname) and not self.resolve_host6(hostname):
                             self.debug(
                                 f"Host {hostname} could not be resolved")
                             evt = SpiderFootEvent(

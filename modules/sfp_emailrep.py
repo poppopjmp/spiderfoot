@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: emailrep."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_emailrep
@@ -13,11 +17,12 @@
 import json
 import time
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_emailrep(SpiderFootPlugin):
-
+class sfp_emailrep(SpiderFootModernPlugin):
+    """SpiderFoot plugin to search EmailRep.io for email address reputation."""
     meta = {
         'name': "EmailRep",
         'summary': "Search EmailRep.io for email address reputation.",
@@ -57,22 +62,22 @@ class sfp_emailrep(SpiderFootPlugin):
     errorState = False
     errorWarned = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ['EMAILADDR']
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ['RAW_RIR_DATA', 'EMAILADDR_COMPROMISED', 'MALICIOUS_EMAILADDR']
 
     # https://emailrep.io/docs/
-    def query(self, qry):
+    def query(self, qry: str) -> dict | None:
+        """Query the data source."""
         headers = {
             'Accept': "application/json"
         }
@@ -80,7 +85,7 @@ class sfp_emailrep(SpiderFootPlugin):
         if self.opts['api_key'] != '':
             headers['Key'] = self.opts['api_key']
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             'https://emailrep.io/' + qry,
             headers=headers,
             useragent='SpiderFoot',
@@ -120,7 +125,8 @@ class sfp_emailrep(SpiderFootPlugin):
 
         return None
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

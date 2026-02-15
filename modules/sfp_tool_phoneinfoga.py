@@ -2,11 +2,16 @@
 """
 SpiderFoot plug-in for using the PhoneInfoga tool (https://github.com/sundowndev/phoneinfoga).
 """
+from __future__ import annotations
+
 import json
 import time
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
-class sfp_tool_phoneinfoga(SpiderFootPlugin):
+class sfp_tool_phoneinfoga(SpiderFootModernPlugin):
+    """Gather phone number intelligence using PhoneInfoga."""
+
     meta = {
         "name": "Tools - PhoneInfoga",
         "summary": "Gather phone number intelligence using PhoneInfoga.",
@@ -66,16 +71,16 @@ class sfp_tool_phoneinfoga(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["PHONE_NUMBER"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "PHONE_NUMBER",
             "COUNTRY_NAME",
@@ -92,7 +97,7 @@ class sfp_tool_phoneinfoga(SpiderFootPlugin):
             "CARRIER_TYPE",
         ]
 
-    def run_remote_tool(self, phone_number):
+    def run_remote_tool(self, phone_number: str) -> dict | None:
         """Run the tool remotely via SSH and return parsed JSON output."""
         import paramiko
         import io
@@ -139,7 +144,8 @@ class sfp_tool_phoneinfoga(SpiderFootPlugin):
             self.error(f"SSH connection or execution failed: {e}")
             return None
 
-    def query_api(self, phone_number):
+    def query_api(self, phone_number: str) -> dict | None:
+        """Query api."""
         if self.opts.get("remote_enabled"):
             return self.run_remote_tool(phone_number)
         """Query the PhoneInfoga API for information about a phone number."""
@@ -152,7 +158,7 @@ class sfp_tool_phoneinfoga(SpiderFootPlugin):
         delay = int(self.opts.get("retry_delay", 2))
         for attempt in range(retries + 1):
             try:
-                res = self.sf.fetchUrl(
+                res = self.fetch_url(
                     url,
                     postData=data,
                     headers=headers,
@@ -177,7 +183,7 @@ class sfp_tool_phoneinfoga(SpiderFootPlugin):
                     continue
                 return None
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle PHONE_NUMBER events and query PhoneInfoga API."""
         eventData = event.data
         if eventData in self.results:

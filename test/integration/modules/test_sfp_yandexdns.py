@@ -1,6 +1,10 @@
+from __future__ import annotations
+
+"""Tests for sfp_yandexdns module."""
+
 import pytest
 from modules.sfp_yandexdns import sfp_yandexdns
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 from unittest.mock import patch
 

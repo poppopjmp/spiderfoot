@@ -1,0 +1,19 @@
+id: software_version_exposed
+version: "1"
+meta:
+  name: Software version information exposed
+  description: >
+    Software name and version details were discovered, potentially
+    through HTTP headers, banner grabbing, or web page content.
+    Exposed software versions allow attackers to search for known
+    vulnerabilities (CVEs) specific to that version and craft
+    targeted exploits.
+  risk: INFO
+collections:
+  collect:
+      - method: exact
+        field: type
+        value: SOFTWARE_USED
+aggregation:
+  field: entity.data
+headline: "Software version exposed on: {entity.data}"

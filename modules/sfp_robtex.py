@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: robtex."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_robtex
@@ -15,10 +19,13 @@ import time
 
 from netaddr import IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_robtex(SpiderFootPlugin):
+class sfp_robtex(SpiderFootModernPlugin):
+
+    """Search Robtex.com for hosts sharing the same IP."""
 
     meta = {
         'name': "Robtex",
@@ -71,17 +78,15 @@ class sfp_robtex(SpiderFootPlugin):
     errorState = False
     cohostcount = 0
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
         self.cohostcount = 0
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             "IP_ADDRESS",
             "IPV6_ADDRESS",
@@ -92,11 +97,13 @@ class sfp_robtex(SpiderFootPlugin):
         ]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["CO_HOSTED_SITE", "IP_ADDRESS", "IPV6_ADDRESS", "RAW_RIR_DATA"]
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -162,7 +169,7 @@ class sfp_robtex(SpiderFootPlugin):
                 if self.checkForStop():
                     return
 
-                res = self.sf.fetchUrl(
+                res = self.fetch_url(
                     "https://freeapi.robtex.com/ipquery/" + ip, timeout=self.opts['_fetchtimeout'])
 
                 if res['code'] == "200":

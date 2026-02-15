@@ -1,0 +1,23 @@
+id: cross_scan_shared_username
+version: "1"
+meta:
+  name: Shared username across scans
+  description: >
+    The same username was discovered in multiple scans, indicating
+    that different targets share a common user identity. This may
+    reveal organisational relationships, shared administrators,
+    or reused credentials across distinct systems.
+  risk: INFO
+  scope: workspace
+collections:
+  collect:
+      - method: exact
+        field: type
+        value: USERNAME
+aggregation:
+  field: data
+analysis:
+  - method: threshold
+    field: data
+    minimum: 2
+headline: "Username {data} found in multiple scans"

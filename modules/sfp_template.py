@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: template."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_template
@@ -14,12 +18,15 @@ import json
 
 from netaddr import IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_template(SpiderFootPlugin):
+class sfp_template(SpiderFootModernPlugin):
     # The module descriptor dictionary contains all the meta data about a module necessary
     # for users to understand...
+    """This is an example module to help developers create their own SpiderFoot modules."""
+
     meta = {
         # Module name: A very short but human readable name for the module.
         'name': "Template Module",
@@ -181,8 +188,9 @@ class sfp_template(SpiderFootPlugin):
     # has failed and you don't wish to process any more events.
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         # self.tempStorage() basically returns a dict(), but we use self.tempStorage()
         # instead since on SpiderFoot HX, different mechanisms are used to persist
         # data for load distribution, avoiding excess memory consumption and fault
@@ -198,13 +206,10 @@ class sfp_template(SpiderFootPlugin):
         # data itself, you can do so with the following. Note that this is only
         # utilised in SpiderFoot  and not the open source version.
         self.__dataSource__ = "Some Data Source"
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     # For a list of all events, check spiderfoot/db.py.
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             "IP_ADDRESS",
             "NETBLOCK_OWNER",
@@ -213,7 +218,8 @@ class sfp_template(SpiderFootPlugin):
         ]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "OPERATING_SYSTEM",
             "DEVICE_TYPE",
@@ -226,14 +232,15 @@ class sfp_template(SpiderFootPlugin):
 
     # When querying third parties, it's best to have a dedicated function
     # to do so and avoid putting it in handleEvent()
-    def query(self, qry):
+    def query(self, qry: str) -> dict | None:
 
         # This is an example of querying SHODAN. Note that the fetch timeout
         # is inherited from global options (options prefixed with _ will come
         # from global config), and the user agent is SpiderFoot so that the
         # provider knows the request comes from the tool. Many third parties
         # request that, so best to just be consistent anyway.
-        res = self.sf.fetchUrl(
+        """Query the data source."""
+        res = self.fetch_url(
             f"https://api.shodan.io/shodan/host/{qry}?key={self.opts['api_key']}",
             timeout=self.opts['_fetchtimeout'],
             useragent="SpiderFoot"
@@ -258,11 +265,12 @@ class sfp_template(SpiderFootPlugin):
         return None
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         # The three most used fields in SpiderFootEvent are:
         # event.eventType - the event type, e.g. INTERNET_NAME, IP_ADDRESS, etc.
         # event.module - the name of the module that generated the event, e.g. sfp_dnsresolve
         # event.data - the actual data, e.g. 127.0.0.1. This can sometimes be megabytes in size (e.g. a PDF)
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 

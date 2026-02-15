@@ -1,0 +1,25 @@
+id: geo_outlier_hosting
+version: "1"
+meta:
+  name: Infrastructure hosted in unusual country
+  description: >
+    Infrastructure associated with the target is hosted in a
+    country that appears infrequently compared to the rest of
+    the target's assets. This outlier may indicate shadow IT,
+    compromised infrastructure, or third-party services
+    operating from unexpected jurisdictions.
+
+    Unusual hosting locations can also signal compliance risks
+    for data sovereignty or regulatory requirements.
+  risk: MEDIUM
+collections:
+  collect:
+      - method: exact
+        field: type
+        value: GEOINFO
+aggregation:
+  field: data
+analysis:
+  - method: outlier
+    maximum_percent: 10
+headline: "Infrastructure in unusual location: {data}"

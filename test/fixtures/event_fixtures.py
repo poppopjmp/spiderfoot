@@ -1,9 +1,9 @@
-# -*- coding: utf-8 -*-
 """Event fixtures for testing SpiderFoot event handling."""
+from __future__ import annotations
 
 import pytest
 import time
-from spiderfoot.event import SpiderFootEvent
+from spiderfoot.events.event import SpiderFootEvent
 
 
 @pytest.fixture
@@ -189,7 +189,7 @@ def malicious_events():
     vulnerability = SpiderFootEvent(
         eventType='VULNERABILITY',
         data='Critical SQL injection vulnerability found',
-        module='sfp_tool_nuclei'
+        module='sfp_nuclei'
     )
     vulnerability.risk = 85
     events.append(vulnerability)

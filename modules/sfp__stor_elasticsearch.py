@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: _stor_elasticsearch."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp__stor_elasticsearch
@@ -13,10 +17,10 @@
 from elasticsearch import Elasticsearch
 import threading
 import time
-from spiderfoot import SpiderFootPlugin
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp__stor_elasticsearch(SpiderFootPlugin):
+class sfp__stor_elasticsearch(SpiderFootModernPlugin):
     """SpiderFoot plug-in for storing events to an ElasticSearch instance.
 
     This module sends scan results to an external ElasticSearch instance
@@ -24,8 +28,10 @@ class sfp__stor_elasticsearch(SpiderFootPlugin):
     """
 
     meta = {
-        'name': "ElasticSearch Storage",
-        'summary': "Stores scan results into an ElasticSearch instance for indexing and visualization."
+        'name': "ElasticSearch Storage [DEPRECATED]",
+        'summary': "DEPRECATED: Use Vector.dev integration instead (config/vector.toml). "
+                   "Stores scan results into an ElasticSearch instance for indexing and visualization.",
+        'flags': ["deprecated"]
     }
 
     _priority = 0
@@ -60,24 +66,20 @@ class sfp__stor_elasticsearch(SpiderFootPlugin):
         'timeout': "Connection timeout in seconds"
     }
 
-    def setup(self, sfc, userOpts=dict()):
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module with user options.
 
         Args:
             sfc: SpiderFoot instance
             userOpts (dict): User options
         """
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
         self.es = None
         self.buffer = []  # Buffer for bulk insertion
         self.buffer_lock = threading.Lock()  # Thread safety for buffer
         self.errorState = False
         self.connection_retries = 0
         self.max_connection_retries = 3
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
         if not self.opts['enabled']:
             self.debug("ElasticSearch storage module not enabled")
             return        # Set up ElasticSearch connection with retry logic
@@ -163,7 +165,7 @@ class sfp__stor_elasticsearch(SpiderFootPlugin):
             self.error(f"Failed to create ElasticSearch index: {e}")
             # Don't fail completely, index might exist with different mapping
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Define the events this module is interested in for input.
 
         Returns:
@@ -171,7 +173,7 @@ class sfp__stor_elasticsearch(SpiderFootPlugin):
         """
         return ["*"]
 
-    def handleEvent(self, sfEvent):
+    def handleEvent(self, sfEvent: SpiderFootEvent) -> None:
         """Handle events sent to this module.
 
         Args:
@@ -264,10 +266,10 @@ class sfp__stor_elasticsearch(SpiderFootPlugin):
             return False
         try:
             return self.es.ping()
-        except Exception:
+        except Exception as e:
             return False
 
-    def shutdown(self):
+    def shutdown(self) -> None:
         """Clean up after this module."""
         # Flush any remaining events in the buffer
         if self.opts['enabled'] and self.es and self.buffer:

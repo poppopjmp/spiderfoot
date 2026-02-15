@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: fsecure_riddler."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:        sfp_fsecure_riddler
@@ -13,11 +17,13 @@
 import json
 import time
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_fsecure_riddler(SpiderFootPlugin):
-
+class sfp_fsecure_riddler(SpiderFootModernPlugin):
+    """SpiderFoot plugin for querying F-Secure Riddler.io API."""
+    __name__ = "sfp_fsecure_riddler"
     meta = {
         'name': "F-Secure Riddler.io",
         'summary': "Obtain network information from F-Secure Riddler.io API.",
@@ -62,18 +68,17 @@ class sfp_fsecure_riddler(SpiderFootPlugin):
     token = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ['DOMAIN_NAME', 'INTERNET_NAME',
                 'INTERNET_NAME_UNRESOLVED', 'IP_ADDRESS']
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ['INTERNET_NAME', 'AFFILIATE_INTERNET_NAME',
                 'INTERNET_NAME_UNRESOLVED', 'AFFILIATE_INTERNET_NAME_UNRESOLVED',
                 'DOMAIN_NAME', 'AFFILIATE_DOMAIN_NAME',
@@ -81,7 +86,8 @@ class sfp_fsecure_riddler(SpiderFootPlugin):
                 'PHYSICAL_COORDINATES', 'RAW_RIR_DATA']
 
     # https://riddler.io/help/api
-    def login(self):
+    def login(self) -> None:
+        """Login."""
         params = {
             'email': self.opts['username'].encode('raw_unicode_escape').decode("ascii"),
             'password': self.opts['password'].encode('raw_unicode_escape').decode("ascii")
@@ -90,7 +96,7 @@ class sfp_fsecure_riddler(SpiderFootPlugin):
             'Content-Type': 'application/json',
         }
 
-        res = self.sf.fetchUrl('https://riddler.io/auth/login',
+        res = self.fetch_url('https://riddler.io/auth/login',
                                postData=json.dumps(params),
                                headers=headers,
                                useragent=self.opts['_useragent'],
@@ -109,7 +115,7 @@ class sfp_fsecure_riddler(SpiderFootPlugin):
         try:
             token = data.get('response').get(
                 'user').get('authentication_token')
-        except Exception:
+        except Exception as e:
             self.error('Login failed')
             self.errorState = True
             return
@@ -122,7 +128,8 @@ class sfp_fsecure_riddler(SpiderFootPlugin):
         self.token = token
 
     # https://riddler.io/help/search
-    def query(self, qry):
+    def query(self, qry: str) -> dict | None:
+        """Query the data source."""
         params = {
             'query': qry.encode('raw_unicode_escape').decode("ascii", errors='replace')
         }
@@ -131,7 +138,7 @@ class sfp_fsecure_riddler(SpiderFootPlugin):
             'Content-Type': 'application/json',
         }
 
-        res = self.sf.fetchUrl('https://riddler.io/api/search',
+        res = self.fetch_url('https://riddler.io/api/search',
                                postData=json.dumps(params),
                                headers=headers,
                                useragent=self.opts['_useragent'],
@@ -161,7 +168,8 @@ class sfp_fsecure_riddler(SpiderFootPlugin):
 
         return data
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -243,7 +251,7 @@ class sfp_fsecure_riddler(SpiderFootPlugin):
             else:
                 evt_type = 'AFFILIATE_INTERNET_NAME'
 
-            if self.opts['verify'] and not self.sf.resolveHost(host) and not self.sf.resolveHost6(host):
+            if self.opts['verify'] and not self.resolve_host(host) and not self.resolve_host6(host):
                 self.debug(f"Host {host} could not be resolved")
                 evt_type += '_UNRESOLVED'
 

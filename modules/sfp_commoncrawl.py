@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: commoncrawl."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_commoncrawl
@@ -14,11 +18,12 @@
 import json
 import re
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_commoncrawl(SpiderFootPlugin):
-
+class sfp_commoncrawl(SpiderFootModernPlugin):
+    """SpiderFoot plugin to search CommonCrawl.org for URLs related to the target."""
     meta = {
         'name': "CommonCrawl",
         'summary': "Searches for URLs found through CommonCrawl.org.",
@@ -56,20 +61,18 @@ class sfp_commoncrawl(SpiderFootPlugin):
     indexBase = list()
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.indexBase = list()
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def search(self, target):
+    def search(self, target: str) -> str | None:
+        """Search the data source."""
         ret = list()
         for index in self.indexBase:
             url = f"https://index.commoncrawl.org/{index}-index?url={target}/*&output=json"
-            res = self.sf.fetchUrl(url, timeout=60,
+            res = self.fetch_url(url, timeout=60,
                                    useragent="SpiderFoot")
 
             if res['code'] in ["400", "401", "402", "403", "404"]:
@@ -86,9 +89,10 @@ class sfp_commoncrawl(SpiderFootPlugin):
 
         return ret
 
-    def getLatestIndexes(self):
+    def getLatestIndexes(self) -> list:
+        """Get LatestIndexes."""
         url = "https://index.commoncrawl.org/"
-        res = self.sf.fetchUrl(url, timeout=60,
+        res = self.fetch_url(url, timeout=60,
                                useragent="SpiderFoot")
 
         if res['code'] in ["400", "401", "402", "403", "404"]:
@@ -124,17 +128,20 @@ class sfp_commoncrawl(SpiderFootPlugin):
         return retindex
 
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["INTERNET_NAME"]
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["LINKED_URL_INTERNAL"]
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

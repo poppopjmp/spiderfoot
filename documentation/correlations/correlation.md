@@ -98,4 +98,72 @@ We can see above that a port was found to be open by the `sfp_portscan_tcp` modu
 
 **NOTE:** Rules will only succeed if relevant data exists in your scan results in the first place. In other words, correlation rules analyze scan data, they don't collect data from targets.
 
-...existing code...
+---
+
+## Correlation Engine (2025+)
+
+SpiderFoot's correlation engine allows you to define rules in YAML to analyze and relate collected OSINT data. The engine and rule storage are fully backend-agnostic and robust.
+
+- Correlation rules are written in YAML and stored in the `/correlations` directory.
+- The engine supports advanced analysis methods (`outlier`, `first_collection_only`, `match_all_to_first_collection`).
+- Rule loading is robust: syntax errors in a rule will not prevent other rules from loading.
+- The `id` field in each rule must match the filename.
+- Correlation results are stored in the database and can be queried via the API or web UI.
+
+### Writing Custom Rules
+
+- Use the provided template and reference built-in rules for guidance.
+- See the `/correlations/README.md` for a full technical reference.
+
+### Backend-Aware Storage
+
+- Correlation results and configuration are stored using backend-agnostic SQL, ensuring compatibility with both SQLite and PostgreSQL.
+
+---
+
+## Correlation Engine Architecture and Storage (2025+)
+
+SpiderFoot's correlation engine is designed for reliability, extensibility, and backend-agnostic operation. Here are key technical details and best practices for advanced users and developers:
+
+### Rule Storage and Loading
+
+- All correlation rules are stored as YAML files in the `/correlations` directory.
+- Rules are loaded at startup; syntax errors in one rule will not prevent others from loading. Errors are logged with full context.
+- The `id` field in each rule must match the filename (excluding `.yaml`). This ensures traceability and prevents accidental rule duplication.
+- Rules can be enabled/disabled by adding/removing them from the directory or via the web UI (if supported).
+
+### Database Integration
+
+- Correlation results, rule metadata, and configuration are stored in the main SpiderFoot database using backend-agnostic SQL.
+- All upsert/replace operations use helpers to ensure correct behavior for both SQLite and PostgreSQL.
+- Schema creation and migrations are idempotent and backend-aware. Unique constraints and composite keys are enforced where required.
+- The correlation engine is robust to schema changes and will automatically migrate or update tables as needed.
+
+### Querying and Using Correlation Results
+
+- Correlation results are available in the web UI, via the REST API, and can be exported for further analysis.
+- Results include references to the rule ID, scan instance, affected entities, and a human-readable headline.
+- You can use the API to filter, search, and aggregate correlation results for reporting or integration with other tools.
+
+### Writing and Testing Custom Rules
+
+- Start with the provided template and reference built-in rules for best practices.
+- Use the `collections` section to extract relevant data, `aggregation` to group, and `analysis` for advanced logic.
+- Test new rules on sample scans and review the logs for errors or unexpected results.
+- Use the `/correlations/README.md` for a full technical reference and advanced features.
+
+### Backend Differences and Best Practices
+
+- All correlation engine storage and queries are backend-agnostic. Placeholders, upserts, and type mapping are handled automatically.
+- For SQLite, foreign key enforcement is enabled automatically. For PostgreSQL, connection pooling is recommended for high concurrency.
+- Always back up your database before adding or modifying correlation rules in production.
+
+### Troubleshooting
+
+- If a rule fails to load, check the logs for detailed error messages (including YAML syntax and schema issues).
+- If correlation results are missing, ensure your scan data contains the required event types and fields referenced by your rules.
+- For database errors, see the [Configuration Guide](../configuration.md) for backend-specific troubleshooting.
+
+---
+
+For more advanced usage, see the [Correlation Analysis Guide](../../workflow/correlation_analysis.md) and the [Developer Guide](../../developer_guide.md).

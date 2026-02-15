@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: archiveorg."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_archiveorg
@@ -14,10 +18,11 @@
 import datetime
 import json
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_archiveorg(SpiderFootPlugin):
+class sfp_archiveorg(SpiderFootModernPlugin):
     """
     SpiderFoot plugin to query archive.org (Wayback Machine) for historic versions of certain pages/files.
     Emits events for historic versions found, based on input event types and configuration.
@@ -87,7 +92,7 @@ class sfp_archiveorg(SpiderFootPlugin):
     foundDates = list()
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """
         Set up the plugin with SpiderFoot context and user options.
 
@@ -95,15 +100,11 @@ class sfp_archiveorg(SpiderFootPlugin):
             sfc (SpiderFoot): The SpiderFoot context object.
             userOpts (dict): User-supplied options for the module.
         """
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.foundDates = list()
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """
         Return a list of event types this module is interested in.
 
@@ -116,7 +117,7 @@ class sfp_archiveorg(SpiderFootPlugin):
             "URL_WEB_FRAMEWORK"
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """
         Return a list of event types this module produces.
 
@@ -131,7 +132,7 @@ class sfp_archiveorg(SpiderFootPlugin):
             "URL_JAVASCRIPT_HISTORIC"
         ]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """
         Handle incoming events, query archive.org for historic versions, and emit events for found snapshots.
 
@@ -174,7 +175,7 @@ class sfp_archiveorg(SpiderFootPlugin):
         for daysback in self.opts['farback'].split(","):
             try:
                 newDate = datetime.datetime.now() - datetime.timedelta(days=int(daysback))
-            except Exception:
+            except Exception as e:
                 self.error("Unable to parse option for number of days back to search.")
                 self.errorState = True
                 return
@@ -182,7 +183,7 @@ class sfp_archiveorg(SpiderFootPlugin):
             maxDate = newDate.strftime("%Y%m%d")
 
             url = f"https://archive.org/wayback/available?url={eventData}&timestamp={maxDate}"
-            res = self.sf.fetchUrl(url, timeout=self.opts['_fetchtimeout'], useragent=self.opts['_useragent'])
+            res = self.fetch_url(url, timeout=self.opts['_fetchtimeout'], useragent=self.opts['_useragent'])
 
             if res['content'] is None:
                 self.error(f"Unable to fetch {url}")

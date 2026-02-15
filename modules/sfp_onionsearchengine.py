@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: onionsearchengine."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_onionsearchengine
@@ -16,10 +20,13 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_onionsearchengine(SpiderFootPlugin):
+class sfp_onionsearchengine(SpiderFootModernPlugin):
+
+    """Search Tor onionsearchengine.com for mentions of the target domain."""
 
     meta = {
         'name': "Onionsearchengine.com",
@@ -61,24 +68,24 @@ class sfp_onionsearchengine(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME", "HUMAN_NAME", "EMAILADDR"]
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["DARKNET_MENTION_URL", "DARKNET_MENTION_CONTENT"]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 
@@ -105,7 +112,7 @@ class sfp_onionsearchengine(SpiderFootPlugin):
             }
 
             # Sites hosted on the domain
-            data = self.sf.fetchUrl('https://onionsearchengine.com/search.php?' + urllib.parse.urlencode(params),
+            data = self.fetch_url('https://onionsearchengine.com/search.php?' + urllib.parse.urlencode(params),
                                     useragent=self.opts['_useragent'],
                                     timeout=self.opts['timeout'])
 
@@ -150,13 +157,14 @@ class sfp_onionsearchengine(SpiderFootPlugin):
                 if not self.sf.urlFQDN(link).endswith(".onion"):
                     continue
 
+                # Always emit DARKNET_MENTION_URL for .onion links
+                evt = SpiderFootEvent(
+                    "DARKNET_MENTION_URL", link, "sfp_onionsearchengine", event)
+                self.notifyListeners(evt)
                 if not self.opts['fetchlinks']:
-                    evt = SpiderFootEvent(
-                        "DARKNET_MENTION_URL", link, self.__name__, event)
-                    self.notifyListeners(evt)
                     continue
 
-                res = self.sf.fetchUrl(link,
+                res = self.fetch_url(link,
                                        timeout=self.opts['_fetchtimeout'],
                                        useragent=self.opts['_useragent'],
                                        verify=False)
@@ -170,21 +178,17 @@ class sfp_onionsearchengine(SpiderFootPlugin):
                                " as no mention of " + eventData)
                     continue
 
-                evt = SpiderFootEvent(
-                    "DARKNET_MENTION_URL", link, self.__name__, event)
-                self.notifyListeners(evt)
-
                 try:
                     startIndex = res['content'].index(eventData) - 120
                     endIndex = startIndex + len(eventData) + 240
-                except Exception:
+                except Exception as e:
                     self.debug('String "' + eventData +
                                '" not found in content.')
                     continue
 
                 data = res['content'][startIndex:endIndex]
                 evt = SpiderFootEvent("DARKNET_MENTION_CONTENT", "..." + data + "...",
-                                      self.__name__, evt)
+                                      "sfp_onionsearchengine", evt)
                 self.notifyListeners(evt)
 
 # End of sfp_onionsearchengine class

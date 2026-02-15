@@ -1,13 +1,17 @@
+from __future__ import annotations
+
+"""Tests for sfp_surbl module."""
+
 import pytest
 import unittest
 
 from modules.sfp_surbl import sfp_surbl
-from sflib import SpiderFoot
-from test.unit.utils.test_base import SpiderFootTestBase
+from spiderfoot.sflib import SpiderFoot
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModuleSurbl(SpiderFootTestBase):
+class TestModuleSurbl(TestModuleBase):
 
     def test_opts(self):
         module = sfp_surbl()

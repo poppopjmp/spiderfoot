@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: threatfox."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:        sfp_threatfox
@@ -13,10 +17,13 @@
 import json
 import time
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_threatfox(SpiderFootPlugin):
+class sfp_threatfox(SpiderFootModernPlugin):
+
+    """Check if an IP address is malicious according to ThreatFox."""
 
     meta = {
         'name': "ThreatFox",
@@ -49,20 +56,19 @@ class sfp_threatfox(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             "IP_ADDRESS",
             "AFFILIATE_IPADDR"
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "BLACKLISTED_IPADDR",
             "BLACKLISTED_AFFILIATE_IPADDR",
@@ -70,7 +76,7 @@ class sfp_threatfox(SpiderFootPlugin):
             "MALICIOUS_AFFILIATE_IPADDR",
         ]
 
-    def query(self, qry):
+    def query(self, qry: str) -> dict | None:
         """Query IOCs.
 
         Args:
@@ -88,7 +94,7 @@ class sfp_threatfox(SpiderFootPlugin):
             "Accept": "application/json",
         }
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             "https://threatfox-api.abuse.ch/api/v1/",
             useragent=self.opts['_useragent'],
             timeout=self.opts['_fetchtimeout'],
@@ -135,7 +141,8 @@ class sfp_threatfox(SpiderFootPlugin):
 
         return data
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 

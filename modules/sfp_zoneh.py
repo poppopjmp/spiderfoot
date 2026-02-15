@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: zoneh."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_zoneh
@@ -13,10 +17,13 @@
 
 import re
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_zoneh(SpiderFootPlugin):
+class sfp_zoneh(SpiderFootModernPlugin):
+
+    """Check if a hostname/domain appears on the zone-h.org """
 
     meta = {
         'name': "Zone-H Defacement Check",
@@ -60,20 +67,18 @@ class sfp_zoneh(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
 
         # Clear / reset any other class member variables here
         # or you risk them persisting between threads.
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     # * = be notified about all events.
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["INTERNET_NAME", "IP_ADDRESS", "IPV6_ADDRESS",
                 "AFFILIATE_INTERNET_NAME", "AFFILIATE_IPADDR", "AFFILIATE_IPV6_ADDRESS",
                 "CO_HOSTED_SITE"]
@@ -81,12 +86,14 @@ class sfp_zoneh(SpiderFootPlugin):
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["DEFACED_INTERNET_NAME", "DEFACED_IPADDR",
                 "DEFACED_AFFILIATE_INTERNET_NAME",
                 "DEFACED_COHOST", "DEFACED_AFFILIATE_IPADDR"]
 
-    def lookupItem(self, target, content):
+    def lookupItem(self, target: str, content: str):
+        """Look up Item."""
         grps = re.findall(
             r"<title><\!\[CDATA\[(.[^\]]*)\]\]></title>\s+<link><\!\[CDATA\[(.[^\]]*)\]\]></link>", content)
         for m in grps:
@@ -97,7 +104,8 @@ class sfp_zoneh(SpiderFootPlugin):
         return False
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -137,15 +145,15 @@ class sfp_zoneh(SpiderFootPlugin):
             return
 
         url = "https://www.zone-h.org/rss/specialdefacements"
-        content = self.sf.cacheGet("sfzoneh", 48)
+        content = self.cache_get("sfzoneh", 48)
         if content is None:
-            data = self.sf.fetchUrl(url, useragent=self.opts['_useragent'])
+            data = self.fetch_url(url, useragent=self.opts['_useragent'])
             if data['content'] is None:
                 self.error("Unable to fetch " + url)
                 self.errorState = True
                 return
 
-            self.sf.cachePut("sfzoneh", data['content'])
+            self.cache_put("sfzoneh", data['content'])
             content = data['content']
 
         ret = self.lookupItem(eventData, content)

@@ -1,11 +1,16 @@
+from __future__ import annotations
+
+"""Tests for sfp_tool_phoneinfoga module."""
+
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch, MagicMock
 from modules.sfp_tool_phoneinfoga import sfp_tool_phoneinfoga
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 import json
 
-class TestPhoneInfogaModuleUnit(unittest.TestCase):
+class TestPhoneInfogaModuleUnit(TestModuleBase):
     def setUp(self):
         self.sf = SpiderFoot({'_useragent': 'SpiderFootTestAgent'})
         self.module = sfp_tool_phoneinfoga()

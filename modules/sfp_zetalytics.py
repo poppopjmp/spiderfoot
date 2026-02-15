@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: zetalytics."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_zetalytics
@@ -13,10 +17,13 @@
 import json
 from urllib.parse import urlencode
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_zetalytics(SpiderFootPlugin):
+class sfp_zetalytics(SpiderFootModernPlugin):
+    """Query the Zetalytics database for hosts on your target domain(s)."""
+
     BASE_URL = "https://zonecruncher.com/api/v1"
     meta = {
         "name": "Zetalytics",
@@ -48,33 +55,38 @@ class sfp_zetalytics(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         if userOpts:
             self.opts.update(userOpts)
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["INTERNET_NAME", "DOMAIN_NAME", "EMAILADDR"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["INTERNET_NAME", "AFFILIATE_DOMAIN_NAME", "INTERNET_NAME_UNRESOLVED"]
 
-    def emit(self, etype, data, pevent):
+    def emit(self, etype: str, data: str, pevent: SpiderFootEvent) -> None:
+        """Emit."""
         if self.checkForStop():
             return None
         evt = SpiderFootEvent(etype, data, self.__name__, pevent)
         self.notifyListeners(evt)
         return evt
 
-    def verify_emit_internet_name(self, hostname, pevent):
+    def verify_emit_internet_name(self, hostname: str, pevent: SpiderFootEvent) -> bool:
+        """Verify emit internet name."""
         if f"INTERNET_NAME:{hostname}" in self.results:
             return False
 
         if not self.getTarget().matches(hostname):
             return False
 
-        if self.opts["verify"] and not self.sf.resolveHost(hostname) and not self.sf.resolveHost6(hostname):
+        if self.opts["verify"] and not self.resolve_host(hostname) and not self.resolve_host6(hostname):
             self.debug(f"Host {hostname} could not be resolved")
             self.emit("INTERNET_NAME_UNRESOLVED", hostname, pevent)
             return True
@@ -85,10 +97,11 @@ class sfp_zetalytics(SpiderFootPlugin):
 
         return True
 
-    def request(self, path, params):
+    def request(self, path: str, params: dict) -> dict | None:
+        """Request."""
         params = {**params, "token": self.opts["api_key"]}
         qs = urlencode(params)
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"{self.BASE_URL}{path}/?{qs}",
             timeout=self.opts["_fetchtimeout"],
             useragent="SpiderFoot",
@@ -104,19 +117,24 @@ class sfp_zetalytics(SpiderFootPlugin):
             self.error(f"Error processing JSON response from Zetalytics: {e}")
         return None
 
-    def query_subdomains(self, domain):
+    def query_subdomains(self, domain: str) -> dict:
+        """Query subdomains."""
         return self.request("/subdomains", {"q": domain})
 
-    def query_hostname(self, hostname):
+    def query_hostname(self, hostname: str) -> dict:
+        """Query hostname."""
         return self.request("/hostname", {"q": hostname})
 
-    def query_email_domain(self, email_domain):
+    def query_email_domain(self, email_domain: str) -> dict:
+        """Query email domain."""
         return self.request("/email_domain", {"q": email_domain})
 
-    def query_email_address(self, email_address):
+    def query_email_address(self, email_address: str) -> dict:
+        """Query email address."""
         return self.request("/email_address", {"q": email_address})
 
-    def generate_subdomains_events(self, data, pevent):
+    def generate_subdomains_events(self, data: dict, pevent: SpiderFootEvent) -> bool:
+        """Generate subdomains events."""
         if not isinstance(data, dict):
             return False
 
@@ -134,7 +152,8 @@ class sfp_zetalytics(SpiderFootPlugin):
 
         return events_generated  # noqa R504
 
-    def generate_hostname_events(self, data, pevent):
+    def generate_hostname_events(self, data: dict, pevent: SpiderFootEvent) -> bool:
+        """Generate hostname events."""
         if not isinstance(data, dict):
             return False
 
@@ -155,7 +174,8 @@ class sfp_zetalytics(SpiderFootPlugin):
 
         return events_generated  # noqa R504
 
-    def generate_email_events(self, data, pevent):
+    def generate_email_events(self, data: dict, pevent: SpiderFootEvent) -> bool:
+        """Generate email events."""
         if not isinstance(data, dict):
             return False
 
@@ -172,7 +192,8 @@ class sfp_zetalytics(SpiderFootPlugin):
 
         return events_generated  # noqa R504
 
-    def generate_email_domain_events(self, data, pevent):
+    def generate_email_domain_events(self, data: dict, pevent: SpiderFootEvent) -> bool:
+        """Generate email domain events."""
         if not isinstance(data, dict):
             return False
 
@@ -189,7 +210,8 @@ class sfp_zetalytics(SpiderFootPlugin):
 
         return events_generated  # noqa R504
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

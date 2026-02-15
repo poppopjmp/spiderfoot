@@ -1,14 +1,28 @@
+from __future__ import annotations
+
+"""Tests for sfp_punkspider module."""
+
 import pytest
 import unittest
 
 from modules.sfp_punkspider import sfp_punkspider
-from sflib import SpiderFoot
-from test.unit.utils.test_base import SpiderFootTestBase
+from spiderfoot.sflib import SpiderFoot
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModulePunkspider(SpiderFootTestBase):
+class TestModulePunkspider(TestModuleBase):
 
+
+    def setUp(self):
+        """Enhanced setUp with ThreadReaper module tracking."""
+        super().setUp()
+        # ThreadReaper infrastructure is automatically initialized
+        
+    def tearDown(self):
+        """Enhanced tearDown with ThreadReaper cleanup."""
+        # ThreadReaper infrastructure automatically cleans up
+        super().tearDown()
     def test_opts(self):
         module = sfp_punkspider()
         self.assertEqual(len(module.opts), len(module.optdescs))

@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: dnsdumpster."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:        sfp_dnsdumpster
@@ -15,11 +19,12 @@ import re
 
 from bs4 import BeautifulSoup
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_dnsdumpster(SpiderFootPlugin):
-
+class sfp_dnsdumpster(SpiderFootModernPlugin):
+    """SpiderFoot plugin for passive subdomain enumeration using HackerTarget's DNSDumpster."""
     meta = {
         "name": "DNSDumpster",
         "summary": "Passive subdomain enumeration using HackerTarget's DNSDumpster",
@@ -38,23 +43,27 @@ class sfp_dnsdumpster(SpiderFootPlugin):
     # Option descriptions
     optdescs = {}
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.debug("Setting up sfp_dnsdumpster")
         self.results = self.tempStorage()
         self.opts.update(userOpts)
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME", "INTERNET_NAME"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["INTERNET_NAME", "INTERNET_NAME_UNRESOLVED"]
 
-    def query(self, domain):
+    def query(self, domain: str) -> list:
+        """Query the data source."""
         ret = []
         # first, get the CSRF tokens
         url = "https://dnsdumpster.com"
-        res1 = self.sf.fetchUrl(
+        res1 = self.fetch_url(
             url,
             useragent=self.opts.get("_useragent", "Spiderfoot")
         )
@@ -74,7 +83,7 @@ class sfp_dnsdumpster(SpiderFootPlugin):
                     csrftoken = str(v)
             csrfmiddlewaretoken = html.find(
                 "input", {"name": "csrfmiddlewaretoken"}).attrs.get("value")
-        except Exception:
+        except (ValueError, AttributeError, KeyError, TypeError):
             pass
 
         # Abort if we didn't get the tokens
@@ -88,7 +97,7 @@ class sfp_dnsdumpster(SpiderFootPlugin):
         # Otherwise, do the needful
         url = "https://dnsdumpster.com/"
         subdomains = set()
-        res2 = self.sf.fetchUrl(
+        res2 = self.fetch_url(
             url,
             cookies={
                 "csrftoken": csrftoken
@@ -117,15 +126,17 @@ class sfp_dnsdumpster(SpiderFootPlugin):
 
         return list(subdomains)
 
-    def sendEvent(self, source, host):
-        if self.sf.resolveHost(host) or self.sf.resolveHost6(host):
+    def sendEvent(self, source: str, host: str) -> None:
+        """SendEvent."""
+        if self.resolve_host(host) or self.resolve_host6(host):
             e = SpiderFootEvent("INTERNET_NAME", host, self.__name__, source)
         else:
             e = SpiderFootEvent("INTERNET_NAME_UNRESOLVED",
                                 host, self.__name__, source)
         self.notifyListeners(e)
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         query = str(event.data).lower()
 
         self.debug(f"Received event, {event.eventType}, from {event.module}")

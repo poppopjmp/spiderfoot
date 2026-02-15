@@ -1,9 +1,14 @@
+from __future__ import annotations
+
+"""Tests for sfp_onyphe module."""
+
 import pytest
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch
 
 from modules.sfp_onyphe import sfp_onyphe
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
@@ -15,7 +20,7 @@ class DummyEventListener:
         self.events.append(event)
 
 
-class TestModuleIntegrationOnyphe(unittest.TestCase):
+class TestModuleIntegrationOnyphe(TestModuleBase):
     def setUp(self):
         self.options = {
             'api_key': 'dummy_key',
@@ -35,8 +40,8 @@ class TestModuleIntegrationOnyphe(unittest.TestCase):
         self.listener = DummyEventListener()
         self.module.notifyListeners = self.listener.notifyListeners
 
-    @patch('sflib.SpiderFoot.fetchUrl')
-    @patch('sflib.SpiderFoot.cveInfo', lambda self, cve: ('VULNERABILITY_CVE_CRITICAL', cve))
+    @patch('spiderfoot.sflib.SpiderFoot.fetchUrl')
+    @patch('spiderfoot.sflib.SpiderFoot.cveInfo', lambda self, cve: ('VULNERABILITY_CVE_CRITICAL', cve))
     def test_handleEvent_emits_events_on_ip(self, mock_fetchUrl):
         # Simulate Onyphe API responses for all endpoints
         def fetchUrl_side_effect(url, **kwargs):

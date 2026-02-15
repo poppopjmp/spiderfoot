@@ -1,10 +1,17 @@
+from __future__ import annotations
+
+"""Tests for spiderfootevent module."""
+
 import unittest
-from spiderfoot.event import SpiderFootEvent
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_module_base import TestModuleBase
+from spiderfoot.events.event import SpiderFootEvent
+from test.unit.utils.test_base import TestModuleBase
+from test.unit.utils.resource_manager import get_test_resource_manager
+from test.unit.utils.thread_registry import get_test_thread_registry
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestSpiderFootEvent(SpiderFootTestBase):
+class TestSpiderFootEvent(TestModuleBase):
 
     def setUp(self):
         super().setUp()

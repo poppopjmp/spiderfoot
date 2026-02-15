@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: greynoise."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_greynoise
@@ -17,10 +21,13 @@ import time
 from datetime import datetime
 from netaddr import IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_greynoise(SpiderFootPlugin):
+class sfp_greynoise(SpiderFootModernPlugin):
+
+    """Obtain IP enrichment data from GreyNoise"""
 
     meta = {
         "name": "GreyNoise",
@@ -76,22 +83,21 @@ class sfp_greynoise(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
 
         # Clear / reset any other class member variables here
         # or you risk them persisting between threads.
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["IP_ADDRESS", "AFFILIATE_IPADDR", "NETBLOCK_MEMBER", "NETBLOCK_OWNER"]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "MALICIOUS_IPADDR",
             "MALICIOUS_ASN",
@@ -105,7 +111,8 @@ class sfp_greynoise(SpiderFootPlugin):
             "RAW_RIR_DATA",
         ]
 
-    def queryIP(self, qry, qry_type):
+    def queryIP(self, qry: str, qry_type: str) -> dict | None:
+        """Query IP."""
         gn_context_url = "https://api.greynoise.io/v2/noise/context/"
         gn_gnql_url = "https://api.greynoise.io/v2/experimental/gnql?query="
 
@@ -114,7 +121,7 @@ class sfp_greynoise(SpiderFootPlugin):
         if qry_type == "ip":
             self.debug(f"Querying GreyNoise for IP: {qry}")
             res = {}
-            ip_response = self.sf.fetchUrl(
+            ip_response = self.fetch_url(
                 gn_context_url + qry,
                 timeout=self.opts["_fetchtimeout"],
                 useragent="greynoise-spiderfoot-v1.2.0",
@@ -124,7 +131,7 @@ class sfp_greynoise(SpiderFootPlugin):
                 res = json.loads(ip_response["content"])
         else:
             self.debug(f"Querying GreyNoise for Netblock: {qry}")
-            query_response = self.sf.fetchUrl(
+            query_response = self.fetch_url(
                 gn_gnql_url + qry,
                 timeout=self.opts["_fetchtimeout"],
                 useragent="greynoise-spiderfoot-v1.1.0",
@@ -142,7 +149,8 @@ class sfp_greynoise(SpiderFootPlugin):
         return res
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: abuseipdb."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:        sfp_abuseipdb
@@ -17,11 +21,12 @@ import urllib.parse
 import urllib.request
 import requests
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_abuseipdb(SpiderFootPlugin):
-
+class sfp_abuseipdb(SpiderFootModernPlugin):
+    """SpiderFoot plugin to check if an IP address is malicious according to AbuseIPDB.com."""
     meta = {
         'name': "AbuseIPDB",
         'summary': "Check if an IP address is malicious according to AbuseIPDB.com blacklist.",
@@ -72,14 +77,12 @@ class sfp_abuseipdb(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             "IP_ADDRESS",
             "IPV6_ADDRESS",
@@ -87,7 +90,8 @@ class sfp_abuseipdb(SpiderFootPlugin):
             "AFFILIATE_IPV6_ADDRESS",
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "BLACKLISTED_IPADDR",
             "BLACKLISTED_AFFILIATE_IPADDR",
@@ -95,8 +99,9 @@ class sfp_abuseipdb(SpiderFootPlugin):
             "MALICIOUS_AFFILIATE_IPADDR",
         ]
 
-    def queryBlacklist(self):
-        blacklist = self.sf.cacheGet('abuseipdb', 24)
+    def queryBlacklist(self) -> list | None:
+        """Query Blacklist."""
+        blacklist = self.cache_get('abuseipdb', 24)
 
         if blacklist is not None:
             return self.parseBlacklist(blacklist)
@@ -112,7 +117,7 @@ class sfp_abuseipdb(SpiderFootPlugin):
             'plaintext': '1'
         })
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://api.abuseipdb.com/api/v2/blacklist?{params}",
             # retrieving 10,000 results (default) or more can sometimes take a while
             timeout=60,
@@ -142,11 +147,11 @@ class sfp_abuseipdb(SpiderFootPlugin):
             self.errorState = True
             return None
 
-        self.sf.cachePut("abuseipdb", res['content'])
+        self.cache_put("abuseipdb", res['content'])
 
         return self.parseBlacklist(res['content'])
 
-    def parseBlacklist(self, blacklist):
+    def parseBlacklist(self, blacklist: str) -> list:
         """Parse plaintext blacklist.
 
         Args:
@@ -170,7 +175,7 @@ class sfp_abuseipdb(SpiderFootPlugin):
 
         return ips
 
-    def queryIpAddress(self, ip):
+    def queryIpAddress(self, ip: str) -> dict | None:
         """Query API for an IPv4 or IPv6 address.
 
         Note: Currently unused.
@@ -192,7 +197,7 @@ class sfp_abuseipdb(SpiderFootPlugin):
             'maxAgeInDays': 30,
         })
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://api.abuseipdb.com/api/v2/check?{params}",
             timeout=self.opts['_fetchtimeout'],
             useragent=self.opts['_useragent'],
@@ -224,7 +229,7 @@ class sfp_abuseipdb(SpiderFootPlugin):
 
         return None
 
-    def queryNetblock(self, ip):
+    def queryNetblock(self, ip: str) -> dict | None:
         """Query API for a netblock.
 
         Note: Currently unused.
@@ -246,7 +251,7 @@ class sfp_abuseipdb(SpiderFootPlugin):
             'maxAgeInDays': 30,
         })
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://api.abuseipdb.com/api/v2/check-block?{params}",
             timeout=self.opts['_fetchtimeout'],
             useragent=self.opts['_useragent'],
@@ -277,7 +282,8 @@ class sfp_abuseipdb(SpiderFootPlugin):
 
         return None
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

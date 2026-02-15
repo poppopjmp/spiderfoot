@@ -1,6 +1,13 @@
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent
+from __future__ import annotations
 
-class sfp_reddit(SpiderFootPlugin):
+"""SpiderFoot plug-in module: reddit."""
+
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+
+class sfp_reddit(SpiderFootModernPlugin):
+    """Monitors specified subreddits for new posts and emits events."""
+
     meta = {
         'name': "Reddit Monitor",
         'summary': "Monitors specified subreddits for new posts and emits events.",
@@ -34,19 +41,24 @@ class sfp_reddit(SpiderFootPlugin):
         "max_posts": "Maximum number of posts to fetch per subreddit."
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["ROOT"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["REDDIT_POST"]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         # This is a stub. Actual implementation would use praw or similar.
+        """Handle an event received by this module."""
         pass
 
-    def shutdown(self):
+    def shutdown(self) -> None:
+        """Shutdown."""
         pass

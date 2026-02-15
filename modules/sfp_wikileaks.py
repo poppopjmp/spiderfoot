@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: wikileaks."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_wikileaks
@@ -13,10 +17,13 @@
 import datetime
 from urllib.parse import urlparse
 
-from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_wikileaks(SpiderFootPlugin):
+class sfp_wikileaks(SpiderFootModernPlugin):
+
+    """Search Wikileaks for mentions of domain names and e-mail addresses."""
 
     meta = {
         'name': "Wikileaks",
@@ -53,25 +60,25 @@ class sfp_wikileaks(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME", "EMAILADDR", "HUMAN_NAME"]
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["LEAKSITE_CONTENT", "LEAKSITE_URL"]
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
         self.currentEventSrc = event
@@ -101,7 +108,7 @@ class sfp_wikileaks(SpiderFootPlugin):
             "&include_external_sources=" + external + \
                 "&new_search=True&order_by=most_relevant#results"
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             "https://search.wikileaks.org/?" + wlurl
         )
         if res['content'] is None:
@@ -159,7 +166,7 @@ class sfp_wikileaks(SpiderFootPlugin):
                         "&released_date_start=" + maxDate + "&include_external_sources=" + \
                         external + "&new_search=True&order_by=most_relevant&page=" + \
                         str(page) + "#results"
-                res = self.sf.fetchUrl(wlurl)
+                res = self.fetch_url(wlurl)
                 if not res:
                     break
                 if not res['content']:

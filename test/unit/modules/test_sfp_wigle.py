@@ -1,16 +1,30 @@
+from __future__ import annotations
+
+"""Tests for sfp_wigle module."""
+
 import pytest
 import unittest
 
 from modules.sfp_wigle import sfp_wigle
-from sflib import SpiderFoot
-from spiderfoot.event import SpiderFootEvent
+from spiderfoot.sflib import SpiderFoot
+from spiderfoot.events.event import SpiderFootEvent
 from spiderfoot.target import SpiderFootTarget
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModuleWigle(SpiderFootTestBase):
+class TestModuleWigle(TestModuleBase):
 
+
+    def setUp(self):
+        """Enhanced setUp with ThreadReaper module tracking."""
+        super().setUp()
+        # ThreadReaper infrastructure is automatically initialized
+        
+    def tearDown(self):
+        """Enhanced tearDown with ThreadReaper cleanup."""
+        # ThreadReaper infrastructure automatically cleans up
+        super().tearDown()
     def test_opts(self):
         module = sfp_wigle()
         self.assertEqual(len(module.opts), len(module.optdescs))

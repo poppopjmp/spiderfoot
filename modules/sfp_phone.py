@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: phone."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_phone
@@ -16,10 +20,13 @@ import phonenumbers
 from phonenumbers import carrier
 
 # from phonenumbers import geocoder
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_phone(SpiderFootPlugin):
+class sfp_phone(SpiderFootModernPlugin):
+
+    """Identify phone numbers in scraped webpages."""
 
     meta = {
         'name': "Phone Number Extractor",
@@ -34,20 +41,20 @@ class sfp_phone(SpiderFootPlugin):
     results = None
     optdescs = {}
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ['TARGET_WEB_CONTENT', 'DOMAIN_WHOIS', 'NETBLOCK_WHOIS', 'PHONE_NUMBER']
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ['PHONE_NUMBER', 'PROVIDER_TELCO']
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -113,7 +120,7 @@ class sfp_phone(SpiderFootPlugin):
             # else:
             #     self.debug("No location information found for " + eventData)
 
-    def registerEventEmitter(self, emitter):
+    def registerEventEmitter(self, emitter: str) -> None:
         """Register event emitter"""
         self.eventEmitter = emitter
 

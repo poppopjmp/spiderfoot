@@ -1,10 +1,24 @@
+from __future__ import annotations
+
+"""Tests for sfp_apileak module."""
+
 import unittest
 from unittest.mock import patch, MagicMock
 from modules.sfp_apileak import sfp_apileak
 from spiderfoot import SpiderFootEvent
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_module_base import TestModuleBase
 
-class IntegrationTestAPILLeak(SpiderFootTestBase):
+class IntegrationTestAPILLeak(TestModuleBase):
+
+    def setUp(self):
+        """Enhanced setUp with ThreadReaper module tracking."""
+        super().setUp()
+        # ThreadReaper infrastructure is automatically initialized
+        
+    def tearDown(self):
+        """Enhanced tearDown with ThreadReaper cleanup."""
+        # ThreadReaper infrastructure automatically cleans up
+        super().tearDown()
     @patch("requests.get")
     def test_integration_leak(self, mock_get):
         mock_get.return_value = MagicMock(

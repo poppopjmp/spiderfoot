@@ -11,16 +11,21 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: countryname."""
+
 import re
 
 import phonenumbers
 from phonenumbers.phonenumberutil import region_code_for_country_code
 
-from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_countryname(SpiderFootPlugin):
-
+class sfp_countryname(SpiderFootModernPlugin):
+    """SpiderFoot plugin to identify country names in any obtained data."""
     meta = {
         'name': "Country Name Extractor",
         'summary': "Identify country names in any obtained data.",
@@ -45,16 +50,13 @@ class sfp_countryname(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
 
         # Clear / reset any other class member variables here
         # or you risk them persisting between threads.
-
-        for opt in userOpts.keys():
-            self.opts[opt] = userOpts[opt]
-
     def detectCountryFromPhone(self, srcPhoneNumber: str) -> str:
         """Lookup name of country from phone number region code.
 
@@ -70,14 +72,14 @@ class sfp_countryname(SpiderFootPlugin):
 
         try:
             phoneNumber = phonenumbers.parse(srcPhoneNumber)
-        except Exception:
+        except Exception as e:
             self.debug(f"Skipped invalid phone number: {srcPhoneNumber}")
             return None
 
         try:
             countryCode = region_code_for_country_code(
                 phoneNumber.country_code)
-        except Exception:
+        except Exception as e:
             self.debug(
                 f"Lookup of region code failed for phone number: {srcPhoneNumber}")
             return None
@@ -170,18 +172,21 @@ class sfp_countryname(SpiderFootPlugin):
         return list(set(countries))
 
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["IBAN_NUMBER", "PHONE_NUMBER", "AFFILIATE_DOMAIN_NAME",
                 "CO_HOSTED_SITE_DOMAIN", "DOMAIN_NAME", "SIMILARDOMAIN",
                 "AFFILIATE_DOMAIN_WHOIS", "CO_HOSTED_SITE_DOMAIN_WHOIS",
                 "DOMAIN_WHOIS", "GEOINFO", "PHYSICAL_ADDRESS"]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["COUNTRY_NAME"]
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

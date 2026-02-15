@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: company."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_company
@@ -13,11 +17,12 @@
 
 import re
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_company(SpiderFootPlugin):
-
+class sfp_company(SpiderFootModernPlugin):
+    """SpiderFoot plugin to identify company names in scraped webpages."""
     meta = {
         'name': "Company Name Extractor",
         'summary': "Identify company names in any obtained data.",
@@ -34,24 +39,24 @@ class sfp_company(SpiderFootPlugin):
         'filterjscss': "Filter out company names that originated from CSS/JS content. Enabling this avoids detection of popular Javascript and web framework author company names."
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["TARGET_WEB_CONTENT", "SSL_CERTIFICATE_ISSUED",
                 "DOMAIN_WHOIS", "NETBLOCK_WHOIS",
                 "AFFILIATE_DOMAIN_WHOIS", "AFFILIATE_WEB_CONTENT"]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["COMPANY_NAME", "AFFILIATE_COMPANY_NAME"]
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -96,7 +101,7 @@ class sfp_company(SpiderFootPlugin):
         try:
             if eventName == "SSL_CERTIFICATE_ISSUED":
                 eventData = eventData.split("O=")[1]
-        except Exception:
+        except Exception as e:
             self.debug(
                 "Couldn't strip out 'O=' from certificate issuer, proceeding anyway...")
 

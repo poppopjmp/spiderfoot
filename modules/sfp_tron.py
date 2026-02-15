@@ -1,10 +1,17 @@
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent
+from __future__ import annotations
 
-class sfp_tron(SpiderFootPlugin):
+"""SpiderFoot plug-in module: tron."""
+
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+
+class sfp_tron(SpiderFootModernPlugin):
+    """Monitors Tron blockchain for transactions and emits events."""
+
     meta = {
         'name': "Tron Blockchain Monitor",
         'summary': "Monitors Tron blockchain for transactions and emits events.",
-        'flags': ['apikey'],
+        'flags': ['apikey', 'experimental'],
         'useCases': ["Passive", "Investigate"],
         'group': ["Passive", "Investigate"],
         'categories': ["Reputation Systems"],
@@ -41,10 +48,11 @@ class sfp_tron(SpiderFootPlugin):
         "output_format": "Output format: summary (default) or full."
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
-        self.debug("[setup] Options: {}".format(self.opts))
+        self.debug(f"[setup] Options: {self.opts}")
         # Option validation
         if not self.opts.get("api_key"):
             self.error("[setup] API key is required.")
@@ -59,13 +67,16 @@ class sfp_tron(SpiderFootPlugin):
             self.error("[setup] output_format must be 'summary' or 'full'.")
             raise ValueError("output_format must be 'summary' or 'full'.")
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["ROOT"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["TRON_ADDRESS", "TRON_TX"]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         self.debug(f"[handleEvent] Received event: {event.eventType}")
         # Stub event filtering logic
         if event.eventType not in self.watchedEvents():
@@ -74,5 +85,6 @@ class sfp_tron(SpiderFootPlugin):
         # Stub for Tron monitoring logic
         self.debug("[handleEvent] (stub) No real logic implemented.")
 
-    def shutdown(self):
+    def shutdown(self) -> None:
+        """Shutdown."""
         self.debug("[shutdown] Shutting down Tron module.")

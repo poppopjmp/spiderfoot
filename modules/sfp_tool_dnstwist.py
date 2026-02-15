@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: tool_dnstwist."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_tool_dnstwist
@@ -16,10 +20,14 @@ from pathlib import Path
 from shutil import which
 from subprocess import PIPE, Popen, TimeoutExpired
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin, SpiderFootHelpers
+from spiderfoot import SpiderFootEvent
+from spiderfoot import SpiderFootHelpers
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_tool_dnstwist(SpiderFootPlugin):
+class sfp_tool_dnstwist(SpiderFootModernPlugin):
+
+    """Identify bit-squatting, typo and other similar domains to the target using a local DNSTwist installation."""
 
     meta = {
         'name': "Tool - DNSTwist",
@@ -55,27 +63,27 @@ class sfp_tool_dnstwist(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
         self.__dataSource__ = "DNS"
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ['DOMAIN_NAME']
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["SIMILARDOMAIN"]
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -107,7 +115,6 @@ class sfp_tool_dnstwist(SpiderFootPlugin):
             self.debug(f"Wildcard DNS detected on {eventData} TLD: {tld}")
             return
 
-        # TODO: check dnstwistpath option before trying which()
         dnstwistLocation = which('dnstwist')
         if dnstwistLocation and Path(dnstwistLocation).is_file():
             cmd = ['dnstwist']

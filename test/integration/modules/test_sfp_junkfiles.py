@@ -1,14 +1,18 @@
+from __future__ import annotations
+
+"""Tests for sfp_junkfiles module."""
+
 import pytest
 import unittest
 
 from modules.sfp_junkfiles import sfp_junkfiles
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.utils.test_base import SpiderFootTestBase  # Add missing import
+from test.unit.utils.test_module_base import TestModuleBase  # Add missing import
 
 
 
-class TestModuleIntegrationJunkfiles(SpiderFootTestBase):  # Add inheritance
+class TestModuleIntegrationJunkfiles(TestModuleBase):  # Add inheritance
 
     @unittest.skip("todo")
     def test_handleEvent(self):

@@ -11,16 +11,23 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: networksdb."""
+
 import json
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_networksdb(SpiderFootPlugin):
+class sfp_networksdb(SpiderFootModernPlugin):
+
+    """Search NetworksDB.io API for IP address and domain information."""
 
     meta = {
         'name': "NetworksDB",
@@ -70,27 +77,27 @@ class sfp_networksdb(SpiderFootPlugin):
     errorState = False
 
     # Initialize module and module options
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.cohostcount = 0
         self.errorState = False
-
-        for opt in userOpts.keys():
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["IP_ADDRESS", "IPV6_ADDRESS", "INTERNET_NAME", "DOMAIN_NAME"]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["INTERNET_NAME", "IP_ADDRESS", "IPV6_ADDRESS", "NETBLOCK_MEMBER",
                 "CO_HOSTED_SITE", "GEOINFO", "RAW_RIR_DATA"]
 
     # Query IP Address Info
     # https://networksdb.io/api/docs#ipinfo
-    def queryIpInfo(self, qry):
+    def queryIpInfo(self, qry: str) -> dict:
+        """Query IpInfo."""
         params = {
             'ip': qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),
         }
@@ -99,7 +106,7 @@ class sfp_networksdb(SpiderFootPlugin):
             'X-Api-Key': self.opts['api_key'],
             'Content-Type': 'application/x-www-form-urlencoded',
         }
-        res = self.sf.fetchUrl('https://networksdb.io/api/ip-info',
+        res = self.fetch_url('https://networksdb.io/api/ip-info',
                                headers=headers,
                                postData=urllib.parse.urlencode(params),
                                timeout=15,
@@ -111,7 +118,8 @@ class sfp_networksdb(SpiderFootPlugin):
 
     # Query IP Geolocation
     # https://networksdb.io/api/docs#geoip
-    def queryIpGeo(self, qry):
+    def queryIpGeo(self, qry: str) -> dict:
+        """Query IpGeo."""
         params = {
             'ip': qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),
         }
@@ -120,7 +128,7 @@ class sfp_networksdb(SpiderFootPlugin):
             'X-Api-Key': self.opts['api_key'],
             'Content-Type': 'application/x-www-form-urlencoded',
         }
-        res = self.sf.fetchUrl('https://networksdb.io/api/ip-geo',
+        res = self.fetch_url('https://networksdb.io/api/ip-geo',
                                headers=headers,
                                postData=urllib.parse.urlencode(params),
                                timeout=15,
@@ -132,7 +140,8 @@ class sfp_networksdb(SpiderFootPlugin):
 
     # Query Domains on IP (Reverse DNS)
     # https://networksdb.io/api/docs#revdns
-    def queryReverseDns(self, qry):
+    def queryReverseDns(self, qry: str) -> dict:
+        """Query ReverseDns."""
         params = {
             'ip': qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),
         }
@@ -141,7 +150,7 @@ class sfp_networksdb(SpiderFootPlugin):
             'X-Api-Key': self.opts['api_key'],
             'Content-Type': 'application/x-www-form-urlencoded',
         }
-        res = self.sf.fetchUrl('https://networksdb.io/api/reverse-dns',
+        res = self.fetch_url('https://networksdb.io/api/reverse-dns',
                                headers=headers,
                                postData=urllib.parse.urlencode(params),
                                timeout=15,
@@ -153,7 +162,8 @@ class sfp_networksdb(SpiderFootPlugin):
 
     # Query IPs for Domain (Forward DNS)
     # https://networksdb.io/api/docs#fwddns
-    def queryForwardDns(self, qry):
+    def queryForwardDns(self, qry: str) -> dict:
+        """Query ForwardDns."""
         params = {
             'domain': qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),
         }
@@ -162,7 +172,7 @@ class sfp_networksdb(SpiderFootPlugin):
             'X-Api-Key': self.opts['api_key'],
             'Content-Type': 'application/x-www-form-urlencoded',
         }
-        res = self.sf.fetchUrl('https://networksdb.io/api/dns',
+        res = self.fetch_url('https://networksdb.io/api/dns',
                                headers=headers,
                                postData=urllib.parse.urlencode(params),
                                timeout=15,
@@ -175,7 +185,8 @@ class sfp_networksdb(SpiderFootPlugin):
     # Query Autonomous System Info
     # https://networksdb.io/api/docs#asinfo
     # Note: currently unused
-    def queryAsnInfo(self, qry):
+    def queryAsnInfo(self, qry: str) -> dict:
+        """Query AsnInfo."""
         params = {
             'asn': qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),
         }
@@ -184,7 +195,7 @@ class sfp_networksdb(SpiderFootPlugin):
             'X-Api-Key': self.opts['api_key'],
             'Content-Type': 'application/x-www-form-urlencoded',
         }
-        res = self.sf.fetchUrl('https://networksdb.io/api/asn',
+        res = self.fetch_url('https://networksdb.io/api/asn',
                                headers=headers,
                                postData=urllib.parse.urlencode(params),
                                timeout=15,
@@ -197,7 +208,8 @@ class sfp_networksdb(SpiderFootPlugin):
     # Query Autonomous System Networks
     # https://networksdb.io/api/docs#asnets
     # Note: currently unused
-    def queryAsnNetworks(self, qry):
+    def queryAsnNetworks(self, qry: str) -> dict:
+        """Query AsnNetworks."""
         params = {
             'asn': qry,
         }
@@ -206,7 +218,7 @@ class sfp_networksdb(SpiderFootPlugin):
             'X-Api-Key': self.opts['api_key'],
             'Content-Type': 'application/x-www-form-urlencoded',
         }
-        res = self.sf.fetchUrl('https://networksdb.io/api/asn-networks',
+        res = self.fetch_url('https://networksdb.io/api/asn-networks',
                                headers=headers,
                                postData=urllib.parse.urlencode(params),
                                timeout=15,
@@ -218,7 +230,8 @@ class sfp_networksdb(SpiderFootPlugin):
 
     # Parse API response
     # https://networksdb.io/api/plans
-    def parseApiResponse(self, res: dict):
+    def parseApiResponse(self, res: dict) -> dict | None:
+        """Parse ApiResponse."""
         if not res:
             self.error("No response from NetworksDB.")
             return None
@@ -253,7 +266,8 @@ class sfp_networksdb(SpiderFootPlugin):
         return data
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

@@ -18,24 +18,77 @@ This guide covers the main features, workflows, and best practices for SpiderFoo
 
 ## Web Interface
 
-- **Start the server:**
-  ```sh
-  python sf.py -l 127.0.0.1:5001
-  ```
-- **Access via browser:** [http://127.0.0.1:5001](http://127.0.0.1:5001)
-- **Log in:** Use your admin account (created on first launch).
-- **New Scan:**
-  - Click **New Scan** to scan a single target.
-  - Enter the target, select type and modules, and run.
-  - Use the module search to quickly find and enable/disable modules.
-- **Workspaces:**
-  - Use **Workspaces** to manage multiple targets and scans.
-  - Organize scans, view history, and collaborate with team members.
-  - Workspaces are ideal for large projects, recurring assessments, or team-based investigations.
-- **Results:**
-  - View results in real time, filter by event type, and export data.
-  - Use the graph view to visualize relationships between entities.
-  - Export results as CSV, Excel, or JSON for further analysis.
+SpiderFoot features a modern React SPA with a dark theme, real-time updates, and comprehensive scan management.
+
+### Getting Started
+
+**Docker Microservices (Recommended):**
+```bash
+docker compose -f docker-compose-microservices.yml up --build -d
+```
+Access the UI at [https://localhost](https://localhost) and log in with your admin credentials.
+
+![Login](images/login.png)
+
+### Dashboard
+
+The dashboard provides at-a-glance statistics — active scans, total events, risk distribution, and recent activity.
+
+![Dashboard](images/dashboard.png)
+
+### New Scan
+
+Click **New Scan** to configure and launch an OSINT scan:
+- Enter the target (domain, IP, email, etc.)
+- Select the target type and choose module categories
+- Click **Run Scan**
+
+![New Scan](images/new_scan.png)
+
+### Scans
+
+View all scans with status, target, event counts, and duration. Filter, search, and manage scans from one place.
+
+![Scans](images/scans.png)
+
+### Scan Detail
+
+Each scan has a detailed view with tabbed navigation:
+
+- **Summary** — Key metrics, risk distribution, top modules, event type breakdown
+- **Browse** — Filter results by event type, risk level, and source module
+- **Graph** — Interactive force-directed graph of entity relationships
+- **GeoMap** — World map plotting discovered IP address locations
+- **Correlations** — Automated findings from the 94-rule YAML engine
+- **AI Report** — LLM-generated Cyber Threat Intelligence report
+- **Scan Settings** — Module configuration used for the scan
+- **Log** — Execution logs and module output
+
+![Scan Detail - Summary](images/scan_detail_summary.png)
+
+![Scan Detail - Browse](images/scan_detail_browse.png)
+
+![Scan Detail - Graph](images/scan_detail_graph.png)
+
+![Scan Detail - GeoMap](images/scan_detail_geomap.png)
+
+![Scan Detail - Correlations](images/scan_detail_correlations.png)
+
+![Scan Detail - AI Report](images/scan_detail_ai_report.png)
+
+### Workspaces
+
+Organize related scans into **Workspaces** for multi-target campaigns. Each workspace groups scans, tracks notes, and provides workspace-level analytics and AI-generated reports.
+
+![Workspaces](images/workspaces.png)
+
+### Settings & Agents
+
+Configure global settings, module API keys, and monitor the 6 AI-powered analysis agents.
+
+![Settings](images/settings.png)
+
+![Agents](images/agents.png)
 
 ---
 
@@ -61,20 +114,39 @@ This guide covers the main features, workflows, and best practices for SpiderFoo
 
 ## Module Categories & Usage Patterns
 
+SpiderFoot v5.3.3 includes 277 modules organized into enhanced categories:
+
+### Core Investigation Modules
 - **DNS/Network**: sfp_dnsresolve, sfp_whois, sfp_ssl, sfp_portscan_tcp, sfp_banner
 - **Threat Intelligence**: sfp_threatcrowd, sfp_virustotal, sfp_alienvault, sfp_malware
 - **Search Engines**: sfp_google, sfp_bing, sfp_duckduckgo, sfp_yandex
-- **Social Media**: sfp_twitter, sfp_github, sfp_linkedin, sfp_instagram
+- **Social Media**: sfp_twitter, sfp_github, sfp_linkedin, sfp_instagram, **sfp_tiktok_osint**
 - **Data Breach**: sfp_haveibeen, sfp_hunter, sfp_emailrep
 
-**Common CLI Patterns:**
+### Enhanced Investigation Modules (New in v5.3.3)
+- **Blockchain Analytics**: sfp_blockchain_analytics (Bitcoin, Ethereum, Litecoin analysis)
+- **Advanced Correlation**: sfp_advanced_correlation (entity resolution, pattern detection)
+- **Performance Optimization**: sfp_performance_optimizer (caching, rate limiting)
+
+**Enhanced CLI Patterns:**
 ```bash
-# Domain reconnaissance
-python sf.py -s example.com -t DOMAIN_NAME -m sfp_dnsresolve,sfp_subdomain_enum,sfp_ssl,sfp_whois,sfp_threatcrowd
+# Domain reconnaissance with performance optimization
+python sf.py -s example.com -t DOMAIN_NAME -m sfp_dnsresolve,sfp_subdomain_enum,sfp_ssl,sfp_whois,sfp_threatcrowd,sfp_performance_optimizer
+
+# TikTok OSINT investigation
+python sf.py -s @username -t SOCIAL_MEDIA -m sfp_tiktok_osint,sfp_advanced_correlation
+
+# Cryptocurrency investigation
+python sf.py -s 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa -t BITCOIN_ADDRESS -m sfp_blockchain_analytics,sfp_advanced_correlation
+
 # Network block analysis
 python sf.py -s 192.168.1.0/24 -t NETBLOCK -m sfp_portscan_tcp,sfp_banner,sfp_ssl
-# Email investigation
-python sf.py -s user@example.com -t EMAILADDR -m sfp_hunter,sfp_haveibeen,sfp_emailrep
+
+# Email investigation with enhanced correlation
+python sf.py -s user@example.com -t EMAILADDR -m sfp_hunter,sfp_haveibeen,sfp_emailrep,sfp_advanced_correlation
+
+# Multi-target investigation with performance optimization
+python sf.py -s multiple_targets.txt -t FILE -m sfp_dnsresolve,sfp_ssl,sfp_blockchain_analytics,sfp_performance_optimizer
 ```
 
 ---
@@ -89,9 +161,32 @@ python sf.py -s user@example.com -t EMAILADDR -m sfp_hunter,sfp_haveibeen,sfp_em
 
 ## Result Interpretation
 
-- **Event Types:** IP_ADDRESS, DOMAIN_NAME, TCP_PORT_OPEN, SSL_CERTIFICATE_ISSUED, VULNERABILITY, MALICIOUS_DOMAIN, EMAILADDR, SOCIAL_MEDIA, etc.
-- **Risk Levels:** HIGH (critical), MEDIUM (important), LOW (informational), INFO (general)
-- **Common High-Risk Findings:** Open admin ports, expired SSL, known vulnerabilities, threat feed hits, breach exposures
+SpiderFoot v5.3.3 provides enhanced result analysis and interpretation:
+
+### Event Types
+- **Traditional Types**: IP_ADDRESS, DOMAIN_NAME, TCP_PORT_OPEN, SSL_CERTIFICATE_ISSUED, VULNERABILITY, MALICIOUS_DOMAIN, EMAILADDR, SOCIAL_MEDIA
+- **Enhanced Types**: TIKTOK_PROFILE, BLOCKCHAIN_ADDRESS, CRYPTOCURRENCY_TRANSACTION, AI_THREAT_SUMMARY, CORRELATION_MATCH, PERFORMANCE_METRIC
+
+### Risk Levels
+- **HIGH (critical)**: Active threats, known vulnerabilities, sanctions matches
+- **MEDIUM (important)**: Suspicious patterns, potential risks, correlation matches
+- **LOW (informational)**: General information, metadata, social profiles
+- **INFO (general)**: Performance metrics, cache statistics, correlation data
+
+### Enhanced Findings
+- **TikTok Intelligence**: Profile verification, follower analytics, content patterns
+- **Blockchain Analysis**: Transaction flows, risk scores, exchange attribution
+- **Correlation Results**: Cross-platform identity matches, behavioral patterns
+- **Performance Insights**: Cache hit rates, optimization recommendations
+- **AI Analysis**: Automated threat summaries, pattern recognition
+
+### Common High-Risk Findings
+- Open admin ports, expired SSL, known vulnerabilities
+- Threat feed hits, breach exposures
+- **Cryptocurrency sanctions matches**
+- **High-risk blockchain transactions**
+- **Cross-platform identity correlation**
+- **Anomalous behavioral patterns**
 
 ---
 

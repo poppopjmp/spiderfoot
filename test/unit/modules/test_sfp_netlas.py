@@ -1,14 +1,18 @@
+from __future__ import annotations
+
+"""Tests for sfp_netlas module."""
+
 import unittest
 from unittest.mock import patch
 from modules.sfp_netlas import sfp_netlas
-from sflib import SpiderFoot
-from spiderfoot.event import SpiderFootEvent
+from spiderfoot.sflib import SpiderFoot
+from spiderfoot.events.event import SpiderFootEvent
 from spiderfoot.target import SpiderFootTarget
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModuleNetlas(SpiderFootTestBase):
+class TestModuleNetlas(TestModuleBase):
 
     def setUp(self):
         super().setUp()

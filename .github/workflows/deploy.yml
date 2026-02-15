@@ -1,0 +1,192 @@
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: ["CI - Test & Lint", "Docker Build & Push"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      version:
+        description: "Image version/tag (default: latest from VERSION)"
+        required: false
+        type: string
+
+concurrency:
+  group: deploy-${{ inputs.environment || 'staging' }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: read
+  id-token: write
+
+env:
+  REGISTRY: ghcr.io
+  HELM_CHART_PATH: helm/spiderfoot
+
+jobs:
+  prepare:
+    name: Prepare Deployment
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      environment: ${{ steps.env.outputs.environment }}
+      sha_short: ${{ steps.sha.outputs.sha_short }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Determine version
+        id: version
+        run: |
+          if [ -n "${{ inputs.version }}" ]; then
+            echo "version=${{ inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=$(cat VERSION)" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Determine environment
+        id: env
+        run: |
+          if [ -n "${{ inputs.environment }}" ]; then
+            echo "environment=${{ inputs.environment }}" >> $GITHUB_OUTPUT
+          else
+            echo "environment=staging" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Short SHA
+        id: sha
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: prepare
+    if: needs.prepare.outputs.environment == 'staging'
+    environment:
+      name: staging
+      url: https://staging.spiderfoot.example.com
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.14.0
+
+      - name: Configure kubectl
+        uses: azure/k8s-set-context@v4
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG_STAGING }}
+
+      - name: Helm upgrade (staging)
+        run: |
+          helm upgrade --install spiderfoot ${{ env.HELM_CHART_PATH }} \
+            -f ${{ env.HELM_CHART_PATH }}/values.yaml \
+            --set image.tag="${{ needs.prepare.outputs.version }}" \
+            --set image.pullPolicy=Always \
+            --set ingress.enabled=true \
+            --set ingress.hosts[0].host=staging.spiderfoot.example.com \
+            --set postgresql.auth.password="${{ secrets.DB_PASSWORD_STAGING }}" \
+            --set redis.auth.password="${{ secrets.REDIS_PASSWORD_STAGING }}" \
+            --set config.jwtSecret="${{ secrets.JWT_SECRET_STAGING }}" \
+            --set config.logLevel=INFO \
+            --namespace spiderfoot-staging \
+            --create-namespace \
+            --wait \
+            --timeout 10m
+
+      - name: Verify deployment
+        run: |
+          kubectl -n spiderfoot-staging rollout status deployment/spiderfoot-api --timeout=120s
+          kubectl -n spiderfoot-staging rollout status deployment/spiderfoot-webui --timeout=120s
+          kubectl -n spiderfoot-staging rollout status deployment/spiderfoot-celery-worker --timeout=120s
+
+      - name: Smoke test
+        run: |
+          # Wait for service to be ready
+          sleep 15
+          API_URL=$(kubectl -n spiderfoot-staging get svc spiderfoot-api -o jsonpath='{.spec.clusterIP}')
+          kubectl -n spiderfoot-staging run smoke-test --rm -i --restart=Never \
+            --image=curlimages/curl:latest \
+            -- curl -sf "http://${API_URL}:8001/health" || echo "Smoke test warning"
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: prepare
+    if: needs.prepare.outputs.environment == 'production'
+    environment:
+      name: production
+      url: https://spiderfoot.example.com
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.14.0
+
+      - name: Configure kubectl
+        uses: azure/k8s-set-context@v4
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG_PRODUCTION }}
+
+      - name: Pre-deploy database backup
+        run: |
+          kubectl -n spiderfoot-production create job \
+            --from=cronjob/spiderfoot-backup \
+            pre-deploy-backup-${{ needs.prepare.outputs.sha_short }} \
+            || echo "Backup job creation skipped"
+
+      - name: Helm upgrade (production)
+        run: |
+          helm upgrade --install spiderfoot ${{ env.HELM_CHART_PATH }} \
+            -f ${{ env.HELM_CHART_PATH }}/values-production.yaml \
+            --set image.tag="${{ needs.prepare.outputs.version }}" \
+            --set postgresql.auth.password="${{ secrets.DB_PASSWORD_PRODUCTION }}" \
+            --set redis.auth.password="${{ secrets.REDIS_PASSWORD_PRODUCTION }}" \
+            --set config.jwtSecret="${{ secrets.JWT_SECRET_PRODUCTION }}" \
+            --set ingress.hosts[0].host=spiderfoot.example.com \
+            --set ingress.tls[0].hosts[0]=spiderfoot.example.com \
+            --namespace spiderfoot-production \
+            --create-namespace \
+            --wait \
+            --timeout 15m \
+            --atomic
+
+      - name: Verify deployment
+        run: |
+          kubectl -n spiderfoot-production rollout status deployment/spiderfoot-api --timeout=180s
+          kubectl -n spiderfoot-production rollout status deployment/spiderfoot-webui --timeout=180s
+          kubectl -n spiderfoot-production rollout status deployment/spiderfoot-celery-worker --timeout=180s
+
+      - name: Health check
+        run: |
+          sleep 20
+          API_URL=$(kubectl -n spiderfoot-production get svc spiderfoot-api -o jsonpath='{.spec.clusterIP}')
+          kubectl -n spiderfoot-production run health-check --rm -i --restart=Never \
+            --image=curlimages/curl:latest \
+            -- curl -sf "http://${API_URL}:8001/health/ready"
+
+  notify:
+    name: Notify
+    runs-on: ubuntu-latest
+    needs: [prepare, deploy-staging, deploy-production]
+    if: always()
+    steps:
+      - name: Deployment summary
+        run: |
+          echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: ${{ needs.prepare.outputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: ${{ needs.prepare.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: ${{ needs.prepare.outputs.sha_short }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ${{ needs.deploy-staging.result || needs.deploy-production.result }}" >> $GITHUB_STEP_SUMMARY

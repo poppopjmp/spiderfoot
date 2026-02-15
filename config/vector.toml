@@ -1,0 +1,334 @@
+# =============================================================================
+# Vector.dev Configuration for SpiderFoot
+# =============================================================================
+# This configuration collects logs, scan events, and metrics from SpiderFoot
+# and routes them to external data stores.
+#
+# Sources: Docker logs, HTTP endpoint (scan events), Prometheus metrics
+# Sinks: Loki (logs), Elasticsearch (events), S3 (archival), Webhook (alerts)
+#
+# Enable sinks via environment variables:
+#   SF_LOKI_ENDPOINT      - Loki push endpoint (e.g. http://loki:3100)
+#   SF_ES_ENDPOINT        - Elasticsearch endpoint (e.g. http://es:9200)
+#   SF_S3_BUCKET          - S3 bucket for archival
+#   SF_S3_REGION          - S3 region
+#   SF_ALERT_WEBHOOK_URL  - Webhook URL for high-severity alerts
+#   SF_VECTOR_HTTP_PORT   - HTTP source port (default: 8686)
+#
+# See: https://vector.dev/docs/reference/configuration/
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# DATA DIRECTORY
+# ---------------------------------------------------------------------------
+data_dir = "/var/lib/vector"
+
+# ---------------------------------------------------------------------------
+# SOURCES
+# ---------------------------------------------------------------------------
+
+# Collect container logs from all SpiderFoot services
+[sources.sf_docker_logs]
+type = "docker_logs"
+docker_host = "tcp://docker-socket-proxy:2375"
+include_labels = ["com.docker.compose.project=spiderfoot"]
+
+# HTTP source for scan events (SpiderFoot pushes events here)
+[sources.sf_events_http]
+type = "http_server"
+address = "0.0.0.0:${SF_VECTOR_HTTP_PORT:-8686}"
+decoding.codec = "json"
+strict_decoding = false
+headers = ["Authorization"]
+
+# Internal Vector metrics
+[sources.vector_metrics]
+type = "internal_metrics"
+
+# OTLP trace receiver — services send traces here; Vector forwards to Jaeger
+# This replaces OTel Collector for trace ingestion.
+[sources.otlp_traces]
+type = "opentelemetry"
+grpc.address = "0.0.0.0:4317"
+http.address = "0.0.0.0:4318"
+
+# ---------------------------------------------------------------------------
+# TRANSFORMS
+# ---------------------------------------------------------------------------
+
+# Parse JSON from container logs
+[transforms.parse_docker_logs]
+type = "remap"
+inputs = ["sf_docker_logs"]
+source = '''
+  # Try to parse the message as JSON
+  parsed, err = parse_json(.message)
+  if err == null {
+    . = merge!(., parsed)
+    .log_format = "structured"
+  } else {
+    .log_format = "plain"
+  }
+  
+  # Ensure level label is always set (Loki rejects empty labels)
+  if !exists(.level) {
+    .level = "INFO"
+  }
+  
+  # Add source info
+  .pipeline = "spiderfoot"
+  .ingestion_timestamp = now()
+'''
+
+# Enrich scan events with metadata
+[transforms.enrich_events]
+type = "remap"
+inputs = ["sf_events_http"]
+source = '''
+  .pipeline = "spiderfoot"
+  .ingestion_timestamp = now()
+  
+  # Ensure label fields have defaults (required for Loki sink)
+  if !exists(.container_name) || is_null(.container_name) {
+    .container_name = "spiderfoot-events"
+  }
+  if !exists(.level) || is_null(.level) {
+    .level = "INFO"
+  }
+  if !exists(.log_format) || is_null(.log_format) {
+    .log_format = "structured"
+  }
+  
+  # Categorize by event type
+  event_str = to_string(.event_type) ?? ""
+  if starts_with(event_str, "URL") {
+    .event_category = "web"
+  } else if starts_with(event_str, "IP") {
+    .event_category = "network"
+  } else if starts_with(event_str, "DOMAIN") {
+    .event_category = "domain"
+  } else if starts_with(event_str, "DNS") {
+    .event_category = "dns"
+  } else if starts_with(event_str, "VULNERABILITY") {
+    .event_category = "security"
+  } else if starts_with(event_str, "MALICIOUS") {
+    .event_category = "threat"
+  } else if starts_with(event_str, "EMAIL") {
+    .event_category = "email"
+  } else if starts_with(event_str, "PHONE") {
+    .event_category = "phone"
+  } else if starts_with(event_str, "USERNAME") {
+    .event_category = "identity"
+  } else if starts_with(event_str, "SOCIAL") {
+    .event_category = "social"
+  } else {
+    .event_category = "osint"
+  }
+  
+  # Risk classification
+  risk_val = to_int(.risk) ?? 0
+  if risk_val >= 80 {
+    .risk_level = "critical"
+  } else if risk_val >= 60 {
+    .risk_level = "high"
+  } else if risk_val >= 40 {
+    .risk_level = "medium"
+  } else if risk_val >= 20 {
+    .risk_level = "low"
+  } else {
+    .risk_level = "info"
+  }
+'''
+
+# Route events by type
+[transforms.route_events]
+type = "route"
+inputs = ["enrich_events"]
+[transforms.route_events.route]
+  scan_events = '.type == "scan_event"'
+  scan_status = '.type == "scan_status"'
+  metrics = '.type == "metric"'
+  logs = '.type == "log"'
+
+# Route logs by level
+[transforms.route_logs]
+type = "route"
+inputs = ["parse_docker_logs"]
+[transforms.route_logs.route]
+  errors = '.level == "ERROR" || .level == "CRITICAL"'
+  warnings = '.level == "WARNING"'
+  info = '.level == "INFO" || .level == "DEBUG"'
+
+# Filter high-risk events for alerting
+[transforms.high_risk_filter]
+type = "filter"
+inputs = ["enrich_events"]
+condition = '(to_int(.risk) ?? 0) >= 60'
+
+# ---------------------------------------------------------------------------
+# SINKS
+# ---------------------------------------------------------------------------
+
+# Console output for development/debugging (disabled by default)
+# Uncomment to enable:
+# [sinks.console_debug]
+# type = "console"
+# inputs = ["enrich_events"]
+# encoding.codec = "json"
+# target = "stdout"
+
+# Elasticsearch for scan events (searchable event store)
+# Uncomment when Elasticsearch is available and set SF_ES_ENDPOINT
+# [sinks.elasticsearch_events]
+# type = "elasticsearch"
+# inputs = ["route_events.scan_events", "route_events.scan_status"]
+# endpoints = ["${SF_ES_ENDPOINT:-http://elasticsearch:9200}"]
+# api_version = "v8"
+# mode = "bulk"
+# bulk.index = "spiderfoot-events-{{ event_category }}-%Y-%m-%d"
+# encoding.timestamp_format = "rfc3339"
+# auth.strategy = "basic"
+# auth.user = "elastic"
+# auth.password = "changeme"
+
+# Loki for log aggregation
+[sinks.loki_logs]
+type = "loki"
+inputs = ["route_logs.errors", "route_logs.warnings", "route_logs.info", "route_logs._unmatched", "route_events.logs"]
+endpoint = "${SF_LOKI_ENDPOINT:-http://loki:3100}"
+encoding.codec = "json"
+healthcheck.enabled = true
+
+[sinks.loki_logs.labels]
+service = "spiderfoot"
+job = "{{ container_name }}"
+level = "{{ level }}"
+log_format = "{{ log_format }}"
+
+# High-severity webhook alerting (enable via SF_ALERT_WEBHOOK_URL)
+# Forwards events with risk >= 60 to PagerDuty, Slack, or custom endpoint
+# Uncomment and set SF_ALERT_WEBHOOK_URL
+# [sinks.high_severity_webhook]
+# type = "http"
+# inputs = ["high_risk_filter"]
+# uri = "${SF_ALERT_WEBHOOK_URL:-http://localhost:9999/alert}"
+# method = "post"
+# encoding.codec = "json"
+# batch.max_events = 1
+# batch.timeout_secs = 0
+
+# ClickHouse for high-volume analytics
+# Uncomment when ClickHouse is available
+# [sinks.clickhouse_events]
+# type = "clickhouse"  
+# inputs = ["route_events.scan_events"]
+# endpoint = "http://clickhouse:8123"
+# database = "spiderfoot"
+# table = "events"
+# skip_unknown_fields = true
+
+# File output for local persistence / backup
+[sinks.file_events]
+type = "file"
+inputs = ["enrich_events"]
+path = "/var/log/vector/spiderfoot/events-%Y-%m-%d.json"
+encoding.codec = "json"
+
+[sinks.file_logs]
+type = "file"
+inputs = ["parse_docker_logs"]
+path = "/var/log/vector/spiderfoot/logs-%Y-%m-%d.json"
+encoding.codec = "json"
+
+# ---------------------------------------------------------------------------
+# MinIO S3 sinks — primary persistent log & event storage
+# ---------------------------------------------------------------------------
+# These sinks push all logs and scan events to MinIO for long-term archival.
+# MinIO is configured as the central data persistence layer; all data here
+# survives container restarts.
+# ---------------------------------------------------------------------------
+
+# Scan events → MinIO (sf-logs bucket, partitioned by category + date)
+[sinks.minio_events]
+type = "aws_s3"
+inputs = ["enrich_events"]
+bucket = "${SF_MINIO_LOGS_BUCKET:-sf-logs}"
+key_prefix = "events/{{ event_category }}/%Y/%m/%d/"
+region = "us-east-1"
+endpoint = "${SF_MINIO_ENDPOINT:-http://minio:9000}"
+encoding.codec = "json"
+compression = "gzip"
+batch.max_bytes = 5242880
+batch.timeout_secs = 60
+
+[sinks.minio_events.auth]
+access_key_id = "${AWS_ACCESS_KEY_ID:-spiderfoot}"
+secret_access_key = "${AWS_SECRET_ACCESS_KEY:-changeme123}"
+
+# Container logs → MinIO (sf-logs bucket, partitioned by date)
+[sinks.minio_logs]
+type = "aws_s3"
+inputs = ["parse_docker_logs"]
+bucket = "${SF_MINIO_LOGS_BUCKET:-sf-logs}"
+key_prefix = "logs/%Y/%m/%d/"
+region = "us-east-1"
+endpoint = "${SF_MINIO_ENDPOINT:-http://minio:9000}"
+encoding.codec = "json"
+compression = "gzip"
+batch.max_bytes = 5242880
+batch.timeout_secs = 60
+
+[sinks.minio_logs.auth]
+access_key_id = "${AWS_ACCESS_KEY_ID:-spiderfoot}"
+secret_access_key = "${AWS_SECRET_ACCESS_KEY:-changeme123}"
+
+# High-risk events → MinIO (separate prefix for faster querying)
+[sinks.minio_alerts]
+type = "aws_s3"
+inputs = ["high_risk_filter"]
+bucket = "${SF_MINIO_LOGS_BUCKET:-sf-logs}"
+key_prefix = "alerts/%Y/%m/%d/"
+region = "us-east-1"
+endpoint = "${SF_MINIO_ENDPOINT:-http://minio:9000}"
+encoding.codec = "json"
+compression = "gzip"
+batch.max_bytes = 1048576
+batch.timeout_secs = 30
+
+[sinks.minio_alerts.auth]
+access_key_id = "${AWS_ACCESS_KEY_ID:-spiderfoot}"
+secret_access_key = "${AWS_SECRET_ACCESS_KEY:-changeme123}"
+
+# Prometheus metrics exporter — Vector internal + SpiderFoot pipeline metrics
+[sinks.prometheus_metrics]
+type = "prometheus_exporter"
+inputs = ["route_events.metrics", "vector_metrics"]
+address = "0.0.0.0:9598"
+default_namespace = "spiderfoot"
+
+# Jaeger trace sink — forwards OTLP traces to Jaeger collector
+[sinks.jaeger_traces]
+type = "opentelemetry"
+inputs = ["otlp_traces.traces"]
+
+[sinks.jaeger_traces.protocol]
+type = "http"
+uri = "http://jaeger:4318/v1/traces"
+method = "post"
+compression = "gzip"
+
+[sinks.jaeger_traces.protocol.encoding]
+codec = "otlp"
+
+# S3 for long-term archival (enable via SF_S3_BUCKET + SF_S3_REGION)
+# Uncomment for cloud deployments
+# [sinks.s3_archive]
+# type = "aws_s3"
+# inputs = ["enrich_events"]
+# bucket = "${SF_S3_BUCKET:-spiderfoot-data-archive}"
+# key_prefix = "events/{{ event_category }}/%Y/%m/%d/"
+# region = "${SF_S3_REGION:-us-east-1}"
+# encoding.codec = "json"
+# compression = "gzip"
+# batch.max_bytes = 10485760  # 10MB
+# batch.timeout_secs = 300

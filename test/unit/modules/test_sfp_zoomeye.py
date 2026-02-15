@@ -1,16 +1,20 @@
+from __future__ import annotations
+
+"""Tests for sfp_zoomeye module."""
+
 # filepath: spiderfoot/test/unit/modules/test_sfp_zoomeye.py
 from unittest.mock import patch, MagicMock
-from sflib import SpiderFoot
-from spiderfoot.event import SpiderFootEvent
+from spiderfoot.sflib import SpiderFoot
+from spiderfoot.events.event import SpiderFootEvent
 from modules.sfp_zoomeye import sfp_zoomeye
 import unittest
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 import json
 import requests
 
 
-class TestModuleZoomeye(SpiderFootTestBase):
+class TestModuleZoomeye(TestModuleBase):
     """Test Zoomeye module."""
 
     def setUp(self):

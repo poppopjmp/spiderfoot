@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 """Database fixtures for testing SpiderFoot database operations."""
+from __future__ import annotations
 
 import pytest
 import tempfile
@@ -7,7 +7,7 @@ import os
 import sqlite3
 from unittest.mock import Mock, MagicMock, patch
 from spiderfoot import SpiderFootDb
-from spiderfoot.event import SpiderFootEvent
+from spiderfoot.events.event import SpiderFootEvent
 
 
 @pytest.fixture

@@ -1,10 +1,15 @@
+from __future__ import annotations
+
+"""Tests for sfp_threatcrowd module."""
+
 import pytest
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch
 import json
 
 from modules.sfp_threatcrowd import sfp_threatcrowd
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent
 
 
@@ -15,7 +20,7 @@ class DummyEventListener:
     def notifyListeners(self, event):
         self.events.append(event)
 
-class TestModuleIntegrationThreatcrowd(unittest.TestCase):
+class TestModuleIntegrationThreatcrowd(TestModuleBase):
     def setUp(self):
         self.options = {
             '_fetchtimeout': 5
@@ -27,8 +32,8 @@ class TestModuleIntegrationThreatcrowd(unittest.TestCase):
         self.listener = DummyEventListener()
         self.module.notifyListeners = self.listener.notifyListeners
 
-    @patch('sflib.SpiderFoot.fetchUrl')
-    @patch('sflib.SpiderFoot.validIP', lambda self, x: True)
+    @patch('spiderfoot.sflib.SpiderFoot.fetchUrl')
+    @patch('spiderfoot.sflib.SpiderFoot.validIP', lambda self, x: True)
     def test_handleEvent_emits_malicious_ipaddr(self, mock_fetch):
         # Simulate ThreatCrowd API response for a malicious IP
         test_ip = '1.2.3.4'

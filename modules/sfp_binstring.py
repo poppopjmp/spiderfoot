@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: binstring."""
+
 # coding: utf-8
 # -------------------------------------------------------------------------------
 # Name:         sfp_binstring
@@ -12,11 +16,12 @@
 
 import string
 
-from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_binstring(SpiderFootPlugin):
-
+class sfp_binstring(SpiderFootModernPlugin):
+    """SpiderFoot plugin to identify strings in binary content."""
     meta = {
         'name': "Binary String Extractor",
         'summary': "Attempt to identify strings in binary content.",
@@ -52,17 +57,15 @@ class sfp_binstring(SpiderFootPlugin):
     n = None
     fq = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = list()
         self.__dataSource__ = "Target Website"
 
         self.d = SpiderFootHelpers.dictionaryWordsFromWordlists()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def getStrings(self, content):
+    def getStrings(self, content: str) -> list | None:
+        """Get Strings."""
         words = list()
         result = ""
 
@@ -105,15 +108,18 @@ class sfp_binstring(SpiderFootPlugin):
         return words
 
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["LINKED_URL_INTERNAL"]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["RAW_FILE_META_DATA"]
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -127,7 +133,7 @@ class sfp_binstring(SpiderFootPlugin):
 
         for fileExt in self.opts['fileexts']:
             if eventData.lower().endswith(f".{fileExt.lower()}") or f".{fileExt.lower()}?" in eventData.lower():
-                res = self.sf.fetchUrl(
+                res = self.fetch_url(
                     eventData,
                     useragent=self.opts['_useragent'],
                     disableContentEncoding=True,

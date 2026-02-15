@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: spamcop."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_spamcop
@@ -14,10 +18,13 @@
 
 from netaddr import IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_spamcop(SpiderFootPlugin):
+class sfp_spamcop(SpiderFootModernPlugin):
+
+    """Check if a netblock or IP address is in the SpamCop database."""
 
     meta = {
         'name': "SpamCop",
@@ -58,14 +65,12 @@ class sfp_spamcop(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             'IP_ADDRESS',
             'AFFILIATE_IPADDR',
@@ -73,7 +78,8 @@ class sfp_spamcop(SpiderFootPlugin):
             'NETBLOCK_MEMBER'
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "BLACKLISTED_IPADDR",
             "BLACKLISTED_AFFILIATE_IPADDR",
@@ -86,13 +92,14 @@ class sfp_spamcop(SpiderFootPlugin):
         ]
 
     # Swap 1.2.3.4 to 4.3.2.1
-    def reverseAddr(self, ipaddr):
+    def reverseAddr(self, ipaddr: str) -> str | None:
+        """ReverseAddr."""
         if not self.sf.validIP(ipaddr):
             self.debug(f"Invalid IPv4 address {ipaddr}")
             return None
         return '.'.join(reversed(ipaddr.split('.')))
 
-    def queryAddr(self, qaddr):
+    def queryAddr(self, qaddr: str) -> list | None:
         """Query SpamCop DNS for an IPv4 address.
 
         Args:
@@ -108,13 +115,14 @@ class sfp_spamcop(SpiderFootPlugin):
         try:
             lookup = self.reverseAddr(qaddr) + '.bl.spamcop.net'
             self.debug(f"Checking SpamCop blacklist: {lookup}")
-            return self.sf.resolveHost(lookup)
+            return self.resolve_host(lookup)
         except Exception as e:
             self.debug(f"SpamCop did not resolve {qaddr} / {lookup}: {e}")
 
         return None
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 

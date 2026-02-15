@@ -1,12 +1,17 @@
+from __future__ import annotations
+
+"""Tests for sfp_censys module."""
+
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch
 
 from modules.sfp_censys import sfp_censys
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
-class TestModuleIntegrationCensys(unittest.TestCase):
+class TestModuleIntegrationCensys(TestModuleBase):
     def setUp(self):
         self.default_options = {
             "_fetchtimeout": 10,

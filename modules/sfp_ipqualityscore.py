@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: ipqualityscore."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_ipqualityscore
@@ -12,10 +16,13 @@
 # -------------------------------------------------------------------------------
 import json
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_ipqualityscore(SpiderFootPlugin):
+class sfp_ipqualityscore(SpiderFootModernPlugin):
+
+    """Determine if target is malicious using IPQualityScore API"""
 
     meta = {
         "name": "IPQualityScore",
@@ -58,14 +65,16 @@ class sfp_ipqualityscore(SpiderFootPlugin):
 
     errorState = False
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
         if userOpts is None:
             userOpts = {}
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.opts.update(userOpts)
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             "DOMAIN_NAME",
             "EMAILADDR",
@@ -73,7 +82,8 @@ class sfp_ipqualityscore(SpiderFootPlugin):
             "PHONE_NUMBER",
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "EMAILADDR_DISPOSABLE",
             "EMAILADDR_COMPROMISED",
@@ -86,10 +96,11 @@ class sfp_ipqualityscore(SpiderFootPlugin):
             "RAW_RIR_DATA"
         ]
 
-    def handle_error_response(self, qry, res):
+    def handle_error_response(self, qry: str, res: dict) -> None:
+        """Handle error response."""
         try:
             error_info = json.loads(res["content"])
-        except Exception:
+        except Exception as e:
             error_info = None
         if error_info:
             error_message = error_info.get("message")
@@ -102,7 +113,8 @@ class sfp_ipqualityscore(SpiderFootPlugin):
         self.error(
             f"Failed to get results for {qry}, code {res['code']}{error_str}")
 
-    def query(self, qry, eventName):
+    def query(self, qry: str, eventName: str) -> dict | None:
+        """Query the data source."""
         queryString = ""
         if eventName == "PHONE_NUMBER":
             queryString = f"https://ipqualityscore.com/api/json/phone/{self.opts['api_key']}/{qry}?strictness={self.opts['strictness']}"
@@ -111,7 +123,7 @@ class sfp_ipqualityscore(SpiderFootPlugin):
         elif eventName in ['IP_ADDRESS', 'DOMAIN_NAME']:
             queryString = f"https://ipqualityscore.com/api/json/ip/{self.opts['api_key']}/{qry}?strictness={self.opts['strictness']}"
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             queryString,
             timeout=self.opts["_fetchtimeout"],
             useragent="SpiderFoot",
@@ -133,7 +145,8 @@ class sfp_ipqualityscore(SpiderFootPlugin):
 
         return None
 
-    def getGeoInfo(self, data):
+    def getGeoInfo(self, data: dict) -> dict:
+        """Get GeoInfo."""
         geoInfo = ""
 
         city = data.get('city')
@@ -154,7 +167,8 @@ class sfp_ipqualityscore(SpiderFootPlugin):
 
         return geoInfo
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

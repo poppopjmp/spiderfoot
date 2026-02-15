@@ -1,12 +1,17 @@
+from __future__ import annotations
+
+"""Tests for sfp_cloudflaredns module."""
+
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch
 
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 from modules.sfp_cloudflaredns import sfp_cloudflaredns
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 
 
-class TestModuleIntegrationCloudflaredns(unittest.TestCase):
+class TestModuleIntegrationCloudflaredns(TestModuleBase):
 
     def setUp(self):
         self.default_options = {

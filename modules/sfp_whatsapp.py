@@ -1,10 +1,17 @@
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent
+from __future__ import annotations
 
-class sfp_whatsapp(SpiderFootPlugin):
+"""SpiderFoot plug-in module: whatsapp."""
+
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+
+class sfp_whatsapp(SpiderFootModernPlugin):
+    """Monitors WhatsApp for new messages and emits events."""
+
     meta = {
         'name': "WhatsApp Monitor",
         'summary': "Monitors WhatsApp for new messages and emits events.",
-        'flags': ['apikey'],
+        'flags': ['apikey', 'experimental'],
         'useCases': ["Passive", "Investigate"],
         'group': ["Passive", "Investigate"],
         'categories': ["Social Media"],
@@ -31,19 +38,24 @@ class sfp_whatsapp(SpiderFootPlugin):
         "max_messages": "Maximum number of messages to fetch per number."
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["ROOT"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["WHATSAPP_MESSAGE"]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         # Stub for WhatsApp monitoring logic
+        """Handle an event received by this module."""
         pass
 
-    def shutdown(self):
+    def shutdown(self) -> None:
+        """Shutdown."""
         pass

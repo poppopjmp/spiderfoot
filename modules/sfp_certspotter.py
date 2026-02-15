@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: certspotter."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:        sfp_certspotter
@@ -17,10 +21,13 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_certspotter(SpiderFootPlugin):
+class sfp_certspotter(SpiderFootModernPlugin):
+    """SpiderFoot plugin to gather information about SSL certificates from SSLMate CertSpotter API."""
+
     meta = {
         'name': "CertSpotter",
         'summary': "Gather information about SSL certificates from SSLMate CertSpotter API.",
@@ -65,20 +72,19 @@ class sfp_certspotter(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in userOpts.keys():
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ['DOMAIN_NAME']
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             'INTERNET_NAME',
             'INTERNET_NAME_UNRESOLVED',
@@ -95,7 +101,8 @@ class sfp_certspotter(SpiderFootPlugin):
         ]
 
     # Query CertSpotter issuances API endpoint
-    def queryIssuances(self, domain, after=None):
+    def queryIssuances(self, domain: str, after: int = None) -> dict | None:
+        """Query Issuances."""
         params = {
             'domain': domain.encode('raw_unicode_escape').decode("ascii", errors='replace'),
             'include_subdomains': 'true',
@@ -110,7 +117,7 @@ class sfp_certspotter(SpiderFootPlugin):
             'Authorization': "Basic " + base64.b64encode(f"{self.opts['api_key']}:".encode('utf-8')).decode('utf-8')
         }
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://api.certspotter.com/v1/issuances?{urllib.parse.urlencode(params)}&expand={expand}",
             headers=headers,
             timeout=15,
@@ -143,7 +150,8 @@ class sfp_certspotter(SpiderFootPlugin):
         return None
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -262,7 +270,7 @@ class sfp_certspotter(SpiderFootPlugin):
 
             if self.getTarget().matches(domain, includeChildren=True, includeParents=True):
                 evt_type = 'INTERNET_NAME'
-                if self.opts['verify'] and not self.sf.resolveHost(domain) and not self.sf.resolveHost6(domain):
+                if self.opts['verify'] and not self.resolve_host(domain) and not self.resolve_host6(domain):
                     self.debug(f"Host {domain} could not be resolved")
                     evt_type += '_UNRESOLVED'
             else:

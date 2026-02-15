@@ -1,11 +1,16 @@
+from __future__ import annotations
+
+"""Tests for sfp_zoomeye module."""
+
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 
 from modules.sfp_zoomeye import sfp_zoomeye
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
-class TestModuleIntegrationZoomEye(unittest.TestCase):
+class TestModuleIntegrationZoomEye(TestModuleBase):
 
     def setUp(self):
         self.default_options = {

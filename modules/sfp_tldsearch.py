@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: tldsearch."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_tldsearch
@@ -17,10 +21,13 @@ import time
 
 import dns.resolver
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_tldsearch(SpiderFootPlugin):
+class sfp_tldsearch(SpiderFootModernPlugin):
+
+    """Search all Internet TLDs for domains with the same name as the target (this can be very slow.)"""
 
     meta = {
         'name': "TLD Searcher",
@@ -52,26 +59,26 @@ class sfp_tldsearch(SpiderFootPlugin):
     tldResults = dict()
     lock = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.__dataSource__ = "DNS"
         self.lock = threading.Lock()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["INTERNET_NAME"]
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["SIMILARDOMAIN"]
 
-    def tryTld(self, target, tld):
+    def tryTld(self, target: str, tld: str) -> None:
+        """TryTld."""
         resolver = dns.resolver.Resolver()
         resolver.timeout = 1
         resolver.lifetime = 1
@@ -83,17 +90,18 @@ class sfp_tldsearch(SpiderFootPlugin):
             return
 
         try:
-            if not self.sf.resolveHost(target) and not self.sf.resolveHost6(target):
+            if not self.resolve_host(target) and not self.resolve_host6(target):
                 with self.lock:
                     self.tldResults[target] = False
             else:
                 with self.lock:
                     self.tldResults[target] = True
-        except Exception:
+        except Exception as e:
             with self.lock:
                 self.tldResults[target] = False
 
-    def tryTldWrapper(self, tldList, sourceEvent):
+    def tryTldWrapper(self, tldList: list, sourceEvent: SpiderFootEvent) -> None:
+        """TryTldWrapper."""
         self.tldResults = dict()
         running = True
         t = []
@@ -127,7 +135,8 @@ class sfp_tldsearch(SpiderFootPlugin):
                 self.sendEvent(sourceEvent, res)
 
     # Store the result internally and notify listening modules
-    def sendEvent(self, source, result):
+    def sendEvent(self, source: str, result: str) -> None:
+        """SendEvent."""
         self.info("Found a TLD with the target's name: " + result)
         self.results[result] = True
 
@@ -136,12 +145,12 @@ class sfp_tldsearch(SpiderFootPlugin):
             if self.checkForStop():
                 return
 
-            pageContent = self.sf.fetchUrl('http://' + result,
+            pageContent = self.fetch_url('http://' + result,
                                            timeout=self.opts['_fetchtimeout'],
                                            useragent=self.opts['_useragent'],
                                            noLog=True,
                                            verify=False)
-            if pageContent['content'] is not None:
+            if pageContent is not None and pageContent.get('content') is not None:
                 evt = SpiderFootEvent(
                     "SIMILARDOMAIN", result, self.__name__, source)
                 self.notifyListeners(evt)
@@ -151,7 +160,8 @@ class sfp_tldsearch(SpiderFootPlugin):
             self.notifyListeners(evt)
 
     # Search for similar sounding domains
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventData = event.data
 
         if eventData in self.results:

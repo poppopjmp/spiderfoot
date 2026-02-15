@@ -1,0 +1,60 @@
+#
+# SpiderFoot Microservices - Base Image
+# Shared base for all SpiderFoot service containers
+#
+
+FROM python:3.11-slim-bullseye as builder
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    build-essential \
+    libxml2-dev \
+    libxslt-dev \
+    libjpeg-dev \
+    zlib1g-dev \
+    libffi-dev \
+    libssl-dev \
+    python3-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /build
+
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -U pip==25.0.1 && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Runtime stage
+FROM python:3.11-slim-bullseye
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libxml2 \
+    libxslt1.1 \
+    libjpeg62-turbo \
+    zlib1g \
+    dnsutils \
+    ca-certificates \
+    curl \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /opt/venv /opt/venv
+
+ENV PATH="/opt/venv/bin:$PATH" \
+    VIRTUAL_ENV="/opt/venv" \
+    PYTHONPATH="/app" \
+    PYTHONUNBUFFERED=1
+
+RUN addgroup --system spiderfoot && \
+    adduser --system --ingroup spiderfoot --home /app \
+            --shell /usr/sbin/nologin --gecos "SpiderFoot" spiderfoot
+
+WORKDIR /app
+
+COPY --chown=spiderfoot:spiderfoot . .
+
+RUN mkdir -p /app/data /app/logs /app/cache && \
+    chown -R spiderfoot:spiderfoot /app
+
+USER spiderfoot

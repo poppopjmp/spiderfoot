@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: ipregistry."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_ipregistry
@@ -13,10 +17,13 @@
 import json
 import urllib.parse
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_ipregistry(SpiderFootPlugin):
+class sfp_ipregistry(SpiderFootModernPlugin):
+    """Query the ipregistry.co database for reputation and geo-location."""
+
     meta = {
         "name": "ipregistry",
         "summary": "Query the ipregistry.co database for reputation and geo-location.",
@@ -54,22 +61,26 @@ class sfp_ipregistry(SpiderFootPlugin):
 
     errorState = False
 
-    def setup(self, sfc, userOpts=None):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
 
         if userOpts:
             self.opts.update(userOpts)
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["IP_ADDRESS", "IPV6_ADDRESS"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["GEOINFO", "MALICIOUS_IPADDR", "PHYSICAL_COORDINATES", "RAW_RIR_DATA"]
 
-    def query(self, qry):
+    def query(self, qry: str) -> dict | None:
+        """Query the data source."""
         qs = urllib.parse.urlencode({"key": self.opts["api_key"]})
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://api.ipregistry.co/{qry}?{qs}",
             timeout=self.opts["_fetchtimeout"],
             useragent="SpiderFoot",
@@ -88,12 +99,14 @@ class sfp_ipregistry(SpiderFootPlugin):
 
         return None
 
-    def emit(self, etype, data, pevent):
+    def emit(self, etype: str, data: str, pevent: SpiderFootEvent) -> None:
+        """Emit."""
         evt = SpiderFootEvent(etype, data, self.__name__, pevent)
         self.notifyListeners(evt)
         return evt
 
-    def generate_location_events(self, location, pevent):
+    def generate_location_events(self, location: dict, pevent: SpiderFootEvent) -> None:
+        """Generate location events."""
         if not isinstance(location, dict):
             return
         physical_location = None
@@ -128,7 +141,8 @@ class sfp_ipregistry(SpiderFootPlugin):
         if physical_location:
             self.emit("PHYSICAL_COORDINATES", physical_location, pevent)
 
-    def generate_security_events(self, security, pevent):
+    def generate_security_events(self, security: dict, pevent: SpiderFootEvent) -> None:
+        """Generate security events."""
         if not isinstance(security, dict):
             return
         malicious = any(
@@ -138,13 +152,15 @@ class sfp_ipregistry(SpiderFootPlugin):
             self.emit("MALICIOUS_IPADDR",
                       f"ipregistry [{pevent.data}]", pevent)
 
-    def generate_events(self, data, pevent):
+    def generate_events(self, data: dict, pevent: SpiderFootEvent) -> None:
+        """Generate events."""
         if not isinstance(data, dict):
             return
         self.generate_location_events(data.get("location"), pevent)
         self.generate_security_events(data.get("security"), pevent)
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         if self.errorState:
             return
 

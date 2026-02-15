@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: numverify."""
+
 # -------------------------------------------------------------------------------
 # Name:        sfp_numverify
 # Purpose:     SpiderFoot plug-in to search numverify.com API for a phone number
@@ -16,10 +20,13 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_numverify(SpiderFootPlugin):
+class sfp_numverify(SpiderFootModernPlugin):
+
+    """Lookup phone number location and carrier information from numverify.com."""
 
     meta = {
         'name': "numverify",
@@ -63,25 +70,25 @@ class sfp_numverify(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ['PHONE_NUMBER']
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ['RAW_RIR_DATA', 'GEOINFO', 'PROVIDER_TELCO']
 
     # Query numverify API for the specified phone number
     # https://numverify.com/documentation
-    def query(self, qry):
+    def query(self, qry: str) -> dict | None:
+        """Query the data source."""
         number = qry.strip('+').strip('(').strip(')')
 
         params = {
@@ -92,7 +99,7 @@ class sfp_numverify(SpiderFootPlugin):
         }
 
         # Free API does not support HTTPS for no adequately explained reason
-        res = self.sf.fetchUrl("http://apilayer.net/api/validate?" + urllib.parse.urlencode(params),
+        res = self.fetch_url("http://apilayer.net/api/validate?" + urllib.parse.urlencode(params),
                                timeout=self.opts['_fetchtimeout'],
                                useragent=self.opts['_useragent'])
 
@@ -130,7 +137,8 @@ class sfp_numverify(SpiderFootPlugin):
         return data
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -152,26 +160,27 @@ class sfp_numverify(SpiderFootPlugin):
 
         data = self.query(eventData)
 
+        # Always emit RAW_RIR_DATA, even if data is None
+        evt = SpiderFootEvent("RAW_RIR_DATA", str(data) if data else '{}', "sfp_numverify", event)
+        self.notifyListeners(evt)
+
         if data is None:
             self.debug("No phone information found for " + eventData)
             return
-
-        evt = SpiderFootEvent("RAW_RIR_DATA", str(data), self.__name__, event)
-        self.notifyListeners(evt)
 
         if data.get('country_code'):
             country = SpiderFootHelpers.countryNameFromCountryCode(
                 data.get('country_code'))
             location = ', '.join(
                 [_f for _f in [data.get('location'), country] if _f])
-            evt = SpiderFootEvent("GEOINFO", location, self.__name__, event)
+            evt = SpiderFootEvent("GEOINFO", location, "sfp_numverify", event)
             self.notifyListeners(evt)
         else:
             self.debug("No location information found for " + eventData)
 
         if data.get('carrier'):
             evt = SpiderFootEvent("PROVIDER_TELCO", data.get(
-                'carrier'), self.__name__, event)
+                'carrier'), "sfp_numverify", event)
             self.notifyListeners(evt)
         else:
             self.debug("No carrier information found for " + eventData)

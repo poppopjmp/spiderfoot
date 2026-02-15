@@ -1,6 +1,8 @@
 """Base test class with proper resource management to prevent hanging tests."""
+from __future__ import annotations
 
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 import threading
 import time
 import os
@@ -9,7 +11,7 @@ from unittest.mock import MagicMock
 from spiderfoot import SpiderFootHelpers
 
 
-class SpiderFootTestBase(unittest.TestCase):
+class TestModuleBase(TestModuleBase):
     """Base test class with resource management."""
     
     def setUp(self):
@@ -126,7 +128,13 @@ class SpiderFootTestBase(unittest.TestCase):
         pass
     
     def tearDown(self):
-        """Clean up test resources."""
+        """Clean up after each test."""
+        # This method is inherited by other test classes.
+        # It provides a central, safe way to clean up lingering threads.
+
+        import threading
+        from contextlib import suppress
+
         # Clean up event emitters
         for emitter in self._event_emitters:
             try:
@@ -134,25 +142,32 @@ class SpiderFootTestBase(unittest.TestCase):
                     emitter.stop()
                 if hasattr(emitter, 'cleanup'):
                     emitter.cleanup()
-            except:
+            except Exception as e:
+                # Suppress any cleanup errors from event emitters
                 pass
-        
-        # Force cleanup of any new threads
-        current_threads = set(threading.enumerate())
-        new_threads = current_threads - self._initial_threads
-        
-        for thread in new_threads:
-            if thread.is_alive() and not thread.daemon:
-                thread.daemon = True
-        
+
+        # Safely clean up any remaining SpiderFoot-related threads.
+        for thread in threading.enumerate():
+            if (hasattr(thread, '_target')
+                    and thread._target
+                    and 'SpiderFoot' in str(thread._target)
+                    and thread != threading.current_thread()
+                    and thread.is_alive()):
+                
+                # DO NOT set thread.daemon on an active thread.
+                # Instead, suppress errors and safely attempt to join it.
+                with suppress(RuntimeError):
+                    thread.join(timeout=0.5)
+
         # Clean up temporary directory
         try:
             import shutil
             shutil.rmtree(self._temp_dir, ignore_errors=True)
-        except:
+        except Exception as e:
+            # Suppress any filesystem cleanup errors
             pass
-        
+
         # Give time for cleanup
         time.sleep(0.1)
-        
+
         super().tearDown()

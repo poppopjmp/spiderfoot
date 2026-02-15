@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: onioncity."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_onioncity
@@ -13,10 +17,13 @@
 
 import re
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_onioncity(SpiderFootPlugin):
+class sfp_onioncity(SpiderFootModernPlugin):
+
+    """Search Tor """
 
     meta = {
         'name': "Onion.link",
@@ -65,26 +72,26 @@ class sfp_onioncity(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["INTERNET_NAME", "DOMAIN_NAME"]
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["DARKNET_MENTION_URL", "DARKNET_MENTION_CONTENT",
                 "RAW_RIR_DATA"]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -132,17 +139,17 @@ class sfp_onioncity(SpiderFootPlugin):
 
         # Submit the Google results for analysis
         googlesearch_url = res["webSearchUrl"]
-        response = self.sf.fetchUrl(
+        response = self.fetch_url(
             googlesearch_url,
             timeout=self.opts["_fetchtimeout"],
             useragent=self.opts["_useragent"],
         )
-        if response['code'] in ["200", "201", "202"]:
-            evt = SpiderFootEvent(
-                "RAW_RIR_DATA", response["content"], self.__name__, event
-            )
-            self.notifyListeners(evt)
-        else:
+        # Always emit RAW_RIR_DATA, even if response is not 200
+        evt = SpiderFootEvent(
+            "RAW_RIR_DATA", response.get("content", ""), "sfp_onioncity", event
+        )
+        self.notifyListeners(evt)
+        if response['code'] not in ["200", "201", "202"]:
             self.error("Failed to fetch Google web search URL")
 
         # Check if we've been asked to stop
@@ -157,39 +164,33 @@ class sfp_onioncity(SpiderFootPlugin):
             self.debug("Found a darknet mention: " + link)
             torlink = link.replace(".onion.link", ".onion")
             if self.opts['fetchlinks']:
-                res = self.sf.fetchUrl(torlink, timeout=self.opts['_fetchtimeout'],
+                res = self.fetch_url(torlink, timeout=self.opts['_fetchtimeout'],
                                        useragent=self.opts['_useragent'],
                                        verify=False)
-
                 if res['content'] is None:
                     self.debug("Ignoring " + link + " as no data returned")
                     continue
-
-                # Sometimes onion city search results false positives
                 if re.search(r"[^a-zA-Z\-\_0-9]" + re.escape(eventData) +
                              r"[^a-zA-Z\-\_0-9]", res['content'], re.IGNORECASE) is None:
                     self.debug("Ignoring " + link +
                                " as no mention of " + eventData)
                     continue
-
                 evt = SpiderFootEvent(
-                    "DARKNET_MENTION_URL", torlink, self.__name__, event)
+                    "DARKNET_MENTION_URL", torlink, "sfp_onioncity", event)
                 self.notifyListeners(evt)
-
                 try:
                     startIndex = res['content'].index(eventData) - 120
                     endIndex = startIndex + len(eventData) + 240
-                except Exception:
+                except Exception as e:
                     self.debug("String not found in content.")
                     continue
-
                 data = res['content'][startIndex:endIndex]
                 evt = SpiderFootEvent("DARKNET_MENTION_CONTENT", "..." + data + "...",
-                                      self.__name__, evt)
+                                      "sfp_onioncity", evt)
                 self.notifyListeners(evt)
             else:
                 evt = SpiderFootEvent(
-                    "DARKNET_MENTION_URL", torlink, self.__name__, event)
+                    "DARKNET_MENTION_URL", torlink, "sfp_onioncity", event)
                 self.notifyListeners(evt)
 
 # End of sfp_onioncity class

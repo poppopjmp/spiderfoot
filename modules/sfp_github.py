@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: github."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_github
@@ -13,11 +17,13 @@
 
 import json
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_github(SpiderFootPlugin):
-
+class sfp_github(SpiderFootModernPlugin):
+    """SpiderFoot plugin to identify public code repositories in Github associated with your target."""
+    __name__ = "sfp_github"
     meta = {
         'name': "Github",
         'summary': "Identify associated public code repositories on Github.",
@@ -47,26 +53,26 @@ class sfp_github(SpiderFootPlugin):
         'namesonly': "Match repositories by name only, not by their descriptions. Helps reduce false positives."
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME", "USERNAME", "SOCIAL_MEDIA"]
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["RAW_RIR_DATA", "GEOINFO", "PUBLIC_CODE_REPO"]
 
     # Build up repo info for use as an event
-    def buildRepoInfo(self, item):
+    def buildRepoInfo(self, item: dict) -> str | None:
         # Get repos matching the name
+        """Build RepoInfo."""
         name = item.get('name')
         if name is None:
             self.debug("Incomplete Github information found (name).")
@@ -84,7 +90,8 @@ class sfp_github(SpiderFootPlugin):
 
         return "\n".join([f"Name: {name}", f"URL: {html_url}", f"Description: {description}"])
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
         srcModuleName = event.module
@@ -115,11 +122,11 @@ class sfp_github(SpiderFootPlugin):
             try:
                 urlParts = url.split("/")
                 username = urlParts[len(urlParts) - 1]
-            except Exception:
+            except Exception as e:
                 self.debug(f"Couldn't get a username out of {url}")
                 return
 
-            res = self.sf.fetchUrl(
+            res = self.fetch_url(
                 f"https://api.github.com/users/{username}",
                 timeout=self.opts['_fetchtimeout'],
                 useragent=self.opts['_useragent']
@@ -177,7 +184,7 @@ class sfp_github(SpiderFootPlugin):
         # Get all the repositories based on direct matches with the
         # name identified
         url = f"https://api.github.com/search/repositories?q={username}"
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             url,
             timeout=self.opts['_fetchtimeout'],
             useragent=self.opts['_useragent']
@@ -218,7 +225,7 @@ class sfp_github(SpiderFootPlugin):
         # Now look for users matching the name found
         failed = False
         url = f"https://api.github.com/search/users?q={username}"
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             url,
             timeout=self.opts['_fetchtimeout'],
             useragent=self.opts['_useragent']
@@ -235,7 +242,7 @@ class sfp_github(SpiderFootPlugin):
                     self.error(
                         f"Unable to process empty response from Github for: {username}")
                     failed = True
-            except Exception:
+            except Exception as e:
                 self.error(
                     f"Unable to process invalid response from Github for: {username}")
                 failed = True
@@ -254,7 +261,7 @@ class sfp_github(SpiderFootPlugin):
                     continue
 
                 url = item['repos_url']
-                res = self.sf.fetchUrl(url, timeout=self.opts['_fetchtimeout'],
+                res = self.fetch_url(url, timeout=self.opts['_fetchtimeout'],
                                        useragent=self.opts['_useragent'])
 
                 if res['content'] is None:

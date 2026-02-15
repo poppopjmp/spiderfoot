@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: coinblocker."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_coinblocker
@@ -10,11 +14,12 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_coinblocker(SpiderFootPlugin):
-
+class sfp_coinblocker(SpiderFootModernPlugin):
+    """SpiderFoot plugin to check if a domain appears on CoinBlocker lists."""
     meta = {
         'name': "CoinBlocker Lists",
         'summary': "Check if a domain appears on CoinBlocker lists.",
@@ -53,22 +58,21 @@ class sfp_coinblocker(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.errorState = False
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             "INTERNET_NAME",
             "AFFILIATE_INTERNET_NAME",
             "CO_HOSTED_SITE",
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "BLACKLISTED_INTERNET_NAME",
             "BLACKLISTED_AFFILIATE_INTERNET_NAME",
@@ -78,7 +82,8 @@ class sfp_coinblocker(SpiderFootPlugin):
             "MALICIOUS_COHOST",
         ]
 
-    def queryBlocklist(self, target):
+    def queryBlocklist(self, target: str) -> bool:
+        """Query Blocklist."""
         blocklist = self.retrieveBlocklist()
 
         if not blocklist:
@@ -90,15 +95,16 @@ class sfp_coinblocker(SpiderFootPlugin):
 
         return False
 
-    def retrieveBlocklist(self):
-        blocklist = self.sf.cacheGet(
+    def retrieveBlocklist(self) -> list | None:
+        """RetrieveBlocklist."""
+        blocklist = self.cache_get(
             'coinblocker', self.opts.get('cacheperiod', 24))
 
         if blocklist is not None:
             return self.parseBlocklist(blocklist)
 
         url = "https://zerodot1.gitlab.io/CoinBlockerLists/list.txt"
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             url,
             timeout=self.opts['_fetchtimeout'],
             useragent=self.opts['_useragent'],
@@ -115,11 +121,11 @@ class sfp_coinblocker(SpiderFootPlugin):
             self.errorState = True
             return None
 
-        self.sf.cachePut("coinblocker", res['content'])
+        self.cache_put("coinblocker", res['content'])
 
         return self.parseBlocklist(res['content'])
 
-    def parseBlocklist(self, blocklist):
+    def parseBlocklist(self, blocklist: str) -> list:
         """Parse plaintext CoinBlocker list.
 
         Args:
@@ -148,7 +154,8 @@ class sfp_coinblocker(SpiderFootPlugin):
 
         return hosts
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

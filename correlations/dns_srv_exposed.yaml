@@ -1,0 +1,19 @@
+id: dns_srv_exposed
+version: "1"
+meta:
+  name: DNS SRV record reveals internal services
+  description: >
+    DNS SRV records were found that reveal internal service
+    names, ports, and protocols. SRV records are used for
+    service discovery (e.g., LDAP, SIP, XMPP, Kerberos)
+    and can disclose internal infrastructure topology to
+    attackers performing reconnaissance.
+  risk: MEDIUM
+collections:
+  collect:
+      - method: exact
+        field: type
+        value: DNS_SRV
+aggregation:
+  field: entity.data
+headline: "DNS SRV record exposes service for: {entity.data}"

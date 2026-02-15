@@ -1,10 +1,14 @@
+from __future__ import annotations
+
+"""Tests for sfp_telegram module."""
+
 import unittest
 from unittest.mock import patch, MagicMock
 from modules.sfp_telegram import sfp_telegram
 from spiderfoot import SpiderFootEvent
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_module_base import TestModuleBase
 
-class IntegrationTestTelegramPlugin(SpiderFootTestBase):
+class IntegrationTestTelegramPlugin(TestModuleBase):
     def setUp(self):
         super().setUp()
         self.sf_instance = self.scanner  # Fix: provide sf_instance for module.setup

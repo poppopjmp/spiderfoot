@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: gravatar."""
+
 # -------------------------------------------------------------------------------
 # Name:        sfp_gravatar
 # Purpose:     SpiderFoot plug-in to search Gravatar API for an email address
@@ -15,10 +19,13 @@ import hashlib
 import json
 import time
 
-from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_gravatar(SpiderFootPlugin):
+class sfp_gravatar(SpiderFootModernPlugin):
+
+    """Retrieve user information from Gravatar API."""
 
     meta = {
         'name': "Gravatar",
@@ -52,20 +59,19 @@ class sfp_gravatar(SpiderFootPlugin):
     results = None
     reportedUsers = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.reportedUsers = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ['EMAILADDR']
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ['RAW_RIR_DATA', 'USERNAME',
                 'EMAILADDR', 'EMAILADDR_GENERIC', 'PHONE_NUMBER', 'GEOINFO',
                 'ACCOUNT_EXTERNAL_OWNED', 'SOCIAL_MEDIA']
@@ -73,11 +79,12 @@ class sfp_gravatar(SpiderFootPlugin):
     # Query Gravatar API for the specified email address
     # https://secure.gravatar.com/site/implement/
     # https://secure.gravatar.com/site/implement/profiles/
-    def query(self, qry):
+    def query(self, qry: str):
+        """Query the data source."""
         email_hash = hashlib.md5(qry.encode('utf-8', errors='replace').lower()).hexdigest()  # noqa: DUO130
         output = 'json'
 
-        res = self.sf.fetchUrl("https://secure.gravatar.com/" + email_hash + '.' + output,
+        res = self.fetch_url("https://secure.gravatar.com/" + email_hash + '.' + output,
                                timeout=self.opts['_fetchtimeout'],
                                useragent=self.opts['_useragent'])
 
@@ -102,7 +109,8 @@ class sfp_gravatar(SpiderFootPlugin):
         return data.get('entry')[0]
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -143,15 +151,13 @@ class sfp_gravatar(SpiderFootPlugin):
                         "RAW_RIR_DATA", f"Possible full name: {full_name}", self.__name__, event)
                     self.notifyListeners(evt)
 
-        # TODO: re-enable once location validation is implemented
-        # location can not be trusted
-        # if data.get('currentLocation') is not None:
-        #     location = data.get('currentLocation')
-        #     if len(location) < 3 or len(location) > 100:
-        #         self.debug("Skipping likely invalid location.")
-        #     else:
-        #         evt = SpiderFootEvent("GEOINFO", location, self.__name__, event)
-        #         self.notifyListeners(evt)
+        if data.get('currentLocation') is not None:
+            location = data.get('currentLocation')
+            if len(location) < 3 or len(location) > 100:
+                self.debug("Skipping likely invalid location.")
+            else:
+                evt = SpiderFootEvent("GEOINFO", location, self.__name__, event)
+                self.notifyListeners(evt)
 
         if data.get('phoneNumbers') is not None:
             for number in data.get('phoneNumbers'):

@@ -1,0 +1,18 @@
+id: upload_endpoint_exposed
+version: "1"
+meta:
+  name: Upload endpoint found on website
+  description: >
+    A file upload endpoint was discovered on the target's web
+    application. Upload endpoints are a common attack vector
+    for web shells, malware delivery, and remote code execution
+    if not properly validated and sandboxed.
+  risk: MEDIUM
+collections:
+  collect:
+      - method: exact
+        field: type
+        value: URL_UPLOAD
+aggregation:
+  field: entity.data
+headline: "Upload endpoint found on: {entity.data}"

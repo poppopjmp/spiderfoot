@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: similar."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_similar
@@ -11,7 +15,8 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 nearchars = {
     'a': ['4', 's'],
@@ -58,7 +63,9 @@ pairs = {
 }
 
 
-class sfp_similar(SpiderFootPlugin):
+class sfp_similar(SpiderFootModernPlugin):
+
+    """Search various sources to identify similar looking domain names, for instance squatted domains."""
 
     meta = {
         'name': "Similar Domain Finder",
@@ -81,26 +88,26 @@ class sfp_similar(SpiderFootPlugin):
     # Internal results tracking
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.__dataSource__ = "DNS"
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME"]
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["SIMILARDOMAIN"]
 
     # Search for similar sounding domains
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventData = event.data
 
         dom = self.sf.domainKeyword(eventData, self.opts['_internettlds'])
@@ -153,13 +160,13 @@ class sfp_similar(SpiderFootPlugin):
         for d in domlist:
             try:
                 for domain in [f"{d}{tld}", f"www.{d}{tld}"]:
-                    if self.sf.resolveHost(domain) or self.sf.resolveHost6(domain):
+                    if self.resolve_host(domain) or self.resolve_host6(domain):
                         self.debug(f"Resolved {domain}")
                         evt = SpiderFootEvent(
                             "SIMILARDOMAIN", f"{d}{tld}", self.__name__, event)
                         self.notifyListeners(evt)
                         break
-            except Exception:
+            except Exception as e:
                 continue
 
 # End of sfp_similar class

@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: arin."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_arin
@@ -13,10 +17,12 @@
 
 import json
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_arin(SpiderFootPlugin):
+class sfp_arin(SpiderFootModernPlugin):
+    """SpiderFoot plugin to query the ARIN internet registry for contact information."""
     meta = {
         "name": "ARIN",
         "summary": "Queries ARIN registry for contact information.",
@@ -54,7 +60,7 @@ class sfp_arin(SpiderFootPlugin):
     currentEventSrc = None
     keywords = None
 
-    def setup(self, sfc, userOpts=dict()):
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """
         Set up the plugin with SpiderFoot context and user options.
 
@@ -62,13 +68,10 @@ class sfp_arin(SpiderFootPlugin):
             sfc (SpiderFoot): The SpiderFoot context object.
             userOpts (dict): User-supplied options for the module.
         """
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.currentEventSrc = None
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """
         Return a list of event types this module is interested in.
 
@@ -77,7 +80,7 @@ class sfp_arin(SpiderFootPlugin):
         """
         return ["DOMAIN_NAME", "HUMAN_NAME"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """
         Return a list of event types this module produces.
 
@@ -86,7 +89,7 @@ class sfp_arin(SpiderFootPlugin):
         """
         return ["RAW_RIR_DATA", "HUMAN_NAME"]
 
-    def fetchRir(self, url):
+    def fetchRir(self, url: str) -> dict | None:
         """
         Fetch content from ARIN and return the response if available.
 
@@ -97,7 +100,7 @@ class sfp_arin(SpiderFootPlugin):
             dict or None: The response dict or None if not found.
         """
         head = {"Accept": "application/json"}
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             url,
             timeout=self.opts["_fetchtimeout"],
             useragent=self.opts["_useragent"],
@@ -107,7 +110,7 @@ class sfp_arin(SpiderFootPlugin):
             return res
         return None
 
-    def query(self, qtype, value):
+    def query(self, qtype: str, value: str) -> dict | None:
         """
         Query ARIN for information based on type and value.
 
@@ -149,7 +152,7 @@ class sfp_arin(SpiderFootPlugin):
         self.notifyListeners(evt)
         return data
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """
         Handle incoming events, query ARIN for data, and emit events for found information.
 

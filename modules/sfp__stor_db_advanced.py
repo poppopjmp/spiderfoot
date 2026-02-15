@@ -3,15 +3,15 @@
 # Name:         sfp_stor_db_advanced
 # Purpose:      Advanced enterprise-grade storage module with Phase 2 features
 #
-# Author:       Enterprise Enhancement Team
-# Created:      2025-01-XX
-# Copyright:    (c) SpiderFoot Enterprise 2025
+# Author:       Agostino Panico poppopjmp
+# Created:      2025-06-20
+# Copyright:    (c) Agostino Panico 2025
 # License:      MIT
 # -------------------------------------------------------------------------------
 
-"""
-Phase 2 Enterprise Storage Module
+from __future__ import annotations
 
+"""
 This module implements advanced enterprise features:
 - Advanced query optimization with prepared statements
 - Connection load balancing across multiple databases
@@ -24,15 +24,15 @@ import os
 import time
 import json
 import threading
-from typing import Dict, List, Optional, Any, Tuple
+import signal
+from typing import Any
 from collections import defaultdict, deque
 from dataclasses import dataclass
 import hashlib
 import logging
-from contextlib import contextmanager
-import queue
-import signal
-import traceback
+from contextlib import contextmanager, suppress
+
+_log = logging.getLogger(__name__)
 
 try:
     import psycopg2
@@ -49,7 +49,7 @@ try:
 except ImportError:
     HAS_ELASTICSEARCH = False
 
-from spiderfoot import SpiderFootPlugin
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
 @dataclass
@@ -69,17 +69,18 @@ class QueryProfile:
     """Profile for optimized queries."""
     query_hash: str
     query_type: str
-    prepared_statement: Optional[str] = None
+    prepared_statement: str | None = None
     execution_count: int = 0
     avg_execution_time: float = 0.0
-    optimized_version: Optional[str] = None
-    index_hints: List[str] = None
+    optimized_version: str | None = None
+    index_hints: list[str] = None
 
 
 class ConnectionLoadBalancer:
     """Advanced connection load balancer with health monitoring."""
     
-    def __init__(self, configs: List[Dict[str, Any]]):
+    def __init__(self, configs: list[dict[str, Any]]) -> None:
+        """Initialize the ConnectionLoadBalancer."""
         self.configs = configs
         self.pools = {}
         self.metrics = {}
@@ -93,6 +94,15 @@ class ConnectionLoadBalancer:
             pool_id = f"pool_{i}"
             try:
                 if config['type'] == 'postgresql':
+                    if not HAS_PSYCOPG2:
+                        raise ImportError("psycopg2 is required for PostgreSQL connections but not installed")
+                    
+                    # Validate required configuration parameters
+                    required_params = ['host', 'port', 'database', 'username', 'password']
+                    missing_params = [param for param in required_params if not config.get(param)]
+                    if missing_params:
+                        raise ValueError(f"Missing required PostgreSQL parameters: {missing_params}")
+                    
                     pool = psycopg2.pool.ThreadedConnectionPool(
                         minconn=config.get('min_connections', 1),
                         maxconn=config.get('max_connections', 10),
@@ -106,12 +116,17 @@ class ConnectionLoadBalancer:
                     self.pools[pool_id] = pool
                     self.metrics[pool_id] = ConnectionMetrics()
                     self.health_status[pool_id] = True
+                else:
+                    raise ValueError(f"Unsupported database type: {config.get('type', 'unknown')}")
                     
             except Exception as e:
-                logging.error(f"Failed to initialize pool {pool_id}: {e}")
+                if hasattr(self, 'sf') and hasattr(self.sf, 'error'):
+                    self.log.error(f"Failed to initialize pool {pool_id}: {e}")
+                else:
+                    _log.error("Failed to initialize pool %s: %s", pool_id, e)
                 self.health_status[pool_id] = False
     
-    def get_optimal_connection(self, query_type: str = None) -> Tuple[str, Any]:
+    def get_optimal_connection(self, query_type: str = None) -> tuple[str, Any]:
         """Get the optimal connection based on load balancing algorithms."""
         with self.lock:
             available_pools = [
@@ -132,11 +147,14 @@ class ConnectionLoadBalancer:
                 return best_pool_id, conn
             except Exception as e:
                 self.health_status[best_pool_id] = False
-                logging.error(f"Failed to get connection from {best_pool_id}: {e}")
+                if hasattr(self, 'sf') and hasattr(self.sf, 'error'):
+                    self.log.error(f"Failed to get connection from {best_pool_id}: {e}")
+                else:
+                    _log.error("Failed to get connection from %s: %s", best_pool_id, e)
                 # Retry with next best pool
                 return self.get_optimal_connection(query_type)
     
-    def return_connection(self, pool_id: str, conn: Any, success: bool = True):
+    def return_connection(self, pool_id: str, conn: Any, success: bool = True) -> None:
         """Return connection to pool and update metrics."""
         with self.lock:
             try:
@@ -152,19 +170,23 @@ class ConnectionLoadBalancer:
                 metrics.load_factor = (metrics.total_queries - metrics.successful_queries) / max(metrics.total_queries, 1)
                 
             except Exception as e:
-                logging.error(f"Failed to return connection to {pool_id}: {e}")
+                if hasattr(self, 'sf') and hasattr(self.sf, 'error'):
+                    self.log.error(f"Failed to return connection to {pool_id}: {e}")
+                else:
+                    _log.error("Failed to return connection to %s: %s", pool_id, e)
 
 
 class QueryOptimizer:
     """Advanced query optimizer with prepared statements and AI-powered optimization."""
     
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize the QueryOptimizer."""
         self.query_profiles = {}
         self.prepared_statements = {}
         self.query_cache = {}
         self.optimization_rules = self._load_optimization_rules()
         
-    def _load_optimization_rules(self) -> Dict[str, Any]:
+    def _load_optimization_rules(self) -> dict[str, Any]:
         """Load AI-powered optimization rules."""
         return {
             'bulk_insert': {
@@ -247,7 +269,7 @@ class QueryOptimizer:
             return query.replace('INSERT INTO', 'INSERT INTO', 1) + ' ON CONFLICT DO NOTHING'
         return query
     
-    def _suggest_indexes(self, query: str) -> List[str]:
+    def _suggest_indexes(self, query: str) -> list[str]:
         """Suggest indexes for complex queries."""
         suggestions = []
         if 'WHERE' in query.upper():
@@ -266,7 +288,8 @@ class QueryOptimizer:
 class PerformanceMonitor:
     """Real-time performance monitoring and analytics."""
     
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize the PerformanceMonitor."""
         self.metrics = defaultdict(list)
         self.alerts = deque(maxlen=1000)
         self.thresholds = {
@@ -277,7 +300,7 @@ class PerformanceMonitor:
         self.monitoring_active = True
         self._start_monitoring_thread()
     
-    def record_query(self, query_type: str, execution_time: float, success: bool):
+    def record_query(self, query_type: str, execution_time: float, success: bool) -> None:
         """Record query execution metrics."""
         timestamp = time.time()
         self.metrics['queries'].append({
@@ -295,7 +318,7 @@ class PerformanceMonitor:
                 'timestamp': timestamp
             })
     
-    def record_connection_metrics(self, pool_id: str, metrics: ConnectionMetrics):
+    def record_connection_metrics(self, pool_id: str, metrics: ConnectionMetrics) -> None:
         """Record connection pool metrics."""
         self.metrics['connections'].append({
             'timestamp': time.time(),
@@ -306,7 +329,7 @@ class PerformanceMonitor:
             'load_factor': metrics.load_factor
         })
     
-    def _trigger_alert(self, alert_type: str, details: Dict[str, Any]):
+    def _trigger_alert(self, alert_type: str, details: dict[str, Any]):
         """Trigger performance alert."""
         alert = {
             'timestamp': time.time(),
@@ -315,9 +338,12 @@ class PerformanceMonitor:
             'severity': self._determine_severity(alert_type, details)
         }
         self.alerts.append(alert)
-        logging.warning(f"Performance alert: {alert_type} - {details}")
+        if hasattr(self, 'sf') and hasattr(self.sf, 'warning'):
+            self.log.warning(f"Performance alert: {alert_type} - {details}")
+        else:
+            _log.warning("Performance alert: %s - %s", alert_type, details)
     
-    def _determine_severity(self, alert_type: str, details: Dict[str, Any]) -> str:
+    def _determine_severity(self, alert_type: str, details: dict[str, Any]) -> str:
         """Determine alert severity."""
         if alert_type == 'slow_query' and details.get('execution_time', 0) > 5.0:
             return 'HIGH'
@@ -328,13 +354,17 @@ class PerformanceMonitor:
     
     def _start_monitoring_thread(self):
         """Start background monitoring thread."""
-        def monitor():
+        def monitor() -> None:
+            """Monitor."""
             while self.monitoring_active:
                 try:
                     self._analyze_performance_trends()
                     time.sleep(30)  # Check every 30 seconds
                 except Exception as e:
-                    logging.error(f"Performance monitoring error: {e}")
+                    if hasattr(self, 'sf') and hasattr(self.sf, 'error'):
+                        self.log.error(f"Performance monitoring error: {e}")
+                    else:
+                        _log.error("Performance monitoring error: %s", e)
         
         threading.Thread(target=monitor, daemon=True).start()
     
@@ -357,7 +387,7 @@ class PerformanceMonitor:
                     'query_count': len(recent_queries)
                 })
     
-    def get_performance_report(self) -> Dict[str, Any]:
+    def get_performance_report(self) -> dict[str, Any]:
         """Generate comprehensive performance report."""
         recent_queries = [
             q for q in self.metrics['queries'] 
@@ -398,7 +428,8 @@ class PerformanceMonitor:
 class AutoScaler:
     """Automated scaling for database connections and resources."""
     
-    def __init__(self, load_balancer: ConnectionLoadBalancer, monitor: PerformanceMonitor):
+    def __init__(self, load_balancer: ConnectionLoadBalancer, monitor: PerformanceMonitor) -> None:
+        """Initialize the AutoScaler."""
         self.load_balancer = load_balancer
         self.monitor = monitor
         self.scaling_rules = {
@@ -413,13 +444,17 @@ class AutoScaler:
     
     def _start_scaling_thread(self):
         """Start background auto-scaling thread."""
-        def scale():
+        def scale() -> None:
+            """Scale."""
             while self.scaling_active:
                 try:
                     self._evaluate_scaling_needs()
                     time.sleep(60)  # Check every minute
                 except Exception as e:
-                    logging.error(f"Auto-scaling error: {e}")
+                    if hasattr(self, 'sf') and hasattr(self.sf, 'error'):
+                        self.log.error(f"Auto-scaling error: {e}")
+                    else:
+                        _log.error("Auto-scaling error: %s", e)
         
         threading.Thread(target=scale, daemon=True).start()
     
@@ -446,10 +481,16 @@ class AutoScaler:
                 # Create new pool with increased capacity
                 config = self.load_balancer.configs[int(pool_id.split('_')[1])]
                 self._recreate_pool(pool_id, config, new_max)
-                logging.info(f"Scaled up {pool_id} from {current_max} to {new_max} connections")
+                if hasattr(self, 'sf') and hasattr(self.sf, 'info'):
+                    self.log.info(f"Scaled up {pool_id} from {current_max} to {new_max} connections")
+                else:
+                    _log.info("Scaled up %s from %s to %s connections", pool_id, current_max, new_max)
                 
         except Exception as e:
-            logging.error(f"Failed to scale up {pool_id}: {e}")
+            if hasattr(self, 'sf') and hasattr(self.sf, 'error'):
+                self.log.error(f"Failed to scale up {pool_id}: {e}")
+            else:
+                _log.error("Failed to scale up %s: %s", pool_id, e)
     
     def _scale_down(self, pool_id: str):
         """Scale down connections for a pool."""
@@ -462,39 +503,63 @@ class AutoScaler:
             if new_max < current_max:
                 config = self.load_balancer.configs[int(pool_id.split('_')[1])]
                 self._recreate_pool(pool_id, config, new_max)
-                logging.info(f"Scaled down {pool_id} from {current_max} to {new_max} connections")
+                if hasattr(self, 'sf') and hasattr(self.sf, 'info'):
+                    self.log.info(f"Scaled down {pool_id} from {current_max} to {new_max} connections")
+                else:
+                    _log.info("Scaled down %s from %s to %s connections", pool_id, current_max, new_max)
                 
         except Exception as e:
-            logging.error(f"Failed to scale down {pool_id}: {e}")
+            if hasattr(self, 'sf') and hasattr(self.sf, 'error'):
+                self.log.error(f"Failed to scale down {pool_id}: {e}")
+            else:
+                _log.error("Failed to scale down %s: %s", pool_id, e)
     
-    def _recreate_pool(self, pool_id: str, config: Dict[str, Any], max_connections: int):
+    def _recreate_pool(self, pool_id: str, config: dict[str, Any], max_connections: int):
         """Recreate pool with new connection limits."""
-        # Close existing pool
-        old_pool = self.load_balancer.pools[pool_id]
-        old_pool.closeall()
-        
-        # Create new pool
-        new_pool = psycopg2.pool.ThreadedConnectionPool(
-            minconn=config.get('min_connections', 1),
-            maxconn=max_connections,
-            host=config['host'],
-            port=config['port'],
-            database=config['database'],
-            user=config['username'],
-            password=config['password'],
-            connect_timeout=config.get('timeout', 30)
-        )
-        
-        self.load_balancer.pools[pool_id] = new_pool
+        try:
+            # Close existing pool
+            old_pool = self.load_balancer.pools[pool_id]
+            old_pool.closeall()
+            
+            # Create new pool only if we have PostgreSQL support
+            if config['type'] == 'postgresql':
+                if not HAS_PSYCOPG2:
+                    raise ImportError("psycopg2 is required for PostgreSQL connections but not installed")
+                
+                new_pool = psycopg2.pool.ThreadedConnectionPool(
+                    minconn=config.get('min_connections', 1),
+                    maxconn=max_connections,
+                    host=config['host'],
+                    port=config['port'],
+                    database=config['database'],
+                    user=config['username'],
+                    password=config['password'],
+                    connect_timeout=config.get('timeout', 30)
+                )
+                
+                self.load_balancer.pools[pool_id] = new_pool
+            else:
+                raise ValueError(f"Unsupported database type: {config.get('type', 'unknown')}")
+                
+        except Exception as e:
+            if hasattr(self, 'sf') and hasattr(self.sf, 'error'):
+                self.log.error(f"Failed to recreate pool {pool_id}: {e}")
+            else:
+                _log.error("Failed to recreate pool %s: %s", pool_id, e)
+            # Mark pool as unhealthy
+            self.load_balancer.health_status[pool_id] = False
 
 
-class sfp__stor_db_advanced(SpiderFootPlugin):
-    """Advanced enterprise storage module with Phase 2 features."""
+class sfp__stor_db_advanced(SpiderFootModernPlugin):
+    """Advanced enterprise storage module Advanced features."""
 
     meta = {
-        'name': "Advanced Database Storage (Enterprise)",
-        'summary': "Enterprise-grade storage with advanced features: connection pooling, load balancing, auto-scaling, and AI optimization.",
-        'flags': ["enterprise", "production"]
+        'name': "Advanced Database Storage (Enterprise) [DEPRECATED]",
+        'summary': "DEPRECATED: Core sfp__stor_db module handles all production storage needs. "
+                   "Connection pooling is managed at the database driver level. "
+                   "Enterprise features (load balancing, auto-scaling, AI optimization) are "
+                   "handled by the infrastructure layer (PostgreSQL, Vector.dev).",
+        'flags': ["deprecated", "enterprise", "production"]
     }
 
     _priority = 0
@@ -525,9 +590,9 @@ class sfp__stor_db_advanced(SpiderFootPlugin):
         'database_configs': "List of database configurations for load balancing"
     }
 
-    def setup(self, sfc, userOpts=dict()):
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the advanced storage module."""
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
         self.errorState = False
         self.event_buffer = []
         self.buffer_lock = threading.Lock()
@@ -539,10 +604,6 @@ class sfp__stor_db_advanced(SpiderFootPlugin):
             return
             
         self.__sfdb__ = self.sf.dbh
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
         # Initialize enterprise components
         self._initialize_enterprise_features()
         
@@ -554,7 +615,11 @@ class sfp__stor_db_advanced(SpiderFootPlugin):
         try:
             # Load balancer
             if self.opts['enable_load_balancing'] and self.opts['database_configs']:
-                self.load_balancer = ConnectionLoadBalancer(self.opts['database_configs'])
+                if not HAS_PSYCOPG2:
+                    self.error("Load balancing requires psycopg2 for PostgreSQL connections but it's not installed. Disabling load balancing.")
+                    self.load_balancer = None
+                else:
+                    self.load_balancer = ConnectionLoadBalancer(self.opts['database_configs'])
             else:
                 self.load_balancer = None
             
@@ -581,22 +646,27 @@ class sfp__stor_db_advanced(SpiderFootPlugin):
             
         except Exception as e:
             self.error(f"Failed to initialize enterprise features: {e}")
-            self.errorState = True
+            # Don't set errorState = True, just disable advanced features
+            self.load_balancer = None
+            self.query_optimizer = None
+            self.performance_monitor = None
+            self.auto_scaler = None
 
     def _setup_graceful_shutdown(self):
         """Set up graceful shutdown handlers."""
-        def shutdown_handler(signum, frame):
+        def shutdown_handler(signum: int, frame: object) -> None:
+            """Shutdown handler."""
             self.debug("Received shutdown signal, cleaning up...")
             self._graceful_shutdown()
         
         signal.signal(signal.SIGTERM, shutdown_handler)
         signal.signal(signal.SIGINT, shutdown_handler)
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Define the events this module is interested in."""
         return ["*"]
 
-    def handleEvent(self, sfEvent):
+    def handleEvent(self, sfEvent: SpiderFootEvent) -> None:
         """Handle events with enterprise features."""
         if not self.opts['_store'] or self.errorState:
             return
@@ -648,9 +718,25 @@ class sfp__stor_db_advanced(SpiderFootPlugin):
             for event in events_to_process:
                 self._store_single_event(event)
 
-    def _bulk_store_with_load_balancing(self, events: List[Any]):
+    def _bulk_store_with_load_balancing(self, events: list[Any]):
         """Store events using load-balanced connections."""
-        pool_id, conn = self.load_balancer.get_optimal_connection('bulk_insert')
+        if not HAS_PSYCOPG2:
+            self.error("PostgreSQL bulk storage requires psycopg2 but it's not installed. Falling back to SQLite.")
+            self._bulk_store_sqlite(events)
+            return
+            
+        if not self.load_balancer or not self.load_balancer.pools:
+            self.error("No healthy database connections available. Falling back to SQLite.")
+            self._bulk_store_sqlite(events)
+            return
+            
+        pool_id, conn = None, None
+        try:
+            pool_id, conn = self.load_balancer.get_optimal_connection('bulk_insert')
+        except Exception as e:
+            self.error(f"Failed to get database connection: {e}. Falling back to SQLite.")
+            self._bulk_store_sqlite(events)
+            return
         
         try:
             cursor = conn.cursor()
@@ -703,12 +789,14 @@ class sfp__stor_db_advanced(SpiderFootPlugin):
             if conn:
                 try:
                     conn.rollback()
-                except:
+                except OSError:
                     pass
-            self.load_balancer.return_connection(pool_id, conn, False)
-            raise
+            if pool_id and conn:
+                self.load_balancer.return_connection(pool_id, conn, False)
+            # Fall back to SQLite
+            self._bulk_store_sqlite(events)
 
-    def _bulk_store_sqlite(self, events: List[Any]):
+    def _bulk_store_sqlite(self, events: list[Any]):
         """Bulk store events in SQLite."""
         for event in events:
             if self.opts['maxstorage'] != 0 and len(event.data) > self.opts['maxstorage']:
@@ -730,7 +818,7 @@ class sfp__stor_db_advanced(SpiderFootPlugin):
         except Exception as e:
             self.error(f"Failed to store single event: {e}")
 
-    def get_performance_status(self) -> Dict[str, Any]:
+    def get_performance_status(self) -> dict[str, Any]:
         """Get comprehensive performance status."""
         status = {
             'timestamp': time.time(),
@@ -769,40 +857,35 @@ class sfp__stor_db_advanced(SpiderFootPlugin):
         return status
 
     def _graceful_shutdown(self):
-        """Perform graceful shutdown."""
-        try:
-            self.debug("Starting graceful shutdown...")
-            
-            # Process remaining buffered events
-            if hasattr(self, 'event_buffer'):
-                with self.buffer_lock:
-                    if self.event_buffer:
-                        self.debug(f"Processing {len(self.event_buffer)} remaining events...")
+        """Perform graceful shutdown without any logging to prevent I/O errors during interpreter shutdown."""
+        with suppress(Exception):
+            # Process remaining buffered events silently
+            if hasattr(self, 'event_buffer') and hasattr(self, 'buffer_lock'):
+                with suppress(Exception), self.buffer_lock:
+                    if hasattr(self, 'event_buffer') and self.event_buffer:
                         self._process_event_buffer()
             
             # Stop monitoring and scaling
-            if self.performance_monitor:
-                self.performance_monitor.monitoring_active = False
+            if hasattr(self, 'performance_monitor') and self.performance_monitor:
+                with suppress(Exception):
+                    self.performance_monitor.monitoring_active = False
             
-            if self.auto_scaler:
-                self.auto_scaler.scaling_active = False
+            if hasattr(self, 'auto_scaler') and self.auto_scaler:
+                with suppress(Exception):
+                    self.auto_scaler.scaling_active = False
             
-            # Close all connections
-            if self.load_balancer:
-                for pool_id, pool in self.load_balancer.pools.items():
-                    try:
-                        pool.closeall()
-                        self.debug(f"Closed connection pool {pool_id}")
-                    except Exception as e:
-                        self.error(f"Error closing pool {pool_id}: {e}")
-            
-            self.debug("Graceful shutdown completed")
-        except Exception as e:
-            self.error(f"Error during graceful shutdown: {e}\n{traceback.format_exc()}")
+            # Close all connections silently
+            if hasattr(self, 'load_balancer') and self.load_balancer:
+                with suppress(Exception):
+                    for _, pool in self.load_balancer.pools.items():
+                        with suppress(Exception):
+                            pool.closeall()
 
     def __del__(self):
-        """Clean up resources."""
-        if hasattr(self, '_graceful_shutdown'):
-            self._graceful_shutdown()
+        """Clean up resources without any I/O operations to prevent interpreter shutdown errors."""
+        with suppress(Exception):
+            # Only perform essential cleanup without any logging
+            if hasattr(self, '_graceful_shutdown'):
+                self._graceful_shutdown()
 
 # End of sfp__stor_db_advanced class

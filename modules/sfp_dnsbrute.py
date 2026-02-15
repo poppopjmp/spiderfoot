@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: dnsbrute."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_dnsbrute
@@ -16,11 +20,12 @@ import random
 import threading
 import time
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_dnsbrute(SpiderFootPlugin):
-
+class sfp_dnsbrute(SpiderFootModernPlugin):
+    """SpiderFoot plugin to brute-force hostnames and sub-domains."""
     meta = {
         'name': "DNS Brute-forcer",
         'summary': "Attempts to identify hostnames through brute-forcing common names and iterations.",
@@ -55,16 +60,13 @@ class sfp_dnsbrute(SpiderFootPlugin):
     sublist = None
     lock = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.sublist = self.tempStorage()
         self.events = self.tempStorage()
         self.__dataSource__ = "DNS"
         self.lock = threading.Lock()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
         if self.opts['commons']:
             from importlib.resources import files
             with (files('spiderfoot.dicts') / 'subdomains.txt').open('r') as f:
@@ -80,7 +82,8 @@ class sfp_dnsbrute(SpiderFootPlugin):
                     self.sublist[s] = True
 
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         ret = ['DOMAIN_NAME']
         if not self.opts['domainonly'] or self.opts['numbersuffix']:
             ret.append('INTERNET_NAME')
@@ -89,19 +92,22 @@ class sfp_dnsbrute(SpiderFootPlugin):
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["INTERNET_NAME"]
 
-    def tryHost(self, name):
+    def tryHost(self, name: str) -> None:
+        """TryHost."""
         try:
-            if self.sf.resolveHost(name) or self.sf.resolveHost6(name):
+            if self.resolve_host(name) or self.resolve_host6(name):
                 with self.lock:
                     self.hostResults[name] = True
-        except Exception:
+        except Exception as e:
             with self.lock:
                 self.hostResults[name] = False
 
-    def tryHostWrapper(self, hostList, sourceEvent):
+    def tryHostWrapper(self, hostList: list, sourceEvent: SpiderFootEvent) -> None:
+        """TryHostWrapper."""
         self.hostResults = dict()
         running = True
         i = 0
@@ -134,14 +140,16 @@ class sfp_dnsbrute(SpiderFootPlugin):
                 self.sendEvent(sourceEvent, res)
 
     # Store the result internally and notify listening modules
-    def sendEvent(self, source, result):
+    def sendEvent(self, source: str, result: str) -> None:
+        """SendEvent."""
         self.info("Found a brute-forced host: " + result)
         # Report the host
         evt = SpiderFootEvent("INTERNET_NAME", result, self.__name__, source)
         self.notifyListeners(evt)
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

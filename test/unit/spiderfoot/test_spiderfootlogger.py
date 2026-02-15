@@ -1,16 +1,31 @@
+from __future__ import annotations
+
+"""Tests for spiderfootlogger module."""
+
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 import logging
 import tempfile
 import os
 from queue import Queue
-from spiderfoot.logger import (
+from spiderfoot.observability.logger import (
     SpiderFootSqliteLogHandler,
     logListenerSetup,
     logWorkerSetup,
     stop_listener
 )
 
-class TestLoggerIntegration(unittest.TestCase):
+class TestLoggerIntegration(TestModuleBase):
+
+    def setUp(self):
+        """Enhanced setUp with ThreadReaper module tracking."""
+        super().setUp()
+        # ThreadReaper infrastructure is automatically initialized
+        
+    def tearDown(self):
+        """Enhanced tearDown with ThreadReaper cleanup."""
+        # ThreadReaper infrastructure automatically cleans up
+        super().tearDown()
     def test_sqlite_log_handler_emit_and_batch(self):
         opts = {'_debug': True}
         handler = SpiderFootSqliteLogHandler(opts)

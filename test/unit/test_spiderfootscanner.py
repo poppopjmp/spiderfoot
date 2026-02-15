@@ -1,15 +1,27 @@
+from __future__ import annotations
+
+"""Tests for spiderfootscanner module."""
+
 # test_spiderfootscanner.py
 import pytest
 import unittest
 import uuid
 
-from sfscan import SpiderFootScanner
-from test.unit.utils.test_base import SpiderFootTestBase
+from spiderfoot.scan_service.scanner import SpiderFootScanner
+from test.unit.utils.test_scanner_base import TestScannerBase
+
+# Import shared thread pool cleanup
+try:
+    from test.unit.utils.shared_pool_cleanup import enhanced_teardown_with_shared_pool_cleanup
+except ImportError:
+    def enhanced_teardown_with_shared_pool_cleanup():
+        return 0  # Fallback if cleanup utility not available
+
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestSpiderFootScanner(SpiderFootTestBase):
-    """Test SpiderFootScanStatus."""
+class TestSpiderFootScanner(TestScannerBase):
+    """Test SpiderFootScanStatus with ThreadReaper infrastructure."""
 
     def test_init_argument_start_false_should_create_a_scan_without_starting_the_scan(self):
         """Test __init__(self, scanName, scanId, scanTarget, targetType,
@@ -27,71 +39,22 @@ class TestSpiderFootScanner(SpiderFootTestBase):
         """
         Test __init__(self, scanName, scanId, targetValue, targetType, moduleList, globalOpts, start=True)
         """
-        # Ensure any existing threads are stopped before starting new ones
-        import threading
-        import time
-        
-        # Stop any existing scanner threads
-        for thread in threading.enumerate():
-            if hasattr(thread, '_target') and thread._target and 'SpiderFoot' in str(thread._target):
-                if hasattr(thread, 'stop'):
-                    thread.stop()
-                # Wait for thread to finish if it's still alive
-                if thread.is_alive() and thread != threading.current_thread():
-                    thread.join(timeout=1.0)
-        
         opts = self.default_options.copy()
-        # Do not overwrite __modules__ with an empty dict
         scan_id = str(uuid.uuid4())
-        module_list = ['invalid module']
+        module_list = ['invalid_module_that_does_not_exist']
 
-        # Create scanner without starting to avoid immediate thread creation
-        sfscan = SpiderFootScanner(
-            "example scan name", scan_id, "van1shland.io", "INTERNET_NAME", module_list, opts, start=False)
+        # This test should complete quickly because invalid modules are caught
+        # during the scanning phase and set status to ERROR-FAILED
+        # The logging fixes in sfp__stor_db_advanced.py prevent shutdown issues
         
-        # Verify initial state
-        self.assertIsInstance(sfscan, SpiderFootScanner)
-        self.assertEqual(sfscan.status, "INITIALIZING")
-        
-        # Now manually trigger the scan logic that would normally run in __init__ with start=True
-        # but in a controlled way to avoid thread daemon issues
-        try:
-            # Simulate the scan start logic without creating problematic threads
-            if hasattr(sfscan, '_SpiderFootScanner__setStatus'):
-                sfscan._SpiderFootScanner__setStatus("ERROR-FAILED")
-            else:
-                # Fallback if the private method name is different
-                sfscan.status = "ERROR-FAILED"
-        except Exception as e:
-            # If we can't set status directly, create a new scanner with start=True
-            # but with additional thread safety measures
-            import threading
-            original_thread_init = threading.Thread.__init__
-            
-            def safe_thread_init(self, *args, **kwargs):
-                # Ensure daemon is set before the thread becomes active
-                result = original_thread_init(self, *args, **kwargs)
-                return result
-            
-            threading.Thread.__init__ = safe_thread_init
-            
-            try:
-                sfscan = SpiderFootScanner(
-                    "example scan name", scan_id, "van1shland.io", "INTERNET_NAME", module_list, opts, start=True)
-            finally:
-                # Restore original thread init
-                threading.Thread.__init__ = original_thread_init
-        
-        # Verify final state
-        self.assertEqual(sfscan.status, "ERROR-FAILED")
+        # Store the scanner in self for proper cleanup
+        self.scanner = SpiderFootScanner(
+            "example scan name", scan_id, "spiderfoot.net", "INTERNET_NAME",
+            module_list, opts, start=True)
 
-        # Ensure any threads created are properly cleaned up
-        if hasattr(sfscan, '_thread') and sfscan._thread:
-            if sfscan._thread.is_alive():
-                # Don't try to set daemon on active thread, just wait for it to finish
-                sfscan._thread.join(timeout=1.0)
-            # Clean up reference
-            sfscan._thread = None
+        # Verify the scanner was created and has expected status
+        self.assertIsInstance(self.scanner, SpiderFootScanner)
+        self.assertEqual(self.scanner.status, "ERROR-FAILED")
 
     def test_init_argument_scanName_of_invalid_type_should_raise_TypeError(self):
         """Test __init__(self, scanName, scanId, scanTarget, targetType,
@@ -157,9 +120,15 @@ class TestSpiderFootScanner(SpiderFootTestBase):
         scan_id = str(uuid.uuid4())
         module_list = ['sfp_example']
 
-        with self.assertRaises(ValueError):
+        # Test should complete quickly and raise ValueError synchronously
+        # The timeout issue was likely caused by logging during __del__
+        # which has been fixed in sfp__stor_db_advanced.py
+        with self.assertRaises(ValueError) as context:
             SpiderFootScanner("example scan name", scan_id, "",
                               "IP_ADDRESS", module_list, self.default_options.copy(), start=False)
+        
+        # Verify the specific error message to ensure we're catching the right exception
+        self.assertIn("targetValue value is blank", str(context.exception))
 
     def test__setStatus_argument_status_of_invalid_type_should_raise_TypeError(self):
         """Test __setStatus(self, status, started=None, ended=None)"""
@@ -313,8 +282,9 @@ class TestSpiderFootScanner(SpiderFootTestBase):
             def setTarget(self, t): pass
         sys.modules['modules.'+mod_name] = types.SimpleNamespace(**{mod_name: Minimal})
         module_list = [mod_name]
-        with self.assertRaises(KeyError):
-            SpiderFootScanner("scan", scan_id, "van1shland.io", "INTERNET_NAME", module_list, opts, start=False)
+        # Should not raise KeyError; should load module successfully
+        scanner = SpiderFootScanner("scan", scan_id, "van1shland.io", "INTERNET_NAME", module_list, opts, start=False)
+        self.assertIn(mod_name, scanner._SpiderFootScanner__moduleInstances)
         del sys.modules['modules.'+mod_name]
 
     def test_module_importerror(self):
@@ -558,6 +528,221 @@ class TestSpiderFootScanner(SpiderFootTestBase):
         t2.join()
         self.assertEqual(results.count("INITIALIZING"), 2)
 
+    def test_module_missing_meta(self):
+        opts = self.default_options.copy()
+        scan_id = str(uuid.uuid4())
+        mod_name = 'sfp_missingmetaonly'
+        opts['__modules__'][mod_name] = {'descr': 'no meta'}
+        class Minimal:
+            def __init__(self): pass
+            def clearListeners(self): pass
+            def setScanId(self, x): pass
+            def setSharedThreadPool(self, x): pass
+            def setDbh(self, x): pass
+            def setup(self, a, b): pass
+            def enrichTarget(self, t): return None
+            def setTarget(self, t): pass
+        import types, sys
+        sys.modules['modules.'+mod_name] = types.SimpleNamespace(**{mod_name: Minimal})
+        module_list = [mod_name]
+        scanner = SpiderFootScanner("scan", scan_id, "van1shland.io", "INTERNET_NAME", module_list, opts, start=False)
+        self.assertIn(mod_name, scanner._SpiderFootScanner__moduleInstances)
+        del sys.modules['modules.'+mod_name]
+
+    def test_module_empty_opts(self):
+        opts = self.default_options.copy()
+        scan_id = str(uuid.uuid4())
+        mod_name = 'sfp_emptyopts'
+        opts['__modules__'][mod_name] = {'descr': 'empty opts', 'opts': {}}
+        class Minimal:
+            def __init__(self): pass
+            def clearListeners(self): pass
+            def setScanId(self, x): pass
+            def setSharedThreadPool(self, x): pass
+            def setDbh(self, x): pass
+            def setup(self, a, b): pass
+            def enrichTarget(self, t): return None
+            def setTarget(self, t): pass
+        import types, sys
+        sys.modules['modules.'+mod_name] = types.SimpleNamespace(**{mod_name: Minimal})
+        module_list = [mod_name]
+        scanner = SpiderFootScanner("scan", scan_id, "van1shland.io", "INTERNET_NAME", module_list, opts, start=False)
+        self.assertIn(mod_name, scanner._SpiderFootScanner__moduleInstances)
+        del sys.modules['modules.'+mod_name]
+
+    def test_module_opts_is_none(self):
+        opts = self.default_options.copy()
+        scan_id = str(uuid.uuid4())
+        mod_name = 'sfp_noneopts'
+        opts['__modules__'][mod_name] = {'descr': 'opts is None', 'opts': None}
+        class Minimal:
+            def __init__(self): pass
+            def clearListeners(self): pass
+            def setScanId(self, x): pass
+            def setSharedThreadPool(self, x): pass
+            def setDbh(self, x): pass
+            def setup(self, a, b): pass
+            def enrichTarget(self, t): return None
+            def setTarget(self, t): pass
+        import types, sys
+        sys.modules['modules.'+mod_name] = types.SimpleNamespace(**{mod_name: Minimal})
+        module_list = [mod_name]
+        # Should handle None opts gracefully (should not raise, should load module)
+        scanner = SpiderFootScanner("scan", scan_id, "van1shland.io", "INTERNET_NAME", module_list, opts, start=False)
+        self.assertIn(mod_name, scanner._SpiderFootScanner__moduleInstances)
+        del sys.modules['modules.'+mod_name]
+
+    def test_module_opts_is_not_dict(self):
+        opts = self.default_options.copy()
+        scan_id = str(uuid.uuid4())
+        mod_name = 'sfp_stropts'
+        opts['__modules__'][mod_name] = {'descr': 'opts is string', 'opts': 'notadict'}
+        class Minimal:
+            def __init__(self): pass
+            def clearListeners(self): pass
+            def setScanId(self, x): pass
+            def setSharedThreadPool(self, x): pass
+            def setDbh(self, x): pass
+            def setup(self, a, b): pass
+            def enrichTarget(self, t): return None
+            def setTarget(self, t): pass
+        import types, sys
+        sys.modules['modules.'+mod_name] = types.SimpleNamespace(**{mod_name: Minimal})
+        module_list = [mod_name]
+        # Should raise TypeError or handle gracefully
+        with self.assertRaises(Exception):
+            SpiderFootScanner("scan", scan_id, "van1shland.io", "INTERNET_NAME", module_list, opts, start=False)
+        del sys.modules['modules.'+mod_name]
+
+    def test_module_missing_meta_and_opts_keys(self):
+        opts = self.default_options.copy()
+        scan_id = str(uuid.uuid4())
+        mod_name = 'sfp_missingall'
+        opts['__modules__'][mod_name] = {}
+        class Minimal:
+            def __init__(self): pass
+            def clearListeners(self): pass
+            def setScanId(self, x): pass
+            def setSharedThreadPool(self, x): pass
+            def setDbh(self, x): pass
+            def setup(self, a, b): pass
+            def enrichTarget(self, t): return None
+            def setTarget(self, t): pass
+        import types, sys
+        sys.modules['modules.'+mod_name] = types.SimpleNamespace(**{mod_name: Minimal})
+        module_list = [mod_name]
+        scanner = SpiderFootScanner("scan", scan_id, "van1shland.io", "INTERNET_NAME", module_list, opts, start=False)
+        self.assertIn(mod_name, scanner._SpiderFootScanner__moduleInstances)
+        del sys.modules['modules.'+mod_name]
+
+    def test_module_config_is_list(self):
+        opts = self.default_options.copy()
+        scan_id = str(uuid.uuid4())
+        mod_name = 'sfp_listcfg'
+        opts['__modules__'][mod_name] = [1, 2, 3]
+        class Minimal:
+            def __init__(self): pass
+            def clearListeners(self): pass
+            def setScanId(self, x): pass
+            def setSharedThreadPool(self, x): pass
+            def setDbh(self, x): pass
+            def setup(self, a, b): pass
+            def enrichTarget(self, t): return None
+            def setTarget(self, t): pass
+        import types, sys
+        sys.modules['modules.'+mod_name] = types.SimpleNamespace(**{mod_name: Minimal})
+        module_list = [mod_name]
+        with self.assertRaises(Exception):
+            SpiderFootScanner("scan", scan_id, "van1shland.io", "INTERNET_NAME", module_list, opts, start=False)
+        del sys.modules['modules.'+mod_name]
+
+    def test_module_config_is_string(self):
+        opts = self.default_options.copy()
+        scan_id = str(uuid.uuid4())
+        mod_name = 'sfp_strcfg'
+        opts['__modules__'][mod_name] = "notadict"
+        class Minimal:
+            def __init__(self): pass
+            def clearListeners(self): pass
+            def setScanId(self, x): pass
+            def setSharedThreadPool(self, x): pass
+            def setDbh(self, x): pass
+            def setup(self, a, b): pass
+            def enrichTarget(self, t): return None
+            def setTarget(self, t): pass
+        import types, sys
+        sys.modules['modules.'+mod_name] = types.SimpleNamespace(**{mod_name: Minimal})
+        module_list = [mod_name]
+        with self.assertRaises(Exception):
+            SpiderFootScanner("scan", scan_id, "van1shland.io", "INTERNET_NAME", module_list, opts, start=False)
+        del sys.modules['modules.'+mod_name]
+
+    def test_module_config_opts_is_empty_string(self):
+        opts = self.default_options.copy()
+        scan_id = str(uuid.uuid4())
+        mod_name = 'sfp_stropts'
+        opts['__modules__'][mod_name] = {'opts': ''}
+        class Minimal:
+            def __init__(self): pass
+            def clearListeners(self): pass
+            def setScanId(self, x): pass
+            def setSharedThreadPool(self, x): pass
+            def setDbh(self, x): pass
+            def setup(self, a, b): pass
+            def enrichTarget(self, t): return None
+            def setTarget(self, t): pass
+        import types, sys
+        sys.modules['modules.'+mod_name] = types.SimpleNamespace(**{mod_name: Minimal})
+        module_list = [mod_name]
+        with self.assertRaises(TypeError):
+            SpiderFootScanner("scan", scan_id, "van1shland.io", "INTERNET_NAME", module_list, opts, start=False)
+        del sys.modules['modules.'+mod_name]
+
+    def test_module_config_opts_is_nested_dict(self):
+        opts = self.default_options.copy()
+        scan_id = str(uuid.uuid4())
+        mod_name = 'sfp_nestedopts'
+        opts['__modules__'][mod_name] = {'opts': {'foo': {'bar': 1}}}
+        class Minimal:
+            def __init__(self): pass
+            def clearListeners(self): pass
+            def setScanId(self, x): pass
+            def setSharedThreadPool(self, x): pass
+            def setDbh(self, x): pass
+            def setup(self, a, b): pass
+            def enrichTarget(self, t): return None
+            def setTarget(self, t): pass
+        import types, sys
+        sys.modules['modules.'+mod_name] = types.SimpleNamespace(**{mod_name: Minimal})
+        module_list = [mod_name]
+        scanner = SpiderFootScanner("scan", scan_id, "van1shland.io", "INTERNET_NAME", module_list, opts, start=False)
+        self.assertIn(mod_name, scanner._SpiderFootScanner__moduleInstances)
+        del sys.modules['modules.'+mod_name]
+
+    def test_multiple_modules_some_invalid_config(self):
+        opts = self.default_options.copy()
+        scan_id = str(uuid.uuid4())
+        valid_mod = 'sfp_valid'
+        invalid_mod = 'sfp_invalid'
+        opts['__modules__'][valid_mod] = {'opts': {}}
+        opts['__modules__'][invalid_mod] = {'opts': 123}
+        class Minimal:
+            def __init__(self): pass
+            def clearListeners(self): pass
+            def setScanId(self, x): pass
+            def setSharedThreadPool(self, x): pass
+            def setDbh(self, x): pass
+            def setup(self, a, b): pass
+            def enrichTarget(self, t): return None
+            def setTarget(self, t): pass
+        import types, sys
+        sys.modules['modules.'+valid_mod] = types.SimpleNamespace(**{valid_mod: Minimal})
+        sys.modules['modules.'+invalid_mod] = types.SimpleNamespace(**{invalid_mod: Minimal})
+        module_list = [valid_mod, invalid_mod]
+        with self.assertRaises(TypeError):
+            SpiderFootScanner("scan", scan_id, "van1shland.io", "INTERNET_NAME", module_list, opts, start=False)
+        del sys.modules['modules.'+valid_mod]
+        del sys.modules['modules.'+invalid_mod]
 
     def setUp(self):
         """Set up before each test."""
@@ -579,25 +764,164 @@ class TestSpiderFootScanner(SpiderFootTestBase):
             self.register_event_emitter(self.module)
 
     def tearDown(self):
-        """Clean up after each test."""
-        # Ensure any scanner instances are properly cleaned up
-        if hasattr(self, 'scanner'):
-            try:
-                # Stop any running scanner threads
-                if hasattr(self.scanner, '_thread') and self.scanner._thread:
-                    if self.scanner._thread.is_alive():
-                        self.scanner._thread.join(timeout=1.0)
-                self.scanner = None
-            except:
-                pass
-        
-        # Clean up any remaining SpiderFoot threads
+        """Clean up after each test with comprehensive scanner cleanup."""
         import threading
-        for thread in threading.enumerate():
-            if (hasattr(thread, '_target') and thread._target and 
-                'SpiderFoot' in str(thread._target) and 
-                thread != threading.current_thread()):
-                if thread.is_alive():
-                    thread.join(timeout=0.5)
+        import gc
+        from contextlib import suppress
+        
+        # COMPREHENSIVE SCANNER CLEANUP - Find and stop ALL scanner instances
+        self._cleanup_all_scanner_instances()
+        
+        # Clean up any remaining SpiderFoot threads - ENHANCED VERSION
+        self._cleanup_spiderfoot_threads()
+        
+        # Force garbage collection to ensure cleanup
+        gc.collect()
+        
+        # Enhanced shared thread pool cleanup
+        enhanced_teardown_with_shared_pool_cleanup()
         
         super().tearDown()
+    
+    def _cleanup_all_scanner_instances(self):
+        """Find and cleanup ALL SpiderFootScanner instances, not just self.scanner."""
+        from contextlib import suppress
+        import gc
+        
+        # Method 1: Clean up self.scanner if it exists
+        if hasattr(self, 'scanner') and self.scanner:
+            with suppress(Exception):
+                self._stop_scanner_safely(self.scanner)
+                self.scanner = None
+        
+        # Method 2: Find all scanner instances in the current test's local variables
+        # This catches scanners created as local variables like 'sfscan'
+        test_frame = None
+        try:
+            import inspect
+            for frame_info in inspect.stack():
+                if frame_info.function.startswith('test_'):
+                    test_frame = frame_info.frame
+                    break
+            
+            if test_frame:
+                # Check all local variables in the test method
+                for var_name, var_value in test_frame.f_locals.items():
+                    if (hasattr(var_value, '__class__') and 
+                        'SpiderFootScanner' in str(var_value.__class__)):
+                        with suppress(Exception):
+                            self._stop_scanner_safely(var_value)
+        except Exception as e:
+            pass
+        
+        # Method 3: Use garbage collector to find any remaining scanner instances
+        for obj in gc.get_objects():
+            try:
+                if (hasattr(obj, '__class__') and 
+                    'SpiderFootScanner' in str(obj.__class__) and
+                    hasattr(obj, '_thread')):
+                    with suppress(Exception):
+                        self._stop_scanner_safely(obj)
+            except Exception as e:
+                pass
+    
+    def _stop_scanner_safely(self, scanner):
+        """Safely stop a scanner instance using the new shutdown method."""
+        from contextlib import suppress
+        
+        if not scanner:
+            return
+            
+        # Use the new explicit shutdown method for comprehensive cleanup
+        with suppress(Exception):
+            if hasattr(scanner, 'shutdown'):
+                scanner.shutdown()
+            else:
+                # Fallback to old method if shutdown doesn't exist yet
+                self._legacy_stop_scanner(scanner)
+    
+    def _legacy_stop_scanner(self, scanner):
+        """Legacy scanner stopping method for backwards compatibility.
+        
+        Args:
+            scanner: The SpiderFootScanner instance to stop
+        """
+        from contextlib import suppress
+        
+        # Stop any running scanner threads
+        if hasattr(scanner, '_thread') and scanner._thread:
+            with suppress(Exception):
+                if scanner._thread.is_alive():
+                    # Try to stop the scanner gracefully first
+                    if hasattr(scanner, 'stop'):
+                        scanner.stop()
+                    
+                    # Give it a moment to stop gracefully
+                    scanner._thread.join(timeout=1.0)
+                    
+                    # If still alive, force cleanup
+                    if scanner._thread.is_alive():
+                        scanner._thread.join(timeout=0.5)
+        
+        # Clean up scanner state
+        with suppress(Exception):
+            if hasattr(scanner, 'status'):
+                scanner._SpiderFootScanner__setStatus("ABORTED")
+        
+        # Clean up any module instances within the scanner
+        with suppress(Exception):
+            if hasattr(scanner, '_SpiderFootScanner__moduleInstances'):
+                for _, module_instance in scanner._SpiderFootScanner__moduleInstances.items():
+                    if module_instance:
+                        with suppress(Exception):
+                            if hasattr(module_instance, 'clearListeners'):
+                                module_instance.clearListeners()
+                            if hasattr(module_instance, 'errorState'):
+                                module_instance.errorState = True
+    
+    def _cleanup_spiderfoot_threads(self):
+        """Enhanced cleanup for SpiderFoot-related threads."""
+        import threading
+        from contextlib import suppress
+        
+        main_thread = threading.main_thread()
+        current_thread = threading.current_thread()
+        
+        for thread in threading.enumerate():
+            if (thread != main_thread and 
+                thread != current_thread and 
+                thread.is_alive()):
+                
+                # Check if this is a SpiderFoot-related thread
+                thread_name = getattr(thread, 'name', '').lower()
+                thread_target = str(getattr(thread, '_target', '')).lower()
+                
+                is_spiderfoot_thread = any(keyword in thread_name or keyword in thread_target 
+                                         for keyword in ['spiderfoot', 'scanner', 'scan', 'module'])
+                
+                if is_spiderfoot_thread:
+                    with suppress(RuntimeError, OSError):
+                        # Try to join the thread with timeout
+                        thread.join(timeout=0.5)
+                        
+                        # If thread is still alive after join, it might be stuck
+                        if thread.is_alive():
+                            # Log this for debugging (but don't fail the test)
+                            print(f"Warning: Thread {thread.name} still alive after cleanup")
+        
+        # Additional cleanup for any lingering scanner-related resources
+        with suppress(Exception):
+            # Clean up any global scanner references that might exist
+            import sys
+            modules_to_check = [module for module_name, module in sys.modules.items() 
+                              if module and 'spiderfoot' in module_name.lower()]
+            
+            for module in modules_to_check:
+                if hasattr(module, '__dict__'):
+                    for attr_name in list(module.__dict__.keys()):
+                        attr_value = getattr(module, attr_name, None)
+                        if (attr_value and hasattr(attr_value, '__class__') and 
+                            'SpiderFootScanner' in str(attr_value.__class__)):
+                            with suppress(Exception):
+                                self._stop_scanner_safely(attr_value)
+                                setattr(module, attr_name, None)

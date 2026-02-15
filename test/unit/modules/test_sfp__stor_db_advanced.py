@@ -10,16 +10,19 @@ This test suite covers:
 - Bulk processing and connection pooling
 - Integration with existing SpiderFoot test framework
 """
+from __future__ import annotations
 
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 import time
 import threading
 import json
 from unittest.mock import Mock, patch, MagicMock, call
-from typing import Dict, List, Any
+from typing import Any
 import tempfile
 import os
 import sys
+from contextlib import suppress
 
 # Add project root to path
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -28,7 +31,7 @@ sys.path.insert(0, project_root)
 try:
     import sys
     sys.path.insert(0, project_root)
-    from sflib import SpiderFoot
+    from spiderfoot.sflib import SpiderFoot
     from spiderfoot import SpiderFootEvent
     IMPORTS_AVAILABLE = True
 except ImportError as e:
@@ -132,7 +135,7 @@ class MockSpiderFootEvent:
 
 
 @skip_if_no_imports
-class TestConnectionLoadBalancer(unittest.TestCase):
+class TestConnectionLoadBalancer(TestModuleBase):
     """Test suite for Connection Load Balancer."""
     
     def setUp(self):
@@ -260,7 +263,7 @@ class TestConnectionLoadBalancer(unittest.TestCase):
 
 
 @skip_if_no_imports
-class TestQueryOptimizer(unittest.TestCase):
+class TestQueryOptimizer(TestModuleBase):
     """Test suite for Query Optimizer."""
     
     def setUp(self):
@@ -336,7 +339,7 @@ class TestQueryOptimizer(unittest.TestCase):
 
 
 @skip_if_no_imports
-class TestPerformanceMonitor(unittest.TestCase):
+class TestPerformanceMonitor(TestModuleBase):
     """Test suite for Performance Monitor."""
     
     def setUp(self):
@@ -428,7 +431,7 @@ class TestPerformanceMonitor(unittest.TestCase):
 
 
 @skip_if_no_imports
-class TestAutoScaler(unittest.TestCase):
+class TestAutoScaler(TestModuleBase):
     """Test suite for Auto Scaler."""
     
     def setUp(self):
@@ -508,7 +511,7 @@ class TestAutoScaler(unittest.TestCase):
 
 
 @skip_if_no_imports
-class TestAdvancedStorageModule(unittest.TestCase):
+class TestAdvancedStorageModule(TestModuleBase):
     """Test suite for the advanced storage module."""
     
     def setUp(self):
@@ -518,6 +521,14 @@ class TestAdvancedStorageModule(unittest.TestCase):
         
         # Mock database handle methods
         self.sf.dbh.scanEventStore = Mock()
+        
+        # FIXED: Configure proper mock logger to prevent TypeError
+        self.sf._logger = MagicMock()
+        # Create mock handler with stream that's not closed
+        mock_handler = MagicMock()
+        mock_handler.stream.closed = False
+        # Make handlers behave like a list for subscriptable access
+        self.sf._logger.handlers = [mock_handler]
         
         self.module = sfp__stor_db_advanced()
         
@@ -695,15 +706,28 @@ class TestAdvancedStorageModule(unittest.TestCase):
         # Should handle error gracefully
         try:
             self.module._process_event_buffer()
-        except Exception:
+        except Exception as e:
             pass  # Expected to fail for testing
         
         # Verify no crash occurred
         self.assertIsNotNone(self.module)
 
+    def tearDown(self):
+        """Clean up test environment with explicit module shutdown."""
+        # Explicitly call _graceful_shutdown to prevent resource leaks
+        if hasattr(self, 'module') and self.module:
+            with suppress(Exception):
+                self.module._graceful_shutdown()
+        
+        # Clear references to prevent memory leaks
+        if hasattr(self, 'sf'):
+            self.sf = None
+        if hasattr(self, 'module'):
+            self.module = None
+
 
 @skip_if_no_imports
-class TestPhase2StorageIntegration(unittest.TestCase):
+class TestPhase2StorageIntegration(TestModuleBase):
     """Integration tests for Phase 2 storage features."""
     
     def setUp(self):

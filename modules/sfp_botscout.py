@@ -11,15 +11,20 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: botscout."""
+
 import urllib.error
 import urllib.parse
 import urllib.request
 
-from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_botscout(SpiderFootPlugin):
-
+class sfp_botscout(SpiderFootModernPlugin):
+    """SpiderFoot plugin to search BotScout.com for malicious IPs and email addresses."""
     meta = {
         'name': "BotScout",
         'summary': "Searches BotScout.com's database of spam-bot IP addresses and e-mail addresses.",
@@ -61,20 +66,20 @@ class sfp_botscout(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ['IP_ADDRESS', 'EMAILADDR']
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["MALICIOUS_IPADDR", "BLACKLISTED_IPADDR", "MALICIOUS_EMAILADDR"]
 
-    def queryIp(self, ip):
+    def queryIp(self, ip: str) -> dict | None:
+        """Query Ip."""
         if not self.sf.validIP(ip):
             return None
 
@@ -83,7 +88,7 @@ class sfp_botscout(SpiderFootPlugin):
             'key': self.opts['api_key'],
         })
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://botscout.com/test/?{params}",
             timeout=self.opts['_fetchtimeout'],
             useragent=self.opts['_useragent'],
@@ -91,7 +96,8 @@ class sfp_botscout(SpiderFootPlugin):
 
         return self.parseApiResponse(res)
 
-    def queryEmail(self, email):
+    def queryEmail(self, email: str) -> dict | None:
+        """Query Email."""
         if not SpiderFootHelpers.validEmail(email):
             return None
 
@@ -100,7 +106,7 @@ class sfp_botscout(SpiderFootPlugin):
             'key': self.opts['api_key'],
         })
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://botscout.com/test/?{params}",
             timeout=self.opts['_fetchtimeout'],
             useragent=self.opts['_useragent'],
@@ -108,7 +114,8 @@ class sfp_botscout(SpiderFootPlugin):
 
         return self.parseApiResponse(res)
 
-    def parseApiResponse(self, res: dict):
+    def parseApiResponse(self, res: dict) -> str | None:
+        """Parse ApiResponse."""
         if not res:
             self.error("No response from BotScout.")
             return None
@@ -134,7 +141,8 @@ class sfp_botscout(SpiderFootPlugin):
 
         return res['content']
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 

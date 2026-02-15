@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: wigle."""
+
 # -------------------------------------------------------------------------------
 # Name:         sfp_wigle
 # Purpose:      Query wigle.net to identify nearby WiFi access points.
@@ -16,10 +20,13 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_wigle(SpiderFootPlugin):
+class sfp_wigle(SpiderFootModernPlugin):
+
+    """Query WiGLE to identify nearby WiFi access points."""
 
     meta = {
         'name': "WiGLE",
@@ -70,26 +77,26 @@ class sfp_wigle(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
 
         # Clear / reset any other class member variables here
         # or you risk them persisting between threads.
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["PHYSICAL_COORDINATES"]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["WIFI_ACCESS_POINT"]
 
-    def getnetworks(self, coords):
+    def getnetworks(self, coords: str):
+        """Get networks."""
         params = {
             'onlymine': 'false',
             'latrange1': str(coords[0]),
@@ -112,7 +119,7 @@ class sfp_wigle(SpiderFootPlugin):
             "Authorization": "Basic " + self.opts['api_key_encoded']
         }
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             "https://api.wigle.net/api/v2/network/search?" +
             urllib.parse.urlencode(params),
             timeout=30,
@@ -143,20 +150,22 @@ class sfp_wigle(SpiderFootPlugin):
             self.error(f"Error processing JSON response from WiGLE: {e}")
             return None
 
-    def validApiKey(self, api_key):
+    def validApiKey(self, api_key: str) -> bool:
+        """ValidApiKey."""
         if not api_key:
             return False
 
         try:
             if base64.b64encode(base64.b64decode(api_key)).decode('utf-8') != api_key:
                 return False
-        except Exception:
+        except Exception as e:
             return False
 
         return True
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

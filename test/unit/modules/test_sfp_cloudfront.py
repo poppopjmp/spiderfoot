@@ -1,15 +1,19 @@
+from __future__ import annotations
+
+"""Tests for sfp_cloudfront module."""
+
 # filepath: spiderfoot/test/unit/modules/test_sfp_cloudfront.py
 import unittest
 from unittest.mock import patch, MagicMock
 
 from modules.sfp_cloudfront import sfp_cloudfront
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModuleCloudfront(SpiderFootTestBase):
+class TestModuleCloudfront(TestModuleBase):
     """Test Cloudfront module."""
 
     def setUp(self):

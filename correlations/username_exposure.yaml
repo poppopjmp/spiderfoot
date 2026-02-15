@@ -1,0 +1,22 @@
+id: username_exposure
+version: "1"
+meta:
+  name: Username discovered across multiple platforms
+  description: >
+    A username associated with the target was discovered on
+    multiple platforms or services. Consistent username usage
+    across platforms can be leveraged for account enumeration,
+    credential stuffing, and social engineering attacks.
+  risk: INFO
+collections:
+  collect:
+      - method: exact
+        field: type
+        value: USERNAME
+aggregation:
+  field: data
+analysis:
+  - method: threshold
+    minimum: 2
+    field: data
+headline: "Username found on multiple platforms: {data}"

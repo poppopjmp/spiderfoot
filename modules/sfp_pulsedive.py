@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: pulsedive."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_pulsedive
@@ -19,10 +23,13 @@ from datetime import datetime
 
 from netaddr import IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_pulsedive(SpiderFootPlugin):
+class sfp_pulsedive(SpiderFootModernPlugin):
+
+    """Obtain information from Pulsedive"""
 
     meta = {
         'name': "Pulsedive",
@@ -82,15 +89,13 @@ class sfp_pulsedive(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             "IP_ADDRESS",
             "IPV6_ADDRESS",
@@ -104,13 +109,15 @@ class sfp_pulsedive(SpiderFootPlugin):
         ]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["MALICIOUS_INTERNET_NAME", "MALICIOUS_IPADDR",
                 "MALICIOUS_AFFILIATE_IPADDR", "MALICIOUS_NETBLOCK",
                 'TCP_PORT_OPEN']
 
     # https://pulsedive.com/api/
-    def query(self, qry):
+    def query(self, qry: str) -> dict | None:
+        """Query the data source."""
         params = {
             'indicator': qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),
             'key': self.opts['api_key']
@@ -118,7 +125,7 @@ class sfp_pulsedive(SpiderFootPlugin):
 
         url = 'https://pulsedive.com/api/info.php?' + \
             urllib.parse.urlencode(params)
-        res = self.sf.fetchUrl(url, timeout=30, useragent="SpiderFoot")
+        res = self.fetch_url(url, timeout=30, useragent="SpiderFoot")
 
         time.sleep(self.opts['delay'])
 
@@ -144,7 +151,8 @@ class sfp_pulsedive(SpiderFootPlugin):
         return None
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -262,7 +270,7 @@ class sfp_pulsedive(SpiderFootPlugin):
                         self.debug(
                             f"Threat found but too old ({created_dt}), skipping.")
                         continue
-                except Exception:
+                except Exception as e:
                     self.debug(
                         "Couldn't parse date from Pulsedive so assuming it's OK.")
                 e = SpiderFootEvent(evtType, descr, self.__name__, event)

@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: dehashed."""
+
 # -------------------------------------------------------------------------------
 # Name:        sfp_dehashed
 # Purpose:     Gather breach data from Dehashed API.
@@ -13,10 +17,13 @@ import base64
 import json
 import time
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_dehashed(SpiderFootPlugin):
+class sfp_dehashed(SpiderFootModernPlugin):
+    """Dehashed API integration for SpiderFoot"""
+
     __name__ = "sfp_dehashed"
 
     meta = {
@@ -69,22 +76,21 @@ class sfp_dehashed(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             "DOMAIN_NAME",
             "EMAILADDR"
         ]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             'EMAILADDR',
             'EMAILADDR_COMPROMISED',
@@ -94,7 +100,8 @@ class sfp_dehashed(SpiderFootPlugin):
         ]
 
     # Query Dehashed
-    def query(self, event, per_page, start):
+    def query(self, event: SpiderFootEvent, per_page: int, start: int) -> dict | None:
+        """Query the data source."""
         if event.eventType == "EMAILADDR":
             queryString = f"https://api.dehashed.com/search?query=email:\"{event.data}\"&page={start}&size={self.opts['per_page']}"
         if event.eventType == "DOMAIN_NAME":
@@ -107,7 +114,7 @@ class sfp_dehashed(SpiderFootPlugin):
             'Authorization': f'Basic {token}'
         }
 
-        res = self.sf.fetchUrl(queryString,
+        res = self.fetch_url(queryString,
                                headers=headers,
                                timeout=15,
                                useragent=self.opts['_useragent'],
@@ -119,7 +126,7 @@ class sfp_dehashed(SpiderFootPlugin):
             self.error(
                 "Too many requests were performed in a small amount of time. Please wait a bit before querying the API.")
             time.sleep(5)
-            res = self.sf.fetchUrl(queryString, headers=headers, timeout=15,
+            res = self.fetch_url(queryString, headers=headers, timeout=15,
                                    useragent=self.opts['_useragent'], verify=True)
 
         if res['code'] == "401":
@@ -143,7 +150,8 @@ class sfp_dehashed(SpiderFootPlugin):
             return None
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

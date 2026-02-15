@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: whoisfreaks."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_whoisfreaks
@@ -12,10 +16,13 @@
 
 import json
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_whoisfreaks(SpiderFootPlugin):
+class sfp_whoisfreaks(SpiderFootModernPlugin):
+    """Reverse Whois Lookup by owner email or name or company name"""
+
     meta = {
         'name': "WhoisFreaks",
         'summary': "Reverse Whois Lookup by owner email or name or company name",
@@ -60,15 +67,13 @@ class sfp_whoisfreaks(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             "COMPANY_NAME",
             "HUMAN_NAME",
@@ -77,19 +82,21 @@ class sfp_whoisfreaks(SpiderFootPlugin):
         ]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             'AFFILIATE_INTERNET_NAME',
             'AFFILIATE_DOMAIN_NAME'
         ]
 
     # Search WhoisFreaks
-    def query(self, qry, querytype, page=1, accum=None):
+    def query(self, qry: str, querytype: str, page: int = 1, accum: list = None):
+        """Query the data source."""
         url = "https://api.whoisfreaks.com/v1.0/whois?whois=reverse&mode=mini&apiKey=" + \
             self.opts['api_key']
         url += "&" + querytype + "=" + qry + "&page=" + str(page)
 
-        res = self.sf.fetchUrl(url, timeout=self.opts['_fetchtimeout'],
+        res = self.fetch_url(url, timeout=self.opts['_fetchtimeout'],
                                useragent="SpiderFoot")
 
         if res['code'] in ["401", "429", "413", "412"]:
@@ -134,7 +141,8 @@ class sfp_whoisfreaks(SpiderFootPlugin):
             return None
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

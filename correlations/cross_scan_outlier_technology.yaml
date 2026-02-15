@@ -1,0 +1,22 @@
+id: cross_scan_outlier_technology
+version: "1"
+meta:
+  name: Outlier web technology across scans
+  description: >
+    A web technology that appeared in 10% or fewer of all scans.
+    Rare technologies may indicate experimental, legacy, or
+    non-standard deployments that deserve closer security review
+    as they may lack the same hardening as mainstream stacks.
+  risk: INFO
+  scope: workspace
+collections:
+  collect:
+      - method: exact
+        field: type
+        value: WEBSERVER_TECHNOLOGY
+aggregation:
+  field: data
+analysis:
+  - method: outlier
+    maximum_percent: 10
+headline: "Outlier technology found: {data}"

@@ -1,8 +1,23 @@
+from __future__ import annotations
+
+"""Tests for spiderfootmcp module."""
+
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 import inspect
 import spiderfoot.mcp_integration as mcp
 
-class TestMCPIntegrationSmoke(unittest.TestCase):
+class TestMCPIntegrationSmoke(TestModuleBase):
+
+    def setUp(self):
+        """Enhanced setUp with ThreadReaper module tracking."""
+        super().setUp()
+        # ThreadReaper infrastructure is automatically initialized
+        
+    def tearDown(self):
+        """Enhanced tearDown with ThreadReaper cleanup."""
+        # ThreadReaper infrastructure automatically cleans up
+        super().tearDown()
     def test_module_import(self):
         # Ensure the module loads and has at least one public class or function
         public_members = [name for name, obj in inspect.getmembers(mcp) if not name.startswith('_')]
@@ -15,7 +30,7 @@ class TestMCPIntegrationSmoke(unittest.TestCase):
             # Optionally, call main with dummy args and check for no crash
             try:
                 mcp.main([])
-            except Exception:
+            except Exception as e:
                 pass  # Accept any exception for now
 
     def test_public_classes_instantiable(self):
@@ -25,7 +40,7 @@ class TestMCPIntegrationSmoke(unittest.TestCase):
                 try:
                     instance = obj()
                     self.assertIsInstance(instance, obj)
-                except Exception:
+                except Exception as e:
                     pass  # Accept any exception for now
 
 if __name__ == "__main__":

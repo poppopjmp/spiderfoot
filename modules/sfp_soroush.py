@@ -1,10 +1,17 @@
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent
+from __future__ import annotations
 
-class sfp_soroush(SpiderFootPlugin):
+"""SpiderFoot plug-in module: soroush."""
+
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+
+class sfp_soroush(SpiderFootModernPlugin):
+    """Monitors Soroush for new messages and emits events."""
+
     meta = {
         'name': "Soroush Monitor",
         'summary': "Monitors Soroush for new messages and emits events.",
-        'flags': [],
+        'flags': ['experimental'],
         'useCases': ["Passive", "Investigate"],
         'group': ["Passive", "Investigate"],
         'categories': ["Social Media"],
@@ -28,19 +35,24 @@ class sfp_soroush(SpiderFootPlugin):
         "max_messages": "Maximum number of messages to fetch per channel."
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["ROOT"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["SOROUSH_MESSAGE"]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         # Stub for Soroush monitoring logic
+        """Handle an event received by this module."""
         pass
 
-    def shutdown(self):
+    def shutdown(self) -> None:
+        """Shutdown."""
         pass

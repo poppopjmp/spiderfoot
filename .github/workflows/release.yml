@@ -1,0 +1,59 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read version
+        id: version
+        run: echo "version=$(cat VERSION)" >> $GITHUB_OUTPUT
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          PREV_TAG=$(git tag --sort=-version:refname | head -2 | tail -1)
+          if [ -z "$PREV_TAG" ]; then
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" HEAD)
+          else
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" ${PREV_TAG}..HEAD)
+          fi
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: SpiderFoot v${{ steps.version.outputs.version }}
+          body: |
+            ## SpiderFoot v${{ steps.version.outputs.version }}
+
+            ### Changes
+            ${{ steps.changelog.outputs.changelog }}
+
+            ### Docker Images
+            ```bash
+            docker pull ghcr.io/${{ github.repository_owner }}/spiderfoot-scanner:${{ steps.version.outputs.version }}
+            docker pull ghcr.io/${{ github.repository_owner }}/spiderfoot-api:${{ steps.version.outputs.version }}
+            docker pull ghcr.io/${{ github.repository_owner }}/spiderfoot-webui:${{ steps.version.outputs.version }}
+            ```
+
+            ### Helm Chart
+            ```bash
+            helm install spiderfoot oci://ghcr.io/${{ github.repository_owner }}/charts/spiderfoot
+            ```
+          draft: false
+          prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc') }}
+          generate_release_notes: true

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Enterprise Storage Features Integration Test Suite
 
@@ -17,8 +16,10 @@ implemented in SpiderFoot's storage modules:
 Author: SpiderFoot Enterprise Team
 Created: 2025-01-27
 """
+from __future__ import annotations
 
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 import time
 import threading
 import tempfile
@@ -28,14 +29,14 @@ from unittest.mock import patch, MagicMock, Mock
 import psycopg2
 from elasticsearch import Elasticsearch, ConnectionError
 
-from sflib import SpiderFoot
-from spiderfoot.event import SpiderFootEvent
+from spiderfoot.sflib import SpiderFoot
+from spiderfoot.events.event import SpiderFootEvent
 from modules.sfp__stor_db import sfp__stor_db
 from modules.sfp__stor_elasticsearch import sfp__stor_elasticsearch
 from modules.sfp__stor_stdout import sfp__stor_stdout
 
 
-class TestEnterpriseStorageFeatures(unittest.TestCase):
+class TestEnterpriseStorageFeatures(TestModuleBase):
     """Integration tests for enterprise storage features."""
 
     def setUp(self):

@@ -1,14 +1,19 @@
+from __future__ import annotations
+
+"""Tests for sfp_bingsearch module."""
+
 import pytest
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch
 
 from modules.sfp_bingsearch import sfp_bingsearch
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 
-class TestModuleIntegrationbingsearch(unittest.TestCase):
+class TestModuleIntegrationbingsearch(TestModuleBase):
     def setUp(self):
         self.sf = SpiderFoot({'api_key': 'dummy', '_fetchtimeout': 5, '_useragent': 'SpiderFootTestAgent'})
         self.module = sfp_bingsearch()

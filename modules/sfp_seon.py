@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: seon."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_seon
@@ -13,10 +17,13 @@
 
 import json
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_seon(SpiderFootPlugin):
+class sfp_seon(SpiderFootModernPlugin):
+
+    """Queries seon.io to gather intelligence about IP Addresses, email addresses, and phone numbers"""
 
     meta = {
         'name': "Seon",
@@ -57,15 +64,13 @@ class sfp_seon(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             "IP_ADDRESS",
             "IPV6_ADDRESS",
@@ -76,7 +81,8 @@ class sfp_seon(SpiderFootPlugin):
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "GEOINFO",
             "MALICIOUS_IPADDR",
@@ -98,7 +104,8 @@ class sfp_seon(SpiderFootPlugin):
             "PROXY_HOST",
         ]
 
-    def query(self, qry, eventName):
+    def query(self, qry: str, eventName: str) -> dict | None:
+        """Query the data source."""
         if eventName in ['IP_ADDRESS', 'IPV6_ADDRESS']:
             queryString = f"https://api.seon.io/SeonRestService/ip-api/v1.0/{qry}"
         elif eventName == "EMAILADDR":
@@ -111,7 +118,7 @@ class sfp_seon(SpiderFootPlugin):
             'X-API-KEY': self.opts['api_key']
         }
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             queryString,
             headers=headers,
             timeout=15,
@@ -133,7 +140,8 @@ class sfp_seon(SpiderFootPlugin):
         return json.loads(res['content'])
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

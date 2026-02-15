@@ -1,0 +1,16 @@
+# =============================================================================
+# Grafana Dashboard Provisioning — SpiderFoot
+# =============================================================================
+apiVersion: 1
+
+providers:
+  - name: SpiderFoot
+    orgId: 1
+    type: file
+    disableDeletion: false
+    editable: true
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: true

@@ -1,13 +1,18 @@
+from __future__ import annotations
+
+"""Tests for sfp_c99 module."""
+
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch
 import json
 
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
+from spiderfoot.sflib import SpiderFoot
 from modules.sfp_c99 import sfp_c99
-from sflib import SpiderFoot
 
 
-class TestModuleIntegrationC99(unittest.TestCase):
+class TestModuleIntegrationC99(TestModuleBase):
     def setUp(self):
         self.default_options = {"_useragent": "SpiderFootTestAgent", "api_key": "DUMMYKEY", "_fetchtimeout": 5, "_socks1type": "", "_internettlds": []}
         self.sf = SpiderFoot(self.default_options)
@@ -16,7 +21,7 @@ class TestModuleIntegrationC99(unittest.TestCase):
         self.module.__name__ = self.module.__class__.__name__
 
     @patch('modules.sfp_c99.requests.get')
-    @patch('sflib.SpiderFoot.fetchUrl')
+    @patch('spiderfoot.sflib.SpiderFoot.fetchUrl')
     def test_handleEvent_malicious_ip(self, mock_fetchUrl, mock_get):
         # Mock a geoip response to trigger RAW_RIR_DATA emission
         mock_geoip_data = {

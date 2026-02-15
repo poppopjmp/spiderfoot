@@ -1,6 +1,12 @@
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent
+from __future__ import annotations
 
-class sfp_douyin(SpiderFootPlugin):
+"""SpiderFoot plug-in module: douyin."""
+
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+
+class sfp_douyin(SpiderFootModernPlugin):
+    """Douyin plugin for monitoring video uploads."""
     meta = {
         'name': "Douyin Monitor",
         'summary': "Monitors Douyin for new videos and emits events.",
@@ -28,17 +34,20 @@ class sfp_douyin(SpiderFootPlugin):
         "max_videos": "Maximum number of videos to fetch per user."
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["ROOT"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["DOUYIN_VIDEO"]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """
         Handle a SpiderFoot event by fetching recent Douyin videos for each configured username.
         Emits DOUYIN_VIDEO events with enriched data (username, description, timestamp).
@@ -91,5 +100,6 @@ class sfp_douyin(SpiderFootPlugin):
             except Exception as e:
                 self.error(f"Error fetching videos for user {username}: {e}")
 
-    def shutdown(self):
+    def shutdown(self) -> None:
+        """Shutdown."""
         pass

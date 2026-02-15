@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: h1nobbdde."""
+
 # -------------------------------------------------------------------------------
 # Name:         sfp_h1.nobbd.de
 # Purpose:      Query the the unofficial HackerOne disclosure timeline database
@@ -11,10 +15,13 @@
 
 import re
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_h1nobbdde(SpiderFootPlugin):
+class sfp_h1nobbdde(SpiderFootModernPlugin):
+
+    """Check external vulnerability scanning/reporting service h1.nobbd.de to see if the target is listed."""
 
     meta = {
         'name': "HackerOne (Unofficial)",
@@ -48,28 +55,28 @@ class sfp_h1nobbdde(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
 
         # Clear / reset any other class member variables here
         # or you risk them persisting between threads.
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME"]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["VULNERABILITY_DISCLOSURE"]
 
     # Query h1.nobbd.de
-    def queryOBB(self, qry):
+    def queryOBB(self, qry: str):
+        """Query OBB."""
         ret = list()
         url = "http://h1.nobbd.de/search.php?q=" + qry
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             url, timeout=30, useragent=self.opts['_useragent'])
 
         if res['content'] is None:
@@ -89,7 +96,8 @@ class sfp_h1nobbdde(SpiderFootPlugin):
 
         return ret
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

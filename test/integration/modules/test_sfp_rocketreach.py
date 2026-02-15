@@ -1,4 +1,7 @@
-# -*- coding: utf-8 -*-
+from __future__ import annotations
+
+"""Tests for sfp_rocketreach module."""
+
 # -------------------------------------------------------------------------------
 # Name:         test_sfp_rocketreach
 # Purpose:      Test RocketReach module.
@@ -11,6 +14,7 @@
 # -------------------------------------------------------------------------------
 
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 import sys
 import os
 
@@ -18,7 +22,7 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 from spiderfoot import SpiderFootEvent, SpiderFootHelpers
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 
 try:
     from modules.sfp_rocketreach import sfp_rocketreach
@@ -49,7 +53,7 @@ except ImportError:
             return None
 
 
-class TestSFPRrocketreach(unittest.TestCase):
+class TestSFPRrocketreach(TestModuleBase):
 
     @classmethod
     def setUpClass(cls):

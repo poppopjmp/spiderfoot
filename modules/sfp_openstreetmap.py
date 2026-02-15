@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: openstreetmap."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_openstreetmap
@@ -18,10 +22,13 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_openstreetmap(SpiderFootPlugin):
+class sfp_openstreetmap(SpiderFootModernPlugin):
+
+    """Retrieves latitude/longitude coordinates for physical addresses from OpenStreetMap API."""
 
     meta = {
         'name': "OpenStreetMap",
@@ -50,24 +57,24 @@ class sfp_openstreetmap(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ['PHYSICAL_ADDRESS']
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ['PHYSICAL_COORDINATES']
 
     # Search for address
     # https://operations.osmfoundation.org/policies/nominatim/
-    def query(self, qry):
+    def query(self, qry: str) -> dict | None:
+        """Query the data source."""
         params = {
             'q': qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),
             'format': 'json',
@@ -75,7 +82,7 @@ class sfp_openstreetmap(SpiderFootPlugin):
             'addressdetails': '0'
         }
 
-        res = self.sf.fetchUrl("https://nominatim.openstreetmap.org/search?" + urllib.parse.urlencode(params),
+        res = self.fetch_url("https://nominatim.openstreetmap.org/search?" + urllib.parse.urlencode(params),
                                timeout=self.opts['_fetchtimeout'], useragent='SpiderFoot')
 
         if res['content'] is None:
@@ -90,7 +97,8 @@ class sfp_openstreetmap(SpiderFootPlugin):
         return None
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

@@ -1,10 +1,16 @@
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent
+from __future__ import annotations
 
-class sfp_bnb(SpiderFootPlugin):
+"""SpiderFoot plug-in module: bnb."""
+
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+
+class sfp_bnb(SpiderFootModernPlugin):
+    """SpiderFoot plugin to monitor Binance Smart Chain (BNB) for transactions and emit events."""
     meta = {
         'name': "BNB Chain Monitor",
         'summary': "Monitors Binance Smart Chain (BNB) for transactions and emits events.",
-        'flags': ['apikey'],
+        'flags': ['apikey', 'experimental'],
         'useCases': ["Passive", "Investigate"],
         'group': ["Passive", "Investigate"],
         'categories': ["Reputation Systems"],
@@ -41,8 +47,9 @@ class sfp_bnb(SpiderFootPlugin):
         "output_format": "Output format: summary (default) or full."
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
         # Option validation
         if not self.opts.get("api_key"):
@@ -55,13 +62,16 @@ class sfp_bnb(SpiderFootPlugin):
             self.error("min_value must be non-negative.")
         self.debug(f"BNB module options: {self.opts}")
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["ROOT"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["BNB_ADDRESS", "BNB_TX"]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         self.debug(f"Received event: {event.eventType} from {event.module}")
         # Optionally filter by event_types (stub logic)
         allowed_types = [t.strip() for t in self.opts.get("event_types", "").split(",") if t.strip()]
@@ -74,11 +84,12 @@ class sfp_bnb(SpiderFootPlugin):
             if value < self.opts.get("min_value", 0.0):
                 self.debug(f"Event value {value} below min_value {self.opts['min_value']}, skipping.")
                 return None
-        except Exception:
+        except (ValueError, TypeError):
             pass
         # Stub: would process and emit events here
         self.debug("Stub: would process and emit BNB events here.")
         return None
 
-    def shutdown(self):
+    def shutdown(self) -> None:
+        """Shutdown."""
         self.debug("Shutting down BNB module.")

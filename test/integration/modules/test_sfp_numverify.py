@@ -1,9 +1,14 @@
+from __future__ import annotations
+
+"""Tests for sfp_numverify module."""
+
 import pytest
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch
 
 from modules.sfp_numverify import sfp_numverify
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
@@ -14,7 +19,7 @@ class DummyEventListener:
     def notifyListeners(self, event):
         self.events.append(event)
 
-class TestModuleIntegrationNumverify(unittest.TestCase):
+class TestModuleIntegrationNumverify(TestModuleBase):
     def setUp(self):
         self.options = {
             'api_key': 'dummy_key',
@@ -28,7 +33,7 @@ class TestModuleIntegrationNumverify(unittest.TestCase):
         self.listener = DummyEventListener()
         self.module.notifyListeners = self.listener.notifyListeners
 
-    @patch('sflib.SpiderFoot.fetchUrl')
+    @patch('spiderfoot.sflib.SpiderFoot.fetchUrl')
     def test_handleEvent_emits_events_on_valid_phone(self, mock_fetch):
         # Simulate Numverify API positive response
         mock_fetch.return_value = {

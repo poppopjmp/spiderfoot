@@ -1,13 +1,17 @@
+from __future__ import annotations
+
+"""Tests for sfp_bambenek module."""
+
 # filepath: spiderfoot/test/unit/modules/test_sfp_bambenek.py
 import unittest
-from sflib import SpiderFoot
-from spiderfoot.event import SpiderFootEvent
+from spiderfoot.sflib import SpiderFoot
+from spiderfoot.events.event import SpiderFootEvent
 from modules.sfp_bambenek import sfp_bambenek
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModuleBambenek(SpiderFootTestBase):
+class TestModuleBambenek(TestModuleBase):
     """Test Bambenek module."""
 
     def setUp(self):

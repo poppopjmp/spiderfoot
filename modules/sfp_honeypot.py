@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: honeypot."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:        sfp_honeypot
@@ -13,10 +17,13 @@
 
 from netaddr import IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_honeypot(SpiderFootPlugin):
+class sfp_honeypot(SpiderFootModernPlugin):
+
+    """Query the Project Honey Pot database for IP addresses."""
 
     meta = {
         'name': "Project Honey Pot",
@@ -91,14 +98,12 @@ class sfp_honeypot(SpiderFootPlugin):
         "10": "Unknown (10)"
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             "IP_ADDRESS",
             "AFFILIATE_IPADDR",
@@ -106,7 +111,8 @@ class sfp_honeypot(SpiderFootPlugin):
             "NETBLOCK_MEMBER",
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "BLACKLISTED_IPADDR",
             "BLACKLISTED_AFFILIATE_IPADDR",
@@ -119,11 +125,13 @@ class sfp_honeypot(SpiderFootPlugin):
         ]
 
     # Swap 1.2.3.4 to 4.3.2.1
-    def reverseAddr(self, ipaddr):
+    def reverseAddr(self, ipaddr: str) -> str:
+        """ReverseAddr."""
         return '.'.join(reversed(ipaddr.split('.')))
 
     # Returns text about the IP status returned from DNS
-    def parseDNS(self, addr):
+    def parseDNS(self, addr: str) -> str | None:
+        """Parse DNS."""
         bits = addr.split(".")
         if int(bits[1]) > self.opts['timelimit']:
             return None
@@ -136,7 +144,8 @@ class sfp_honeypot(SpiderFootPlugin):
 
         return f"{self.statuses[bits[3]]}\nLast Activity: {bits[1]} days ago\nThreat Level: {bits[2]}"
 
-    def queryAddr(self, qaddr, parentEvent):
+    def queryAddr(self, qaddr: str, parentEvent: SpiderFootEvent) -> None:
+        """Query Addr."""
         eventName = parentEvent.eventType
 
         text = None
@@ -144,7 +153,7 @@ class sfp_honeypot(SpiderFootPlugin):
             lookup = f"{self.opts['api_key']}.{self.reverseAddr(qaddr)}.dnsbl.httpbl.org"
 
             self.debug(f"Checking ProjectHoneyPot: {lookup}")
-            addrs = self.sf.resolveHost(lookup)
+            addrs = self.resolve_host(lookup)
             if not addrs:
                 return
 
@@ -187,7 +196,8 @@ class sfp_honeypot(SpiderFootPlugin):
             blacklist_type, f"ProjectHoneyPot ({qaddr}): {text}\n<SFURL>{url}</SFURL>", self.__name__, parentEvent)
         self.notifyListeners(evt)
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 

@@ -1,12 +1,29 @@
+from __future__ import annotations
+
+"""Tests for spiderfoothelpers module."""
+
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch, MagicMock, mock_open
 from spiderfoot.helpers import SpiderFootHelpers
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_base import TestModuleBase
+from test.unit.utils.resource_manager import get_test_resource_manager
+from test.unit.utils.thread_registry import get_test_thread_registry
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestSpiderFootHelpers(SpiderFootTestBase):
+class TestSpiderFootHelpers(TestModuleBase):
 
+
+    def setUp(self):
+        """Enhanced setUp with ThreadReaper module tracking."""
+        super().setUp()
+        # ThreadReaper infrastructure is automatically initialized
+        
+    def tearDown(self):
+        """Enhanced tearDown with ThreadReaper cleanup."""
+        # ThreadReaper infrastructure automatically cleans up
+        super().tearDown()
     def test_dataPath(self):
         with patch('spiderfoot.helpers.os') as mock_os:
             mock_os.path.abspath.return_value = '/home/user/.spiderfoot/data'
@@ -49,15 +66,31 @@ class TestSpiderFootHelpers(SpiderFootTestBase):
             SpiderFootHelpers.loadModulesAsDict('invalid_path')
 
     def test_loadModulesAsDict(self):
-        with patch('spiderfoot.helpers.os') as mock_os, patch('builtins.__import__') as mock_import:
-            mock_os.path.isdir.return_value = True
-            mock_os.listdir.return_value = ['sfp_test.py']
-            mock_module = MagicMock()
-            mock_module.sfp_test.asdict.return_value = {
-                'cats': ['Content Analysis']}
-            mock_import.return_value = mock_module
-            modules = SpiderFootHelpers.loadModulesAsDict('path')
+        """Test loadModulesAsDict with a real temp module file."""
+        import tempfile
+        import os
+        with tempfile.TemporaryDirectory() as tmpdir:
+            mod_path = os.path.join(tmpdir, 'sfp_test.py')
+            with open(mod_path, 'w', encoding='utf-8') as f:
+                f.write(
+                    "from spiderfoot.modern_plugin import SpiderFootModernPlugin\n"
+                    "class sfp_test(SpiderFootModernPlugin):\n"
+                    "    meta = {'name': 'Test Module'}\n"
+                    "    opts = {'opt1': 'val1'}\n"
+                    "    optdescs = {'opt1': 'desc1'}\n"
+                    "    def setup(self, sfc, userOpts=None):\n"
+                    "        super().setup(sfc, userOpts or {})\n"
+                    "    def watchedEvents(self):\n"
+                    "        return ['IP_ADDRESS']\n"
+                    "    def producedEvents(self):\n"
+                    "        return ['RAW_RIR_DATA']\n"
+                    "    def handleEvent(self, event):\n"
+                    "        pass\n"
+                )
+            modules = SpiderFootHelpers.loadModulesAsDict(tmpdir)
             self.assertIn('sfp_test', modules)
+            self.assertEqual(modules['sfp_test']['name'], 'Test Module')
+            self.assertTrue(modules['sfp_test'].get('modern', False))
 
     def test_loadCorrelationRulesRaw_invalid_ignore_files_type(self):
         with self.assertRaises(TypeError):

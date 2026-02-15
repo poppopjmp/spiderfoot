@@ -1,8 +1,13 @@
+from __future__ import annotations
+
+"""Tests for sfp_xiaohongshu module."""
+
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from spiderfoot import SpiderFootEvent
 from modules.sfp_xiaohongshu import sfp_xiaohongshu
 
-class TestSfpXiaohongshu(unittest.TestCase):
+class TestSfpXiaohongshu(TestModuleBase):
     def setUp(self):
         self.plugin = sfp_xiaohongshu()
         self.plugin.setup(None, {})

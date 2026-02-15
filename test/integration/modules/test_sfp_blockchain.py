@@ -1,14 +1,19 @@
+from __future__ import annotations
+
+"""Tests for sfp_blockchain module."""
+
 import pytest
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch
 
 from modules.sfp_blockchain import sfp_blockchain
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 
-class TestModuleIntegrationBlockchain(unittest.TestCase):
+class TestModuleIntegrationBlockchain(TestModuleBase):
     def setUp(self):
         self.sf = SpiderFoot({
             '_fetchtimeout': 10,

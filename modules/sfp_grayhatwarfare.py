@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: grayhatwarfare."""
+
 # -------------------------------------------------------------------------------
 # Name:        sfp_grayhatwarfare
 # Purpose:     Find bucket names matching the keyword extracted from a domain from Grayhat API.
@@ -13,10 +17,13 @@ import json
 import time
 import urllib
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_grayhatwarfare(SpiderFootPlugin):
+class sfp_grayhatwarfare(SpiderFootModernPlugin):
+
+    """Find bucket names matching the keyword extracted from a domain from Grayhat API."""
 
     meta = {
         'name': "Grayhat Warfare",
@@ -63,21 +70,20 @@ class sfp_grayhatwarfare(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             "DOMAIN_NAME",
         ]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             'CLOUD_STORAGE_BUCKET',
             'CLOUD_STORAGE_BUCKET_OPEN',
@@ -85,7 +91,8 @@ class sfp_grayhatwarfare(SpiderFootPlugin):
         ]
 
     # Query Grayhat Warfare
-    def query(self, keyword, start):
+    def query(self, keyword: str, start: int) -> dict | None:
+        """Query the data source."""
         params = urllib.parse.urlencode({
             'keywords': keyword.encode('raw_unicode_escape'),
             'access_token': self.opts['api_key']
@@ -95,7 +102,7 @@ class sfp_grayhatwarfare(SpiderFootPlugin):
             'Accept': 'application/json',
         }
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://buckets.grayhatwarfare.com/api/v1/buckets/{start}/{self.opts['per_page']}?{params}",
             headers=headers,
             timeout=15,
@@ -121,7 +128,8 @@ class sfp_grayhatwarfare(SpiderFootPlugin):
             return None
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

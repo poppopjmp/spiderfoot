@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: skymem."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_skymem
@@ -13,10 +17,13 @@
 
 import re
 
-from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_skymem(SpiderFootPlugin):
+class sfp_skymem(SpiderFootModernPlugin):
+
+    """Look up e-mail addresses on Skymem."""
 
     meta = {
         'name': "Skymem",
@@ -46,25 +53,25 @@ class sfp_skymem(SpiderFootPlugin):
     optdescs = {
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ['INTERNET_NAME', "DOMAIN_NAME"]
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["EMAILADDR", "EMAILADDR_GENERIC"]
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -77,7 +84,7 @@ class sfp_skymem(SpiderFootPlugin):
         self.debug(f"Received event, {eventName}, from {srcModuleName}")
 
         # Get e-mail addresses on this domain
-        res = self.sf.fetchUrl("http://www.skymem.info/srch?q=" + eventData,
+        res = self.fetch_url("http://www.skymem.info/srch?q=" + eventData,
                                timeout=self.opts['_fetchtimeout'], useragent=self.opts['_useragent'])
 
         if res['content'] is None:
@@ -113,7 +120,7 @@ class sfp_skymem(SpiderFootPlugin):
         domain_id = domain_ids[0]
 
         for page in range(1, 21):
-            res = self.sf.fetchUrl(
+            res = self.fetch_url(
                 f"http://www.skymem.info/domain/{domain_id}?p={page}",
                 timeout=self.opts['_fetchtimeout'],
                 useragent=self.opts['_useragent']

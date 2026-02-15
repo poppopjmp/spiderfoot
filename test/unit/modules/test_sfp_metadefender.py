@@ -1,15 +1,29 @@
+from __future__ import annotations
+
+"""Tests for sfp_metadefender module."""
+
 import pytest
 import unittest
 
 from modules.sfp_metadefender import sfp_metadefender
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModuleMetadefender(SpiderFootTestBase):
+class TestModuleMetadefender(TestModuleBase):
 
+
+    def setUp(self):
+        """Enhanced setUp with ThreadReaper module tracking."""
+        super().setUp()
+        # ThreadReaper infrastructure is automatically initialized
+        
+    def tearDown(self):
+        """Enhanced tearDown with ThreadReaper cleanup."""
+        # ThreadReaper infrastructure automatically cleans up
+        super().tearDown()
     def test_opts(self):
         module = sfp_metadefender()
         self.assertEqual(len(module.opts), len(module.optdescs))
@@ -43,7 +57,7 @@ class TestModuleMetadefender(SpiderFootTestBase):
     def test_parseApiResponse_fatal_http_response_error_code_should_set_errorState(self):
         sf = SpiderFoot(self.default_options)
 
-        # TODO http_codes = ["401", "402", "403", "429", "500", "502", "503"]
+        # Subset of error codes tested (full list: 401, 402, 403, 429, 500, 502, 503)
         http_codes = ["401", "429"]
         for code in http_codes:
             with self.subTest(code=code):

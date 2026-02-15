@@ -10,16 +10,21 @@
 # Licence:   MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: fofa."""
+
 import json
 import time
 import urllib.parse
 import base64
-from typing import Optional, Dict, Any
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from typing import Any
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_fofa(SpiderFootPlugin):
-
+class sfp_fofa(SpiderFootModernPlugin):
+    """SpiderFoot plugin for querying Fofa API to look up domain, IP address, and other information."""
     meta = {
         'name': "Fofa",
         'summary': "Look up domain, IP address, and other information from Fofa.",
@@ -59,7 +64,7 @@ class sfp_fofa(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """
         Setup plugin with SpiderFoot context and user options.
         :param sfc: SpiderFoot context
@@ -67,21 +72,18 @@ class sfp_fofa(SpiderFootPlugin):
         """
         if userOpts is None:
             userOpts = {}
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
         self.errorState = False
         self.results = self.tempStorage()
-        for opt in userOpts:
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Return a list of event types this module watches."""
         return ["DOMAIN_NAME", "IP_ADDRESS", "IPV6_ADDRESS"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Return a list of event types this module produces."""
         return ["INTERNET_NAME", "DOMAIN_NAME", "IP_ADDRESS", "IPV6_ADDRESS", "RAW_RIR_DATA"]
 
-    def query(self, query: str) -> Optional[Dict[str, Any]]:
+    def query(self, query: str) -> dict[str, Any] | None:
         """
         Query the Fofa API for the given search string.
         :param query: The search string (domain, IP, etc.)
@@ -105,7 +107,7 @@ class sfp_fofa(SpiderFootPlugin):
                 'time': f'-{max_age_days}d',
             })
             url = f"https://fofa.info/api/v1/search/all?{params}"
-            res = self.sf.fetchUrl(
+            res = self.fetch_url(
                 url,
                 useragent=self.opts.get('_useragent', 'SpiderFoot')
             )
@@ -118,7 +120,7 @@ class sfp_fofa(SpiderFootPlugin):
             self.error(f"Exception during Fofa API query: {e}")
             return None
 
-    def parseApiResponse(self, res: dict) -> Optional[Dict[str, Any]]:
+    def parseApiResponse(self, res: dict) -> dict[str, Any] | None:
         """
         Parse the Fofa API response.
         :param res: Response dict from fetchUrl
@@ -138,7 +140,7 @@ class sfp_fofa(SpiderFootPlugin):
             self.debug(f"Error processing JSON response: {e}")
             return None
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """
         Handle incoming events, query Fofa, and emit results as SpiderFootEvents.
         :param event: SpiderFootEvent

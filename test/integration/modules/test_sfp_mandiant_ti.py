@@ -1,11 +1,16 @@
+from __future__ import annotations
+
+"""Tests for sfp_mandiant_ti module."""
+
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch
 from modules.sfp_mandiant_ti import sfp_mandiant_ti
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
-class TestModuleMandiantTI(unittest.TestCase):
+class TestModuleMandiantTI(TestModuleBase):
 
     def setUp(self):
         self.default_options = {
@@ -22,7 +27,7 @@ class TestModuleMandiantTI(unittest.TestCase):
         self.module.__name__ = "sfp_mandiant_ti"
 
     @patch("modules.sfp_mandiant_ti.sfp_mandiant_ti.notifyListeners")
-    @patch("sflib.SpiderFoot.fetchUrl")
+    @patch("spiderfoot.sflib.SpiderFoot.fetchUrl")
     def test_handleEvent(self, mock_fetchUrl, mock_notifyListeners):
         target_value = 'example.com'
         target_type = 'INTERNET_NAME'
@@ -46,7 +51,7 @@ class TestModuleMandiantTI(unittest.TestCase):
         assert 'THREAT_INTELLIGENCE' in calls
         self.assertTrue(self.module.results)
 
-    @patch("sflib.SpiderFoot.fetchUrl")
+    @patch("spiderfoot.sflib.SpiderFoot.fetchUrl")
     def test_query(self, mock_fetchUrl):
         self.module.opts['api_key'] = 'test_api_key'
         self.module.opts.update(self.default_options)

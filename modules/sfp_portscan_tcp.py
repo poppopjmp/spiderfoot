@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: portscan_tcp."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_portscan_tcp
@@ -17,10 +21,13 @@ import time
 
 from netaddr import IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_portscan_tcp(SpiderFootPlugin):
+class sfp_portscan_tcp(SpiderFootModernPlugin):
+
+    """Scans for commonly open TCP ports on Internet-facing systems."""
 
     meta = {
         'name': "Port Scanner - TCP",
@@ -62,15 +69,12 @@ class sfp_portscan_tcp(SpiderFootPlugin):
     lock = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.__dataSource__ = "Target Network"
         self.lock = threading.Lock()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
         portlist = list()
         if self.opts['ports'][0].startswith("http://") or \
                 self.opts['ports'][0].startswith("https://") or \
@@ -96,21 +100,24 @@ class sfp_portscan_tcp(SpiderFootPlugin):
             random.SystemRandom().shuffle(self.portlist)
 
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ['IP_ADDRESS', 'NETBLOCK_OWNER']
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["TCP_PORT_OPEN", "TCP_PORT_OPEN_BANNER"]
 
-    def tryPort(self, ip, port):
+    def tryPort(self, ip: str, port: int) -> None:
+        """TryPort."""
         peer = f"{ip}:{port}"
 
         try:
             sock = self.sf.safeSocket(ip, port, self.opts['timeout'])
             with self.lock:
                 self.portResults[peer] = True
-        except Exception:
+        except Exception as e:
             with self.lock:
                 self.portResults[peer] = False
             return
@@ -119,7 +126,7 @@ class sfp_portscan_tcp(SpiderFootPlugin):
         try:
             with self.lock:
                 self.portResults[peer] = sock.recv(4096)
-        except Exception:
+        except Exception as e:
             sock.close()
             return
         else:
@@ -129,7 +136,8 @@ class sfp_portscan_tcp(SpiderFootPlugin):
 
         sock.close()
 
-    def tryPortWrapper(self, ip, portList):
+    def tryPortWrapper(self, ip: str, portList: list):
+        """TryPortWrapper."""
         self.portResults = dict()
         running = True
         i = 0
@@ -158,7 +166,8 @@ class sfp_portscan_tcp(SpiderFootPlugin):
         return self.portResults
 
     # Generate TCP_PORT_OPEN_BANNER event
-    def sendEvent(self, resArray, srcEvent):
+    def sendEvent(self, resArray: list, srcEvent: SpiderFootEvent) -> None:
+        """SendEvent."""
         for cp in resArray:
             if not resArray[cp]:
                 continue
@@ -174,7 +183,8 @@ class sfp_portscan_tcp(SpiderFootPlugin):
                 self.notifyListeners(bevt)
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

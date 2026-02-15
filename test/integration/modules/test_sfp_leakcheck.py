@@ -1,16 +1,21 @@
+from __future__ import annotations
+
+"""Tests for sfp_leakcheck module."""
+
 # filepath: spiderfoot/test/integration/modules/test_sfpleakcheck.py
 import pytest
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch
 import json
 import os
 
 from modules.sfp_leakcheck import sfp_leakcheck
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
-class TestModuleIntegrationLeakcheck(unittest.TestCase):
+class TestModuleIntegrationLeakcheck(TestModuleBase):
     def setUp(self):
         self.sf = SpiderFoot({
             '_fetchtimeout': 0.1,

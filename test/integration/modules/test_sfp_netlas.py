@@ -1,11 +1,16 @@
+from __future__ import annotations
+
+"""Tests for sfp_netlas module."""
+
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch
 from modules.sfp_netlas import sfp_netlas
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
-class TestModuleIntegrationNetlas(unittest.TestCase):
+class TestModuleIntegrationNetlas(TestModuleBase):
 
     def setUp(self):
         self.default_options = {
@@ -40,7 +45,7 @@ class TestModuleIntegrationNetlas(unittest.TestCase):
                          "DOMAIN_NAME", "IP_ADDRESS", "IPV6_ADDRESS"])
 
     @patch("modules.sfp_netlas.sfp_netlas.notifyListeners")
-    @patch("sflib.SpiderFoot.fetchUrl")
+    @patch("spiderfoot.sflib.SpiderFoot.fetchUrl")
     def test_handleEvent(self, mock_fetchUrl, mock_notifyListeners):
         self.module.opts['api_key'] = 'test_api_key'
         # Mock Netlas API response

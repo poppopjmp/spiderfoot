@@ -1,0 +1,23 @@
+id: cross_scan_shared_darknet
+version: "1"
+meta:
+  name: Shared dark web mention across scans
+  description: >
+    The same dark web content or URL was found referencing multiple
+    scan targets. This may indicate a common threat actor, a shared
+    data breach being sold, or a marketplace listing affecting
+    multiple organisations.
+  risk: HIGH
+  scope: workspace
+collections:
+  collect:
+      - method: regex
+        field: type
+        value: DARKNET_MENTION_CONTENT|DARKNET_MENTION_URL
+aggregation:
+  field: data
+analysis:
+  - method: threshold
+    field: data
+    minimum: 2
+headline: "Dark web mention {data} references multiple scan targets"

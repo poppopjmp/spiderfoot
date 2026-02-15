@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: reversewhois."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_reversewhois
@@ -14,10 +18,13 @@ import re
 
 from bs4 import BeautifulSoup
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_reversewhois(SpiderFootPlugin):
+class sfp_reversewhois(SpiderFootModernPlugin):
+
+    """Reverse Whois lookups using reversewhois.io."""
 
     meta = {
         "name": "ReverseWhois",
@@ -45,30 +52,30 @@ class sfp_reversewhois(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
 
         # Clear / reset any other class member variables here
         # or you risk them persisting between threads.
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME"]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["AFFILIATE_INTERNET_NAME", "AFFILIATE_DOMAIN_NAME", "DOMAIN_REGISTRAR"]
 
     # Search ReverseWhois
-    def query(self, qry):
+    def query(self, qry: str) -> tuple:
+        """Query the data source."""
         url = f"https://reversewhois.io?searchterm={qry}"
 
-        res = self.sf.fetchUrl(url, timeout=self.opts.get("_fetchtimeout", 30))
+        res = self.fetch_url(url, timeout=self.opts.get("_fetchtimeout", 30))
 
         if res["code"] not in ["200"]:
             self.error("You may have exceeded ReverseWhois usage limits.")
@@ -100,7 +107,8 @@ class sfp_reversewhois(SpiderFootPlugin):
         return (list(domains), list(registrars))
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

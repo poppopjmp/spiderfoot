@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: maltiverse."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_maltiverse
@@ -16,10 +20,13 @@ from datetime import datetime
 
 from netaddr import IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_maltiverse(SpiderFootPlugin):
+class sfp_maltiverse(SpiderFootModernPlugin):
+
+    """Obtain information about any malicious activities involving IP addresses"""
 
     meta = {
         'name': "Maltiverse",
@@ -64,33 +71,33 @@ class sfp_maltiverse(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     # For a list of all events, check sfdb.py.
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["IP_ADDRESS", "NETBLOCK_OWNER", "NETBLOCK_MEMBER",
                 "AFFILIATE_IPADDR"]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["IP_ADDRESS", "MALICIOUS_IPADDR", "RAW_RIR_DATA",
                 "MALICIOUS_AFFILIATE_IPADDR"]
 
     # Check whether the IP Address is malicious using Maltiverse API
     # https://app.swaggerhub.com/apis-docs/maltiverse/api/1.0.0-oas3#/IPv4/getIP
-    def queryIPAddress(self, qry):
+    def queryIPAddress(self, qry: str) -> dict | None:
 
+        """Query IPAddress."""
         headers = {
             'Accept': "application/json",
         }
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             'https://api.maltiverse.com/ip/' + str(qry),
             headers=headers,
             timeout=15,
@@ -113,12 +120,13 @@ class sfp_maltiverse(SpiderFootPlugin):
             # Maltiverse returns \\n instead of \n in the response
             data = str(res['content']).replace("\\n", " ")
             return json.loads(data)
-        except Exception:
+        except Exception as e:
             self.error("Incorrectly formatted data received as JSON response")
             return None
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -217,7 +225,7 @@ class sfp_maltiverse(SpiderFootPlugin):
                 try:
                     lastSeenDate = datetime.strptime(
                         str(lastSeen), "%Y-%m-%d %H:%M:%S")
-                except Exception:
+                except Exception as e:
                     self.error("Invalid date in JSON response, skipping")
                     continue
 

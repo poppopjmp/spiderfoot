@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: sublist3r."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_sublist3r
@@ -13,10 +17,13 @@
 
 import json
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_sublist3r(SpiderFootPlugin):
+class sfp_sublist3r(SpiderFootModernPlugin):
+
+    """Passive subdomain enumeration using Sublist3r"""
 
     meta = {
         "name": "Sublist3r PassiveDNS",
@@ -38,22 +45,26 @@ class sfp_sublist3r(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.debug("Setting up sfp_sublist3r")
         self.results = self.tempStorage()
         self.opts.update(userOpts)
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME", "INTERNET_NAME"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["INTERNET_NAME", "INTERNET_NAME_UNRESOLVED"]
 
-    def query(self, domain):
+    def query(self, domain: str) -> list:
+        """Query the data source."""
         url = f"https://api.sublist3r.com/search.php?domain={domain}"
         ret = []
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             url,
             useragent=self.opts.get("_useragent", "Spiderfoot"),
             # mirror sublist3r's headers
@@ -76,15 +87,17 @@ class sfp_sublist3r(SpiderFootPlugin):
 
         return list(set(ret))
 
-    def sendEvent(self, source, host):
-        if self.sf.resolveHost(host) or self.sf.resolveHost6(host):
+    def sendEvent(self, source: str, host: str) -> None:
+        """SendEvent."""
+        if self.resolve_host(host) or self.resolve_host6(host):
             e = SpiderFootEvent("INTERNET_NAME", host, self.__name__, source)
         else:
             e = SpiderFootEvent("INTERNET_NAME_UNRESOLVED",
                                 host, self.__name__, source)
         self.notifyListeners(e)
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         query = str(event.data).lower()
 
         self.debug(f"Received event, {event.eventType}, from {event.module}")

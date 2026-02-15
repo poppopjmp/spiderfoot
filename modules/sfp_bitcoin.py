@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: bitcoin."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_bitcoin
@@ -15,11 +19,12 @@ import codecs
 import re
 from hashlib import sha256
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_bitcoin(SpiderFootPlugin):
-
+class sfp_bitcoin(SpiderFootModernPlugin):
+    """SpiderFoot plugin to identify bitcoin addresses in scraped webpages."""
     meta = {
         'name': "Bitcoin Finder",
         'summary': "Identify bitcoin addresses in scraped webpages.",
@@ -33,35 +38,38 @@ class sfp_bitcoin(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["TARGET_WEB_CONTENT"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["BITCOIN_ADDRESS"]
 
-    def to_bytes(self, n, length):
+    def to_bytes(self, n: int, length: int):
+        """Convert to bytes."""
         h = '%x' % n
         return codecs.decode(('0' * (len(h) % 2) + h).zfill(length * 2), "hex")
 
-    def decode_base58(self, bc, length):
+    def decode_base58(self, bc: str, length: int):
+        """Decode base58."""
         digits58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
         n = 0
         for char in bc:
             n = n * 58 + digits58.index(char)
         return self.to_bytes(n, length)
 
-    def check_bc(self, bc):
+    def check_bc(self, bc: str) -> bool:
+        """Check bc."""
         bcbytes = self.decode_base58(bc, 25)
         return bcbytes[-4:] == sha256(sha256(bcbytes[:-4]).digest()).digest()[:4]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

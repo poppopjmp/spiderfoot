@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: subdomain_takeover."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:        sfp_subdomain_takeover
@@ -14,10 +18,13 @@
 
 import json
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_subdomain_takeover(SpiderFootPlugin):
+class sfp_subdomain_takeover(SpiderFootModernPlugin):
+
+    """Check if affiliated subdomains are vulnerable to takeover."""
 
     meta = {
         'name': "Subdomain Takeover Checker",
@@ -40,25 +47,22 @@ class sfp_subdomain_takeover(SpiderFootPlugin):
     fingerprints = dict()
 
     # Initialize module and module options
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in userOpts.keys():
-            self.opts[opt] = userOpts[opt]
-
-        content = self.sf.cacheGet("subjack-fingerprints", 48)
+        content = self.cache_get("subjack-fingerprints", 48)
         if content is None:
             url = "https://raw.githubusercontent.com/haccer/subjack/master/fingerprints.json"
-            res = self.sf.fetchUrl(url, useragent="SpiderFoot")
+            res = self.fetch_url(url, useragent="SpiderFoot")
 
             if res['content'] is None:
                 self.error(f"Unable to fetch {url}")
                 self.errorState = True
                 return
 
-            self.sf.cachePut("subjack-fingerprints", res['content'])
+            self.cache_put("subjack-fingerprints", res['content'])
             content = res['content']
 
         try:
@@ -70,15 +74,18 @@ class sfp_subdomain_takeover(SpiderFootPlugin):
             return
 
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["AFFILIATE_INTERNET_NAME", "AFFILIATE_INTERNET_NAME_UNRESOLVED"]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["AFFILIATE_INTERNET_NAME_HIJACKABLE"]
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -108,7 +115,7 @@ class sfp_subdomain_takeover(SpiderFootPlugin):
                         continue
 
                     for proto in ["https", "http"]:
-                        res = self.sf.fetchUrl(
+                        res = self.fetch_url(
                             f"{proto}://{eventData}/",
                             timeout=15,
                             useragent=self.opts['_useragent'],

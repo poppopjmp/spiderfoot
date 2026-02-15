@@ -10,6 +10,10 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: koodous."""
+
 import json
 import re
 import time
@@ -17,10 +21,13 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_koodous(SpiderFootPlugin):
+class sfp_koodous(SpiderFootModernPlugin):
+
+    """Search Koodous for mobile apps."""
 
     meta = {
         'name': "Koodous",
@@ -59,26 +66,26 @@ class sfp_koodous(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.errorState = False
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             'DOMAIN_NAME'
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             'APPSTORE_ENTRY',
             'RAW_RIR_DATA'
         ]
 
-    def queryPackageName(self, qry, cursor=''):
+    def queryPackageName(self, qry: str, cursor: int = '') -> dict:
+        """Query PackageName."""
         package_name = qry.encode('raw_unicode_escape').decode(
             "ascii", errors='replace')
 
@@ -87,7 +94,7 @@ class sfp_koodous(SpiderFootPlugin):
             'search': f"package:{package_name}.*"
         })
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://developer.koodous.com/apks/?{params}",
             headers={"Authorization": f"Token {self.opts['api_key']}"},
             useragent=self.opts['_useragent'],
@@ -99,7 +106,8 @@ class sfp_koodous(SpiderFootPlugin):
 
         return self.parseApiResponse(res)
 
-    def parseApiResponse(self, res: dict):
+    def parseApiResponse(self, res: dict) -> dict | None:
+        """Parse ApiResponse."""
         if not res:
             self.error("No response from Koodous.")
             return None
@@ -139,7 +147,8 @@ class sfp_koodous(SpiderFootPlugin):
 
         return None
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         if self.errorState:
             return
 
@@ -195,7 +204,7 @@ class sfp_koodous(SpiderFootPlugin):
                 if not app:
                     continue
 
-                # TODO: compare company name with target
+                # NOTE: company name comparison with target not yet implemented
                 # company = result.get('company')
 
                 version = result.get('version')

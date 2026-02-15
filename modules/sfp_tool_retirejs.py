@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: tool_retirejs."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_tool_retirejs
@@ -17,10 +21,13 @@ import shutil
 import tempfile
 from subprocess import Popen, PIPE, TimeoutExpired
 
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_tool_retirejs(SpiderFootPlugin):
+class sfp_tool_retirejs(SpiderFootModernPlugin):
+
+    """Scanner detecting the use of JavaScript libraries with known vulnerabilities"""
 
     meta = {
         "name": "Tool - Retire.js",
@@ -50,17 +57,16 @@ class sfp_tool_retirejs(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in userOpts.keys():
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["LINKED_URL_INTERNAL", "LINKED_URL_EXTERNAL"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "VULNERABILITY_CVE_CRITICAL",
             "VULNERABILITY_CVE_HIGH",
@@ -70,7 +76,8 @@ class sfp_tool_retirejs(SpiderFootPlugin):
         ]
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -106,7 +113,7 @@ class sfp_tool_retirejs(SpiderFootPlugin):
 
         # Store the javascript file being analyzed somewhere temporary
         tmpdirname = tempfile.mkdtemp()
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             eventData,
             timeout=self.opts["_fetchtimeout"],
             useragent=self.opts["_useragent"],

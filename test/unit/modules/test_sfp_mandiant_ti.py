@@ -1,11 +1,15 @@
+from __future__ import annotations
+
+"""Tests for sfp_mandiant_ti module."""
+
 import unittest
 from modules.sfp_mandiant_ti import sfp_mandiant_ti
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
-class TestModuleMandiantTI(SpiderFootTestBase):
+class TestModuleMandiantTI(TestModuleBase):
 
     def setUp(self):
         super().setUp()

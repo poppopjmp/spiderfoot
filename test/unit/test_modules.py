@@ -1,16 +1,21 @@
+from __future__ import annotations
+
+"""Tests for modules module."""
+
 # test_modules.py
 import os
 import pytest
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootDb
 from spiderfoot import SpiderFootHelpers
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestSpiderFootModuleLoading(unittest.TestCase):
+class TestSpiderFootModuleLoading(TestModuleBase):
     """Test SpiderFoot module loading."""
 
     @staticmethod
@@ -128,7 +133,7 @@ class TestSpiderFootModuleLoading(unittest.TestCase):
 
             for opt, val in m.get('opts').items():
                 self.assertIsInstance(
-                    val, (str, int, bool, list, float), f"Module {module} option {opt} has invalid type {type(val)}")
+                    val, (str, int, bool, list, float, dict), f"Module {module} option {opt} has invalid type {type(val)}")
 
     def test_module_options_have_valid_names(self):
         sf = SpiderFoot(self.default_options)

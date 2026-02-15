@@ -10,6 +10,10 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: censys."""
+
 import base64
 import json
 import time
@@ -20,10 +24,12 @@ from datetime import datetime
 
 from netaddr import IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_censys(SpiderFootPlugin):
+class sfp_censys(SpiderFootModernPlugin):
+    """SpiderFoot plugin to obtain host information from Censys.io."""
 
     meta = {
         'name': "Censys",
@@ -78,14 +84,12 @@ class sfp_censys(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             "IP_ADDRESS",
             "IPV6_ADDRESS",
@@ -93,7 +97,8 @@ class sfp_censys(SpiderFootPlugin):
             "NETBLOCKV6_OWNER",
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "BGP_AS_MEMBER",
             "UDP_PORT_OPEN",
@@ -108,7 +113,8 @@ class sfp_censys(SpiderFootPlugin):
             "RAW_RIR_DATA"
         ]
 
-    def queryHosts(self, qry):
+    def queryHosts(self, qry: str) -> dict:
+        """Query Hosts."""
         secret = self.opts['censys_api_key_uid'] + \
             ':' + self.opts['censys_api_key_secret']
         auth = base64.b64encode(secret.encode('utf-8')).decode('utf-8')
@@ -117,7 +123,7 @@ class sfp_censys(SpiderFootPlugin):
             'Authorization': f"Basic {auth}"
         }
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://search.censys.io/api/v2/hosts/{qry}",
             timeout=self.opts['_fetchtimeout'],
             useragent="SpiderFoot",
@@ -129,7 +135,8 @@ class sfp_censys(SpiderFootPlugin):
 
         return self.parseApiResponse(res)
 
-    def queryHostsSearch(self, qry):
+    def queryHostsSearch(self, qry: str) -> dict:
+        """Query HostsSearch."""
         secret = self.opts['censys_api_key_uid'] + \
             ':' + self.opts['censys_api_key_secret']
         auth = base64.b64encode(secret.encode('utf-8')).decode('utf-8')
@@ -142,7 +149,7 @@ class sfp_censys(SpiderFootPlugin):
             'q': qry,
         })
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://search.censys.io/api/v2/hosts/search/?{params}",
             timeout=self.opts['_fetchtimeout'],
             useragent="SpiderFoot",
@@ -154,7 +161,8 @@ class sfp_censys(SpiderFootPlugin):
 
         return self.parseApiResponse(res)
 
-    def parseApiResponse(self, res: dict):
+    def parseApiResponse(self, res: dict) -> dict | None:
+        """Parse ApiResponse."""
         if not res:
             self.error("No response from Censys.io.")
             return None
@@ -201,7 +209,8 @@ class sfp_censys(SpiderFootPlugin):
 
         return data
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         if self.errorState:
             return
 

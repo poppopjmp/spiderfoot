@@ -1,14 +1,18 @@
+from __future__ import annotations
+
+"""Tests for sfp_phone module."""
+
 import pytest
 import unittest
 
 from modules.sfp_phone import sfp_phone
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModulePhone(SpiderFootTestBase):
+class TestModulePhone(TestModuleBase):
 
     def setUp(self):
         super().setUp()

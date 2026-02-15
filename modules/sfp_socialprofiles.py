@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: socialprofiles."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_socialprofiles
@@ -15,7 +19,8 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 sites = {
     # Search string to use, domain name the profile will sit on within
@@ -44,7 +49,9 @@ sites = {
 }
 
 
-class sfp_socialprofiles(SpiderFootPlugin):
+class sfp_socialprofiles(SpiderFootModernPlugin):
+
+    """Tries to discover the social media profiles for human names identified."""
 
     meta = {
         'name': "Social Media Profile Finder",
@@ -106,27 +113,27 @@ class sfp_socialprofiles(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.keywords = None
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["HUMAN_NAME"]
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["SOCIAL_MEDIA", "RAW_RIR_DATA"]
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -235,7 +242,7 @@ class sfp_socialprofiles(SpiderFootPlugin):
                             "Tightening results to look for " +
                             str(self.keywords)
                         )
-                        pres = self.sf.fetchUrl(
+                        pres = self.fetch_url(
                             match,
                             timeout=self.opts["_fetchtimeout"],
                             useragent=self.opts["_useragent"],

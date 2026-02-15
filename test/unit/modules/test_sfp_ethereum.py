@@ -1,8 +1,13 @@
+from __future__ import annotations
+
+"""Tests for sfp_ethereum module."""
+
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from modules.sfp_ethereum import sfp_ethereum
 
 
-class TestSfpEthereum(unittest.TestCase):
+class TestSfpEthereum(TestModuleBase):
     def setUp(self):
         self.valid_opts = {"api_key": "key", "addresses": "0x123", "max_transactions": 10, "output_format": "summary"}
         self.plugin = sfp_ethereum()

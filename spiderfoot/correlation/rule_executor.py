@@ -1,26 +1,42 @@
+# -------------------------------------------------------------------------------
+# Name:         Modular SpiderFoot Correlation Engine
+# Purpose:      Common functions for enriching events with contextual information.
+#
+# Author:      Agostino Panico @poppopjmp
+#
+# Created:     30/06/2025
+# Copyright:   (c) Agostino Panico 2025
+# Licence:     MIT
+# -------------------------------------------------------------------------------
+from __future__ import annotations
+
+"""Executes correlation rules against scan data using pluggable strategies."""
+
 import logging
-from copy import deepcopy
 from collections import defaultdict
+from typing import Any, Callable
 from spiderfoot.correlation.rule_loader import RuleLoader
 
 class RuleExecutionStrategy:
     """Base class for pluggable rule execution strategies."""
-    def execute(self, dbh, rule, scan_ids):
+    def execute(self, dbh: Any, rule: dict, scan_ids: list[str]) -> dict:
+        """Execute a correlation rule against scan data and return results."""
         raise NotImplementedError
 
 class DefaultRuleExecutionStrategy(RuleExecutionStrategy):
-    def execute(self, dbh, rule, scan_ids):
+    """Default strategy for executing correlation rules against scan data."""
+    def execute(self, dbh: Any, rule: dict, scan_ids: list[str]) -> dict:
         """Execute correlation rule and save results to database."""
         import uuid
         from collections import defaultdict
-        
+
         log = logging.getLogger("spiderfoot.correlation.strategy")
-        log.debug(f"Processing rule {rule.get('id', 'unknown')} for scans {scan_ids}")
-        
+        log.debug("Processing rule %s for scans %s", rule.get('id', 'unknown'), scan_ids)
+
         # Step 1: Collect data based on rule collections
         collected_events = self._collect_events(dbh, rule, scan_ids)
-        log.debug(f"Collected {len(collected_events)} events")
-        
+        log.debug("Collected %s events", len(collected_events))
+
         if not collected_events:
             log.debug("No events collected, skipping rule")
             return {
@@ -29,36 +45,36 @@ class DefaultRuleExecutionStrategy(RuleExecutionStrategy):
                 'events': [],
                 'correlations_created': 0
             }
-        
+
         # Step 2: Apply aggregation if specified
         aggregated_groups = self._aggregate_events(collected_events, rule.get('aggregation', {}))
-        log.debug(f"Created {len(aggregated_groups)} aggregated groups")
-        
-        # Step 3: Apply analysis if specified  
+        log.debug("Created %s aggregated groups", len(aggregated_groups))
+
+        # Step 3: Apply analysis if specified
         filtered_groups = self._analyze_groups(aggregated_groups, rule.get('analysis', []), rule)
-        log.debug(f"Analysis filtered to {len(filtered_groups)} groups")
-        
+        log.debug("Analysis filtered to %s groups", len(filtered_groups))
+
         # Step 4: Create correlation results for valid groups
         correlations_created = 0
         for group_key, events in filtered_groups.items():
             correlation_id = self._create_correlation_result(dbh, rule, scan_ids, group_key, events)
             if correlation_id:
                 correlations_created += 1
-                log.debug(f"Created correlation {correlation_id} for group {group_key}")
-        
+                log.debug("Created correlation %s for group %s", correlation_id, group_key)
+
         return {
             'meta': rule['meta'],
             'matched': correlations_created > 0,
             'events': collected_events,
             'correlations_created': correlations_created
         }
-    
-    def _collect_events(self, dbh, rule, scan_ids):
+
+    def _collect_events(self, dbh, rule, scan_ids) -> list:
         """Collect events from database based on rule collections."""
         log = logging.getLogger("spiderfoot.correlation.collect")
-        
+
         collections = rule.get('collections', {})
-        
+
         # Handle both dict and list formats for collections
         if isinstance(collections, list):
             # Test format: collections is a list of dicts with 'collect' key
@@ -69,50 +85,64 @@ class DefaultRuleExecutionStrategy(RuleExecutionStrategy):
         else:
             # YAML format: collections is a dict with 'collect' key
             collect_rules = collections.get('collect', [])
-        
+
         if not collect_rules:
             log.warning("No collection rules defined")
             return []
-        
+
         # For each scan, collect matching events
         all_events = []
         for scan_id in scan_ids:
             scan_events = self._get_scan_events(dbh, scan_id, collect_rules)
             all_events.extend(scan_events)
-        
+
         return all_events
-    
-    def _get_scan_events(self, dbh, scan_id, collect_rules):
+
+    def _get_scan_events(self, dbh, scan_id, collect_rules) -> list:
         """Get events for a specific scan that match collection rules."""
         log = logging.getLogger("spiderfoot.correlation.collect")
-        
+        from spiderfoot.db.db_utils import get_placeholder
+
+        # Determine placeholder based on db type
+        db_type = getattr(dbh, 'db_type', 'sqlite')
+        ph = get_placeholder(db_type)
+
         try:
             # Check which table schema we're working with
             # Try the simplified test schema first
+            _test_schema = False
+            dbh_lock = getattr(dbh, 'dbhLock', None)
             try:
-                dbh_lock = getattr(dbh, 'dbhLock', None)
                 if dbh_lock:
                     with dbh_lock:
-                        dbh.dbh.execute("SELECT scan_id, type, data FROM tbl_scan_results WHERE scan_id = ? LIMIT 1", [scan_id])
+                        dbh.dbh.execute(f"SELECT scan_id, type, data FROM tbl_scan_results WHERE scan_id = {ph} LIMIT 1", [scan_id])
                         test_row = dbh.dbh.fetchone()
                 else:
                     # For tests without lock
-                    dbh.dbh.execute("SELECT scan_id, type, data FROM tbl_scan_results WHERE scan_id = ? LIMIT 1", [scan_id])
+                    dbh.dbh.execute(f"SELECT scan_id, type, data FROM tbl_scan_results WHERE scan_id = {ph} LIMIT 1", [scan_id])
                     test_row = dbh.dbh.fetchone()
-                
-                # Use simplified schema for tests
-                base_query = "SELECT scan_id as hash, type, data, 'test_module' as module, 0 as created, 'ROOT' as source_event_hash FROM tbl_scan_results WHERE scan_id = ?"
+
+                # Use simplified schema for tests — generate deterministic hashes
+                import hashlib
+                base_query = f"SELECT type, data, 'test_module' as module, 0 as created, 'ROOT' as source_event_hash FROM tbl_scan_results WHERE scan_id = {ph}"
                 query_params = [scan_id]
-                
-            except Exception:
+                _test_schema = True
+
+            except Exception as e:
+                # Rollback the failed test query (required for PostgreSQL)
+                try:
+                    if hasattr(dbh, 'conn') and dbh.conn:
+                        dbh.conn.rollback()
+                except Exception:
+                    pass
                 # Use full production schema
-                base_query = """
-                    SELECT hash, type, data, module, generated, source_event_hash 
-                    FROM tbl_scan_results 
-                    WHERE scan_instance_id = ? AND false_positive = 0
+                base_query = f"""
+                    SELECT hash, type, data, module, generated, source_event_hash
+                    FROM tbl_scan_results
+                    WHERE scan_instance_id = {ph} AND false_positive = 0
                 """
                 query_params = [scan_id]
-            
+
             # Execute query
             events = []
             if dbh_lock:
@@ -122,40 +152,55 @@ class DefaultRuleExecutionStrategy(RuleExecutionStrategy):
             else:
                 dbh.dbh.execute(base_query, query_params)
                 rows = dbh.dbh.fetchall()
-            
+
             # Convert to dict format for easier processing
             for row in rows:
-                event = {
-                    'hash': row[0],
-                    'type': row[1], 
-                    'data': row[2],
-                    'module': row[3],
-                    'created': row[4],  # using generated column as created
-                    'source_event_hash': row[5],
-                    'scan_id': scan_id
-                }
+                if _test_schema:
+                    # Test schema: columns are (type, data, module, created, source_event_hash)
+                    import hashlib
+                    event_hash = hashlib.sha256(f"{scan_id}:{row[0]}:{row[1]}".encode()).hexdigest()[:16]
+                    event = {
+                        'hash': event_hash,
+                        'type': row[0],
+                        'data': row[1],
+                        'module': row[2],
+                        'created': row[3],
+                        'source_event_hash': row[4],
+                        'scan_id': scan_id
+                    }
+                else:
+                    # Production schema: columns are (hash, type, data, module, generated, source_event_hash)
+                    event = {
+                        'hash': row[0],
+                        'type': row[1],
+                        'data': row[2],
+                        'module': row[3],
+                        'created': row[4],
+                        'source_event_hash': row[5],
+                        'scan_id': scan_id
+                    }
                 events.append(event)
-            
-            log.debug(f"Retrieved {len(events)} base events for scan {scan_id}")
-            
+
+            log.debug("Retrieved %s base events for scan %s", len(events), scan_id)
+
             # Apply collection filters
             filtered_events = events
             for collect_rule in collect_rules:
                 filtered_events = self._apply_collection_filter(filtered_events, collect_rule)
-                log.debug(f"After filter {collect_rule}, {len(filtered_events)} events remain")
-            
+                log.debug("After filter %s, %s events remain", collect_rule, len(filtered_events))
+
             return filtered_events
-            
+
         except Exception as e:
-            log.error(f"Error collecting events for scan {scan_id}: {e}")
+            log.error("Error collecting events for scan %s: %s", scan_id, e)
             return []
-    
-    def _apply_collection_filter(self, events, collect_rule):
+
+    def _apply_collection_filter(self, events, collect_rule) -> list:
         """Apply a single collection filter to events."""
         method = collect_rule.get('method', '')
         field = collect_rule.get('field', '')
         value = collect_rule.get('value', '')
-        
+
         if method == 'exact':
             return [e for e in events if e.get(field) == value]
         elif method == 'regex':
@@ -170,26 +215,28 @@ class DefaultRuleExecutionStrategy(RuleExecutionStrategy):
                         break
             return filtered
         else:
-            # Unknown method, return all events
+            # Unknown method, warn and return all events unfiltered
+            log = logging.getLogger("spiderfoot.correlation")
+            log.warning("Unknown filter method '%s' — returning all events unfiltered", method)
             return events
-    
-    def _aggregate_events(self, events, aggregation):
+
+    def _aggregate_events(self, events, aggregation) -> dict:
         """Group events according to aggregation rules."""
         if not aggregation or not events:
             # No aggregation, return all events in a single group
             return {'all': events}
-        
+
         field = aggregation.get('field', 'data')
         groups = defaultdict(list)
-        
+
         for event in events:
             # Handle nested field references like 'source.data'
             key_value = self._get_field_value(event, field)
             groups[str(key_value)].append(event)
-        
+
         return dict(groups)
-    
-    def _get_field_value(self, event, field):
+
+    def _get_field_value(self, event, field) -> str:
         """Get field value from event, supporting nested references."""
         if '.' in field:
             # Handle nested fields like 'source.data'
@@ -197,10 +244,10 @@ class DefaultRuleExecutionStrategy(RuleExecutionStrategy):
             if parts[0] == 'source':
                 # For source fields, we'll use the event data as placeholder
                 return event.get('data', '')
-        
+
         return event.get(field, '')
-    
-    def _analyze_groups(self, groups, analysis_rules, rule=None):
+
+    def _analyze_groups(self, groups, analysis_rules, rule=None) -> dict:
         """
         Apply analysis rules to filter groups. Also enforces multi-scan logic if required.
 
@@ -214,17 +261,17 @@ class DefaultRuleExecutionStrategy(RuleExecutionStrategy):
         """
         if not analysis_rules and not (rule and rule.get('meta', {}).get('type') == 'multi-scan'):
             return groups
-        
+
         filtered_groups = {}
         for group_key, events in groups.items():
             keep_group = True
 
             # Enforce multi-scan: only keep groups with >1 unique scan_id
             if rule and rule.get('meta', {}).get('type') == 'multi-scan':
-                scan_ids = set(e.get('scan_id') for e in events)
+                scan_ids = {e.get('scan_id') for e in events}
                 if len(scan_ids) <= 1:
                     keep_group = False
-            
+
             if keep_group:
                 for analysis_rule in analysis_rules or []:
                     method = analysis_rule.get('method', '')
@@ -234,12 +281,12 @@ class DefaultRuleExecutionStrategy(RuleExecutionStrategy):
                             keep_group = False
                             break
                     # Add more analysis methods as needed
-            
+
             if keep_group:
                 filtered_groups[group_key] = events
         return filtered_groups
-    
-    def _create_correlation_result(self, dbh, rule, scan_ids, group_key, events):
+
+    def _create_correlation_result(self, dbh, rule, scan_ids, group_key, events) -> str | None:
         """
         Create a correlation result in the database.
 
@@ -254,28 +301,35 @@ class DefaultRuleExecutionStrategy(RuleExecutionStrategy):
             str or None: Correlation ID if created, else None.
         """
         log = logging.getLogger("spiderfoot.correlation.create")
-        
+
         try:
             # Generate correlation title using headline template
             headline = rule.get('headline', 'Correlation found')
-            correlation_title = headline.format(data=group_key)
-            
+            try:
+                correlation_title = headline.format(
+                    data=group_key,
+                    count=len(events),
+                    type=events[0].get('type', '') if events else '',
+                )
+            except (KeyError, IndexError):
+                correlation_title = f"{headline} — {group_key}"
+
             # Use first scan ID as the primary scan
             scan_id = scan_ids[0] if scan_ids else 'unknown'
-            
+
             # Use first event hash as the event hash
             event_hash = events[0]['hash'] if events else 'ROOT'
-            
+
             # Extract rule information
             rule_id = rule.get('id', 'unknown')
             rule_name = rule.get('meta', {}).get('name', 'Unknown Rule')
             rule_descr = rule.get('meta', {}).get('description', '')
             rule_risk = rule.get('meta', {}).get('risk', 'INFO')
             rule_yaml = rule.get('rawYaml', '')
-            
+
             # Collect all event hashes
             event_hashes = [event['hash'] for event in events]
-            
+
             # Check if dbh has correlationResultCreate method (production) or if it's a test
             if hasattr(dbh, 'correlationResultCreate') and callable(dbh.correlationResultCreate):
                 # Create correlation result in database
@@ -290,19 +344,20 @@ class DefaultRuleExecutionStrategy(RuleExecutionStrategy):
                     correlationTitle=correlation_title,
                     eventHashes=event_hashes
                 )
-                log.info(f"Created correlation {correlation_id} for rule {rule_id}: {correlation_title}")
+                log.info("Created correlation %s for rule %s: %s", correlation_id, rule_id, correlation_title)
                 return correlation_id
             # For tests, just return a mock correlation ID
             import uuid
             correlation_id = str(uuid.uuid4())
-            log.info(f"Test mode: Mock correlation {correlation_id} for rule {rule_id}: {correlation_title}")
+            log.info("Test mode: Mock correlation %s for rule %s: %s", correlation_id, rule_id, correlation_title)
             return correlation_id
-            
+
         except Exception as e:
             log.error(f"Error creating correlation result: {e}", exc_info=True)
             return None
 
 class RuleExecutor:
+    """Orchestrates correlation rule execution with pluggable strategies."""
     _strategy_registry = {}
     _event_hooks = {
         'pre_rule': [],
@@ -312,15 +367,18 @@ class RuleExecutor:
     }
 
     @classmethod
-    def register_strategy(cls, rule_type, strategy):
+    def register_strategy(cls, rule_type: str, strategy: RuleExecutionStrategy) -> None:
+        """Register a custom execution strategy for the given rule type."""
         cls._strategy_registry[rule_type] = strategy
 
     @classmethod
-    def register_event_hook(cls, hook_name, func):
+    def register_event_hook(cls, hook_name: str, func: Callable) -> None:
+        """Register a callback function for the specified rule lifecycle hook."""
         if hook_name in cls._event_hooks:
             cls._event_hooks[hook_name].append(func)
 
-    def __init__(self, dbh, rules, scan_ids=None, debug=False):
+    def __init__(self, dbh: Any, rules: list, scan_ids: list[str] | None = None, debug: bool = False) -> None:
+        """Initialize the rule executor with a database handle, rules, and scan IDs."""
         self.log = logging.getLogger("spiderfoot.correlation.executor")
         self.dbh = dbh
         self.rules = rules
@@ -328,31 +386,37 @@ class RuleExecutor:
         self.results = {}
         self.debug = debug
 
-    def run(self):
+    def run(self) -> dict:
+        """Execute all enabled rules in sequence and return aggregated results."""
         for rule in self.rules:
             if not rule.get('enabled', True):
                 self.log.info(f"Skipping disabled rule: {rule.get('id', rule.get('meta', {}).get('name', 'unknown'))}")
                 continue
             try:
                 if self.debug:
-                    print(f"[DEBUG] Evaluating rule: {rule.get('id', rule.get('meta', {}).get('name', 'unknown'))}")
+                    self.log.debug("Evaluating rule: %s", rule.get('id', rule.get('meta', {}).get('name', 'unknown')))
                 for hook in self._event_hooks['pre_rule']:
                     hook(rule, self.scan_ids)
                 rule_result = self.process_rule(rule)
                 if self.debug:
-                    print(f"[DEBUG] Rule result: {rule_result}")
+                    self.log.debug("Rule result: %s", rule_result)
                 for hook in self._event_hooks['post_rule']:
                     hook(rule, rule_result, self.scan_ids)
                 self.results[rule.get('id', rule.get('meta', {}).get('name', 'unknown'))] = rule_result
             except Exception as e:
-                self.log.error(f"Error processing rule {rule.get('id', rule.get('meta', {}).get('name', 'unknown'))}: {e}")
+                self.log.error(
+                    "Error processing rule %s: %s",
+                    rule.get('id', rule.get('meta', {}).get('name', 'unknown')),
+                    e,
+                )
         return self.results
 
-    def process_rule(self, rule):
+    def process_rule(self, rule: dict) -> dict:
+        """Process a single rule by dispatching to the appropriate execution strategy."""
         rule_type = rule.get('meta', {}).get('type', 'default')
         strategy = self._strategy_registry.get(rule_type, DefaultRuleExecutionStrategy())
         if self.debug:
-            print(f"[DEBUG] Using strategy: {strategy.__class__.__name__}")
+            self.log.debug("Using strategy: %s", strategy.__class__.__name__)
         return strategy.execute(self.dbh, rule, self.scan_ids)
 
 # Example: Register a custom strategy for a new rule type

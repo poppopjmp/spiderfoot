@@ -10,16 +10,23 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: jsonwhoiscom."""
+
 import json
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
 
-from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_jsonwhoiscom(SpiderFootPlugin):
+class sfp_jsonwhoiscom(SpiderFootModernPlugin):
+
+    """Search JsonWHOIS.com for WHOIS records associated with a domain."""
 
     meta = {
         'name': "JsonWHOIS.com",
@@ -64,27 +71,27 @@ class sfp_jsonwhoiscom(SpiderFootPlugin):
     errorState = False
 
     # Initialize module and module options
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in userOpts.keys():
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME", "AFFILIATE_DOMAIN_NAME"]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["RAW_RIR_DATA", "DOMAIN_REGISTRAR", "DOMAIN_WHOIS", "PROVIDER_DNS",
                 "EMAILADDR", "EMAILADDR_GENERIC", "PHONE_NUMBER", "PHYSICAL_ADDRESS",
                 "AFFILIATE_DOMAIN_UNREGISTERED"]
 
     # Query domain
     # https://jsonwhois.com/docs
-    def queryDomain(self, qry):
+    def queryDomain(self, qry: str) -> dict:
+        """Query Domain."""
         params = {
             'domain': qry.encode('raw_unicode_escape').decode("ascii", errors='replace')
         }
@@ -93,7 +100,7 @@ class sfp_jsonwhoiscom(SpiderFootPlugin):
             "Authorization": "Token token=" + self.opts["api_key"]
         }
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://jsonwhois.com/api/v1/whois?{urllib.parse.urlencode(params)}",
             headers=headers,
             timeout=15,
@@ -105,7 +112,8 @@ class sfp_jsonwhoiscom(SpiderFootPlugin):
         return self.parseApiResponse(res)
 
     # Parse API response
-    def parseApiResponse(self, res: dict):
+    def parseApiResponse(self, res: dict) -> dict | None:
+        """Parse ApiResponse."""
         if not res:
             self.error("No response from JsonWHOIS.com.")
             return None
@@ -151,7 +159,8 @@ class sfp_jsonwhoiscom(SpiderFootPlugin):
         return None
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

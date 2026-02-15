@@ -1,6 +1,7 @@
 """
 Timeout utilities for preventing test hangs.
 """
+from __future__ import annotations
 
 import threading
 import time

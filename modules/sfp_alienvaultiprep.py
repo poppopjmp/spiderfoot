@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: alienvaultiprep."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:        sfp_alienvaultiprep
@@ -13,11 +17,12 @@
 
 from netaddr import IPAddress, IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_alienvaultiprep(SpiderFootPlugin):
-
+class sfp_alienvaultiprep(SpiderFootModernPlugin):
+    """Check if an IP or netblock is malicious according to the AlienVault IP Reputation database."""
     meta = {
         'name': "AlienVault IP Reputation",
         'summary': "Check if an IP or netblock is malicious according to the AlienVault IP Reputation database.",
@@ -59,15 +64,13 @@ class sfp_alienvaultiprep(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             "IP_ADDRESS",
             "AFFILIATE_IPADDR",
@@ -75,7 +78,8 @@ class sfp_alienvaultiprep(SpiderFootPlugin):
             "NETBLOCK_OWNER"
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "BLACKLISTED_IPADDR",
             "BLACKLISTED_AFFILIATE_IPADDR",
@@ -87,7 +91,8 @@ class sfp_alienvaultiprep(SpiderFootPlugin):
             "MALICIOUS_NETBLOCK",
         ]
 
-    def queryBlacklist(self, target, targetType):
+    def queryBlacklist(self, target: str, targetType: str) -> bool:
+        """Query Blacklist."""
         blacklist = self.retrieveBlacklist()
 
         if not blacklist:
@@ -108,13 +113,14 @@ class sfp_alienvaultiprep(SpiderFootPlugin):
 
         return False
 
-    def retrieveBlacklist(self):
-        blacklist = self.sf.cacheGet('alienvaultiprep', 24)
+    def retrieveBlacklist(self) -> list | None:
+        """RetrieveBlacklist."""
+        blacklist = self.cache_get('alienvaultiprep', 24)
 
         if blacklist is not None:
             return self.parseBlacklist(blacklist)
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             "https://reputation.alienvault.com/reputation.generic",
             timeout=self.opts['_fetchtimeout'],
             useragent=self.opts['_useragent'],
@@ -132,11 +138,11 @@ class sfp_alienvaultiprep(SpiderFootPlugin):
             self.errorState = True
             return None
 
-        self.sf.cachePut("alienvaultiprep", res['content'])
+        self.cache_put("alienvaultiprep", res['content'])
 
         return self.parseBlacklist(res['content'])
 
-    def parseBlacklist(self, blacklist):
+    def parseBlacklist(self, blacklist: str) -> list:
         """Parse plaintext blacklist.
 
         Args:
@@ -161,7 +167,8 @@ class sfp_alienvaultiprep(SpiderFootPlugin):
         return ips
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 

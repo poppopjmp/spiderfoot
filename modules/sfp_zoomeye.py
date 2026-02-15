@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: zoomeye."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:   sfp_zoomeye
@@ -14,10 +18,13 @@ import time
 import json
 import requests
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_zoomeye(SpiderFootPlugin):
+class sfp_zoomeye(SpiderFootModernPlugin):
+    """Look up domain, IP address, and other information from ZoomEye."""
+
     meta = {
         "name": "ZoomEye",
         "summary": "Look up domain, IP address, and other information from ZoomEye.",
@@ -57,22 +64,21 @@ class sfp_zoomeye(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.errorState = False
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
         if not self.opts["api_key"]:
             self.error("ZoomEye API key is required.")
             self.errorState = True
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME", "IP_ADDRESS", "IPV6_ADDRESS"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "INTERNET_NAME",
             "DOMAIN_NAME",
@@ -81,7 +87,7 @@ class sfp_zoomeye(SpiderFootPlugin):
             "RAW_RIR_DATA",
         ]
 
-    def query(self, qry, querytype, page=1):
+    def query(self, qry: str, querytype: str, page: int = 1) -> list | None:
         """
         Query ZoomEye API for the given query and query type (host or web).
         Handle pagination based on the total number of results and page size.
@@ -149,14 +155,14 @@ class sfp_zoomeye(SpiderFootPlugin):
             self.errorState = True
             return None
 
-    def queryHost(self, qry, page=1, pageSize=20):
+    def queryHost(self, qry: str, page: int = 1, pageSize: int = 20) -> dict | None:
         """Query ZoomEye for host information."""
         headers = {
             'API-KEY': self.opts['api_key'],
         }
         
         try:
-            res = self.sf.fetchUrl(
+            res = self.fetch_url(
                 f"https://api.zoomeye.org/host/search?query={qry}&page={page}&pageSize={pageSize}",
                 timeout=self.opts['_fetchtimeout'],
                 useragent="SpiderFoot",
@@ -194,7 +200,7 @@ class sfp_zoomeye(SpiderFootPlugin):
             self.error(f"Error querying ZoomEye API: {e}")
             return None
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """
         Handle incoming events, query ZoomEye, and emit relevant events.
         Deduplicate emitted events to avoid duplicates.
@@ -222,7 +228,8 @@ class sfp_zoomeye(SpiderFootPlugin):
         self.results[eventData] = True
         emitted = set()
 
-        def emit(evt_type, data):
+        def emit(evt_type: str, data: str) -> None:
+            """Emit."""
             key = (evt_type, data)
             if key in emitted:
                 return

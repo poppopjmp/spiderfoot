@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: hackertarget."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_hackertarget
@@ -20,10 +24,13 @@ import urllib.request
 
 from netaddr import IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_hackertarget(SpiderFootPlugin):
+class sfp_hackertarget(SpiderFootModernPlugin):
+
+    """Search HackerTarget.com for hosts sharing the same IP."""
 
     meta = {
         'name': "HackerTarget",
@@ -70,23 +77,22 @@ class sfp_hackertarget(SpiderFootPlugin):
     errorState = False
     cohostcount = 0
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.cohostcount = 0
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             "IP_ADDRESS",
             "NETBLOCK_OWNER",
             'DOMAIN_NAME_PARENT'
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "CO_HOSTED_SITE",
             "IP_ADDRESS",
@@ -100,7 +106,7 @@ class sfp_hackertarget(SpiderFootPlugin):
             'AFFILIATE_INTERNET_NAME_UNRESOLVED'
         ]
 
-    def httpHeaders(self, ip):
+    def httpHeaders(self, ip: str) -> dict | None:
         """Retrieve HTTP headers for IP address.
 
         Args:
@@ -113,7 +119,7 @@ class sfp_hackertarget(SpiderFootPlugin):
             'q': ip
         })
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://api.hackertarget.com/httpheaders/?{params}",
             useragent=self.opts['_useragent'],
             timeout=self.opts['_fetchtimeout']
@@ -144,7 +150,7 @@ class sfp_hackertarget(SpiderFootPlugin):
 
         return headers
 
-    def zoneTransfer(self, ip):
+    def zoneTransfer(self, ip: str) -> list | None:
         """Retrieve DNS zone transfer.
 
         Args:
@@ -157,7 +163,7 @@ class sfp_hackertarget(SpiderFootPlugin):
             'q': ip
         })
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://api.hackertarget.com/zonetransfer/?{params}",
             useragent=self.opts['_useragent'],
             timeout=self.opts['_fetchtimeout']
@@ -184,7 +190,7 @@ class sfp_hackertarget(SpiderFootPlugin):
 
         return records
 
-    def reverseIpLookup(self, ip):
+    def reverseIpLookup(self, ip: str) -> list | None:
         """Reverse lookup hosts on the same IP address.
 
         Args:
@@ -197,7 +203,7 @@ class sfp_hackertarget(SpiderFootPlugin):
             'q': ip
         })
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://api.hackertarget.com/reverseiplookup/?{params}",
             useragent=self.opts['_useragent'],
             timeout=self.opts['_fetchtimeout']
@@ -221,7 +227,8 @@ class sfp_hackertarget(SpiderFootPlugin):
 
         return hosts
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -285,7 +292,7 @@ class sfp_hackertarget(SpiderFootPlugin):
                     else:
                         evt_type = 'AFFILIATE_INTERNET_NAME'
 
-                    if self.opts['verify'] and not self.sf.resolveHost(host) and not self.sf.resolveHost6(host):
+                    if self.opts['verify'] and not self.resolve_host(host) and not self.resolve_host6(host):
                         self.debug(f"Host {host} could not be resolved")
                         evt_type += '_UNRESOLVED'
 

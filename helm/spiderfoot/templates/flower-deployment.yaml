@@ -1,0 +1,88 @@
+{{- if .Values.celery.flower.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "spiderfoot.fullname" . }}-flower
+  labels:
+    {{- include "spiderfoot.labels" . | nindent 4 }}
+    app.kubernetes.io/component: flower
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "spiderfoot.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: flower
+  template:
+    metadata:
+      labels:
+        {{- include "spiderfoot.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: flower
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "spiderfoot.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: flower
+          image: "{{ .Values.celery.flower.image.repository }}:{{ .Values.celery.flower.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - celery
+            - -A
+            - spiderfoot.celery_app
+            - flower
+            - --port={{ .Values.celery.flower.port }}
+            - --broker=redis://{{ include "spiderfoot.redis.host" . }}:6379/0
+          ports:
+            - name: http
+              containerPort: {{ .Values.celery.flower.port }}
+              protocol: TCP
+          env:
+            - name: FLOWER_BASIC_AUTH
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "spiderfoot.fullname" . }}-flower
+                  key: basic-auth
+                  optional: true
+          livenessProbe:
+            httpGet:
+              path: /healthcheck
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /healthcheck
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          resources:
+            {{- toYaml .Values.celery.flower.resources | nindent 12 }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "spiderfoot.fullname" . }}-flower
+  labels:
+    {{- include "spiderfoot.labels" . | nindent 4 }}
+    app.kubernetes.io/component: flower
+spec:
+  type: {{ .Values.celery.flower.service.type }}
+  ports:
+    - port: {{ .Values.celery.flower.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "spiderfoot.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: flower
+{{- end }}

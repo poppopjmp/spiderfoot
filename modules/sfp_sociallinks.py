@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: sociallinks."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:        sfp_sociallinks
@@ -13,10 +17,13 @@
 
 import json
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_sociallinks(SpiderFootPlugin):
+class sfp_sociallinks(SpiderFootModernPlugin):
+
+    """Queries SocialLinks.io to gather intelligence from social media platforms and dark web."""
 
     meta = {
         'name': "Social Links",
@@ -53,15 +60,13 @@ class sfp_sociallinks(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             "USERNAME",
             "EMAILADDR",
@@ -71,7 +76,8 @@ class sfp_sociallinks(SpiderFootPlugin):
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "GEOINFO",
             "SOCIAL_MEDIA",
@@ -83,13 +89,14 @@ class sfp_sociallinks(SpiderFootPlugin):
             "RAW_RIR_DATA"
         ]
 
-    def query(self, queryString):
+    def query(self, queryString: str) -> dict | None:
+        """Query the data source."""
         headers = {
             'Accept': "application/json",
             'Authorization': self.opts['api_key']
         }
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             queryString,
             headers=headers,
             timeout=60,
@@ -114,7 +121,8 @@ class sfp_sociallinks(SpiderFootPlugin):
             return None
         return json.loads(res['content'])
 
-    def queryTelegram(self, qry, eventName):
+    def queryTelegram(self, qry: str, eventName: str) -> dict:
+        """Query Telegram."""
         if eventName == "PHONE_NUMBER":
             queryString = f"https://osint.rest/api/telegram/user_by_phone?query={qry}"
         elif eventName == "USERNAME":
@@ -122,23 +130,27 @@ class sfp_sociallinks(SpiderFootPlugin):
 
         return self.query(queryString)
 
-    def queryFlickr(self, qry):
+    def queryFlickr(self, qry: str) -> dict:
+        """Query Flickr."""
         queryString = f"https://osint.rest/api/flickr/email?email={qry}"
 
         return self.query(queryString)
 
-    def querySkype(self, qry):
+    def querySkype(self, qry: str) -> dict:
+        """Query Skype."""
         queryString = f"https://osint.rest/api/skype/search/v2?query={qry}"
 
         return self.query(queryString)
 
-    def queryLinkedin(self, qry):
+    def queryLinkedin(self, qry: str) -> dict:
+        """Query Linkedin."""
         queryString = f"https://osint.rest/api/linkedin/lookup_by_email/v2?query={qry}"
 
         return self.query(queryString)
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

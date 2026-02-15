@@ -1,6 +1,15 @@
-#  -*- coding: utf-8 -*-
+"""Top-level helper utilities for SpiderFoot.
+
+Contains :class:`SpiderFootHelpers` with static/class methods for URL
+parsing, data type detection, country-code lookups, hash identification,
+data extraction from web content, and other cross-cutting concerns.
+"""
+
+from __future__ import annotations
+
 import html
 import json
+import logging
 import os
 import os.path
 import random
@@ -17,58 +26,57 @@ from networkx.readwrite.gexf import GEXFWriter
 import networkx as nx
 
 
-if sys.version_info >= (3, 8):  # PEP 589 support (TypedDict)
-    class _GraphNode(typing.TypedDict):
-        id: str
-        label: str
-        size: typing.Union[int, float]
-        r: int
-        g: int
-        b: int
+class _GraphNode(typing.TypedDict):
+    """Typed dictionary representing a node in a graph."""
+    id: str
+    label: str
+    size: typing.int | float
+    r: int
+    g: int
+    b: int
 
-    class _GraphEdge(typing.TypedDict):
-        source: str
-        target: str
-        weight: typing.Union[int, float]
+class _GraphEdge(typing.TypedDict):
+    """Typed dictionary representing an edge in a graph."""
+    source: str
+    target: str
+    weight: typing.int | float
 
-    class _Graph(typing.TypedDict, total=False):
-        nodes: typing.List[_GraphNode]
-        edges: typing.List[_GraphEdge]
-        meta: typing.Dict[str, typing.Any]
+class _Graph(typing.TypedDict, total=False):
+    """Typed dictionary representing a graph of nodes and edges."""
+    nodes: list[_GraphNode]
+    edges: list[_GraphEdge]
+    meta: dict[str, typing.Any]
 
-    class Tree(typing.TypedDict):
-        name: str
-        children: typing.List['Tree']
-        size: typing.Optional[int]
+class Tree(typing.TypedDict):
+    """Typed dictionary representing a node in an event tree."""
 
-    class ExtractedLink(typing.TypedDict):
-        url: str
-        text: str
-        title: typing.Optional[str]
-        
-else:
-    _GraphNode = typing.Dict[str, typing.Union[str, int]]
-    _GraphEdge = typing.Dict[str, str]
-    _GraphObject = typing.Union[_GraphNode, _GraphEdge]
-    Tree = typing.Dict[str, typing.Any]
-    ExtractedLink = typing.Dict[str, typing.Any]
+    name: str
+    children: list['Tree']
+    size: typing.int | None
+
+class ExtractedLink(typing.TypedDict):
+    """Typed dictionary describing a hyperlink extracted from HTML content."""
+
+    url: str
+    text: str
+    title: typing.str | None
 
 
-EmptyTree = typing.Dict[None, object]
+EmptyTree = dict[None, object]
 
 
 class SpiderFootHelpers():
     """SpiderFoot helper functions and utilities."""
-    
+
     @staticmethod
     def dataPath() -> str:
-        """Return data path and validate it exists"""
+        """Return data path and validate it exists."""
         try:
             data_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data'))
             if not os.path.exists(data_dir):
                 os.makedirs(data_dir, exist_ok=True)
             return data_dir
-        except Exception:
+        except Exception as e:
             # Fallback to current directory
             fallback_dir = os.path.abspath(os.path.join(os.getcwd(), 'data'))
             if not os.path.exists(fallback_dir):
@@ -77,13 +85,13 @@ class SpiderFootHelpers():
 
     @staticmethod
     def cachePath() -> str:
-        """Return cache path and validate it exists"""
+        """Return cache path and validate it exists."""
         try:
             cache_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'cache'))
             if not os.path.exists(cache_dir):
                 os.makedirs(cache_dir, exist_ok=True)
             return cache_dir
-        except Exception:
+        except Exception as e:
             # Fallback to current directory
             fallback_dir = os.path.abspath(os.path.join(os.getcwd(), 'cache'))
             if not os.path.exists(fallback_dir):
@@ -92,41 +100,41 @@ class SpiderFootHelpers():
 
     @staticmethod
     def logPath() -> str:
-        """Return log path and validate it exists"""
+        """Return log path and validate it exists."""
         try:
             log_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'logs'))
             if not os.path.exists(log_dir):
                 os.makedirs(log_dir, exist_ok=True)
             return log_dir
-        except Exception:
+        except Exception as e:
             # Fallback to current directory
             fallback_dir = os.path.abspath(os.path.join(os.getcwd(), 'logs'))
             if not os.path.exists(fallback_dir):
                 os.makedirs(fallback_dir, exist_ok=True)
             return fallback_dir
-        
+
     @staticmethod
     def genScanInstanceId() -> str:
         """Generate a unique scan instance ID.
-        
+
         Returns:
             str: Unique scan ID
         """
         return str(uuid.uuid4()).split("-")[0].upper()
 
     @staticmethod
-    def targetTypeFromString(target: str) -> typing.Optional[str]:
+    def targetTypeFromString(target: str) -> typing.str | None:
         """Determine target type from string.
-        
+
         Args:
             target: Target string
-            
+
         Returns:
             Target type or None if invalid
         """
         if not target:
             return None
-            
+
         # Check for quoted username/human name first (before stripping quotes)
         if target.startswith('"') and target.endswith('"') and len(target) > 2:
             inner = target[1:-1]
@@ -135,10 +143,10 @@ class SpiderFootHelpers():
                 return "HUMAN_NAME"
             # Otherwise, it's a username
             return "USERNAME"
-            
+
         # Remove quotes for other checks
         stripped_target = target.strip('"\'')
-        
+
         # IP address
         try:
             import ipaddress
@@ -146,8 +154,8 @@ class SpiderFootHelpers():
             return "IP_ADDRESS"
         except ValueError:
             pass
-            
-        # IPv6 address  
+
+        # IPv6 address
         try:
             import ipaddress
             ip = ipaddress.ip_address(stripped_target)
@@ -155,7 +163,7 @@ class SpiderFootHelpers():
                 return "IPV6_ADDRESS"
         except ValueError:
             pass
-            
+
         # IP network
         try:
             import ipaddress
@@ -166,132 +174,165 @@ class SpiderFootHelpers():
                 return "NETBLOCK_OWNER"
         except ValueError:
             pass
-            
+
         # Email
         if re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', stripped_target):
             return "EMAILADDR"
-            
+
         # Phone number
         if re.match(r'^\+?[\d\s\-\(\)]{7,15}$', stripped_target):
             return "PHONE_NUMBER"
-            
+
         # Human name (contains space and letters) - unquoted
         if ' ' in stripped_target and re.match(r'^[a-zA-Z\s]+$', stripped_target):
             return "HUMAN_NAME"
-            
+
         # Bitcoin address
         if re.match(r'^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$|^bc1[a-z0-9]{39,59}$', stripped_target):
             return "BITCOIN_ADDRESS"
-            
+
         # BGP AS number
         if re.match(r'^\d+$', stripped_target) and len(stripped_target) <= 10:
             return "BGP_AS_OWNER"
               # Check if it's a username pattern
         if stripped_target.startswith('@') or stripped_target.lower().startswith('username:'):
             return 'USERNAME'
-            
+
         # Domain/hostname - do this last as it's most permissive
-        if re.match(r'^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$', stripped_target):
+        if re.match(
+            r'^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$',
+            stripped_target,
+        ):
             return "INTERNET_NAME"
-        
+
         return None
 
     @staticmethod
-    def loadModulesAsDict(path, ignore_files=None):
-        """Load modules as dictionary"""
+    def loadModulesAsDict(path: str, ignore_files: typing.list[str] | None = None) -> dict:
+        """Load modules as dictionary."""
         if ignore_files is not None and not isinstance(ignore_files, list):
             raise TypeError("ignore_files must be a list or None")
-            
+
         if not os.path.exists(path):
             raise FileNotFoundError(f"[Errno 2] No such file or directory: '{path}'")
-        
+
         if ignore_files is None:
             ignore_files = []
-        
+
         modules = {}
-        
+
         for filename in os.listdir(path):
             if not filename.endswith('.py') or filename in ignore_files:
                 continue
-                
+
             module_name = filename[:-3]  # Remove .py extension
             file_path = os.path.join(path, filename)
-            
+
             try:
                 import importlib.util
                 spec = importlib.util.spec_from_file_location(module_name, file_path)
                 if spec and spec.loader:
                     module = importlib.util.module_from_spec(spec)
                     spec.loader.exec_module(module)
-                    
+
                     # Try to find the main class - look for various naming patterns
                     mod_class = None
-                    
+
                     # First try: exact module name match
                     if hasattr(module, module_name):
                         mod_class = getattr(module, module_name)
                     else:
                         # Second try: look for any class that inherits from SpiderFootPlugin
+                        # or SpiderFootModernPlugin
                         for attr_name in dir(module):
                             attr = getattr(module, attr_name)
-                            if (isinstance(attr, type) and 
+                            if (isinstance(attr, type) and
                                 hasattr(attr, '__bases__') and
-                                any('SpiderFootPlugin' in str(base) for base in attr.__bases__)):
+                                any('SpiderFootPlugin' in str(base)
+                                    or 'SpiderFootModernPlugin' in str(base)
+                                    for base in attr.__mro__)):
                                 mod_class = attr
                                 # Set the expected attribute name for tests
                                 setattr(module, module_name, mod_class)
                                 break
-                    
+
                     if mod_class and hasattr(mod_class, 'opts') and hasattr(mod_class, 'meta'):
                         # Ensure the class has __name__ attribute
                         if not hasattr(mod_class, '__name__'):
                             setattr(mod_class, '__name__', module_name)
-                            
+
+                        # Detect if this is a modern plugin
+                        is_modern = False
+                        try:
+                            from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+                            is_modern = issubclass(mod_class, SpiderFootModernPlugin)
+                        except ImportError:
+                            pass
+
+                        # Get provides/consumes from instance methods
+                        # (producedEvents/watchedEvents) which is where real
+                        # modules store their event types, falling back to meta.
+                        provides = []
+                        consumes = []
+                        try:
+                            inst = mod_class()
+                            if hasattr(inst, 'producedEvents') and callable(inst.producedEvents):
+                                provides = inst.producedEvents()
+                            if hasattr(inst, 'watchedEvents') and callable(inst.watchedEvents):
+                                consumes = inst.watchedEvents()
+                        except Exception:
+                            pass
+                        if not provides:
+                            provides = getattr(mod_class, 'meta', {}).get('provides', [])
+                        if not consumes:
+                            consumes = getattr(mod_class, 'meta', {}).get('consumes', [])
+
                         modules[module_name] = {
                             'name': getattr(mod_class, 'meta', {}).get('name', module_name),
                             'descr': getattr(mod_class, '__doc__', ''),
                             'cats': getattr(mod_class, 'meta', {}).get('categories', []),
                             'labels': getattr(mod_class, 'meta', {}).get('flags', []),
-                            'provides': getattr(mod_class, 'meta', {}).get('provides', []),
-                            'consumes': getattr(mod_class, 'meta', {}).get('consumes', []),
+                            'provides': provides,
+                            'consumes': consumes,
                             'opts': getattr(mod_class, 'opts', {}),
                             'optdescs': getattr(mod_class, 'optdescs', {}),
                             'meta': getattr(mod_class, 'meta', {}),
-                            'group': getattr(mod_class, 'meta', {}).get('useCases', [])                        }
-            except Exception:
+                            'group': getattr(mod_class, 'meta', {}).get('useCases', []),
+                            'modern': is_modern,
+                        }
+            except Exception as e:
                 continue
-        
+
         return modules
 
     @staticmethod
-    def loadCorrelationRulesRaw(path, ignore_files=None):
-        """Load correlation rules"""
+    def loadCorrelationRulesRaw(path: str, ignore_files: typing.list[str] | None = None) -> list[dict]:
+        """Load correlation rules."""
         if ignore_files is not None and not isinstance(ignore_files, list):
             raise TypeError("ignore_files must be a list or None")
-            
-        if not os.path.exists(path):
+
+        rules_dir = Path(path)
+        if not rules_dir.exists():
             raise FileNotFoundError(f"[Errno 2] No such file or directory: '{path}'")
-        
+
         if ignore_files is None:
             ignore_files = []
-        
+
         rules = []
-        
-        for filename in os.listdir(path):
-            if not filename.endswith('.yaml') or filename in ignore_files:
+
+        for yaml_file in sorted(rules_dir.glob('*.yaml')):
+            if yaml_file.name in ignore_files:
                 continue
-                
-            file_path = os.path.join(path, filename)
-            
+
             try:
                 import yaml
-                with open(file_path, 'r') as f:
-                    rule_data = yaml.safe_load(f)
-                    if rule_data:
-                        rules.append(rule_data)
-            except Exception:
+                rule_data = yaml.safe_load(
+                    yaml_file.read_text(encoding='utf-8'))
+                if rule_data:
+                    rules.append(rule_data)
+            except (yaml.YAMLError, OSError):
                 continue
-                
+
         return rules
 
     @staticmethod
@@ -325,10 +366,10 @@ class SpiderFootHelpers():
     @staticmethod
     def urlBaseDir(url: str) -> str:
         """Extract base directory from full URL.
-        
+
         Args:
             url: Full URL
-            
+
         Returns:
             Base directory
         """
@@ -339,16 +380,16 @@ class SpiderFootHelpers():
     @staticmethod
     def urlRelativeToAbsolute(url: str) -> str:
         """Convert relative URL paths to absolute.
-        
+
         Args:
             url: URL that may contain relative paths
-            
+
         Returns:
             Absolute URL
         """
         if not url:
             return url
-            
+
         # Handle relative path components like ../
         parts = url.split('/')
         stack = []
@@ -361,11 +402,11 @@ class SpiderFootHelpers():
         return '/'.join(stack)
 
     @staticmethod
-    def sanitiseInput(input_str):
-        """Sanitise input string"""
+    def sanitiseInput(input_str: str) -> bool:
+        """Sanitise input string."""
         if not isinstance(input_str, str):
             return False
-        
+
         # Check for invalid patterns
         if input_str.endswith('/'):
             return False
@@ -375,13 +416,13 @@ class SpiderFootHelpers():
             return False
         if len(input_str) <= 2:
             return False
-        
+
         # Escape HTML characters
         sanitized = html.escape(input_str)
         return sanitized
 
     @staticmethod
-    def dictionaryWordsFromWordlists(wordlists: typing.Optional[typing.List[str]] = None) -> typing.Set[str]:
+    def dictionaryWordsFromWordlists(wordlists: typing.list[str] | None = None) -> set[str]:
         """Return dictionary words from several language dictionaries.
 
         Args:
@@ -393,7 +434,7 @@ class SpiderFootHelpers():
         Raises:
             IOError: Error reading wordlist file
         """
-        words: typing.Set[str] = set()
+        words: set[str] = set()
 
         if wordlists is None:
             wordlists = ["english", "german", "french", "spanish"]
@@ -406,12 +447,12 @@ class SpiderFootHelpers():
                     for w in dict_file.readlines():
                         words.add(w.strip().lower().split('/')[0])
             except Exception as e:
-                raise IOError(f"Could not read wordlist file '{d}.dict'") from e
+                raise OSError(f"Could not read wordlist file '{d}.dict'") from e
 
         return words
 
     @staticmethod
-    def humanNamesFromWordlists(wordlists: typing.Optional[typing.List[str]] = None) -> typing.Set[str]:
+    def humanNamesFromWordlists(wordlists: typing.list[str] | None = None) -> set[str]:
         """Return list of human names from wordlist file.
 
         Args:
@@ -423,7 +464,7 @@ class SpiderFootHelpers():
         Raises:
             IOError: Error reading wordlist file
         """
-        words: typing.Set[str] = set()
+        words: set[str] = set()
 
         if wordlists is None:
             wordlists = ["names"]
@@ -435,12 +476,12 @@ class SpiderFootHelpers():
                     for w in dict_file.readlines():
                         words.add(w.strip().lower().split('/')[0])
             except Exception as e:
-                raise IOError(f"Could not read wordlist file '{d}.dict'") from e
+                raise OSError(f"Could not read wordlist file '{d}.dict'") from e
 
         return words
 
     @staticmethod
-    def usernamesFromWordlists(wordlists: typing.Optional[typing.List[str]] = None) -> typing.Set[str]:
+    def usernamesFromWordlists(wordlists: typing.list[str] | None = None) -> set[str]:
         """Return list of usernames from wordlist file.
 
         Args:
@@ -452,7 +493,7 @@ class SpiderFootHelpers():
         Raises:
             IOError: Error reading wordlist file
         """
-        words: typing.Set[str] = set()
+        words: set[str] = set()
 
         if wordlists is None:
             wordlists = ["generic-usernames"]
@@ -464,12 +505,12 @@ class SpiderFootHelpers():
                     for w in dict_file.readlines():
                         words.add(w.strip().lower().split('/')[0])
             except Exception as e:
-                raise IOError(f"Could not read wordlist file '{d}.txt'") from e
-        
+                raise OSError(f"Could not read wordlist file '{d}.txt'") from e
+
         return words
 
     @staticmethod
-    def buildGraphGexf(root: str, title: str, data: typing.List[str], flt: typing.Optional[typing.List[str]] = None) -> str:
+    def buildGraphGexf(root: str, title: str, data: list[str], flt: typing.list[str] | None = None) -> str:
         """Convert supplied raw data into GEXF (Graph Exchange XML Format)
         format (e.g. for Gephi).
 
@@ -489,7 +530,7 @@ class SpiderFootHelpers():
             mapping = SpiderFootHelpers.buildGraphData(data, flt)
             graph = nx.Graph()
 
-            nodelist: typing.Dict[str, int] = dict()
+            nodelist: dict[str, int] = dict()
             ncounter = 0
             for pair in mapping:
                 (dst, src) = pair
@@ -525,12 +566,12 @@ class SpiderFootHelpers():
 
             gexf = GEXFWriter(graph=graph)
             return str(gexf).encode('utf-8')
-        except Exception:
+        except Exception as e:
             return b""
 
     @staticmethod
-    def buildGraphJson(root: str, data: typing.List[str], flt: typing.Optional[typing.List[str]] = None) -> str:
-        """Convert supplied raw data into JSON format for SigmaJS.
+    def buildGraphJson(root: str, data: list[str], flt: typing.list[str] | None = None) -> str:
+        """Convert supplied raw data into JSON format for vis-network.
 
         Args:
             root (str): TBD
@@ -544,17 +585,36 @@ class SpiderFootHelpers():
             if not flt:
                 flt = []
 
+            # Build a lookup: data_value -> (event_type, category)
+            node_type_map: dict[str, tuple[str, str]] = {}
+            for row in data:
+                if len(row) >= 12:
+                    data_val = str(row[1])
+                    event_type = str(row[4]) if row[4] else ''
+                    category = str(row[11]) if row[11] else 'DATA'
+                    if data_val and data_val not in node_type_map:
+                        node_type_map[data_val] = (event_type, category)
+
+            # Category → color map
+            category_colors = {
+                'ENTITY': '#4a90d9',        # Blue
+                'INTERNAL': '#95a5a6',      # Gray
+                'DESCRIPTOR': '#e67e22',    # Orange
+                'DATA': '#2ecc71',          # Green
+                'SUBENTITY': '#9b59b6',     # Purple
+            }
+
             mapping = SpiderFootHelpers.buildGraphData(data, flt)
             ret: _Graph = {}
             ret['nodes'] = list()
             ret['edges'] = list()
 
-            nodelist: typing.Dict[str, int] = dict()
+            nodelist: dict[str, int] = dict()
             ecounter = 0
             ncounter = 0
             for pair in mapping:
                 (dst, src) = pair
-                col = "#000"
+                col = "#7f8c8d"
 
                 # Leave out this special case
                 if dst == "ROOT" or src == "ROOT":
@@ -564,34 +624,48 @@ class SpiderFootHelpers():
                     ncounter = ncounter + 1
 
                     if dst in root:
-                        col = "#f00"
+                        col = "#e74c3c"  # Red for root
+                    else:
+                        type_info = node_type_map.get(dst, ('', 'DATA'))
+                        col = category_colors.get(type_info[1], '#7f8c8d')
 
-                    ret['nodes'].append({
+                    node = {
                         'id': str(ncounter),
                         'label': str(dst),
                         'x': random.SystemRandom().randint(1, 1000),
                         'y': random.SystemRandom().randint(1, 1000),
                         'size': "1",
                         'color': col
-                    })
+                    }
+                    type_info = node_type_map.get(dst, ('', 'DATA'))
+                    node['event_type'] = type_info[0]
+                    node['category'] = type_info[1]
 
+                    ret['nodes'].append(node)
                     nodelist[dst] = ncounter
 
                 if src not in nodelist:
                     ncounter = ncounter + 1
 
                     if src in root:
-                        col = "#f00"
+                        col = "#e74c3c"
+                    else:
+                        type_info = node_type_map.get(src, ('', 'DATA'))
+                        col = category_colors.get(type_info[1], '#7f8c8d')
 
-                    ret['nodes'].append({
+                    node = {
                         'id': str(ncounter),
                         'label': str(src),
                         'x': random.SystemRandom().randint(1, 1000),
                         'y': random.SystemRandom().randint(1, 1000),
                         'size': "1",
                         'color': col
-                    })
+                    }
+                    type_info = node_type_map.get(src, ('', 'DATA'))
+                    node['event_type'] = type_info[0]
+                    node['category'] = type_info[1]
 
+                    ret['nodes'].append(node)
                     nodelist[src] = ncounter
 
                 ecounter = ecounter + 1
@@ -603,11 +677,11 @@ class SpiderFootHelpers():
                 })
 
             return json.dumps(ret)
-        except Exception:
+        except Exception as e:
             return "{}"
 
     @staticmethod
-    def buildGraphData(data: typing.List[str], flt: typing.Optional[typing.List[str]] = None) -> typing.Set[typing.Tuple[str, str]]:
+    def buildGraphData(data: list[str], flt: typing.list[str] | None = None) -> set[tuple[str, str]]:
         """Return a format-agnostic collection of tuples to use as the basis
         for building graphs in various formats.
 
@@ -631,11 +705,12 @@ class SpiderFootHelpers():
         if not data:
             raise ValueError("data is empty")
 
-        def get_next_parent_entities(item: str, pids: typing.Optional[typing.List[str]] = None) -> typing.List[str]:
+        def get_next_parent_entities(item: str, pids: typing.list[str] | None = None) -> list[str]:
+            """Recursively resolve the nearest parent entities for a given item."""
             if not pids:
                 pids = []
 
-            ret: typing.List[str] = list()
+            ret: list[str] = list()
 
             for [parent, entity_id] in parents[item]:
                 if entity_id in pids:
@@ -648,9 +723,9 @@ class SpiderFootHelpers():
                         ret.append(p)
             return ret
 
-        mapping: typing.Set[typing.Tuple[str, str]] = set()
-        entities: typing.Dict[str, bool] = dict()
-        parents: typing.Dict[str, typing.List[typing.List[str]]] = dict()
+        mapping: set[tuple[str, str]] = set()
+        entities: dict[str, bool] = dict()
+        parents: dict[str, list[list[str]]] = dict()
 
         for row in data:
             if len(row) != 15:
@@ -684,7 +759,7 @@ class SpiderFootHelpers():
         return mapping
 
     @staticmethod
-    def dataParentChildToTree(data: typing.Dict[str, typing.Optional[typing.List[str]]]) -> typing.Union[Tree, EmptyTree]:
+    def dataParentChildToTree(data: dict[str, typing.list[str] | None]) -> typing.Tree | EmptyTree:
         """Converts a dictionary of k -> array to a nested tree that can be
         digested by d3 for visualizations.
 
@@ -704,8 +779,9 @@ class SpiderFootHelpers():
         if not data:
             raise ValueError("data is empty")
 
-        def get_children(needle: str, haystack: typing.Dict[str, typing.Optional[typing.List[str]]]) -> typing.Optional[typing.List[Tree]]:
-            ret: typing.List[Tree] = list()
+        def get_children(needle: str, haystack: dict[str, typing.list[str] | None]) -> typing.list[Tree] | None:
+            """Recursively build a list of child tree nodes for the given key."""
+            ret: list[Tree] = list()
 
             if needle not in list(haystack.keys()):
                 return None
@@ -775,14 +851,14 @@ class SpiderFootHelpers():
             import phonenumbers
             parsed = phonenumbers.parse(phone, None)
             return phonenumbers.is_valid_number(parsed)
-        except Exception:
+        except Exception as e:
             # Fallback to basic regex if phonenumbers library is not available
             return bool(re.match(r'^\+?[\d\s\-\(\)]{7,15}$', phone.strip()))
 
     @staticmethod
-    def extractLinksFromHtml(url: str, data: str, domains: typing.Optional[typing.List[str]] = None) -> typing.Dict[str, ExtractedLink]:
+    def extractLinksFromHtml(url: str, data: str, domains: typing.list[str] | None = None) -> dict[str, ExtractedLink]:
         """Find all URLs within the supplied content."""
-        returnLinks: typing.Dict[str, ExtractedLink] = dict()
+        returnLinks: dict[str, ExtractedLink] = dict()
 
         if not isinstance(url, str):
             raise TypeError(f"url {type(url)}; expected str()")
@@ -799,19 +875,19 @@ class SpiderFootHelpers():
             'area': 'href', 'base': 'href', 'form': 'action'
         }
 
-        links: typing.List[typing.Union[typing.List[str], str]] = []
+        links: list[typing.list[str] | str] = []
 
         try:
             for t in list(tags.keys()):
                 for lnk in BeautifulSoup(data, features="lxml", parse_only=SoupStrainer(t)).find_all(t):
                     if lnk.has_attr(tags[t]):
                         links.append(lnk[tags[t]])
-        except Exception:
+        except Exception as e:
             return returnLinks
 
         try:
             proto = url.split(":")[0]
-        except Exception:
+        except Exception as e:
             proto = "http"
 
         # Loop through all the URLs/links found
@@ -856,7 +932,7 @@ class SpiderFootHelpers():
                 for domain in domains:
                     if absLink is None and domain.lower() in link.lower():
                         absLink = proto + '://' + link
-                
+
                 # Otherwise, it's a flat link within the current directory
                 if absLink is None:
                     absLink = SpiderFootHelpers.urlBaseDir(url) + link
@@ -869,9 +945,9 @@ class SpiderFootHelpers():
         return returnLinks
 
     @staticmethod
-    def extractHashesFromText(data: str) -> typing.List[typing.Tuple[str, str]]:
+    def extractHashesFromText(data: str) -> list[tuple[str, str]]:
         """Extract all hashes within the supplied content."""
-        ret: typing.List[typing.Tuple[str, str]] = list()
+        ret: list[tuple[str, str]] = list()
         if not isinstance(data, str):
             return ret
 
@@ -889,7 +965,7 @@ class SpiderFootHelpers():
         return ret
 
     @staticmethod
-    def extractUrlsFromRobotsTxt(robotsTxtData: str) -> typing.List[str]:
+    def extractUrlsFromRobotsTxt(robotsTxtData: str) -> list[str]:
         """Parse the contents of robots.txt.
 
         Args:
@@ -898,12 +974,12 @@ class SpiderFootHelpers():
         Returns:
             list[str]: list of patterns which should not be followed
 
-        Todo:
-            Check and parse User-Agent.
+        Note:
+            Future: Check and parse User-Agent directives.
 
-            Fix whitespace parsing; ie, " " is not a valid disallowed path
+            Future: Fix whitespace parsing — " " is not a valid disallowed path.
         """
-        returnArr: typing.List[str] = list()
+        returnArr: list[str] = list()
 
         if not isinstance(robotsTxtData, str):
             return returnArr
@@ -917,7 +993,7 @@ class SpiderFootHelpers():
         return returnArr
 
     @staticmethod
-    def extractPgpKeysFromText(data: str) -> typing.List[str]:
+    def extractPgpKeysFromText(data: str) -> list[str]:
         """Extract all PGP keys within the supplied content.
 
         Args:
@@ -929,7 +1005,7 @@ class SpiderFootHelpers():
         if not isinstance(data, str):
             return list()
 
-        keys: typing.Set[str] = set()
+        keys: set[str] = set()
 
         pattern = re.compile(
             "(-----BEGIN.*?END.*?BLOCK-----)", re.MULTILINE | re.DOTALL)
@@ -940,7 +1016,7 @@ class SpiderFootHelpers():
         return list(keys)
 
     @staticmethod
-    def extractEmailsFromText(data: str) -> typing.List[str]:
+    def extractEmailsFromText(data: str) -> list[str]:
         """Extract all email addresses within the supplied content.
 
         Args:
@@ -952,7 +1028,7 @@ class SpiderFootHelpers():
         if not isinstance(data, str):
             return list()
 
-        emails: typing.Set[str] = set()
+        emails: set[str] = set()
         matches = re.findall(
             r'([\%a-zA-Z\.0-9_\-\+]+@[a-zA-Z\.0-9\-]+\.[a-zA-Z\.0-9\-]+)', data)
 
@@ -963,7 +1039,7 @@ class SpiderFootHelpers():
         return list(emails)
 
     @staticmethod
-    def extractIbansFromText(data: str) -> typing.List[str]:
+    def extractIbansFromText(data: str) -> list[str]:
         """Find all International Bank Account Numbers (IBANs) within the
         supplied content.
 
@@ -981,7 +1057,7 @@ class SpiderFootHelpers():
         if not isinstance(data, str):
             return list()
 
-        ibans: typing.Set[str] = set()
+        ibans: set[str] = set()
 
         # Dictionary of country codes and their respective IBAN lengths
         ibanCountryLengths = {
@@ -1023,7 +1099,7 @@ class SpiderFootHelpers():
 
             countryCode = iban[0:2]
 
-            if countryCode not in ibanCountryLengths.keys():
+            if countryCode not in ibanCountryLengths:
                 continue
 
             if len(iban) != ibanCountryLengths[countryCode]:
@@ -1047,7 +1123,7 @@ class SpiderFootHelpers():
         return list(ibans)
 
     @staticmethod
-    def extractCreditCardsFromText(data: str) -> typing.List[str]:
+    def extractCreditCardsFromText(data: str) -> list[str]:
         """Find all credit card numbers with the supplied content.
 
         Extracts numbers with lengths ranging from 13 - 19 digits
@@ -1064,7 +1140,7 @@ class SpiderFootHelpers():
         if not isinstance(data, str):
             return list()
 
-        creditCards: typing.Set[str] = set()
+        creditCards: set[str] = set()
 
         # Remove whitespace from data.
         # Credit cards might contain spaces between them
@@ -1097,8 +1173,8 @@ class SpiderFootHelpers():
         return list(creditCards)
 
     @staticmethod
-    def extractUrlsFromText(data: str) -> typing.List[str]:
-        """Extract URLs from text"""
+    def extractUrlsFromText(data: str) -> list[str]:
+        """Extract URLs from text."""
         if not isinstance(data, str):
             return []
         import re
@@ -1114,14 +1190,14 @@ class SpiderFootHelpers():
         return ssl.DER_cert_to_PEM_cert(der_cert)
 
     @staticmethod
-    def countryNameFromCountryCode(countryCode: str) -> typing.Optional[str]:
+    def countryNameFromCountryCode(countryCode: str) -> typing.str | None:
         """Convert a country code to full country name."""
         if not isinstance(countryCode, str):
             return None
         return SpiderFootHelpers.countryCodes().get(countryCode.upper())
 
     @staticmethod
-    def countryNameFromTld(tld: str) -> typing.Optional[str]:
+    def countryNameFromTld(tld: str) -> typing.str | None:
         """Retrieve the country name associated with a TLD."""
         if not isinstance(tld, str):
             return None
@@ -1137,7 +1213,7 @@ class SpiderFootHelpers():
         return country_tlds.get(tld.upper())
 
     @staticmethod
-    def countryCodes() -> typing.Dict[str, str]:
+    def countryCodes() -> dict[str, str]:
         """Dictionary of country codes and associated country names."""
         return {
             "AF": "Afghanistan", "AX": "Aland Islands", "AL": "Albania", "DZ": "Algeria",
@@ -1213,29 +1289,30 @@ class SpiderFootHelpers():
             "US": "United States", "UM": "United States Minor Outlying Islands",
             "UY": "Uruguay", "UZ": "Uzbekistan", "VU": "Vanuatu",
             "VA": "Vatican", "VE": "Venezuela", "VN": "Vietnam",
-            "WF": "Wallis and Futuna", "EH": "Western Sahara", "YE": "Yemen",            "ZM": "Zambia", "ZW": "Zimbabwe",
+            "WF": "Wallis and Futuna", "EH": "Western Sahara",
+            "YE": "Yemen", "ZM": "Zambia", "ZW": "Zimbabwe",
             "AC": "Ascension Island", "EU": "European Union", "SU": "Soviet Union",
             "UK": "United Kingdom"
         }
 
     @staticmethod
-    def fixModuleImport(module, module_name=None):
+    def fixModuleImport(module: typing.Any, module_name: typing.str | None = None) -> typing.Any:
         """Fix module imports to ensure proper class attributes for tests.
-        
+
         Args:
             module: The imported module object
             module_name: Optional module name, will be inferred if not provided
-            
+
         Returns:
             The module object with fixed attributes
         """
         if module_name is None:
             module_name = getattr(module, '__name__', '').split('.')[-1]
-        
+
         # Skip if not a SpiderFoot module
         if not module_name.startswith('sfp_'):
             return module
-            
+
         try:
             # Check if the expected class attribute already exists
             if hasattr(module, module_name):
@@ -1244,26 +1321,26 @@ class SpiderFootHelpers():
                 if not hasattr(mod_class, '__name__'):
                     setattr(mod_class, '__name__', module_name)
                 return module
-            
+
             # Look for any class that inherits from SpiderFootPlugin
             for attr_name in dir(module):
                 attr = getattr(module, attr_name)
-                if (isinstance(attr, type) and 
+                if (isinstance(attr, type) and
                     hasattr(attr, '__bases__') and
                     any('SpiderFootPlugin' in str(base) for base in attr.__bases__)):
-                    
+
                     # Set the expected attribute name for tests
                     setattr(module, module_name, attr)
-                    
+
                     # Ensure the class has __name__ attribute
                     if not hasattr(attr, '__name__'):
                         setattr(attr, '__name__', module_name)
-                    
+
                     break
-                    
-        except Exception:
-            pass
-            
+
+        except Exception as e:
+            logging.debug("Module fix failed for %s: %s", module_name, e)
+
         return module
 
     @staticmethod
@@ -1273,12 +1350,12 @@ class SpiderFootHelpers():
         return os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 
-def fix_module_for_tests(module_name):
+def fix_module_for_tests(module_name: str) -> typing.typing.Any | None:
     """Fix a module to ensure it has the expected class attribute for tests.
-    
+
     This function ensures that modules have the expected sfp_modulename.sfp_modulename
     pattern that tests expect.
-    
+
     Args:
         module_name: Name of the module (e.g., 'sfp_zoomeye')
     """
@@ -1287,7 +1364,7 @@ def fix_module_for_tests(module_name):
         import importlib
         module_path = f'modules.{module_name}'
         module = importlib.import_module(module_path)
-        
+
         # Check if the expected class attribute already exists
         if hasattr(module, module_name):
             mod_class = getattr(module, module_name)
@@ -1295,25 +1372,25 @@ def fix_module_for_tests(module_name):
             if not hasattr(mod_class, '__name__'):
                 setattr(mod_class, '__name__', module_name)
             return module
-        
+
         # Look for any class that inherits from SpiderFootPlugin
         for attr_name in dir(module):
             attr = getattr(module, attr_name)
-            if (isinstance(attr, type) and 
+            if (isinstance(attr, type) and
                 hasattr(attr, '__bases__') and
                 any('SpiderFootPlugin' in str(base) for base in attr.__bases__)):
-                
+
                 # Set the expected attribute name for tests
                 setattr(module, module_name, attr)
-                
+
                 # Ensure the class has __name__ attribute
                 if not hasattr(attr, '__name__'):
                     setattr(attr, '__name__', module_name)
-                
+
                 break
-                
+
         return module
-    except Exception:
+    except Exception as e:
         return None
 
 

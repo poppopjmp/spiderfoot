@@ -10,13 +10,18 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: fullhunt."""
+
 import json
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_fullhunt(SpiderFootPlugin):
-
+class sfp_fullhunt(SpiderFootModernPlugin):
+    """SpiderFoot plugin to identify domain attack surface using FullHunt API."""
     meta = {
         'name': "FullHunt",
         'summary': "Identify domain attack surface using FullHunt API.",
@@ -53,20 +58,19 @@ class sfp_fullhunt(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.errorState = False
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             "DOMAIN_NAME",
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "INTERNET_NAME",
             "INTERNET_NAME_UNRESOLVED",
@@ -78,7 +82,7 @@ class sfp_fullhunt(SpiderFootPlugin):
             "RAW_RIR_DATA"
         ]
 
-    def queryDomainDetails(self, qry):
+    def queryDomainDetails(self, qry: str) -> dict:
         """Search for hosts on a domain.
 
         Args:
@@ -91,7 +95,7 @@ class sfp_fullhunt(SpiderFootPlugin):
             'X-API-KEY': self.opts['api_key']
         }
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://fullhunt.io/api/v1/domain/{qry}/details",
             timeout=30,
             headers=headers,
@@ -101,6 +105,7 @@ class sfp_fullhunt(SpiderFootPlugin):
         return self.parseApiResponse(res)
 
     def parseApiResponse(self, res: dict):
+        """Parse ApiResponse."""
         if not res:
             self.error("No response from FullHunt.")
             return None
@@ -138,7 +143,8 @@ class sfp_fullhunt(SpiderFootPlugin):
 
         return results.get('hosts')
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 
@@ -237,7 +243,7 @@ class sfp_fullhunt(SpiderFootPlugin):
             else:
                 evt_type = "AFFILIATE_INTERNET_NAME"
 
-            if not self.sf.resolveHost(host) and not self.sf.resolveHost6(host):
+            if not self.resolve_host(host) and not self.resolve_host6(host):
                 self.debug(f"Host {host} could not be resolved")
                 evt_type += "_UNRESOLVED"
 

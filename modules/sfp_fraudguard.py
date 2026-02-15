@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: fraudguard."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_fraudguard
@@ -17,11 +21,13 @@ from datetime import datetime
 
 from netaddr import IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_fraudguard(SpiderFootPlugin):
-
+class sfp_fraudguard(SpiderFootModernPlugin):
+    """SpiderFoot plugin for querying Fraudguard.io API."""
+    __name__ = "sfp_fraudguard"
     meta = {
         'name': "Fraudguard",
         'summary': "Obtain threat information from Fraudguard.io",
@@ -82,15 +88,13 @@ class sfp_fraudguard(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.errorState = False
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             "IP_ADDRESS",
             "IPV6_ADDRESS",
@@ -102,7 +106,8 @@ class sfp_fraudguard(SpiderFootPlugin):
             "NETBLOCKV6_OWNER",
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "GEOINFO",
             "MALICIOUS_IPADDR",
@@ -111,7 +116,7 @@ class sfp_fraudguard(SpiderFootPlugin):
             "MALICIOUS_NETBLOCK"
         ]
 
-    def query(self, qry):
+    def query(self, qry: str) -> dict | None:
         """Query IP address.
 
         Args:
@@ -137,7 +142,7 @@ class sfp_fraudguard(SpiderFootPlugin):
             'Authorization': f"Basic {b64_auth}"
         }
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             fraudguard_url,
             timeout=self.opts['_fetchtimeout'],
             useragent="SpiderFoot",
@@ -162,7 +167,8 @@ class sfp_fraudguard(SpiderFootPlugin):
 
         return None
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

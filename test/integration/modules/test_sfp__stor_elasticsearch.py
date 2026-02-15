@@ -1,5 +1,10 @@
+from __future__ import annotations
+
+"""Tests for sfp__stor_elasticsearch module."""
+
 import pytest
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 import time
 import sys
 import os
@@ -24,12 +29,22 @@ except ImportError:
         pass
 
 from modules.sfp__stor_elasticsearch import sfp__stor_elasticsearch
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
-class BaseTestModuleIntegration(unittest.TestCase):
+class BaseTestModuleIntegration(TestModuleBase):
     
+
+    def setUp(self):
+        """Enhanced setUp with ThreadReaper module tracking."""
+        super().setUp()
+        # ThreadReaper infrastructure is automatically initialized
+        
+    def tearDown(self):
+        """Enhanced tearDown with ThreadReaper cleanup."""
+        # ThreadReaper infrastructure automatically cleans up
+        super().tearDown()
     @property
     def default_options(self):
         return {
@@ -53,6 +68,16 @@ class BaseTestModuleIntegration(unittest.TestCase):
 
 class TestModuleIntegration_stor_elasticsearch(BaseTestModuleIntegration):
 
+
+    def setUp(self):
+        """Enhanced setUp with ThreadReaper module tracking."""
+        super().setUp()
+        # ThreadReaper infrastructure is automatically initialized
+        
+    def tearDown(self):
+        """Enhanced tearDown with ThreadReaper cleanup."""
+        # ThreadReaper infrastructure automatically cleans up
+        super().tearDown()
     def setup_elasticsearch_with_retries(self, timeout, retries=3, backoff_factor=0.3):
         for i in range(retries):
             try:

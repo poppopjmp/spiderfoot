@@ -1,14 +1,19 @@
+from __future__ import annotations
+
+"""Tests for sfp_abusech module."""
+
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch
 import requests
 import time
 
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 from modules.sfp_abusech import sfp_abusech
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 
 
-class BaseTestModuleIntegration(unittest.TestCase):
+class BaseTestModuleIntegration(TestModuleBase):
     default_options = {"_useragent": "SpiderFootTestAgent"}
 
     def setUp(self):

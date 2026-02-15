@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: googleobjectstorage."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_googleobjectstorage
@@ -16,10 +20,13 @@ import threading
 import time
 
 from urllib.parse import urlparse
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_googleobjectstorage(SpiderFootPlugin):
+class sfp_googleobjectstorage(SpiderFootModernPlugin):
+    """Search for potential Google Object Storage buckets associated with the target and attempt to list their contents."""
+
     meta = {
         "name": "Google Object Storage Finder",
         "summary": "Search for potential Google Object Storage buckets associated with the target and attempt to list their contents.",
@@ -53,30 +60,30 @@ class sfp_googleobjectstorage(SpiderFootPlugin):
     gosresults = dict()
     lock = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.gosresults = dict()
         self.results = self.tempStorage()
         self.lock = threading.Lock()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME", "LINKED_URL_EXTERNAL"]
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["CLOUD_STORAGE_BUCKET", "CLOUD_STORAGE_BUCKET_OPEN"]
 
-    def checkSite(self, url):
-        res = self.sf.fetchUrl(
+    def checkSite(self, url: str) -> None:
+        """Check Site."""
+        res = self.fetch_url(
             url, timeout=10, useragent="SpiderFoot", noLog=True)
 
-        if not res["content"]:
+        if res is None or not res.get('content'):
             return
 
         if "NoSuchBucket" in res["content"]:
@@ -94,7 +101,8 @@ class sfp_googleobjectstorage(SpiderFootPlugin):
                 with self.lock:
                     self.gosresults[url] = 0
 
-    def threadSites(self, siteList):
+    def threadSites(self, siteList: list) -> None:
+        """ThreadSites."""
         self.gosresults = dict()
         running = True
         i = 0
@@ -131,7 +139,8 @@ class sfp_googleobjectstorage(SpiderFootPlugin):
         # Return once the scanning has completed
         return self.gosresults
 
-    def batchSites(self, sites):
+    def batchSites(self, sites: list) -> None:
+        """BatchSites."""
         i = 0
         res = list()
         siteList = list()
@@ -155,7 +164,8 @@ class sfp_googleobjectstorage(SpiderFootPlugin):
         return res
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

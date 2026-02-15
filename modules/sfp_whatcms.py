@@ -10,16 +10,23 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: whatcms."""
+
 import json
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_whatcms(SpiderFootPlugin):
+class sfp_whatcms(SpiderFootModernPlugin):
+
+    """Check web technology using WhatCMS.org API."""
 
     meta = {
         'name': "WhatCMS",
@@ -69,31 +76,31 @@ class sfp_whatcms(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ['DOMAIN_NAME']
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ['RAW_RIR_DATA', 'WEBSERVER_TECHNOLOGY']
 
     # Query WhatCMS API for the CMS used by the specified URL
     # https://whatcms.org/Documentation
-    def queryCmsDetect(self, qry):
+    def queryCmsDetect(self, qry: str) -> dict:
+        """Query CmsDetect."""
         params = {
             'url': qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),
             'key': self.opts['api_key']
         }
 
-        res = self.sf.fetchUrl('https://whatcms.org/APIEndpoint/Detect?' + urllib.parse.urlencode(params),
+        res = self.fetch_url('https://whatcms.org/APIEndpoint/Detect?' + urllib.parse.urlencode(params),
                                timeout=self.opts['timeout'],
                                useragent=self.opts['_useragent'])
 
@@ -103,13 +110,14 @@ class sfp_whatcms(SpiderFootPlugin):
 
     # Query WhatCMS API for the web technology used by the specified URL
     # https://whatcms.org/Documentation
-    def queryCmsTechnology(self, qry):
+    def queryCmsTechnology(self, qry: str) -> dict:
+        """Query CmsTechnology."""
         params = {
             'url': qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),
             'key': self.opts['api_key']
         }
 
-        res = self.sf.fetchUrl('https://whatcms.org/APIEndpoint/Technology?' + urllib.parse.urlencode(params),
+        res = self.fetch_url('https://whatcms.org/APIEndpoint/Technology?' + urllib.parse.urlencode(params),
                                timeout=self.opts['timeout'],
                                useragent=self.opts['_useragent'])
 
@@ -118,7 +126,8 @@ class sfp_whatcms(SpiderFootPlugin):
         return self.parseApiResponse(res)
 
     # Parse API response
-    def parseApiResponse(self, res: dict):
+    def parseApiResponse(self, res: dict) -> dict | None:
+        """Parse ApiResponse."""
         if not res:
             self.error("No response from WhatCMS.org.")
             return None
@@ -195,7 +204,8 @@ class sfp_whatcms(SpiderFootPlugin):
         return data
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

@@ -1,12 +1,17 @@
+from __future__ import annotations
+
+"""Tests for sfp_adguard_dns module."""
+
 import pytest
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 
 from modules.sfp_adguard_dns import sfp_adguard_dns
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
-class TestModuleIntegrationAdGuardDns(unittest.TestCase):
+class TestModuleIntegrationAdGuardDns(TestModuleBase):
 
     def setUp(self):
         self.default_options = {

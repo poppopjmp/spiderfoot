@@ -1,13 +1,17 @@
+from __future__ import annotations
+
+"""Tests for sfp_googleobjectstorage module."""
+
 import pytest
 import unittest
 
 from modules.sfp_googleobjectstorage import sfp_googleobjectstorage
-from sflib import SpiderFoot
-from test.unit.utils.test_base import SpiderFootTestBase
+from spiderfoot.sflib import SpiderFoot
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModuleGoogleobjectstorage(SpiderFootTestBase):
+class TestModuleGoogleobjectstorage(TestModuleBase):
 
     def test_opts(self):
         module = sfp_googleobjectstorage()

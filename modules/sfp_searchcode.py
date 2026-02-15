@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: searchcode."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:        sfp_searchcode
@@ -16,10 +20,13 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_searchcode(SpiderFootPlugin):
+class sfp_searchcode(SpiderFootModernPlugin):
+
+    """Search searchcode for code repositories mentioning the target domain."""
 
     meta = {
         'name': "searchcode",
@@ -51,19 +58,18 @@ class sfp_searchcode(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             'DOMAIN_NAME'
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             'EMAILADDR',
             'EMAILADDR_GENERIC',
@@ -72,14 +78,15 @@ class sfp_searchcode(SpiderFootPlugin):
             'RAW_RIR_DATA',
         ]
 
-    def query(self, qry, page=1, per_page=100):
+    def query(self, qry: str, page: int = 1, per_page: int = 100) -> dict | None:
+        """Query the data source."""
         params = urllib.parse.urlencode({
             'q': qry,
             'p': page,
             'per_page': per_page
         })
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://searchcode.com/api/codesearch_I/?{params}",
             useragent=self.opts['_useragent'],
             timeout=self.opts['_fetchtimeout']
@@ -108,7 +115,8 @@ class sfp_searchcode(SpiderFootPlugin):
 
         return None
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -192,7 +200,7 @@ class sfp_searchcode(SpiderFootPlugin):
                 if host in self.results:
                     continue
 
-                if self.opts['dns_resolve'] and not self.sf.resolveHost(host) and not self.sf.resolveHost6(host):
+                if self.opts['dns_resolve'] and not self.resolve_host(host) and not self.resolve_host6(host):
                     self.debug(f"Host {host} could not be resolved")
                     evt = SpiderFootEvent(
                         "INTERNET_NAME_UNRESOLVED", host, self.__name__, event)

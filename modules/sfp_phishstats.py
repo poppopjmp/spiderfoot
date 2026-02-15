@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: phishstats."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:        sfp_phishstats
@@ -18,10 +22,13 @@ import urllib.request
 
 from netaddr import IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_phishstats(SpiderFootPlugin):
+class sfp_phishstats(SpiderFootModernPlugin):
+
+    """Check if a netblock or IP address is malicious according to PhishStats."""
 
     meta = {
         'name': "PhishStats",
@@ -59,15 +66,13 @@ class sfp_phishstats(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             'IP_ADDRESS',
             'AFFILIATE_IPADDR',
@@ -75,7 +80,8 @@ class sfp_phishstats(SpiderFootPlugin):
             "NETBLOCK_OWNER",
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "BLACKLISTED_IPADDR",
             "BLACKLISTED_AFFILIATE_IPADDR",
@@ -90,7 +96,8 @@ class sfp_phishstats(SpiderFootPlugin):
 
     # Check whether the IP address is malicious using PhishStats API
     # https://phishstats.info/
-    def queryIPAddress(self, qry):
+    def queryIPAddress(self, qry: str) -> dict | None:
+        """Query IPAddress."""
         params = {
             '_where': f"(ip,eq,{qry})",
             '_size': 1
@@ -100,7 +107,7 @@ class sfp_phishstats(SpiderFootPlugin):
             'Accept': "application/json",
         }
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             'https://phishstats.info:2096/api/phishing?' +
             urllib.parse.urlencode(params),
             headers=headers,
@@ -119,7 +126,8 @@ class sfp_phishstats(SpiderFootPlugin):
 
         return None
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 
@@ -187,10 +195,10 @@ class sfp_phishstats(SpiderFootPlugin):
             if not data:
                 continue
 
-            # TODO: iterate through hosts and extract co-hosts
+            # NOTE: co-host extraction from multiple hosts not yet implemented
             try:
                 maliciousIP = data[0].get('ip')
-            except Exception:
+            except Exception as e:
                 # If ArrayIndex is out of bounds then data doesn't exist
                 continue
 

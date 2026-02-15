@@ -1,10 +1,14 @@
+from __future__ import annotations
+
+"""Tests for sfp_apileak module."""
+
 import unittest
 from unittest.mock import patch, MagicMock
 from modules.sfp_apileak import sfp_apileak
 from spiderfoot import SpiderFootEvent
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_module_base import TestModuleBase
 
-class TestAPILLeak(SpiderFootTestBase):
+class TestAPILLeak(TestModuleBase):
     def setUp(self):
         super().setUp()
         self.module = sfp_apileak()

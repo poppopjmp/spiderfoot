@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: spur."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_spur
@@ -15,10 +19,13 @@ import json
 
 from netaddr import IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_spur(SpiderFootPlugin):
+class sfp_spur(SpiderFootModernPlugin):
+
+    """Obtain information about any malicious activities involving IP addresses found"""
 
     meta = {
         'name': "spur.us",
@@ -70,16 +77,14 @@ class sfp_spur(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     # For a list of all events, check sfdb.py.
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             "IP_ADDRESS",
             "NETBLOCK_OWNER",
@@ -88,7 +93,8 @@ class sfp_spur(SpiderFootPlugin):
         ]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "IP_ADDRESS",
             "MALICIOUS_IPADDR",
@@ -100,14 +106,15 @@ class sfp_spur(SpiderFootPlugin):
 
     # Check whether the IP Address is malicious using spur.us API
     # https://spur.us/app/docs
-    def queryIPAddress(self, ipAddr):
+    def queryIPAddress(self, ipAddr: str):
 
+        """Query IPAddress."""
         headers = {
             'Accept': "application/json",
             'token': self.opts['api_key']
         }
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             'https://api.spur.us/v1/context/' + ipAddr,
             headers=headers,
             timeout=15,
@@ -131,7 +138,8 @@ class sfp_spur(SpiderFootPlugin):
 
         return res.get('content')
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

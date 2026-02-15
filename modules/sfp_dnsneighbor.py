@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: dnsneighbor."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_dnsneighbor
@@ -13,11 +17,12 @@
 
 import ipaddress
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_dnsneighbor(SpiderFootPlugin):
-
+class sfp_dnsneighbor(SpiderFootModernPlugin):
+    """SpiderFoot plugin for gathering IP addresses from sub-domains and hostnames identified, and optionally affiliates."""
     meta = {
         'name': "DNS Look-aside",
         'summary': "Attempt to reverse-resolve the IP addresses next to your target to see if they are related.",
@@ -42,28 +47,28 @@ class sfp_dnsneighbor(SpiderFootPlugin):
     domresults = None
     hostresults = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.events = self.tempStorage()
         self.domresults = self.tempStorage()
         self.hostresults = self.tempStorage()
         self.__dataSource__ = "DNS"
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ['IP_ADDRESS']
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["AFFILIATE_IPADDR", "IP_ADDRESS"]
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -101,7 +106,7 @@ class sfp_dnsneighbor(SpiderFootPlugin):
             if sip in self.hostresults or sip == eventData:
                 continue
 
-            addrs = self.sf.resolveIP(sip)
+            addrs = self.reverse_resolve(sip)
             if not addrs:
                 self.debug("Look-aside resolve for " + sip + " failed.")
                 continue
@@ -145,7 +150,8 @@ class sfp_dnsneighbor(SpiderFootPlugin):
                 else:
                     self.processHost(addr, parent, True)
 
-    def processHost(self, host, parentEvent, affiliate=None):
+    def processHost(self, host: str, parentEvent: SpiderFootEvent, affiliate: bool = None):
+        """Process Host."""
         parentHash = self.sf.hashstring(parentEvent.data)
         if host not in self.hostresults:
             self.hostresults[host] = [parentHash]
@@ -166,13 +172,13 @@ class sfp_dnsneighbor(SpiderFootPlugin):
                 # If the IP the host resolves to is in our
                 # list of aliases,
                 if not self.sf.validIP(host) and not self.sf.validIP6(host):
-                    hostips = self.sf.resolveHost(host)
+                    hostips = self.resolve_host(host)
                     if hostips:
                         for hostip in hostips:
                             if self.getTarget().matches(hostip):
                                 affil = False
                                 break
-                    hostips6 = self.sf.resolveHost6(host)
+                    hostips6 = self.resolve_host6(host)
                     if hostips6:
                         for hostip in hostips6:
                             if self.getTarget().matches(hostip):

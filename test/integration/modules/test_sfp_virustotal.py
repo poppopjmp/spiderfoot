@@ -1,15 +1,20 @@
+from __future__ import annotations
+
+"""Tests for sfp_virustotal module."""
+
 import pytest
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch
 import json
 
 from modules.sfp_virustotal import sfp_virustotal
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 
-class TestModuleIntegrationVirustotal(unittest.TestCase):
+class TestModuleIntegrationVirustotal(TestModuleBase):
     def setUp(self):
         self.sf = SpiderFoot({
             '_fetchtimeout': 0.1,

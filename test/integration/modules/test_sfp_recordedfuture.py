@@ -1,11 +1,16 @@
+from __future__ import annotations
+
+"""Tests for sfp_recordedfuture module."""
+
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch
 from modules.sfp_recordedfuture import sfp_recordedfuture
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
-class TestModuleRecordedFuture(unittest.TestCase):
+class TestModuleRecordedFuture(TestModuleBase):
 
     def setUp(self):
         self.default_options = {
@@ -22,7 +27,7 @@ class TestModuleRecordedFuture(unittest.TestCase):
         self.module.__name__ = "sfp_recordedfuture"
 
     @patch("modules.sfp_recordedfuture.sfp_recordedfuture.notifyListeners")
-    @patch("sflib.SpiderFoot.fetchUrl")
+    @patch("spiderfoot.sflib.SpiderFoot.fetchUrl")
     def test_handleEvent(self, mock_fetchUrl, mock_notifyListeners):
         self.module.opts['api_key'] = 'test_api_key'
         # Mock RecordedFuture API response (correct key: 'data')
@@ -46,7 +51,7 @@ class TestModuleRecordedFuture(unittest.TestCase):
         assert 'VULNERABILITY_DISCLOSURE' in calls
         self.assertTrue(self.module.results)
 
-    @patch("sflib.SpiderFoot.fetchUrl")
+    @patch("spiderfoot.sflib.SpiderFoot.fetchUrl")
     def test_query(self, mock_fetchUrl):
         self.module.opts['api_key'] = 'test_api_key'
         self.module.opts.update(self.default_options)

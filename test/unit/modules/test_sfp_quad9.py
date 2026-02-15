@@ -1,13 +1,17 @@
+from __future__ import annotations
+
+"""Tests for sfp_quad9 module."""
+
 import pytest
 import unittest
 
 from modules.sfp_quad9 import sfp_quad9
-from sflib import SpiderFoot
-from test.unit.utils.test_base import SpiderFootTestBase
+from spiderfoot.sflib import SpiderFoot
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModuleQuad9(SpiderFootTestBase):
+class TestModuleQuad9(TestModuleBase):
 
     def test_opts(self):
         module = sfp_quad9()

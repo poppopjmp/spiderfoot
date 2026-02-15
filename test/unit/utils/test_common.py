@@ -1,6 +1,7 @@
 """
 Common test utilities for SpiderFoot unit tests.
 """
+from __future__ import annotations
 
 def cleanup_listeners():
     """Clean up registered event listeners."""

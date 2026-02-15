@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: pgp."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_pgp
@@ -12,10 +16,13 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
-from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_pgp(SpiderFootPlugin):
+class sfp_pgp(SpiderFootModernPlugin):
+
+    """Look up domains and e-mail addresses in PGP public key servers."""
 
     meta = {
         'name': "PGP Key Servers",
@@ -50,22 +57,22 @@ class sfp_pgp(SpiderFootPlugin):
         'keyserver_fetch2': "Backup PGP public key server URL to find the public key for an e-mail address. Email address will get appended."
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ['INTERNET_NAME', "EMAILADDR", "DOMAIN_NAME"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["EMAILADDR", "EMAILADDR_GENERIC", "AFFILIATE_EMAILADDR", "PGP_KEY"]
 
-    def queryDomain(self, keyserver_search_url, qry):
-        res = self.sf.fetchUrl(
+    def queryDomain(self, keyserver_search_url: str, qry: str) -> dict | None:
+        """Query Domain."""
+        res = self.fetch_url(
             keyserver_search_url + qry,
             timeout=self.opts['_fetchtimeout'],
             useragent=self.opts['_useragent']
@@ -82,8 +89,9 @@ class sfp_pgp(SpiderFootPlugin):
 
         return res
 
-    def queryEmail(self, keyserver_fetch_url, qry):
-        res = self.sf.fetchUrl(
+    def queryEmail(self, keyserver_fetch_url: str, qry: str) -> dict | None:
+        """Query Email."""
+        res = self.fetch_url(
             keyserver_fetch_url + qry,
             timeout=self.opts['_fetchtimeout'],
             useragent=self.opts['_useragent']
@@ -100,7 +108,8 @@ class sfp_pgp(SpiderFootPlugin):
 
         return res
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 

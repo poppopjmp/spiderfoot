@@ -1,13 +1,17 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: ahmia."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:        sfp_ahmia
 # Purpose:     Searches the Tor search engine 'Ahmia' for content related to the
 #              target.
 #
-# Author:      Steve Micallef <steve@binarypool.com>
+# Author:      Agostino Panico van1sh@van1shland.io
 #
-# Created:     20/06/2017
-# Copyright:   (c) Steve Micallef 2017
+# Created:     20/06/2025
+# Copyright:   (c) Agostino Panico 2025
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
@@ -16,11 +20,12 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_ahmia(SpiderFootPlugin):
-
+class sfp_ahmia(SpiderFootModernPlugin):
+    """Search the Tor search engine 'Ahmia' for content related to the target."""
     meta = {
         'name': "Ahmia",
         'flags': ["tor"],
@@ -63,22 +68,22 @@ class sfp_ahmia(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME", "HUMAN_NAME", "EMAILADDR"]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["DARKNET_MENTION_URL", "DARKNET_MENTION_CONTENT"]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -99,7 +104,7 @@ class sfp_ahmia(SpiderFootPlugin):
             'q': eventData
         })
 
-        data = self.sf.fetchUrl(
+        data = self.fetch_url(
             f"https://ahmia.fi/search/?{params}",
             useragent=self.opts['_useragent'],
             timeout=15
@@ -144,7 +149,7 @@ class sfp_ahmia(SpiderFootPlugin):
                 self.notifyListeners(evt)
                 continue
 
-            res = self.sf.fetchUrl(
+            res = self.fetch_url(
                 link,
                 timeout=self.opts['_fetchtimeout'],
                 useragent=self.opts['_useragent'],
@@ -166,7 +171,7 @@ class sfp_ahmia(SpiderFootPlugin):
             try:
                 startIndex = res['content'].index(eventData) - 120
                 endIndex = startIndex + len(eventData) + 240
-            except Exception:
+            except Exception as e:
                 self.debug(f"String '{eventData}' not found in content.")
                 continue
 

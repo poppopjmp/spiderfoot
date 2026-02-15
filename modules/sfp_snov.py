@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: snov."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_snov
@@ -16,10 +20,13 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_snov(SpiderFootPlugin):
+class sfp_snov(SpiderFootModernPlugin):
+
+    """Gather available email IDs from identified domains"""
 
     meta = {
         'name': "Snov",
@@ -64,24 +71,24 @@ class sfp_snov(SpiderFootPlugin):
     # More than 100 per response is not supported by Snov API
     limit = 100
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     # For a list of all events, check sfdb.py.
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME", "INTERNET_NAME"]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["EMAILADDR", "EMAILADDR_GENERIC"]
 
     # Get Authentication token from Snov.IO API
-    def queryAccessToken(self):
+    def queryAccessToken(self) -> str | None:
+        """Query AccessToken."""
         params = {
             'grant_type': "client_credentials",
             'client_id': self.opts['api_key_client_id'],
@@ -92,7 +99,7 @@ class sfp_snov(SpiderFootPlugin):
             'Accept': "application/json",
         }
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             'https://api.snov.io/v1/oauth/access_token?' +
             urllib.parse.urlencode(params),
             headers=headers,
@@ -116,14 +123,15 @@ class sfp_snov(SpiderFootPlugin):
                 return None
 
             return str(accessToken)
-        except Exception:
+        except Exception as e:
             self.error(
                 "No access token received from snov.io for the provided Client ID and/or Client Secret")
             self.errorState = True
             return None
 
     # Fetch email addresses related to target domain
-    def queryDomainName(self, qry, accessToken, currentLastId):
+    def queryDomainName(self, qry: str, accessToken: str, currentLastId: int):
+        """Query DomainName."""
         params = {
             'domain': qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),
             'access_token': accessToken,
@@ -136,7 +144,7 @@ class sfp_snov(SpiderFootPlugin):
             'Accept': "application/json",
         }
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             'https://api.snov.io/v2/domain-emails-with-info?' +
             urllib.parse.urlencode(params),
             headers=headers,
@@ -150,7 +158,8 @@ class sfp_snov(SpiderFootPlugin):
         return res.get('content')
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -196,7 +205,7 @@ class sfp_snov(SpiderFootPlugin):
 
             try:
                 data = json.loads(data)
-            except Exception:
+            except Exception as e:
                 self.debug("No email address found for target domain")
                 break
 

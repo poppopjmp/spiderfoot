@@ -1,13 +1,17 @@
+from __future__ import annotations
+
+"""Tests for sfp_portscan_tcp module."""
+
 import pytest
 import unittest
 
 from modules.sfp_portscan_tcp import sfp_portscan_tcp
-from sflib import SpiderFoot
-from test.unit.utils.test_base import SpiderFootTestBase
+from spiderfoot.sflib import SpiderFoot
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModulePortscanTcp(SpiderFootTestBase):
+class TestModulePortscanTcp(TestModuleBase):
 
     def test_opts(self):
         module = sfp_portscan_tcp()

@@ -1,13 +1,17 @@
+from __future__ import annotations
+
+"""Tests for sfp_wikileaks module."""
+
 import pytest
 import unittest
 
 from modules.sfp_wikileaks import sfp_wikileaks
-from sflib import SpiderFoot
-from test.unit.utils.test_base import SpiderFootTestBase
+from spiderfoot.sflib import SpiderFoot
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModulewikileaks(SpiderFootTestBase):
+class TestModulewikileaks(TestModuleBase):
 
     def test_opts(self):
         module = sfp_wikileaks()

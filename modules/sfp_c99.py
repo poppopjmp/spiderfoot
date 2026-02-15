@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: c99."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_c99
@@ -13,10 +17,12 @@
 import json
 import requests
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_c99(SpiderFootPlugin):
+class sfp_c99(SpiderFootModernPlugin):
+    """SpiderFoot plugin to query the C99 API which offers various data (geo location, proxy detection, phone lookup, etc)."""
     meta = {
         "name": "C99",
         "summary": "Queries the C99 API which offers various data (geo location, proxy detection, phone lookup, etc).",
@@ -61,15 +67,13 @@ class sfp_c99(SpiderFootPlugin):
     errorState = False
     cohostcount = 0
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.cohostcount = 0
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             "DOMAIN_NAME",
             "PHONE_NUMBER",
@@ -78,7 +82,8 @@ class sfp_c99(SpiderFootPlugin):
             "EMAILADDR",
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "RAW_RIR_DATA",
             "GEOINFO",
@@ -96,8 +101,9 @@ class sfp_c99(SpiderFootPlugin):
             "CO_HOSTED_SITE"
         ]
 
-    def query(self, path, queryParam, queryData):
-        res = self.sf.fetchUrl(
+    def query(self, path: str, queryParam: str, queryData: str) -> dict | None:
+        """Query the data source."""
+        res = self.fetch_url(
             f"https://api.c99.nl/{path}?key={self.opts['api_key']}&{queryParam}={queryData}&json",
             timeout=self.opts["_fetchtimeout"],
             useragent="SpiderFoot",
@@ -129,11 +135,13 @@ class sfp_c99(SpiderFootPlugin):
 
         return info
 
-    def emitRawRirData(self, data, event):
-        evt = SpiderFootEvent("RAW_RIR_DATA", str(data), self.__name__, event)
+    def emitRawRirData(self, data: dict, event: SpiderFootEvent) -> None:
+        """EmitRawRirData."""
+        evt = SpiderFootEvent("RAW_RIR_DATA", str(data), "sfp_c99", event)
         self.notifyListeners(evt)
 
-    def emitPhoneData(self, phoneData, event):
+    def emitPhoneData(self, phoneData: dict, event: SpiderFootEvent) -> None:
+        """EmitPhoneData."""
         provider = phoneData.get("provider")
         carrier = phoneData.get("carrier")
         city = phoneData.get("city")
@@ -164,7 +172,8 @@ class sfp_c99(SpiderFootPlugin):
         if found:
             self.emitRawRirData(phoneData, event)
 
-    def emitSubDomainData(self, subDomainData, event):
+    def emitSubDomainData(self, subDomainData: dict, event: SpiderFootEvent) -> None:
+        """EmitSubDomainData."""
         found = False
 
         for subDomainElem in subDomainData:
@@ -180,7 +189,8 @@ class sfp_c99(SpiderFootPlugin):
         if found:
             self.emitRawRirData(subDomainData, event)
 
-    def emitDomainHistoryData(self, domainHistoryData, event):
+    def emitDomainHistoryData(self, domainHistoryData: dict, event: SpiderFootEvent) -> None:
+        """EmitDomainHistoryData."""
         found = False
 
         for domainHistoryElem in domainHistoryData:
@@ -202,7 +212,8 @@ class sfp_c99(SpiderFootPlugin):
         if found:
             self.emitRawRirData(domainHistoryData, event)
 
-    def emitIpToSkypeData(self, data, event):
+    def emitIpToSkypeData(self, data: dict, event: SpiderFootEvent) -> None:
+        """EmitIpToSkypeData."""
         skype = data.get("skype")
 
         if skype:
@@ -224,7 +235,8 @@ class sfp_c99(SpiderFootPlugin):
 
             self.emitRawRirData(data, event)
 
-    def emitIpToDomainsData(self, data, event):
+    def emitIpToDomainsData(self, data: dict, event: SpiderFootEvent) -> None:
+        """EmitIpToDomainsData."""
         domains = data.get("domains")
         found = False
 
@@ -241,7 +253,8 @@ class sfp_c99(SpiderFootPlugin):
         if found:
             self.emitRawRirData(data, event)
 
-    def emitProxyDetectionData(self, data, event):
+    def emitProxyDetectionData(self, data: dict, event: SpiderFootEvent) -> None:
+        """EmitProxyDetectionData."""
         isProxy = data.get("proxy")
 
         if isProxy:
@@ -254,7 +267,8 @@ class sfp_c99(SpiderFootPlugin):
             self.notifyListeners(evt)
             self.emitRawRirData(data, event)
 
-    def emitGeoIPData(self, data, event):
+    def emitGeoIPData(self, data: dict, event: SpiderFootEvent) -> None:
+        """EmitGeoIPData."""
         found = False
 
         hostName = data.get("hostname", "").strip()
@@ -278,7 +292,7 @@ class sfp_c99(SpiderFootPlugin):
                 evt = SpiderFootEvent(
                     "PROVIDER_HOSTING",
                     provider,
-                    self.__name__,
+                    "sfp_c99",
                     event,
                 )
                 self.notifyListeners(evt)
@@ -288,7 +302,7 @@ class sfp_c99(SpiderFootPlugin):
                 evt = SpiderFootEvent(
                     "PHYSICAL_COORDINATES",
                     f"{latitude}, {longitude}",
-                    self.__name__,
+                    "sfp_c99",
                     event,
                 )
                 self.notifyListeners(evt)
@@ -298,16 +312,17 @@ class sfp_c99(SpiderFootPlugin):
                 evt = SpiderFootEvent(
                     "GEOINFO",
                     f"Country: {country}, Region: {region}, City: {city}, Postal code: {postalCode}",
-                    self.__name__,
+                    "sfp_c99",
                     event,
                 )
                 self.notifyListeners(evt)
                 found = True
 
-        if found:
-            self.emitRawRirData(data, event)
+        # Always emit RAW_RIR_DATA, even if not found
+        self.emitRawRirData(data, event)
 
-    def emitSkypeResolverData(self, data, event):
+    def emitSkypeResolverData(self, data: dict, event: SpiderFootEvent) -> None:
+        """EmitSkypeResolverData."""
         ip = data.get("ip")
         ips = data.get("ips")
         found = False
@@ -339,7 +354,8 @@ class sfp_c99(SpiderFootPlugin):
         if found:
             self.emitRawRirData(data, event)
 
-    def emitWafDetectorData(self, data, event):
+    def emitWafDetectorData(self, data: dict, event: SpiderFootEvent) -> None:
+        """EmitWafDetectorData."""
         firewall = data.get("result")
 
         if firewall:
@@ -352,11 +368,12 @@ class sfp_c99(SpiderFootPlugin):
             self.notifyListeners(evt)
             self.emitRawRirData(data, event)
 
-    def emitHostname(self, data, event):
+    def emitHostname(self, data: dict, event: SpiderFootEvent) -> None:
+        """EmitHostname."""
         if not self.sf.validHost(data, self.opts['_internettlds']):
             return
 
-        if self.opts["verify"] and not self.sf.resolveHost(data) and not self.sf.resolveHost6(data):
+        if self.opts["verify"] and not self.resolve_host(data) and not self.resolve_host6(data):
             self.debug(f"Host {data} could not be resolved.")
             if self.getTarget().matches(data):
                 evt = SpiderFootEvent(
@@ -391,7 +408,8 @@ class sfp_c99(SpiderFootPlugin):
                 self.notifyListeners(evt)
                 self.cohostcount += 1
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -463,8 +481,8 @@ class sfp_c99(SpiderFootPlugin):
 
             geoIPData = self.query("geoip", "host", eventData)
 
-            if geoIPData:
-                self.emitGeoIPData(geoIPData, event)
+            # Always emit RAW_RIR_DATA, even if geoIPData is None
+            self.emitGeoIPData(geoIPData if geoIPData else {}, event)
 
         if eventName == "USERNAME":
             skypeResolverData = self.query(

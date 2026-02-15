@@ -1,14 +1,29 @@
+from __future__ import annotations
+
+"""Tests for sfp_torch module."""
+
 import pytest
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 
 from modules.sfp_torch import sfp_torch
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 
-class TestModuleIntegrationTorch(unittest.TestCase):
+class TestModuleIntegrationTorch(TestModuleBase):
 
+
+    def setUp(self):
+        """Enhanced setUp with ThreadReaper module tracking."""
+        super().setUp()
+        # ThreadReaper infrastructure is automatically initialized
+        
+    def tearDown(self):
+        """Enhanced tearDown with ThreadReaper cleanup."""
+        # ThreadReaper infrastructure automatically cleans up
+        super().tearDown()
     @unittest.skip("todo")
     def test_handleEvent(self):
         sf = SpiderFoot(self.default_options)

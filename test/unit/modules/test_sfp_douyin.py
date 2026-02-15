@@ -1,8 +1,13 @@
+from __future__ import annotations
+
+"""Tests for sfp_douyin module."""
+
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from spiderfoot import SpiderFootEvent
 from modules.sfp_douyin import sfp_douyin
 
-class TestSfpDouyin(unittest.TestCase):
+class TestSfpDouyin(TestModuleBase):
     def setUp(self):
         self.plugin = sfp_douyin()
         self.plugin.setup(None, {})

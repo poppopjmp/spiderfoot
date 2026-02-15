@@ -1,10 +1,15 @@
+from __future__ import annotations
+
+"""Tests for sfp_whoisfreaks module."""
+
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from modules.sfp_whoisfreaks import sfp_whoisfreaks
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent
 
 
-class TestModuleIntegrationWhoisfreaks(unittest.TestCase):
+class TestModuleIntegrationWhoisfreaks(TestModuleBase):
 
     def setUp(self):
         self.default_options = {

@@ -1,0 +1,23 @@
+id: web_form_enumeration
+version: "1"
+meta:
+  name: Multiple web forms discovered
+  description: >
+    Multiple web forms were discovered on the target website.
+    While forms are common, a large number of discovered forms
+    increases the input attack surface. Each form is a potential
+    entry point for injection attacks (SQLi, XSS, CSRF) if
+    not properly validated.
+  risk: INFO
+collections:
+  collect:
+      - method: exact
+        field: type
+        value: URL_FORM
+aggregation:
+  field: entity.data
+analysis:
+  - method: threshold
+    minimum: 5
+    field: data
+headline: "Multiple web forms found on: {entity.data}"

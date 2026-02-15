@@ -1,9 +1,14 @@
+from __future__ import annotations
+
+"""Tests for sfp_dideo module."""
+
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import MagicMock
 from spiderfoot import SpiderFootEvent
 from modules.sfp_dideo import sfp_dideo
 
-class TestSfpDideo(unittest.TestCase):
+class TestSfpDideo(TestModuleBase):
     def setUp(self):
         self.plugin = sfp_dideo()
         self.plugin.setup(MagicMock(), {})

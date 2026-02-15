@@ -1,13 +1,20 @@
+from __future__ import annotations
+
+"""Tests for spiderfootplugin module."""
+
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import MagicMock, patch
-from spiderfoot.plugin import SpiderFootPlugin
+from spiderfoot.plugins.plugin import SpiderFootPlugin
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 import queue
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_base import TestModuleBase
+from test.unit.utils.resource_manager import get_test_resource_manager
+from test.unit.utils.thread_registry import get_test_thread_registry
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestSpiderFootPlugin(SpiderFootTestBase):
+class TestSpiderFootPlugin(TestModuleBase):
 
     def setUp(self):
         super().setUp()
@@ -342,7 +349,7 @@ class TestSpiderFootPlugin(SpiderFootTestBase):
                     SpiderFootEvent("ROOT", "data", "module", None), "FINISHED"]
                 self.plugin.threadWorker()
                 mock_SpiderFootDb.assert_called_once_with(self.plugin.opts)
-                self.assertEqual(self.plugin.poolExecute.call_count, 2)    # TODO: Fix this test - it currently hangs due to mocking issues
+                self.assertEqual(self.plugin.poolExecute.call_count, 2)    # NOTE: test may hang due to mocking issues with threadWorker
     # def test_threadWorker_with_exception(self):
     #     pass
 

@@ -3,11 +3,13 @@
 # Name:         sfp_security_hardening
 # Purpose:      Advanced Security Hardening Module
 #
-# Author:       Security Team
+# Author:       Agostino Panico poppopjmp
 # Created:      2025-06-20
-# Copyright:    (c) SpiderFoot Enterprise 2025
+# Copyright:    (c) Agostino Panico 2025
 # License:      MIT
 # -------------------------------------------------------------------------------
+
+from __future__ import annotations
 
 """
 Advanced Security Hardening Module
@@ -29,9 +31,9 @@ import hmac
 import base64
 import secrets
 import threading
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Any
 from dataclasses import dataclass, asdict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 import logging
 import ipaddress
@@ -54,7 +56,8 @@ try:
 except ImportError:
     HAS_AUTH_LIBS = False
 
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
 class SecurityLevel(Enum):
@@ -83,7 +86,7 @@ class User:
     username: str
     email: str
     security_level: SecurityLevel
-    permissions: List[Permission]
+    permissions: list[Permission]
     mfa_enabled: bool
     last_login: datetime
     failed_attempts: int = 0
@@ -105,7 +108,7 @@ class SecurityEvent:
     source_ip: str
     user_agent: str
     risk_score: float
-    details: Dict[str, Any]
+    details: dict[str, Any]
 
 
 @dataclass
@@ -118,13 +121,18 @@ class ThreatIntel:
     source: str
     first_seen: datetime
     last_seen: datetime
-    tags: List[str]
+    tags: list[str]
 
 
 class EncryptionManager:
     """Advanced encryption management for data protection."""
+    __name__ = "sfp__security_hardening"
+    __version__ = "1.0"
+    __author__ = "poppopjmp"
+    __license__ = "MIT"
     
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize the EncryptionManager."""
         self.master_key = None
         self.cipher_suite = None
         self.key_rotation_interval = 30 * 24 * 3600  # 30 days
@@ -203,7 +211,7 @@ class EncryptionManager:
                 logging.error(f"Decryption failed: {e}")
                 return encrypted_data
     
-    def hash_password(self, password: str, salt: str = None) -> Tuple[str, str]:
+    def hash_password(self, password: str, salt: str = None) -> tuple[str, str]:
         """Hash password with salt."""
         if salt is None:
             salt = secrets.token_hex(32)
@@ -229,7 +237,8 @@ class EncryptionManager:
 class AuthenticationManager:
     """Multi-factor authentication management."""
     
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize the AuthenticationManager."""
         self.session_timeout = 3600  # 1 hour
         self.max_failed_attempts = 5
         self.lockout_duration = 900  # 15 minutes
@@ -266,7 +275,7 @@ class AuthenticationManager:
             self.users[user_id] = user
             return user
     
-    def authenticate_user(self, username: str, password: str, totp_code: str = None) -> Optional[str]:
+    def authenticate_user(self, username: str, password: str, totp_code: str = None) -> str | None:
         """Authenticate user with optional MFA."""
         with self.auth_lock:
             # Find user by username
@@ -321,8 +330,8 @@ class AuthenticationManager:
             'username': user.username,
             'security_level': user.security_level.value,
             'permissions': [p.value for p in user.permissions],
-            'exp': datetime.utcnow() + timedelta(seconds=self.session_timeout),
-            'iat': datetime.utcnow()
+            'exp': datetime.now(timezone.utc) + timedelta(seconds=self.session_timeout),
+            'iat': datetime.now(timezone.utc)
         }
         
         # Use a secret key for JWT
@@ -338,7 +347,7 @@ class AuthenticationManager:
         
         return token
     
-    def validate_session(self, token: str) -> Optional[Dict[str, Any]]:
+    def validate_session(self, token: str) -> dict[str, Any] | None:
         """Validate session token."""
         with self.auth_lock:
             if token not in self.active_sessions:
@@ -410,7 +419,8 @@ class AuthenticationManager:
 class RBACManager:
     """Role-Based Access Control management."""
     
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize the RBACManager."""
         self.roles = {}
         self.user_roles = {}
         self.rbac_lock = threading.RLock()
@@ -428,7 +438,7 @@ class RBACManager:
             'security_admin': list(Permission)  # All permissions
         }
     
-    def assign_role(self, user_id: str, role: str):
+    def assign_role(self, user_id: str, role: str) -> None:
         """Assign role to user."""
         with self.rbac_lock:
             if role in self.roles:
@@ -453,7 +463,7 @@ class RBACManager:
             
             return True
     
-    def get_user_permissions(self, user_id: str) -> List[Permission]:
+    def get_user_permissions(self, user_id: str) -> list[Permission]:
         """Get all permissions for user."""
         with self.rbac_lock:
             role = self.user_roles.get(user_id)
@@ -465,7 +475,8 @@ class RBACManager:
 class SecurityAuditLogger:
     """Comprehensive security audit logging."""
     
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize the SecurityAuditLogger."""
         self.audit_log = []
         self.log_file = None
         self.max_memory_logs = 10000
@@ -486,7 +497,7 @@ class SecurityAuditLogger:
     
     def log_security_event(self, user_id: str, action: str, resource: str, 
                           outcome: str, source_ip: str = "", user_agent: str = "",
-                          details: Dict[str, Any] = None) -> SecurityEvent:
+                          details: dict[str, Any] = None) -> SecurityEvent:
         """Log a security event."""
         event = SecurityEvent(
             event_id=hashlib.sha256(f"{time.time()}{user_id}{action}".encode()).hexdigest(),
@@ -532,7 +543,7 @@ class SecurityAuditLogger:
                 'details': event.details
             }
             
-            with open(self.log_file, 'a') as f:
+            with open(self.log_file, 'a', encoding='utf-8') as f:
                 f.write(json.dumps(log_entry) + '\n')
                 
         except Exception as e:
@@ -567,12 +578,12 @@ class SecurityAuditLogger:
                     base_score += 0.0  # Internal IP, lower risk
                 else:
                     base_score += 0.2  # External IP, higher risk
-            except:
+            except ValueError:
                 pass
         
         return min(base_score, 1.0)
     
-    def get_security_events(self, user_id: str = None, hours: int = 24) -> List[SecurityEvent]:
+    def get_security_events(self, user_id: str = None, hours: int = 24) -> list[SecurityEvent]:
         """Get security events for analysis."""
         with self.audit_lock:
             cutoff_time = datetime.now() - timedelta(hours=hours)
@@ -590,7 +601,7 @@ class SecurityAuditLogger:
             
             return filtered_events
     
-    def detect_suspicious_activity(self) -> List[SecurityEvent]:
+    def detect_suspicious_activity(self) -> list[SecurityEvent]:
         """Detect suspicious security activities."""
         suspicious_events = []
         
@@ -622,7 +633,8 @@ class SecurityAuditLogger:
 class ZeroTrustController:
     """Zero-Trust Architecture implementation."""
     
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize the ZeroTrustController."""
         self.trust_policies = {}
         self.device_registry = {}
         self.network_segments = {}
@@ -651,7 +663,7 @@ class ZeroTrustController:
             'exceptions': []
         }
     
-    def evaluate_trust(self, user_context: Dict[str, Any], resource_context: Dict[str, Any]) -> Dict[str, Any]:
+    def evaluate_trust(self, user_context: dict[str, Any], resource_context: dict[str, Any]) -> dict[str, Any]:
         """Evaluate trust for access request."""
         with self.zero_trust_lock:
             # Determine applicable policy
@@ -688,7 +700,7 @@ class ZeroTrustController:
                 'risk_score': len(conditions_failed) / max(len(policy['conditions']), 1)
             }
     
-    def _match_policy(self, user_context: Dict[str, Any], resource_context: Dict[str, Any]) -> str:
+    def _match_policy(self, user_context: dict[str, Any], resource_context: dict[str, Any]) -> str:
         """Match appropriate trust policy."""
         # Simple policy matching logic
         user_role = user_context.get('role', '')
@@ -701,8 +713,8 @@ class ZeroTrustController:
         else:
             return 'internal_network'
     
-    def _evaluate_condition(self, condition: str, user_context: Dict[str, Any], 
-                           resource_context: Dict[str, Any]) -> bool:
+    def _evaluate_condition(self, condition: str, user_context: dict[str, Any], 
+                           resource_context: dict[str, Any]) -> bool:
         """Evaluate a specific trust condition."""
         if condition == 'authenticated':
             return user_context.get('authenticated', False)
@@ -720,7 +732,7 @@ class ZeroTrustController:
         else:
             return False
     
-    def register_device(self, device_id: str, device_info: Dict[str, Any]):
+    def register_device(self, device_id: str, device_info: dict[str, Any]) -> None:
         """Register a trusted device."""
         with self.zero_trust_lock:
             self.device_registry[device_id] = {
@@ -733,13 +745,15 @@ class ZeroTrustController:
             }
 
 
-class sfp__security_hardening(SpiderFootPlugin):
+class sfp__security_hardening(SpiderFootModernPlugin):
     """Advanced Security Hardening Module."""
 
     meta = {
-        'name': "Security Hardening Engine",
-        'summary': "Advanced security hardening with zero-trust, encryption, MFA, RBAC, and comprehensive audit logging.",
-        'flags': ["enterprise", "security"]
+        'name': "Security Hardening Engine [DEPRECATED]",
+        'summary': "DEPRECATED: Security hardening (zero-trust, encryption, MFA, RBAC, audit logging) "
+                   "is now handled at the infrastructure/framework level via the security middleware "
+                   "and API authentication layers, not as a per-scan module.",
+        'flags': ["deprecated", "enterprise", "security"]
     }
 
     _priority = 0  # High priority for security
@@ -772,14 +786,10 @@ class sfp__security_hardening(SpiderFootPlugin):
         'suspicious_activity_threshold': "Threshold for suspicious activity detection"
     }
 
-    def setup(self, sfc, userOpts=dict()):
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the security hardening module."""
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
         # Check for required libraries
         if self.opts['enable_encryption'] and not HAS_CRYPTOGRAPHY:
             self.error("Cryptography library required for encryption features")
@@ -814,11 +824,11 @@ class sfp__security_hardening(SpiderFootPlugin):
             self.error(f"Failed to initialize security components: {e}")
             self.errorState = True
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Define the events this module is interested in."""
         return ["*"]  # Monitor all events for security
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Define the events this module produces."""
         return [
             "SECURITY_AUDIT_EVENT",
@@ -829,7 +839,7 @@ class sfp__security_hardening(SpiderFootPlugin):
             "AUTHORIZATION_DENIED"
         ]
 
-    def handleEvent(self, sfEvent):
+    def handleEvent(self, sfEvent: SpiderFootEvent) -> None:
         """Handle events with security monitoring."""
         if self.errorState:
             return
@@ -871,7 +881,7 @@ class sfp__security_hardening(SpiderFootPlugin):
             except Exception as e:
                 self.error(f"Security monitoring failed: {e}")
 
-    def authenticate_user(self, username: str, password: str, totp_code: str = None) -> Optional[str]:
+    def authenticate_user(self, username: str, password: str, totp_code: str = None) -> str | None:
         """Authenticate user with MFA."""
         if not hasattr(self, 'auth_manager'):
             return None
@@ -983,7 +993,7 @@ class sfp__security_hardening(SpiderFootPlugin):
             return self.encryption_manager.decrypt_data(encrypted_data)
         return encrypted_data
 
-    def get_security_status(self) -> Dict[str, Any]:
+    def get_security_status(self) -> dict[str, Any]:
         """Get comprehensive security status."""
         status = {
             'timestamp': datetime.now().isoformat(),

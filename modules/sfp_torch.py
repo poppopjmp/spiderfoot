@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: torch."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_torch
@@ -14,10 +18,13 @@
 import re
 from urllib.parse import urlencode
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_torch(SpiderFootPlugin):
+class sfp_torch(SpiderFootModernPlugin):
+
+    """Search Tor """
 
     meta = {
         'name': "TORCH",
@@ -51,27 +58,27 @@ class sfp_torch(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             "DOMAIN_NAME",
             "HUMAN_NAME",
             "EMAILADDR"
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "DARKNET_MENTION_URL",
             "DARKNET_MENTION_CONTENT"
         ]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 
@@ -84,7 +91,7 @@ class sfp_torch(SpiderFootPlugin):
 
         self.results[eventData] = True
 
-        formpage = self.sf.fetchUrl(
+        formpage = self.fetch_url(
             "http://torchdeedp3i2jigzjdmfpn5ttjhthh5wbmda2rr3jvqjg5p77c54dqd.onion/",
             useragent=self.opts['_useragent'],
             timeout=60)
@@ -110,7 +117,7 @@ class sfp_torch(SpiderFootPlugin):
             pagecount += 1
 
             qry = urlencode(params)
-            data = self.sf.fetchUrl(
+            data = self.fetch_url(
                 f"http://torchdeedp3i2jigzjdmfpn5ttjhthh5wbmda2rr3jvqjg5p77c54dqd.onion/search?{qry}",
                 useragent=self.opts['_useragent'],
                 timeout=60)
@@ -133,7 +140,7 @@ class sfp_torch(SpiderFootPlugin):
                     if self.checkForStop():
                         return
                     if self.opts['fetchlinks']:
-                        res = self.sf.fetchUrl(link, timeout=self.opts['_fetchtimeout'],
+                        res = self.fetch_url(link, timeout=self.opts['_fetchtimeout'],
                                                useragent=self.opts['_useragent'])
 
                         if res['content'] is None:
@@ -152,7 +159,7 @@ class sfp_torch(SpiderFootPlugin):
                         try:
                             startIndex = res['content'].index(eventData) - 120
                             endIndex = startIndex + len(eventData) + 240
-                        except Exception:
+                        except Exception as e:
                             self.debug("String not found in content.")
                             continue
 

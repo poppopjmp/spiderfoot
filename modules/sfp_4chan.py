@@ -1,9 +1,13 @@
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: 4chan."""
+
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 import requests
 import time
-from typing import Optional, List, Dict
 
-class sfp_4chan(SpiderFootPlugin):
+class sfp_4chan(SpiderFootModernPlugin):
     """
     SpiderFoot plugin to monitor 4chan boards for new posts and emit events.
     """
@@ -35,47 +39,47 @@ class sfp_4chan(SpiderFootPlugin):
         "max_threads": "Maximum number of threads to fetch per board."
     }
 
-    def setup(self, sfc, userOpts=dict()):
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """
         Setup plugin with SpiderFoot context and user options.
         :param sfc: SpiderFoot context
         :param userOpts: User options
         """
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
         self._seen_posts = set()
 
-    def watchedEvents(self) -> List[str]:
+    def watchedEvents(self) -> list[str]:
         """Return a list of event types this module watches."""
         return ["ROOT"]
 
-    def producedEvents(self) -> List[str]:
+    def producedEvents(self) -> list[str]:
         """Return a list of event types this module produces."""
         return ["FOURCHAN_POST"]
 
-    def _fetch_catalog(self, board: str) -> Optional[List[Dict]]:
+    def _fetch_catalog(self, board: str) -> list[dict] | None:
         url = f"https://a.4cdn.org/{board}/catalog.json"
         try:
             resp = requests.get(url, timeout=10)
             if resp.status_code == 200:
                 return resp.json()
-            self.sf.error(f"Failed to fetch catalog for board {board}: {resp.status_code}")
+            self.log.error(f"Failed to fetch catalog for board {board}: {resp.status_code}")
         except Exception as e:
-            self.sf.error(f"Exception fetching catalog for board {board}: {e}")
+            self.log.error(f"Exception fetching catalog for board {board}: {e}")
         return None
 
-    def _fetch_thread(self, board: str, thread_id: int) -> Optional[Dict]:
+    def _fetch_thread(self, board: str, thread_id: int) -> dict | None:
         url = f"https://a.4cdn.org/{board}/thread/{thread_id}.json"
         try:
             resp = requests.get(url, timeout=10)
             if resp.status_code == 200:
                 return resp.json()
-            self.sf.error(f"Failed to fetch thread {thread_id} on board {board}: {resp.status_code}")
+            self.log.error(f"Failed to fetch thread {thread_id} on board {board}: {resp.status_code}")
         except Exception as e:
-            self.sf.error(f"Exception fetching thread {thread_id} on board {board}: {e}")
+            self.log.error(f"Exception fetching thread {thread_id} on board {board}: {e}")
         return None
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """
         Handle the incoming event and monitor 4chan boards for new posts.
         :param event: SpiderFootEvent
@@ -83,9 +87,9 @@ class sfp_4chan(SpiderFootPlugin):
         boards = [b.strip() for b in self.opts.get("boards", "").split(",") if b.strip()]
         max_threads = int(self.opts.get("max_threads", 10))
         if not boards:
-            self.sf.error("No 4chan boards specified in options.")
+            self.log.error("No 4chan boards specified in options.")
             return
-        self.sf.info(f"Monitoring 4chan boards: {', '.join(boards)} (max_threads={max_threads})")
+        self.log.info(f"Monitoring 4chan boards: {', '.join(boards)} (max_threads={max_threads})")
         for board in boards:
             catalog = self._fetch_catalog(board)
             if not catalog:
@@ -119,7 +123,7 @@ class sfp_4chan(SpiderFootPlugin):
                         "ext": post.get("ext"),
                         "rest": post
                     }
-                    self.sf.debug(f"Emitting FOURCHAN_POST event: {post_info}")
+                    self.log.debug(f"Emitting FOURCHAN_POST event: {post_info}")
                     post_event = SpiderFootEvent(
                         "FOURCHAN_POST",
                         str(post_info),
@@ -129,6 +133,6 @@ class sfp_4chan(SpiderFootPlugin):
                     self.notifyListeners(post_event)
                 time.sleep(1)  # Respect API rate limit
 
-    def shutdown(self):
+    def shutdown(self) -> None:
         """Clean up resources if needed."""
         pass

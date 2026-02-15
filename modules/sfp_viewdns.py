@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: viewdns."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:        sfp_viewdns
@@ -15,10 +19,13 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_viewdns(SpiderFootPlugin):
+class sfp_viewdns(SpiderFootModernPlugin):
+
+    """Identify co-hosted websites and perform reverse Whois lookups using ViewDNS.info."""
 
     meta = {
         'name': "ViewDNS.info",
@@ -64,30 +71,30 @@ class sfp_viewdns(SpiderFootPlugin):
     accum = list()
     cohostcount = 0
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.accum = list()
         self.cohostcount = 0
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             "EMAILADDR",
             "IP_ADDRESS",
             "PROVIDER_DNS"
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             'AFFILIATE_INTERNET_NAME',
             'AFFILIATE_DOMAIN_NAME',
             'CO_HOSTED_SITE'
         ]
 
-    def query(self, qry, querytype, page=1):
+    def query(self, qry: str, querytype: str, page: int = 1) -> None:
+        """Query the data source."""
         if querytype == "reverseip":
             attr = "host"
             pagesize = 10000
@@ -110,7 +117,7 @@ class sfp_viewdns(SpiderFootPlugin):
             'output': 'json',
         })
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://api.viewdns.info/{querytype}/?{params}",
             timeout=self.opts['_fetchtimeout'],
             useragent="SpiderFoot"
@@ -161,7 +168,8 @@ class sfp_viewdns(SpiderFootPlugin):
         # We are at the last or only page
         self.accum.extend(response.get(responsekey, []))
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 

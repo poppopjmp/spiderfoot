@@ -1,56 +1,63 @@
+# Version control
 .git/
+.github/
+.gitignore
 
-build
-dist
+# Python build artifacts
+build/
+dist/
 *.egg-info
 *.egg/
+__pycache__/
 *.pyc
-*.swp
+*.pyo
+htmlcov/
+.pytest_cache/
+.ruff_cache/
 
-venv/
+# Runtime data (bind-mounted at runtime)
 cache/
-log/
-logs/
 data/
+logs/
+log/
 spiderfoot.db*
 spiderfoot.test.db
-
-__pycache__
-htmlcov/
-# docs/ - commented out to include documentation in container
-
-.github/
-react-web-interface
-test/
-docker-compose*
-Dockerfile
-Dockerfile.full
-!docker-entrypoint.sh
-.pre-commit-config.yml
-docker-compose-examples/
-THANKYOU
-# README.md - commented out to include README in container
-
-.pylintrc
-.ruff_cache
-.pytest_cache
-
-.gitignore
-# *.md - commented out to include markdown documentation
-.vscode
-.idea
-__pycache__
-*.pyc
-.pytest_cache
 *.log
-.DS_Store
-Thumbs.db
+
+# Virtual environments
+venv/
+.venv/
+
+# IDE / editor
+.vscode/
+.idea/
 *.swp
 *.swo
 *~
+
+# Docker (avoid recursive COPY)
+docker-compose*
+Dockerfile*
+!docker-entrypoint.sh
+docker-compose-examples/
+
+# Tests (not needed in production image)
+test/
+test_results.txt
+xdist_stability_results.json
+pytest.ini
+
+# Misc
+.pre-commit-config.yml
+.pylintrc
 .env
 .env.local
-node_modules
+.DS_Store
+Thumbs.db
+THANKYOU
+react-web-interface/
+node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+*.threadreaper_backup

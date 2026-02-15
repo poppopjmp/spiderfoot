@@ -3,6 +3,7 @@
 This package contains all unit tests, integration tests,
 and test utilities for SpiderFoot.
 """
+from __future__ import annotations
 
 import os
 import sys

@@ -2,31 +2,80 @@
 
 *Author: poppopjmp*
 
-This guide will help you run your first scan in minutes using either the web interface or the command line. Follow these steps for a fast and successful start with SpiderFoot.
+This guide will help you run your first scan in minutes using either the Docker microservices deployment or the standalone mode. Follow these steps for a fast and successful start with SpiderFoot.
 
 ---
 
-## Web Interface
+## Docker Microservices (Recommended)
 
-1. **Start SpiderFoot:**
+1. **Clone and start the stack:**
 
-   ```sh
-   python sf.py -l 127.0.0.1:5001
+   ```bash
+   git clone https://github.com/poppopjmp/spiderfoot.git
+   cd spiderfoot
+   cp docker/env.example .env
+   # Edit .env with your API keys (OpenAI, Anthropic, etc.)
+   docker compose -f docker-compose-microservices.yml up --build -d
    ```
 
 2. **Open the Web UI:**
-   - Go to [http://127.0.0.1:5001](http://127.0.0.1:5001) in your browser.
-   - Log in with your admin account (created on first launch).
+   - Navigate to [https://localhost](https://localhost) in your browser.
+   - Log in with the default credentials (`admin` / `admin`).
+
+   ![Login](images/login.png)
 
 3. **Create a New Scan:**
-   - Click **New Scan**
-   - Enter your target (e.g., example.com)
-   - Select the target type (e.g., DOMAIN_NAME) and choose modules
-   - Click **Run Scan**
+   - Click **New Scan** from the sidebar or dashboard.
+   - Enter your target (e.g., `example.com`).
+   - Select the target type and choose module categories.
+   - Click **Run Scan**.
+
+   ![New Scan](images/new_scan.png)
 
 4. **View Results:**
-   - Results will appear in real time. Use the sidebar to navigate between scans and workspaces.
-   - You can filter, search, and export results as needed.
+   - Results appear in real time. The **Dashboard** shows active scans and key metrics.
+
+   ![Dashboard](images/dashboard.png)
+
+   - Click any scan row to open the **Scan Detail** view with Summary, Browse, Graph, GeoMap, Correlations, and AI Report tabs.
+
+   ![Scan Detail - Summary](images/scan_detail_summary.png)
+
+5. **Browse Data:**
+   - Use the **Browse** tab to filter by event type, risk level, and source module.
+
+   ![Scan Detail - Browse](images/scan_detail_browse.png)
+
+6. **Visualize Relationships:**
+   - The **Graph** tab shows an interactive force-directed graph of entity relationships.
+
+   ![Scan Detail - Graph](images/scan_detail_graph.png)
+
+7. **View Geographic Data:**
+   - The **GeoMap** tab plots discovered IP addresses on a world map with risk coloring.
+
+   ![Scan Detail - GeoMap](images/scan_detail_geomap.png)
+
+8. **Review Correlations:**
+   - The **Correlations** tab shows automated findings from the 94-rule YAML correlation engine.
+
+   ![Scan Detail - Correlations](images/scan_detail_correlations.png)
+
+9. **Generate AI Reports:**
+   - The **AI Report** tab produces a comprehensive Cyber Threat Intelligence report using LLM analysis.
+
+   ![Scan Detail - AI Report](images/scan_detail_ai_report.png)
+
+---
+
+## Standalone Mode
+
+```bash
+pip install -r requirements.txt
+python sf.py -l 127.0.0.1:5001
+```
+
+Open [http://127.0.0.1:5001](http://127.0.0.1:5001) in your browser.
 
 ---
 
@@ -34,7 +83,7 @@ This guide will help you run your first scan in minutes using either the web int
 
 Run a scan directly from the CLI:
 
-```sh
+```bash
 python sf.py -s example.com -t DOMAIN_NAME -m sfp_dnsresolve,sfp_ssl,sfp_whois
 ```
 
@@ -43,13 +92,11 @@ python sf.py -s example.com -t DOMAIN_NAME -m sfp_dnsresolve,sfp_ssl,sfp_whois
 
 ---
 
-## Workspaces (CLI)
+## Workspaces
 
-Workspaces allow you to manage multiple targets and scans:
+Organize related scans into **Workspaces** for multi-target campaigns, recurring assessments, or team collaboration. Each workspace groups scans, tracks notes, and provides workspace-level analytics.
 
-
-
-- Workspaces are ideal for large projects, recurring assessments, or team collaboration.
+![Workspaces](images/workspaces.png)
 
 ---
 

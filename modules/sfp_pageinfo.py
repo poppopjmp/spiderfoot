@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: pageinfo."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_pageinfo
@@ -14,7 +18,8 @@
 
 import re
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 # Indentify pages that use Javascript libs, handle passwords, have forms,
 # permit file uploads and more to come.
@@ -28,7 +33,9 @@ regexps = dict({
 })
 
 
-class sfp_pageinfo(SpiderFootPlugin):
+class sfp_pageinfo(SpiderFootModernPlugin):
+
+    """Obtain information about web pages (do they take passwords, do they contain forms, etc.)"""
 
     meta = {
         'name': "Page Information",
@@ -44,30 +51,30 @@ class sfp_pageinfo(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.__dataSource__ = "Target Website"
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["TARGET_WEB_CONTENT"]
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["URL_STATIC", "URL_JAVASCRIPT", "URL_FORM", "URL_PASSWORD",
                 "URL_UPLOAD", "URL_JAVA_APPLET", "URL_FLASH", "PROVIDER_JAVASCRIPT"]
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         # We are only interested in the raw data from the spidering module
         # because the spidering module will always provide events with the
         # event.sourceEvent.data set to the URL of the source.
+        """Handle an event received by this module."""
         if "sfp_spider" not in event.module:
             self.debug("Ignoring web content from " + event.module)
             return

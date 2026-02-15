@@ -10,12 +10,18 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: _stor_stdout."""
+
 import json
 
-from spiderfoot import SpiderFootPlugin
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp__stor_stdout(SpiderFootPlugin):
+class sfp__stor_stdout(SpiderFootModernPlugin):
+
+    """Dumps output to standard out. Used for when a SpiderFoot scan is run via the command-line."""
 
     meta = {
         'name': "Command-line output",
@@ -24,29 +30,31 @@ class sfp__stor_stdout(SpiderFootPlugin):
 
     _priority = 0
 
-    def __init__(self):
-        super().__init__()
-        self.firstEvent = True
-        self.opts = {
-            "_format": "tab",  # tab, csv, json
-            "_requested": [],
-            "_showonlyrequested": False,
-            "_stripnewline": False,
-            "_showsource": False,
-            "_csvdelim": ",",
-            "_maxlength": 0,
-            "_eventtypes": {}  # Changed from [] to {}
-        }
+    # Default options - moved from __init__ to class level
+    opts = {
+        "_format": "tab",  # tab, csv, json
+        "_requested": [],
+        "_showonlyrequested": False,
+        "_stripnewline": False,
+        "_showsource": False,
+        "_csvdelim": ",",
+        "_maxlength": 0,
+        "_eventtypes": {}  # Changed from [] to {}
+    }
 
     # Option descriptions
     optdescs = {
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def __init__(self) -> None:
+        """Initialize the sfp  stor stdout."""
+        super().__init__()
+        self.firstEvent = True
+
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         # Always start with a fresh opts dict for this instance
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
         # Also allow 'enabled' to be set via userOpts
         if 'enabled' in userOpts:
             self.opts['enabled'] = userOpts['enabled']
@@ -60,8 +68,9 @@ class sfp__stor_stdout(SpiderFootPlugin):
     # can store all events for later analysis.    def watchedEvents(self):
         return ["*"]
 
-    def output(self, event):
+    def output(self, event: SpiderFootEvent) -> None:
         # If the module is disabled, do not output anything
+        """Output."""
         if not self.opts.get('enabled', True):
             return
         d = self.opts['_csvdelim']
@@ -129,7 +138,8 @@ class sfp__stor_stdout(SpiderFootPlugin):
             self.error(f"Stdout write failed: {e}")
 
     # Handle events sent to this module
-    def handleEvent(self, sfEvent):
+    def handleEvent(self, sfEvent: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         if not self.opts.get('enabled', True):
             return
         if sfEvent.eventType == "ROOT":

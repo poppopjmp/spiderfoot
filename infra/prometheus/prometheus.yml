@@ -1,0 +1,102 @@
+# =============================================================================
+# Prometheus Configuration for SpiderFoot
+# =============================================================================
+# Scrapes metrics from SpiderFoot services, Vector.dev, and infrastructure.
+# =============================================================================
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+
+scrape_configs:
+  # SpiderFoot API service metrics (custom Prometheus endpoint)
+  - job_name: "spiderfoot-api"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["api:8001"]
+        labels:
+          service: "spiderfoot"
+          component: "api"
+
+  # SpiderFoot Agents service metrics
+  - job_name: "spiderfoot-agents"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["agents:8100"]
+        labels:
+          service: "spiderfoot"
+          component: "agents"
+
+  # Traefik reverse proxy metrics
+  - job_name: "traefik"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["traefik:8082"]
+        labels:
+          service: "traefik"
+
+  # Vector.dev internal metrics
+  - job_name: "vector"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["vector:9598"]
+        labels:
+          service: "vector"
+
+  # Qdrant vector DB metrics
+  - job_name: "qdrant"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["qdrant:6333"]
+        labels:
+          service: "qdrant"
+
+  # PostgreSQL exporter (optional, if pg-exporter sidecar is added)
+  # - job_name: "postgres"
+  #   static_configs:
+  #     - targets: ["pg-exporter:9187"]
+
+  # Redis exporter (optional)
+  # - job_name: "redis"
+  #   static_configs:
+  #     - targets: ["redis-exporter:9121"]
+
+  # MinIO metrics (auth disabled via MINIO_PROMETHEUS_AUTH_TYPE=public)
+  - job_name: "minio"
+    metrics_path: "/minio/v2/metrics/cluster"
+    static_configs:
+      - targets: ["minio:9000"]
+        labels:
+          service: "minio"
+
+  # Jaeger metrics (v2 exposes on port 8888)
+  - job_name: "jaeger"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["jaeger:8888"]
+        labels:
+          service: "jaeger"
+
+  # LiteLLM proxy metrics
+  - job_name: "litellm"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["litellm:4000"]
+        labels:
+          service: "litellm"
+
+  # Flower (Celery monitoring) metrics (v5.4.4+)
+  - job_name: "celery-flower"
+    metrics_path: "/flower/metrics"
+    static_configs:
+      - targets: ["flower:5555"]
+        labels:
+          service: "celery"
+          component: "flower"
+
+  # Prometheus self-monitoring
+  - job_name: "prometheus"
+    metrics_path: "/prometheus/metrics"
+    static_configs:
+      - targets: ["localhost:9090"]

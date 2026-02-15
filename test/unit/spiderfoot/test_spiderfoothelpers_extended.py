@@ -2,6 +2,7 @@
 Enhanced test suite for spiderfoot.helpers module targeting missed coverage areas.
 This test suite focuses on exception paths, edge cases, and complex logic scenarios.
 """
+from __future__ import annotations
 
 import json
 import pytest

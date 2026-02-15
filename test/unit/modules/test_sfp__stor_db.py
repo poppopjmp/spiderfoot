@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""Tests for sfp__stor_db module."""
+
 import pytest
 import unittest
 from unittest.mock import patch, MagicMock, Mock
@@ -5,13 +9,13 @@ import psycopg2
 import time
 
 from modules.sfp__stor_db import sfp__stor_db
-from sflib import SpiderFoot
-from spiderfoot.event import SpiderFootEvent
-from test.unit.utils.test_base import SpiderFootTestBase
+from spiderfoot.sflib import SpiderFoot
+from spiderfoot.events.event import SpiderFootEvent
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModuleStor_db(SpiderFootTestBase):
+class TestModuleStor_db(TestModuleBase):
     """Comprehensive test suite for enhanced database storage module.
     
     Tests all enterprise-grade features including:
@@ -498,7 +502,7 @@ class TestModuleStor_db(SpiderFootTestBase):
             del module
             # If we get here without exception, graceful shutdown worked
             shutdown_successful = True
-        except Exception:
+        except Exception as e:
             shutdown_successful = False
             
         self.assertTrue(shutdown_successful, "Module should shutdown gracefully")

@@ -8,14 +8,19 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: netlas."""
+
 import json
 import time
 import urllib
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_netlas(SpiderFootPlugin):
+class sfp_netlas(SpiderFootModernPlugin):
     """SpiderFoot plug-in for searching Netlas API for domain, IP address, and
     other information.
 
@@ -60,21 +65,17 @@ class sfp_netlas(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module with user options.
 
         Args:
             sfc: SpiderFoot instance
             userOpts (dict): User options
         """
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
         self.errorState = False
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Define the events this module is interested in for input.
 
         Returns:
@@ -82,7 +83,7 @@ class sfp_netlas(SpiderFootPlugin):
         """
         return ["DOMAIN_NAME", "IP_ADDRESS", "IPV6_ADDRESS"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """Define the events this module produces.
 
         Returns:
@@ -90,7 +91,7 @@ class sfp_netlas(SpiderFootPlugin):
         """
         return ["RAW_RIR_DATA", "GEOINFO", "PHYSICAL_COORDINATES", "PROVIDER_TELCO"]
 
-    def queryNetlas(self, qry, qryType):
+    def queryNetlas(self, qry: str, qryType: str) -> dict | None:
         """Query Netlas API for information.
 
         Args:
@@ -114,7 +115,7 @@ class sfp_netlas(SpiderFootPlugin):
             }
         )
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://api.netlas.io/v1/search?{params}",
             useragent=self.opts["_useragent"],
         )
@@ -127,7 +128,7 @@ class sfp_netlas(SpiderFootPlugin):
 
         return self.parseApiResponse(res)
 
-    def parseApiResponse(self, res: dict):
+    def parseApiResponse(self, res: dict) -> dict | None:
         """Parse the API response from Netlas.
 
         Args:
@@ -176,7 +177,7 @@ class sfp_netlas(SpiderFootPlugin):
             self.errorState = True
         return None
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle events sent to this module.
 
         Args:
@@ -201,7 +202,8 @@ class sfp_netlas(SpiderFootPlugin):
 
         self.results[eventData] = True
         emitted = set()
-        def emit(evt_type, data):
+        def emit(evt_type: str, data: str) -> None:
+            """Emit."""
             key = (evt_type, str(data))
             if key in emitted:
                 return
@@ -214,18 +216,19 @@ class sfp_netlas(SpiderFootPlugin):
 
         if eventName == "DOMAIN_NAME":
             data = self.queryNetlas(eventData, "domain")
+            # Always emit RAW_RIR_DATA, even if data is None
+            emit("RAW_RIR_DATA", str(data))
             if not data:
                 return
-            emit("RAW_RIR_DATA", str(data))
             geoinfo = data.get("geoinfo")
             if geoinfo:
                 emit("GEOINFO", geoinfo)
 
         elif eventName in ["IP_ADDRESS", "IPV6_ADDRESS"]:
             data = self.queryNetlas(eventData, "ip")
+            emit("RAW_RIR_DATA", str(data))
             if not data:
                 return
-            emit("RAW_RIR_DATA", str(data))
             geoinfo = data.get("geoinfo")
             if geoinfo:
                 emit("GEOINFO", geoinfo)

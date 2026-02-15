@@ -3,8 +3,10 @@
 Comprehensive test suite for sfapi.py
 Focus: Achieving maximum code coverage for the API module
 """
+from __future__ import annotations
 
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import MagicMock, patch, PropertyMock
 import sys
 import os
@@ -21,7 +23,7 @@ os.environ['TESTING_MODE'] = '1'
 import sfapi
 
 
-class TestSpiderFootAPICore(unittest.TestCase):
+class TestSpiderFootAPICore(TestModuleBase):
     """Test core functionality of sfapi.py"""
     
     def setUp(self):
@@ -128,7 +130,7 @@ class TestSpiderFootAPICore(unittest.TestCase):
                 result = self.sfapi.build_excel(test_data, columns)
                 # Function was called - that's what matters for coverage
                 self.assertTrue(True)
-            except Exception:
+            except Exception as e:
                 # Function may fail due to mocking complexity
                 self.assertTrue(True)  # We still achieved coverage
     
@@ -160,7 +162,7 @@ class TestSpiderFootAPICore(unittest.TestCase):
             scan_req = self.sfapi.ScanRequest(name="test", target="example.com")
             self.assertEqual(scan_req.name, "test")
             self.assertEqual(scan_req.target, "example.com")
-        except Exception:
+        except Exception as e:
             # Model validation may fail, but we've exercised the code
             pass
     

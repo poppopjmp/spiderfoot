@@ -1,0 +1,19 @@
+id: bgp_as_discovered
+version: "1"
+meta:
+  name: BGP autonomous system identified
+  description: >
+    BGP Autonomous System (AS) numbers associated with the target
+    were identified. AS information reveals the network providers
+    and routing infrastructure used by the target, which can
+    help map the full network footprint and identify peering
+    relationships.
+  risk: INFO
+collections:
+  collect:
+      - method: regex
+        field: type
+        value: BGP_AS_MEMBER|BGP_AS_OWNER
+aggregation:
+  field: data
+headline: "BGP autonomous system identified: {data}"

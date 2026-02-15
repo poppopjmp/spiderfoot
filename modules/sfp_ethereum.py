@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: ethereum."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_ethereum
@@ -13,15 +17,16 @@
 
 import re
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_ethereum(SpiderFootPlugin):
-
+class sfp_ethereum(SpiderFootModernPlugin):
+    """SpiderFoot plugin for extracting Ethereum addresses."""
     meta = {
         'name': "Ethereum Address Extractor",
         'summary': "Identify ethereum addresses in scraped webpages.",
-        'flags': ['apikey'],
+        'flags': ['apikey', 'experimental'],
         'useCases': ["Footprint", "Investigate", "Passive"],
         'categories': ["Content Analysis"],
         'dataSource': {
@@ -60,11 +65,12 @@ class sfp_ethereum(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.opts.update(userOpts)
-        self.debug("[setup] Options: {}".format(self.opts))
+        self.debug(f"[setup] Options: {self.opts}")
         # Option validation
         if not self.opts.get("api_key"):
             self.error("[setup] API key is required.")
@@ -80,17 +86,20 @@ class sfp_ethereum(SpiderFootPlugin):
             raise ValueError("output_format must be 'summary' or 'full'.")
 
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["ROOT"]
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["ETHEREUM_ADDRESS", "ETHEREUM_TX"]
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         self.debug(f"[handleEvent] Received event: {event.eventType}")
         # Stub event filtering logic
         if event.eventType not in self.watchedEvents():
@@ -99,7 +108,8 @@ class sfp_ethereum(SpiderFootPlugin):
         # Stub for Ethereum monitoring logic
         self.debug("[handleEvent] (stub) No real logic implemented.")
 
-    def shutdown(self):
+    def shutdown(self) -> None:
+        """Shutdown."""
         self.debug("[shutdown] Shutting down Ethereum module.")
 
 # End of sfp_ethereum class

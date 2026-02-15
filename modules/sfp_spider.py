@@ -11,13 +11,20 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: spider."""
+
 import json
 import time
 
-from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_spider(SpiderFootPlugin):
+class sfp_spider(SpiderFootModernPlugin):
+
+    """Spidering of web-pages to extract content for searching."""
 
     meta = {
         'name': "Web Spider",
@@ -73,22 +80,21 @@ class sfp_spider(SpiderFootPlugin):
     # Tracked cookies per site
     siteCookies = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.fetchedPages = self.tempStorage()
         self.urlEvents = self.tempStorage()
         self.siteCookies = self.tempStorage()
         self.__dataSource__ = "Target Website"
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # Search engines and DNS lookups provide INTERNET_NAME.
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["LINKED_URL_INTERNAL", "INTERNET_NAME"]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "WEBSERVER_HTTPHEADERS",
             "HTTP_CODE",
@@ -121,7 +127,7 @@ class sfp_spider(SpiderFootPlugin):
             cookies = self.siteCookies[site]
 
         # Fetch the contents of the supplied URL
-        fetched = self.sf.fetchUrl(
+        fetched = self.fetch_url(
             url,
             cookies=cookies,
             timeout=self.opts['_fetchtimeout'],
@@ -142,9 +148,8 @@ class sfp_spider(SpiderFootPlugin):
                     f"Saving cookies for {site}: {self.siteCookies[site]}")
 
         if url not in self.urlEvents:
-            # TODO: be more descriptive
             self.error(
-                "Something strange happened - shouldn't get here: url not in self.urlEvents")
+                f"Unexpected state: URL not found in urlEvents tracking dict: {url}")
             self.urlEvents[url] = None
 
         # Notify modules about the content obtained
@@ -241,7 +246,8 @@ class sfp_spider(SpiderFootPlugin):
         return list(returnLinks.keys())
 
     # Notify listening modules about links
-    def linkNotify(self, url: str, parentEvent=None):
+    def linkNotify(self, url: str, parentEvent: SpiderFootEvent = None) -> SpiderFootEvent:
+        """LinkNotify."""
         if not isinstance(url, str):
             url = str(url, "utf-8", errors='replace')
         if self.getTarget().matches(self.sf.urlFQDN(url)):
@@ -254,7 +260,8 @@ class sfp_spider(SpiderFootPlugin):
         return event
 
     # Notify listening modules about raw data and others
-    def contentNotify(self, url: str, httpresult: dict, parentEvent=None) -> None:
+    def contentNotify(self, url: str, httpresult: dict, parentEvent: SpiderFootEvent = None) -> None:
+        """ContentNotify."""
         if not isinstance(httpresult, dict):
             return
 
@@ -307,7 +314,8 @@ class sfp_spider(SpiderFootPlugin):
                 event.actualSource = url
                 self.notifyListeners(event)
 
-    def handleEvent(self, event) -> None:
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -330,7 +338,7 @@ class sfp_spider(SpiderFootPlugin):
         # Determine where to start spidering from if it's a INTERNET_NAME event
         if eventName == "INTERNET_NAME":
             for prefix in self.opts['start']:
-                res = self.sf.fetchUrl(
+                res = self.fetch_url(
                     prefix + eventData,
                     timeout=self.opts['_fetchtimeout'],
                     useragent=self.opts['_useragent'],
@@ -364,6 +372,7 @@ class sfp_spider(SpiderFootPlugin):
         return self.spiderFrom(spiderTarget)
 
     def spiderFrom(self, startingPoint: str) -> None:
+        """SpiderFrom."""
         pagesFetched = 0
         levelsTraversed = 0
 
@@ -371,7 +380,7 @@ class sfp_spider(SpiderFootPlugin):
         if self.opts['robotsonly']:
             targetBase = SpiderFootHelpers.urlBaseUrl(startingPoint)
             if targetBase not in self.robotsRules:
-                res = self.sf.fetchUrl(
+                res = self.fetch_url(
                     targetBase + '/robots.txt',
                     timeout=self.opts['_fetchtimeout'],
                     useragent=self.opts['_useragent'],
@@ -390,7 +399,7 @@ class sfp_spider(SpiderFootPlugin):
         # Iterations after that are based on links found on those pages, while:
         # number of spidered pages < max pages
         # spidering depth <= max levels (the first level is the first link)
-        while (pagesFetched < self.opts['maxpages']) and (levelsTraversed <= self.opts['maxlevels']):
+        while pagesFetched < self.opts['maxpages'] and levelsTraversed <= self.opts['maxlevels']:
             if not nextLinks:
                 self.info("No more links to spider, finishing.")
                 return

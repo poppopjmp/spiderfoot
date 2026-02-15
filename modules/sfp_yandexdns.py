@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: yandexdns."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_yandexdns
@@ -13,10 +17,13 @@
 
 import dns.resolver
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_yandexdns(SpiderFootPlugin):
+class sfp_yandexdns(SpiderFootModernPlugin):
+
+    """Check if a host would be blocked by Yandex DNS."""
 
     meta = {
         'name': "Yandex DNS",
@@ -54,21 +61,20 @@ class sfp_yandexdns(SpiderFootPlugin):
         "93.158.134.250": "Yandex - Adult",
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             "INTERNET_NAME",
             "AFFILIATE_INTERNET_NAME",
             "CO_HOSTED_SITE"
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "BLACKLISTED_INTERNET_NAME",
             "BLACKLISTED_AFFILIATE_INTERNET_NAME",
@@ -79,7 +85,8 @@ class sfp_yandexdns(SpiderFootPlugin):
         ]
 
     # Query Yandex DNS "family" servers
-    def queryAddr(self, qaddr):
+    def queryAddr(self, qaddr: str):
+        """Query Addr."""
         if not qaddr:
             return None
 
@@ -88,12 +95,13 @@ class sfp_yandexdns(SpiderFootPlugin):
 
         try:
             return res.resolve(qaddr)
-        except Exception:
+        except Exception as e:
             self.debug(f"Unable to resolve {qaddr}")
 
         return None
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 

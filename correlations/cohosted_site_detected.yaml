@@ -1,0 +1,26 @@
+id: cohosted_site_detected
+version: "1"
+meta:
+  name: Multiple sites co-hosted on same infrastructure
+  description: >
+    Multiple websites or domains were found sharing the same
+    hosting infrastructure. Co-hosted sites increase the blast
+    radius of any compromise — if one site is breached, other
+    sites on the same server may also be affected.
+
+    This is especially concerning when co-hosted sites have
+    different security postures or belong to different
+    organisations.
+  risk: INFO
+collections:
+  collect:
+      - method: regex
+        field: type
+        value: CO_HOSTED_SITE|CO_HOSTED_SITE_DOMAIN
+aggregation:
+  field: entity.data
+analysis:
+  - method: threshold
+    minimum: 3
+    field: data
+headline: "Multiple co-hosted sites on: {entity.data}"

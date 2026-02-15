@@ -1,9 +1,13 @@
+from __future__ import annotations
+
+"""Tests for sfp_cisco_umbrella module."""
+
 # filepath: spiderfoot/test/unit/modules/test_sfp_cisco_umbrella.py
 from unittest.mock import patch, MagicMock
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent
 import unittest
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 # Import fix before importing the module
@@ -13,7 +17,7 @@ fix_module_for_tests('sfp_cisco_umbrella')
 from modules.sfp_cisco_umbrella import sfp_cisco_umbrella
 
 
-class TestModuleCiscoUmbrella(SpiderFootTestBase):
+class TestModuleCiscoUmbrella(TestModuleBase):
     """Test Cisco Umbrella module."""
 
     def setUp(self):

@@ -1,15 +1,16 @@
 """SpiderFoot MCP Server Integration.
 
+from __future__ import annotations
+
 This module provides integration with Model Context Protocol (MCP) servers
 for CTI report generation and analysis.
 """
 
-import asyncio
 import json
 import logging
 import uuid
-from datetime import datetime
-from typing import Dict, List, Optional, Any
+from datetime import datetime, timezone
+from typing import Any
 
 import httpx
 
@@ -18,26 +19,26 @@ from spiderfoot.workspace import SpiderFootWorkspace
 
 class SpiderFootMCPClient:
     """Client for communicating with MCP servers for CTI analysis."""
-    
-    def __init__(self, config: dict):
+
+    def __init__(self, config: dict) -> None:
         """Initialize MCP client.
-        
+
         Args:
             config: SpiderFoot configuration including MCP settings
         """
         self.config = config
         self.log = logging.getLogger("spiderfoot.mcp")
-        
+
         # MCP server configuration
         self.mcp_config = config.get('mcp', {})
         self.server_url = self.mcp_config.get('server_url', 'http://localhost:8000')
         self.api_key = self.mcp_config.get('api_key', '')
         self.timeout = self.mcp_config.get('timeout', 300)
-        
+
         # CTI report templates
         self.report_templates = self._load_report_templates()
-        
-    def _load_report_templates(self) -> Dict[str, dict]:
+
+    def _load_report_templates(self) -> dict[str, dict]:
         """Load CTI report templates."""
         return {
             'threat_assessment': {
@@ -74,67 +75,67 @@ class SpiderFootMCPClient:
                 ]
             }
         }
-    
+
     async def generate_cti_report(
-        self, 
+        self,
         workspace: SpiderFootWorkspace,
         report_type: str = 'threat_assessment',
         custom_prompt: str = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Generate CTI report using MCP server.
-        
+
         Args:
             workspace: SpiderFoot workspace containing scan data
             report_type: Type of report to generate
             custom_prompt: Custom prompt for report generation
-            
+
         Returns:
             Generated CTI report
         """
         try:
-            self.log.info(f"Generating CTI report for workspace {workspace.workspace_id}")
-            
+            self.log.info("Generating CTI report for workspace %s", workspace.workspace_id)
+
             # Prepare workspace data for analysis
             workspace_data = await self._prepare_workspace_data(workspace)
-            
+
             # Get report template
             template = self.report_templates.get(report_type, self.report_templates['threat_assessment'])
-            
+
             # Prepare MCP request
             mcp_request = await self._prepare_mcp_request(
                 workspace_data, template, custom_prompt
             )
-            
+
             # Send request to MCP server
             response = await self._send_mcp_request(mcp_request)
-            
+
             # Process and structure the response
             cti_report = await self._process_mcp_response(
                 response, workspace, template, report_type
             )
-            
+
             # Save report to workspace
             await self._save_report_to_workspace(workspace, cti_report)
-            
-            self.log.info(f"CTI report generated successfully for workspace {workspace.workspace_id}")
+
+            self.log.info("CTI report generated successfully for workspace %s", workspace.workspace_id)
             return cti_report
-            
+
         except Exception as e:
-            self.log.error(f"Failed to generate CTI report: {e}")
+            self.log.error("Failed to generate CTI report: %s", e)
             raise
-    
-    async def _prepare_workspace_data(self, workspace: SpiderFootWorkspace) -> Dict[str, Any]:
+
+    async def _prepare_workspace_data(self, workspace: SpiderFootWorkspace) -> dict[str, Any]:
         """Prepare workspace data for MCP analysis.
-        
+
         Args:
             workspace: SpiderFoot workspace
-            
+
         Returns:
             Structured workspace data
         """
         # Export full workspace data
         workspace_export = workspace.export_data()
-        
+
         # Analyze and categorize findings
         categorized_data = {
             'workspace_info': workspace_export['workspace_info'],
@@ -147,7 +148,7 @@ class SpiderFootMCPClient:
             'data_leakage': [],
             'correlations': workspace.metadata.get('correlations', [])
         }
-        
+
         # Process each scan's results
         for scan_id, results in workspace_export['scan_results'].items():
             scan_summary = {
@@ -158,23 +159,23 @@ class SpiderFootMCPClient:
                 'medium_risk_events': [],
                 'threat_events': []
             }
-            
+
             # Categorize events
             for event in results:
                 event_type = event['type']
                 risk_level = event.get('risk', 0)
-                
+
                 # Count event types
                 if event_type not in scan_summary['event_types']:
                     scan_summary['event_types'][event_type] = 0
                 scan_summary['event_types'][event_type] += 1
-                
+
                 # Categorize by risk and type
                 if risk_level >= 8:
                     scan_summary['high_risk_events'].append(event)
                 elif risk_level >= 5:
                     scan_summary['medium_risk_events'].append(event)
-                
+
                 # Categorize specific event types
                 if self._is_threat_indicator(event_type):
                     categorized_data['threat_indicators'].append(event)
@@ -186,11 +187,11 @@ class SpiderFootMCPClient:
                     categorized_data['exposed_services'].append(event)
                 elif self._is_data_leakage(event_type):
                     categorized_data['data_leakage'].append(event)
-            
+
             categorized_data['scans_summary'].append(scan_summary)
-        
+
         return categorized_data
-    
+
     def _is_threat_indicator(self, event_type: str) -> bool:
         """Check if event type is a threat indicator."""
         threat_types = [
@@ -199,7 +200,7 @@ class SpiderFootMCPClient:
             'VULNERABILITY_CVE_CRITICAL'
         ]
         return event_type in threat_types
-    
+
     def _is_infrastructure_data(self, event_type: str) -> bool:
         """Check if event type is infrastructure data."""
         infra_types = [
@@ -207,7 +208,7 @@ class SpiderFootMCPClient:
             'WEBSERVER_TECHNOLOGY', 'OPERATING_SYSTEM', 'SSL_CERTIFICATE_ISSUED'
         ]
         return event_type in infra_types
-    
+
     def _is_vulnerability(self, event_type: str) -> bool:
         """Check if event type is a vulnerability."""
         vuln_types = [
@@ -216,7 +217,7 @@ class SpiderFootMCPClient:
             'VULNERABILITY_GENERAL', 'SOFTWARE_USED'
         ]
         return event_type in vuln_types
-    
+
     def _is_exposed_service(self, event_type: str) -> bool:
         """Check if event type is an exposed service."""
         service_types = [
@@ -224,7 +225,7 @@ class SpiderFootMCPClient:
             'WEBSERVER_HTTPHEADERS', 'CO_HOSTED_SITE'
         ]
         return event_type in service_types
-    
+
     def _is_data_leakage(self, event_type: str) -> bool:
         """Check if event type indicates data leakage."""
         leak_types = [
@@ -232,44 +233,44 @@ class SpiderFootMCPClient:
             'ACCOUNT_EXTERNAL_OWNED', 'LEAKSITE_CONTENT', 'DARKWEB_MENTION'
         ]
         return event_type in leak_types
-    
+
     async def _prepare_mcp_request(
-        self, 
-        workspace_data: Dict[str, Any], 
+        self,
+        workspace_data: dict[str, Any],
         template: dict,
         custom_prompt: str = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Prepare MCP request payload.
-        
+
         Args:
             workspace_data: Structured workspace data
             template: Report template
             custom_prompt: Custom prompt for analysis
-            
+
         Returns:
             MCP request payload
         """
         # Base prompt for CTI analysis
         base_prompt = f"""
-        You are a cybersecurity threat intelligence analyst. Analyze the provided OSINT data 
+        You are a cybersecurity threat intelligence analyst. Analyze the provided OSINT data
         and generate a comprehensive {template['name']}.
-        
+
         The report should include the following sections:
         {', '.join(template['sections'])}
-        
+
         Focus on:
         1. Actionable threat intelligence
         2. Risk assessment and prioritization
         3. Clear, professional language suitable for technical and management audiences
         4. Specific indicators of compromise (IOCs)
         5. Recommended security measures
-        
+
         Data to analyze:
         """
-        
+
         if custom_prompt:
             base_prompt = f"{base_prompt}\n\nAdditional instructions: {custom_prompt}"
-        
+
         # Prepare the request
         mcp_request = {
             'id': str(uuid.uuid4()),
@@ -284,15 +285,15 @@ class SpiderFootMCPClient:
                 'include_iocs': True
             }
         }
-        
+
         return mcp_request
-    
-    async def _send_mcp_request(self, request: Dict[str, Any]) -> Dict[str, Any]:
+
+    async def _send_mcp_request(self, request: dict[str, Any]) -> dict[str, Any]:
         """Send request to MCP server.
-        
+
         Args:
             request: MCP request payload
-            
+
         Returns:
             MCP server response
         """
@@ -300,10 +301,10 @@ class SpiderFootMCPClient:
             'Content-Type': 'application/json',
             'User-Agent': 'SpiderFoot-MCP-Client/1.0'
         }
-        
+
         if self.api_key:
             headers['Authorization'] = f'Bearer {self.api_key}'
-        
+
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             try:
                 response = await client.post(
@@ -313,45 +314,45 @@ class SpiderFootMCPClient:
                 )
                 response.raise_for_status()
                 return response.json()
-                
+
             except httpx.HTTPError as e:
-                self.log.error(f"HTTP error communicating with MCP server: {e}")
+                self.log.error("HTTP error communicating with MCP server: %s", e)
                 raise
             except Exception as e:
-                self.log.error(f"Error communicating with MCP server: {e}")
+                self.log.error("Error communicating with MCP server: %s", e)
                 raise
-    
+
     async def _process_mcp_response(
-        self, 
-        response: Dict[str, Any], 
+        self,
+        response: dict[str, Any],
         workspace: SpiderFootWorkspace,
         template: dict,
         report_type: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Process MCP server response into structured report.
-        
+
         Args:
             response: MCP server response
             workspace: SpiderFoot workspace
             template: Report template used
             report_type: Type of report generated
-            
+
         Returns:
             Structured CTI report
         """
         # Extract analysis result from MCP response
         if 'result' not in response:
             raise ValueError("Invalid MCP response: missing result")
-        
+
         analysis_result = response['result']
-        
+
         # Structure the CTI report
         cti_report = {
             'report_id': str(uuid.uuid4()),
             'workspace_id': workspace.workspace_id,
             'report_type': report_type,
             'template_used': template['name'],
-            'generated_time': datetime.utcnow().isoformat(),
+            'generated_time': datetime.now(timezone.utc).isoformat(),
             'metadata': {
                 'target_count': len(workspace.targets),
                 'scan_count': len(workspace.scans),
@@ -370,65 +371,69 @@ class SpiderFootMCPClient:
                 'data_sources': self._extract_data_sources(workspace)
             }
         }
-        
+
         return cti_report
-    
-    def _extract_data_sources(self, workspace: SpiderFootWorkspace) -> List[str]:
+
+    def _extract_data_sources(self, workspace: SpiderFootWorkspace) -> list[str]:
         """Extract data sources used in the workspace scans."""
         data_sources = set()
-        
+
         # Get modules used across all scans
         for scan in workspace.scans:
             scan_id = scan['scan_id']
             scan_events = workspace.db.scanResultEvent(scan_id, 'ALL')
-            
+
             for event in scan_events:
                 module = event[3]  # Module name
                 data_sources.add(module)
-        
+
         return sorted(list(data_sources))
-    
+
     async def _save_report_to_workspace(
-        self, 
-        workspace: SpiderFootWorkspace, 
-        report: Dict[str, Any]
+        self,
+        workspace: SpiderFootWorkspace,
+        report: dict[str, Any]
     ) -> None:
         """Save CTI report to workspace metadata.
-        
+
         Args:
             workspace: SpiderFoot workspace
             report: Generated CTI report
         """
         if 'cti_reports' not in workspace.metadata:
             workspace.metadata['cti_reports'] = []
-        
+
         # Add report to workspace metadata
         workspace.metadata['cti_reports'].append({
             'report_id': report['report_id'],
             'report_type': report['report_type'],
             'generated_time': report['generated_time'],
             'risk_rating': report['risk_rating'],
-            'summary': report['executive_summary'][:500] + '...' if len(report['executive_summary']) > 500 else report['executive_summary']
+            'summary': (
+                report['executive_summary'][:500] + '...'
+                if len(report['executive_summary']) > 500
+                else report['executive_summary']
+            )
         })
-        
+
         # Save full report separately (could be stored in files or separate table)
         workspace.metadata[f'cti_report_{report["report_id"]}'] = report
-        
+
         workspace.save_workspace()
-        
-        self.log.info(f"CTI report {report['report_id']} saved to workspace {workspace.workspace_id}")
-    
-    async def list_available_templates(self) -> Dict[str, dict]:
+
+        self.log.info("CTI report %s saved to workspace %s", report['report_id'], workspace.workspace_id)
+
+    async def list_available_templates(self) -> dict[str, dict]:
         """List available CTI report templates.
-        
+
         Returns:
             Available report templates
         """
         return self.report_templates
-    
+
     async def test_mcp_connection(self) -> bool:
         """Test connection to MCP server.
-        
+
         Returns:
             True if connection successful
         """
@@ -437,36 +442,37 @@ class SpiderFootMCPClient:
                 response = await client.get(f"{self.server_url}/health")
                 return response.status_code == 200
         except Exception as e:
-            self.log.error(f"MCP server connection test failed: {e}")
+            self.log.error("MCP server connection test failed: %s", e)
             return False
 
 
 class CTIReportExporter:
     """Export CTI reports in various formats."""
-    
-    def __init__(self):
+
+    def __init__(self) -> None:
+        """Initialize the CTIReportExporter."""
         self.log = logging.getLogger("spiderfoot.cti_exporter")
-    
+
     def export_report(
-        self, 
-        report: Dict[str, Any], 
+        self,
+        report: dict[str, Any],
         format: str = 'json',
         output_path: str = None
     ) -> str:
         """Export CTI report to specified format.
-        
+
         Args:
             report: CTI report data
             format: Export format ('json', 'pdf', 'docx', 'html')
             output_path: Output file path
-            
+
         Returns:
             Path to exported file
         """
         if not output_path:
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             output_path = f"cti_report_{report['report_id']}_{timestamp}.{format}"
-        
+
         if format == 'json':
             return self._export_json(report, output_path)
         elif format == 'html':
@@ -477,14 +483,14 @@ class CTIReportExporter:
             return self._export_docx(report, output_path)
         else:
             raise ValueError(f"Unsupported export format: {format}")
-    
-    def _export_json(self, report: Dict[str, Any], output_path: str) -> str:
+
+    def _export_json(self, report: dict[str, Any], output_path: str) -> str:
         """Export report as JSON."""
         with open(output_path, 'w', encoding='utf-8') as f:
             json.dump(report, f, indent=2, ensure_ascii=False)
         return output_path
-    
-    def _export_html(self, report: Dict[str, Any], output_path: str) -> str:
+
+    def _export_html(self, report: dict[str, Any], output_path: str) -> str:
         """Export report as HTML."""
         html_template = """
         <!DOCTYPE html>
@@ -510,22 +516,22 @@ class CTIReportExporter:
                 <p><strong>Risk Rating:</strong> {risk_rating}</p>
                 <p><strong>Workspace:</strong> {workspace_id}</p>
             </div>
-            
+
             <div class="section">
                 <h2>Executive Summary</h2>
                 <p>{executive_summary}</p>
             </div>
-            
+
             <div class="section">
                 <h2>Key Findings</h2>
                 {key_findings}
             </div>
-            
+
             <div class="section">
                 <h2>Indicators of Compromise</h2>
                 {iocs}
             </div>
-            
+
             <div class="section recommendations">
                 <h2>Recommendations</h2>
                 {recommendations}
@@ -533,23 +539,23 @@ class CTIReportExporter:
         </body>
         </html>
         """
-        
+
         # Format data for HTML
         key_findings_html = "<ul>"
         for finding in report.get('key_findings', []):
             key_findings_html += f"<li>{finding}</li>"
         key_findings_html += "</ul>"
-        
+
         iocs_html = "<ul>"
         for ioc in report.get('indicators_of_compromise', []):
             iocs_html += f"<li><code>{ioc}</code></li>"
         iocs_html += "</ul>"
-        
+
         recommendations_html = "<ul>"
         for rec in report.get('recommendations', []):
             recommendations_html += f"<li>{rec}</li>"
         recommendations_html += "</ul>"
-        
+
         html_content = html_template.format(
             title=f"CTI Report - {report.get('report_type', 'Unknown').replace('_', ' ').title()}",
             generated_time=report.get('generated_time', ''),
@@ -560,31 +566,31 @@ class CTIReportExporter:
             iocs=iocs_html,
             recommendations=recommendations_html
         )
-        
+
         with open(output_path, 'w', encoding='utf-8') as f:
             f.write(html_content)
         return output_path
-    
-    def _export_pdf(self, report: Dict[str, Any], output_path: str) -> str:
+
+    def _export_pdf(self, report: dict[str, Any], output_path: str) -> str:
         """Export report as PDF."""
         # This would require a PDF library like reportlab
         # For now, export as HTML and suggest conversion
         html_path = output_path.replace('.pdf', '.html')
         self._export_html(report, html_path)
-        
-        self.log.warning(f"PDF export not implemented. HTML version created at {html_path}")
+
+        self.log.warning("PDF export not implemented. HTML version created at %s", html_path)
         self.log.warning("Consider using wkhtmltopdf or similar tool to convert HTML to PDF")
-        
+
         return html_path
-    
-    def _export_docx(self, report: Dict[str, Any], output_path: str) -> str:
+
+    def _export_docx(self, report: dict[str, Any], output_path: str) -> str:
         """Export report as DOCX."""
         # This would require python-docx library
         # For now, export as HTML
         html_path = output_path.replace('.docx', '.html')
         self._export_html(report, html_path)
-        
-        self.log.warning(f"DOCX export not implemented. HTML version created at {html_path}")
+
+        self.log.warning("DOCX export not implemented. HTML version created at %s", html_path)
         self.log.warning("Consider using pandoc or python-docx to convert HTML to DOCX")
-        
+
         return html_path

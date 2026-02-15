@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: _stor_db."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_stor_db
@@ -11,16 +15,18 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
+import logging
+
 try:
     import psycopg2
     HAS_PSYCOPG2 = True
 except ImportError:
     HAS_PSYCOPG2 = False
 
-from spiderfoot import SpiderFootPlugin
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp__stor_db(SpiderFootPlugin):
+class sfp__stor_db(SpiderFootModernPlugin):
     """SpiderFoot plug-in for storing events to the configured database
     backend.
 
@@ -81,14 +87,14 @@ class sfp__stor_db(SpiderFootPlugin):
         'collect_metrics': "Enable metrics collection (enterprise feature)"
     }
 
-    def setup(self, sfc, userOpts=dict()):
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module with user options.
 
         Args:
             sfc: SpiderFoot instance
             userOpts (dict): User options
         """
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
         self.errorState = False
         self.pg_conn = None
         
@@ -99,10 +105,6 @@ class sfp__stor_db(SpiderFootPlugin):
             return
             
         self.__sfdb__ = self.sf.dbh
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
         # Validate configuration
         if not self._validateConfig():
             self.errorState = True
@@ -178,10 +180,10 @@ class sfp__stor_db(SpiderFootPlugin):
             cursor.fetchone()
             cursor.close()
             return True
-        except:
+        except Exception as e:
             return False
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """Define the events this module is interested in for input.
 
         Returns:
@@ -189,7 +191,7 @@ class sfp__stor_db(SpiderFootPlugin):
         """
         return ["*"]
 
-    def handleEvent(self, sfEvent):
+    def handleEvent(self, sfEvent: SpiderFootEvent) -> None:
         """Handle events sent to this module.
 
         Args:
@@ -224,15 +226,33 @@ class sfp__stor_db(SpiderFootPlugin):
         if not self.__sfdb__:
             self.error("Database handle not available for SQLite storage")
             return
-            
-        if self.opts['maxstorage'] != 0 and len(sfEvent.data) > self.opts['maxstorage']:
-            self.debug("Storing an event: " + sfEvent.eventType)
-            self.__sfdb__.scanEventStore(
-                self.getScanId(), sfEvent, self.opts['maxstorage'])
-            return
 
-        self.debug("Storing an event: " + sfEvent.eventType)
-        self.__sfdb__.scanEventStore(self.getScanId(), sfEvent)
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                if self.opts['maxstorage'] != 0 and len(sfEvent.data) > self.opts['maxstorage']:
+                    self.debug("Storing an event: " + sfEvent.eventType)
+                    self.__sfdb__.scanEventStore(
+                        self.getScanId(), sfEvent, self.opts['maxstorage'])
+                    return
+
+                self.debug("Storing an event: " + sfEvent.eventType)
+                self.__sfdb__.scanEventStore(self.getScanId(), sfEvent)
+                return
+            except Exception as e:
+                err_msg = str(e)
+                if "database is locked" in err_msg and attempt < max_retries - 1:
+                    import time as _time
+                    _time.sleep(0.1 * (attempt + 1))
+                    continue
+                import traceback
+                self.error(f"_store_sqlite failed for event type={sfEvent.eventType} "
+                           f"module={sfEvent.module} hash={sfEvent.hash} "
+                           f"generated={sfEvent.generated} data_len={len(sfEvent.data) if sfEvent.data else 0}: "
+                           f"{type(e).__name__}: {e}")
+                self.error(f"Full traceback: {traceback.format_exc()}")
+                # Do NOT re-raise — keep sfp__stor_db alive for subsequent events
+                return
 
     def _store_postgresql(self, sfEvent):
         """Store the event in the PostgreSQL database.
@@ -277,7 +297,7 @@ class sfp__stor_db(SpiderFootPlugin):
             if self.pg_conn:
                 try:
                     self.pg_conn.rollback()
-                except:
+                except (OSError, psycopg2.Error):
                     pass
             # Fall back to SQLite storage
             self.debug("Falling back to SQLite storage")
@@ -290,7 +310,6 @@ class sfp__stor_db(SpiderFootPlugin):
                 self.pg_conn.close()
                 self.debug("PostgreSQL connection closed")
             except Exception as e:
-                # Use print since self.debug may not be available during destruction
-                print(f"Error closing PostgreSQL connection: {e}")
+                logging.getLogger(__name__).debug("Error closing PostgreSQL connection: %s", e)
 
 # End of sfp__stor_db class

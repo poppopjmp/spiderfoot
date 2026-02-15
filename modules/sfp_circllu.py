@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: circllu."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_circllu
@@ -15,12 +19,13 @@ import json
 import re
 import time
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_circllu(SpiderFootPlugin):
-
-    meta = {
+class sfp_circllu(SpiderFootModernPlugin):
+    """SpiderFoot plugin to obtain information from CIRCL.LU's Passive DNS and Passive SSL databases."""
+    meta = {    
         'name': "CIRCL.LU",
         'summary': "Obtain information from CIRCL.LU's Passive DNS and Passive SSL databases.",
         'flags': ["apikey"],
@@ -79,26 +84,26 @@ class sfp_circllu(SpiderFootPlugin):
     errorState = False
     cohostcount = 0
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.cohostcount = 0
 
         # Clear / reset any other class member variables here
         # or you risk them persisting between threads.
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["INTERNET_NAME", "NETBLOCK_OWNER", "IP_ADDRESS", "DOMAIN_NAME"]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["IP_ADDRESS", "SSL_CERTIFICATE_ISSUED", "CO_HOSTED_SITE"]
 
-    def query(self, qry, qtype):
+    def query(self, qry: str, qtype: str):
+        """Query the data source."""
         if self.errorState:
             return None
 
@@ -115,7 +120,7 @@ class sfp_circllu(SpiderFootPlugin):
         }
 
         # Be more forgiving with the timeout as some queries for subnets can be slow
-        res = self.sf.fetchUrl(url, timeout=30,
+        res = self.fetch_url(url, timeout=30,
                                useragent="SpiderFoot", headers=headers)
 
         if res['code'] not in ["200", "201"]:
@@ -131,7 +136,8 @@ class sfp_circllu(SpiderFootPlugin):
         return res['content']
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

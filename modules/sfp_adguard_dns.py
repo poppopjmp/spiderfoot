@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: adguard_dns."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:        sfp_adguard_dns
@@ -13,11 +17,12 @@
 
 import dns.resolver
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_adguard_dns(SpiderFootPlugin):
-
+class sfp_adguard_dns(SpiderFootModernPlugin):
+    """SpiderFoot plug-in for looking up whether hosts are blocked by AdGuard DNS servers."""
     meta = {
         'name': "AdGuard DNS",
         'summary': "Check if a host would be blocked by AdGuard DNS.",
@@ -46,50 +51,52 @@ class sfp_adguard_dns(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             "INTERNET_NAME",
             "AFFILIATE_INTERNET_NAME",
             "CO_HOSTED_SITE"
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "BLACKLISTED_INTERNET_NAME",
             "BLACKLISTED_AFFILIATE_INTERNET_NAME",
             "BLACKLISTED_COHOST",
         ]
 
-    def queryDefaultDNS(self, qaddr):
+    def queryDefaultDNS(self, qaddr: str):
+        """Query DefaultDNS."""
         res = dns.resolver.Resolver()
         res.nameservers = ["94.140.14.14", "94.140.15.15"]
 
         try:
             return res.resolve(qaddr)
-        except Exception:
+        except Exception as e:
             self.debug(f"Unable to resolve {qaddr}")
 
         return None
 
-    def queryFamilyDNS(self, qaddr):
+    def queryFamilyDNS(self, qaddr: str):
+        """Query FamilyDNS."""
         res = dns.resolver.Resolver()
         res.nameservers = ["94.140.14.15", "94.140.15.16"]
 
         try:
             return res.resolve(qaddr)
-        except Exception:
+        except Exception as e:
             self.debug(f"Unable to resolve {qaddr}")
 
         return None
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 

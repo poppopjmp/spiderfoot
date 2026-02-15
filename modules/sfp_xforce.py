@@ -11,6 +11,10 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: xforce."""
+
 import base64
 import json
 import time
@@ -18,10 +22,13 @@ from datetime import datetime
 
 from netaddr import IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_xforce(SpiderFootPlugin):
+class sfp_xforce(SpiderFootModernPlugin):
+
+    """Obtain IP reputation and passive DNS information from IBM X-Force Exchange."""
 
     meta = {
         'name': "XForce Exchange",
@@ -90,15 +97,13 @@ class sfp_xforce(SpiderFootPlugin):
     errorState = False
     cohostcount = 0
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.cohostcount = 0
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             'IP_ADDRESS',
             'AFFILIATE_IPADDR',
@@ -110,7 +115,8 @@ class sfp_xforce(SpiderFootPlugin):
             "NETBLOCKV6_OWNER",
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "BLACKLISTED_IPADDR",
             "BLACKLISTED_AFFILIATE_IPADDR",
@@ -127,7 +133,8 @@ class sfp_xforce(SpiderFootPlugin):
             "RAW_RIR_DATA",
         ]
 
-    def query(self, qry, querytype):
+    def query(self, qry: str, querytype: str) -> dict:
+        """Query the data source."""
         if querytype not in ["ipr/malware", "ipr/history", "resolve"]:
             querytype = "ipr/malware"
 
@@ -146,14 +153,15 @@ class sfp_xforce(SpiderFootPlugin):
             'Authorization': "Basic " + token.decode('utf-8')
         }
         url = xforce_url + "/" + querytype + "/" + qry
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             url, timeout=self.opts['_fetchtimeout'], useragent="SpiderFoot", headers=headers)
 
         return self.parseApiResponse(res)
 
     # Parse API Response from X-Force Exchange
     # https://exchange.xforce.ibmcloud.com/api/doc/
-    def parseApiResponse(self, res: dict):
+    def parseApiResponse(self, res: dict) -> dict | None:
+        """Parse ApiResponse."""
         if not res:
             self.error("No response from X-Force Exchange.")
             return None
@@ -203,7 +211,8 @@ class sfp_xforce(SpiderFootPlugin):
 
         return None
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 
@@ -377,7 +386,7 @@ class sfp_xforce(SpiderFootPlugin):
                         self.notifyListeners(e)
 
         # For IP addresses, do the additional passive DNS lookup
-        # TODO: Add this to the loop above to support netblocks
+        # NOTE: netblock passive DNS lookup is handled separately below
         if eventName in ["IP_ADDRESS", "IPV6_ADDRESS"]:
             if self.cohostcount >= self.opts['maxcohost']:
                 return
@@ -433,7 +442,7 @@ class sfp_xforce(SpiderFootPlugin):
 
                     if not self.opts["cohostsamedomain"]:
                         if self.getTarget().matches(host, includeParents=True):
-                            if self.sf.resolveHost(host) or self.sf.resolveHost6(host):
+                            if self.resolve_host(host) or self.resolve_host6(host):
                                 e = SpiderFootEvent(
                                     "INTERNET_NAME", host, self.__name__, event)
                             else:

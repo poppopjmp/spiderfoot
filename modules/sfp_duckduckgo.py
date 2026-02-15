@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: duckduckgo."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_duckduckgo
@@ -12,11 +16,12 @@
 
 import json
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_duckduckgo(SpiderFootPlugin):
-
+class sfp_duckduckgo(SpiderFootModernPlugin):
+    """DuckDuckGo plugin for querying DuckDuckGo's API."""
     meta = {
         'name': "DuckDuckGo",
         'summary': "Query DuckDuckGo's API for descriptive information about your target.",
@@ -50,27 +55,27 @@ class sfp_duckduckgo(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME", "DOMAIN_NAME_PARENT",
                 "INTERNET_NAME", "AFFILIATE_INTERNET_NAME"]
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["DESCRIPTION_CATEGORY", "DESCRIPTION_ABSTRACT",
                 "AFFILIATE_DESCRIPTION_CATEGORY",
                 "AFFILIATE_DESCRIPTION_ABSTRACT"]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 
@@ -87,7 +92,7 @@ class sfp_duckduckgo(SpiderFootPlugin):
         self.results[eventData] = True
 
         url = "https://api.duckduckgo.com/?q=" + eventData + "&format=json&pretty=1"
-        res = self.sf.fetchUrl(url, timeout=self.opts['_fetchtimeout'],
+        res = self.fetch_url(url, timeout=self.opts['_fetchtimeout'],
                                useragent="SpiderFoot")
 
         if res['content'] is None:

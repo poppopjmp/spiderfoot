@@ -11,6 +11,7 @@ To install as a git hook:
 To run manually:
     python version_check_hook.py
 """
+from __future__ import annotations
 
 import subprocess
 import sys

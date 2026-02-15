@@ -5,7 +5,7 @@ Version:        %{version}
 Release:        1%{?dist}
 Summary:        Open source OSINT automation tool for threat intelligence and reconnaissance
 License:        GPLv3+
-URL:            https://github.com/smicallef/spiderfoot
+URL:            https://github.com/poppopjmp/spiderfoot
 Source0:        %{name}-%{version}.tar.gz
 BuildArch:      noarch
 BuildRequires:  python3-devel, python3-setuptools
@@ -36,8 +36,6 @@ cp -r spiderfoot/* %{buildroot}%{python3_sitelib}/spiderfoot/
 cp sf.py %{buildroot}%{python3_sitelib}/
 cp sfcli.py %{buildroot}%{python3_sitelib}/
 cp sfapi.py %{buildroot}%{python3_sitelib}/
-cp sflib.py %{buildroot}%{python3_sitelib}/
-cp sfscan.py %{buildroot}%{python3_sitelib}/
 cp sfwebui.py %{buildroot}%{python3_sitelib}/
 
 
@@ -51,8 +49,6 @@ cp sfwebui.py %{buildroot}%{python3_sitelib}/
 %{python3_sitelib}/sf.py
 %{python3_sitelib}/sfcli.py
 %{python3_sitelib}/sfapi.py
-%{python3_sitelib}/sflib.py
-%{python3_sitelib}/sfscan.py
 %{python3_sitelib}/sfwebui.py
 
 

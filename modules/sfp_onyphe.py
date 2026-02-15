@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: onyphe."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_onyphe
@@ -15,10 +19,13 @@ import json
 import time
 from datetime import datetime
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_onyphe(SpiderFootPlugin):
+class sfp_onyphe(SpiderFootModernPlugin):
+
+    """Check Onyphe data (threat list, geo-location, pastries, vulnerabilities)  about a given IP."""
 
     meta = {
         "name": "Onyphe",
@@ -73,19 +80,18 @@ class sfp_onyphe(SpiderFootPlugin):
     errorState = False
     cohostcount = 0
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["IP_ADDRESS", "IPV6_ADDRESS"]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "GEOINFO",
             "MALICIOUS_IPADDR",
@@ -101,14 +107,15 @@ class sfp_onyphe(SpiderFootPlugin):
             "PHYSICAL_COORDINATES",
         ]
 
-    def query(self, endpoint, ip, page=1):
+    def query(self, endpoint: str, ip: str, page: int = 1) -> list | None:
+        """Query the data source."""
         retarr = list()
 
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"apikey {self.opts['api_key']}",
         }
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://www.onyphe.io/api/v2/simple/{endpoint}/{ip}?page={page}",
             timeout=self.opts["_fetchtimeout"],
             useragent=self.opts["_useragent"],
@@ -173,7 +180,8 @@ class sfp_onyphe(SpiderFootPlugin):
 
         return retarr
 
-    def emitLocationEvent(self, location, eventData, event):
+    def emitLocationEvent(self, location: dict, eventData: str, event: SpiderFootEvent) -> None:
+        """EmitLocationEvent."""
         if location is None:
             return
         self.info(f"Found location for {eventData}: {location}")
@@ -182,7 +190,8 @@ class sfp_onyphe(SpiderFootPlugin):
                               location, self.__name__, event)
         self.notifyListeners(evt)
 
-    def emitDomainData(self, response, eventData, event):
+    def emitDomainData(self, response: dict, eventData: str, event: SpiderFootEvent) -> None:
+        """EmitDomainData."""
         domains = set()
         if response.get("domain") is not None and isinstance(
             response['domain'], list
@@ -199,7 +208,7 @@ class sfp_onyphe(SpiderFootPlugin):
         for domain in domains:
             if self.getTarget().matches(domain):
                 if self.opts['verify']:
-                    if self.sf.resolveHost(domain) or self.sf.resolveHost6(domain):
+                    if self.resolve_host(domain) or self.resolve_host6(domain):
                         evt = SpiderFootEvent(
                             'INTERNET_NAME', domain, self.__name__, event)
                     else:
@@ -228,7 +237,8 @@ class sfp_onyphe(SpiderFootPlugin):
                 self.notifyListeners(evt)
                 self.cohostcount += 1
 
-    def isFreshEnough(self, result):
+    def isFreshEnough(self, result: dict) -> bool:
+        """IsFreshEnough."""
         limit = self.opts["age_limit_days"]
         if limit <= 0:
             return True
@@ -249,7 +259,8 @@ class sfp_onyphe(SpiderFootPlugin):
         return True
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

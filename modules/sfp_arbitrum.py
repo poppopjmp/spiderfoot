@@ -1,6 +1,12 @@
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent
+from __future__ import annotations
 
-class sfp_arbitrum(SpiderFootPlugin):
+"""SpiderFoot plug-in module: arbitrum."""
+
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+
+class sfp_arbitrum(SpiderFootModernPlugin):
+    """Monitors Arbitrum blockchain for transactions and emits events."""
     meta = {
         'name': "Arbitrum Blockchain Monitor",
         'summary': "Monitors Arbitrum blockchain for transactions and emits events.",
@@ -40,10 +46,11 @@ class sfp_arbitrum(SpiderFootPlugin):
         "output_format": "Output format: summary (default) or full."
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
-        self.debug("[setup] Options: {}".format(self.opts))
+        self.debug(f"[setup] Options: {self.opts}")
         # Option validation
         if not self.opts.get("api_key"):
             self.error("[setup] API key is required.")
@@ -58,13 +65,15 @@ class sfp_arbitrum(SpiderFootPlugin):
             self.error("[setup] output_format must be 'summary' or 'full'.")
             raise ValueError("output_format must be 'summary' or 'full'.")
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["ROOT"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["ARBITRUM_ADDRESS", "ARBITRUM_TX"]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """
         Handle ROOT event and monitor Arbitrum blockchain for transactions for configured addresses.
         Emits ARBITRUM_TX and ARBITRUM_ADDRESS events for each relevant transaction found.
@@ -136,5 +145,6 @@ class sfp_arbitrum(SpiderFootPlugin):
             except Exception as e:
                 self.error(f"[handleEvent] Error fetching Arbitrum transactions for {address}: {e}")
 
-    def shutdown(self):
+    def shutdown(self) -> None:
+        """Shutdown."""
         self.debug("[shutdown] Shutting down Arbitrum module.")

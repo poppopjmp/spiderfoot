@@ -1,9 +1,14 @@
+from __future__ import annotations
+
+"""Tests for sfp_openbugbounty module."""
+
 import pytest
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch
 
 from modules.sfp_openbugbounty import sfp_openbugbounty
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent
 
 
@@ -14,7 +19,7 @@ class DummyEventListener:
     def notifyListeners(self, event):
         self.events.append(event)
 
-class TestModuleIntegrationOpenbugbounty(unittest.TestCase):
+class TestModuleIntegrationOpenbugbounty(TestModuleBase):
     def setUp(self):
         self.options = {
             '_useragent': 'SpiderFootTestAgent',
@@ -27,7 +32,7 @@ class TestModuleIntegrationOpenbugbounty(unittest.TestCase):
         self.listener = DummyEventListener()
         self.module.notifyListeners = self.listener.notifyListeners
 
-    @patch('sflib.SpiderFoot.fetchUrl')
+    @patch('spiderfoot.sflib.SpiderFoot.fetchUrl')
     def test_handleEvent_emits_vulnerability_disclosure(self, mock_fetch):
         # Simulate HTML response containing a match for the test domain
         test_domain = 'example.com'

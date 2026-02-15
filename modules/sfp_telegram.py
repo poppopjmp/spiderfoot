@@ -1,5 +1,9 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: telegram."""
+
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugin import SpiderFootPlugin
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 import time
 import threading
 
@@ -8,7 +12,9 @@ try:
 except ImportError:
     TelegramClient = None
 
-class sfp_telegram(SpiderFootPlugin):
+class sfp_telegram(SpiderFootModernPlugin):
+    """Monitors specified Telegram channels for new messages and emits events."""
+
     meta = {
         'name': "Telegram Channel Monitor",
         'summary': "Monitors specified Telegram channels for new messages and emits events.",
@@ -39,14 +45,16 @@ class sfp_telegram(SpiderFootPlugin):
         "severity_keywords": "Comma-separated keyword:severity pairs (e.g. phishing:high,scam:medium) for tagging events."
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize the sfp telegram."""
         super().__init__()
         self._stop_event = threading.Event()
         self._client = None
         self._last_message_ids = {}
         self._emitted_message_ids = set()  # For deduplication
 
-    def setup(self, sfc, userOpts=dict()):
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
         super().setup(sfc, userOpts)
         if not TelegramClient:
             self.error("telethon library is not installed. Please add it to requirements.txt.")
@@ -62,7 +70,8 @@ class sfp_telegram(SpiderFootPlugin):
             return False
         return True
 
-    def start(self):
+    def start(self) -> None:
+        """Start the module."""
         if self.errorState:
             return
         api_id = self.opts.get("api_id")
@@ -139,17 +148,21 @@ class sfp_telegram(SpiderFootPlugin):
                         self.error(f"Error fetching messages from {channel}: {e}")
                 time.sleep(poll_interval)
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["ROOT"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["TELEGRAM_MESSAGE"]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         # This module is passive and does not process incoming events
+        """Handle an event received by this module."""
         pass
 
-    def finish(self):
+    def finish(self) -> None:
+        """Finish."""
         self._stop_event.set()
         if hasattr(self, "_thread") and self._thread.is_alive():
             self._thread.join(timeout=5)

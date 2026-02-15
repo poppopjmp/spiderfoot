@@ -1,13 +1,17 @@
+from __future__ import annotations
+
+"""Tests for sfp_dnsbrute module."""
+
 import pytest
 import unittest
 
 from modules.sfp_dnsbrute import sfp_dnsbrute
-from sflib import SpiderFoot
-from test.unit.utils.test_base import SpiderFootTestBase
+from spiderfoot.sflib import SpiderFoot
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModuleDnsBrute(SpiderFootTestBase):
+class TestModuleDnsBrute(TestModuleBase):
 
     def test_opts(self):
         module = sfp_dnsbrute()

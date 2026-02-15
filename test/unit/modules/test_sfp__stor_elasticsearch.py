@@ -1,16 +1,20 @@
+from __future__ import annotations
+
+"""Tests for sfp__stor_elasticsearch module."""
+
 # filepath: spiderfoot/test/unit/modules/test_sfp__stor_elasticsearch.py
 from unittest.mock import patch, MagicMock, Mock
 import unittest
 import threading
 from elasticsearch import Elasticsearch, ConnectionError
-from sflib import SpiderFoot
-from spiderfoot.event import SpiderFootEvent
+from spiderfoot.sflib import SpiderFoot
+from spiderfoot.events.event import SpiderFootEvent
 from modules.sfp__stor_elasticsearch import sfp__stor_elasticsearch
-from test.unit.utils.test_base import SpiderFootTestBase
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModuleStorElasticsearch(SpiderFootTestBase):
+class TestModuleStorElasticsearch(TestModuleBase):
     """Comprehensive test suite for enhanced Elasticsearch storage module.
     
     Tests all enterprise-grade features including:

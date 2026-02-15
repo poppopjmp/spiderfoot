@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: customfeed."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_customfeed
@@ -15,7 +19,8 @@ import re
 
 from netaddr import IPAddress, IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 malchecks = {
     'Custom Threat Data': {
@@ -26,8 +31,8 @@ malchecks = {
 }
 
 
-class sfp_customfeed(SpiderFootPlugin):
-
+class sfp_customfeed(SpiderFootModernPlugin):
+    """SpiderFoot plugin to check if a host/domain, netblock, ASN or IP is malicious according to your custom feed."""
     meta = {
         'name': "Custom Threat Feed",
         'summary': "Check if a host/domain, netblock, ASN or IP is malicious according to your custom feed.",
@@ -58,33 +63,33 @@ class sfp_customfeed(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
 
         # Clear / reset any other class member variables here
         # or you risk them persisting between threads.
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
     # * = be notified about all events.
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["INTERNET_NAME", "IP_ADDRESS", "AFFILIATE_INTERNET_NAME",
                 "AFFILIATE_IPADDR", "CO_HOSTED_SITE"]
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["MALICIOUS_IPADDR", "MALICIOUS_INTERNET_NAME",
                 "MALICIOUS_AFFILIATE_IPADDR", "MALICIOUS_AFFILIATE_INTERNET_NAME",
                 "MALICIOUS_COHOST"]
 
     # Look up 'list' type resources
-    def resourceList(self, replaceme_id, target, targetType):
+    def resourceList(self, replaceme_id: str, target: str, targetType: str) -> str | None:
+        """ResourceList."""
         targetDom = ''
         # Get the base domain if we're supplied a domain
         if targetType == "domain":
@@ -97,15 +102,15 @@ class sfp_customfeed(SpiderFootPlugin):
             url = self.opts['url']
             if replaceme_id == cid:
                 data = dict()
-                data['content'] = self.sf.cacheGet(
+                data['content'] = self.cache_get(
                     "sfmal_" + cid, self.opts.get('cacheperiod', 0))
                 if data['content'] is None:
-                    data = self.sf.fetchUrl(
+                    data = self.fetch_url(
                         url, timeout=self.opts['_fetchtimeout'], useragent=self.opts['_useragent'])
                     if data['content'] is None:
                         self.error("Unable to fetch " + url)
                         return None
-                    self.sf.cachePut("sfmal_" + cid, data['content'])
+                    self.cache_put("sfmal_" + cid, data['content'])
 
                 # If we're looking at netblocks
                 if targetType == "netblock":
@@ -167,7 +172,8 @@ class sfp_customfeed(SpiderFootPlugin):
 
         return None
 
-    def lookupItem(self, resourceId, itemType, target):
+    def lookupItem(self, resourceId: str, itemType: str, target: str):
+        """Look up Item."""
         for check in list(malchecks.keys()):
             cid = malchecks[check]['id']
             if cid == resourceId and itemType in malchecks[check]['checks']:
@@ -178,7 +184,8 @@ class sfp_customfeed(SpiderFootPlugin):
         return None
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

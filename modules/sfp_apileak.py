@@ -1,9 +1,15 @@
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: apileak."""
+
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 import requests
 import re
 import base64
 
-class sfp_apileak(SpiderFootPlugin):
+class sfp_apileak(SpiderFootModernPlugin):
+    """Searches for leaked API keys and secrets on GitHub and paste sites."""
     meta = {
         'name': "API Key/Secret Leak Detector",
         'summary': "Searches for leaked API keys and secrets on GitHub and paste sites.",
@@ -36,8 +42,9 @@ class sfp_apileak(SpiderFootPlugin):
         "max_results": "Max search results per query."
     }
 
-    def setup(self, sfc, userOpts: dict = dict()) -> None:
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
         # Support multiple patterns (comma-separated or list)
         patterns = self.opts["search_patterns"]
@@ -50,10 +57,12 @@ class sfp_apileak(SpiderFootPlugin):
         else:
             self.patterns = []
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME", "EMAILADDR", "ORG_NAME"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["CREDENTIAL_LEAK", "API_KEY_LEAK"]
 
     def handleEvent(self, event: 'SpiderFootEvent') -> None:
@@ -110,7 +119,7 @@ class sfp_apileak(SpiderFootPlugin):
                                 content = file_resp.json().get("content", "")
                                 try:
                                     decoded = base64.b64decode(content).decode(errors='ignore')
-                                except Exception:
+                                except Exception as e:
                                     decoded = content
                                 for pattern in self.patterns:
                                     for match in pattern.findall(decoded):

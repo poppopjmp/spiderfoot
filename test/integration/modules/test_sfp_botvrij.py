@@ -1,14 +1,19 @@
+from __future__ import annotations
+
+"""Tests for sfp_botvrij module."""
+
 import pytest
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch
 
 from modules.sfp_botvrij import sfp_botvrij
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
 
-class TestModuleIntegrationBotvrij(unittest.TestCase):
+class TestModuleIntegrationBotvrij(TestModuleBase):
     def setUp(self):
         self.sf = SpiderFoot({
             '_fetchtimeout': 5,
@@ -27,7 +32,11 @@ class TestModuleIntegrationBotvrij(unittest.TestCase):
         self.module.notifyListeners = self.events.append
 
     @patch.object(SpiderFoot, 'fetchUrl')
-    def test_handleEvent_internet_name_blacklisted(self, mock_fetch):
+    @patch.object(SpiderFoot, 'cacheGet')
+    def test_handleEvent_internet_name_blacklisted(self, mock_cache_get, mock_fetch):
+        # Ensure no cached data to force fresh fetch
+        mock_cache_get.return_value = None
+        
         # Simulate blocklist containing 'malicious.com'
         blocklist = 'malicious.com\nbenign.com\n'
         mock_fetch.return_value = {'code': '200', 'content': blocklist}

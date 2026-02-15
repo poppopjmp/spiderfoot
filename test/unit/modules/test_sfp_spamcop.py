@@ -1,13 +1,17 @@
+from __future__ import annotations
+
+"""Tests for sfp_spamcop module."""
+
 import pytest
 import unittest
 
 from modules.sfp_spamcop import sfp_spamcop
-from sflib import SpiderFoot
-from test.unit.utils.test_base import SpiderFootTestBase
+from spiderfoot.sflib import SpiderFoot
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModuleSpamcop(SpiderFootTestBase):
+class TestModuleSpamcop(TestModuleBase):
 
     def test_opts(self):
         module = sfp_spamcop()

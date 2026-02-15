@@ -1,8 +1,14 @@
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: bluesky."""
+
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 import json
 import requests
 
-class sfp_bluesky(SpiderFootPlugin):
+class sfp_bluesky(SpiderFootModernPlugin):
+    """SpiderFoot plugin to monitor Bluesky for posts and emit events."""
     meta = {
         'name': "Bluesky Monitor",
         'summary': "Monitors Bluesky for posts and emits events.",
@@ -38,8 +44,9 @@ class sfp_bluesky(SpiderFootPlugin):
         "output_format": "Output format: summary (default) or full."
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
         self.debug(f"[setup] Options: {self.opts}")
         # Option validation
@@ -56,13 +63,15 @@ class sfp_bluesky(SpiderFootPlugin):
             self.error("[setup] output_format must be 'summary' or 'full'.")
             raise ValueError("output_format must be 'summary' or 'full'.")
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["INTERNET_NAME", "ROOT"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["BLUESKY_POST"]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """
         Handle event: fetch Bluesky posts for the configured username and emit BLUESKY_POST events.
         """
@@ -117,5 +126,6 @@ class sfp_bluesky(SpiderFootPlugin):
             self.notifyListeners(evt)
         return None
 
-    def shutdown(self):
+    def shutdown(self) -> None:
+        """Shutdown."""
         self.debug("[shutdown] Shutting down Bluesky module.")

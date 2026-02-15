@@ -1,0 +1,818 @@
+# -------------------------------------------------------------------------------
+# Name:         Modular SpiderFoot Scanner
+# Purpose:      Common functions for working with the scanning process.
+#
+# Author:      Agostino Panico @poppopjmp
+#
+# Created:     30/06/2025
+# Copyright:   (c) Agostino Panico 2025
+# Licence:     MIT
+# -------------------------------------------------------------------------------
+from __future__ import annotations
+
+"""Core scan orchestration including module loading, event processing, and scan lifecycle management."""
+
+import socket
+import time
+import queue
+from typing import Any
+from time import sleep
+from copy import deepcopy
+from contextlib import suppress
+from collections import OrderedDict
+
+import dns.resolver
+
+from spiderfoot.sflib import SpiderFoot
+
+# ThreadReaper infrastructure for automatic resource management
+try:
+    from test.unit.utils.thread_registry import get_test_thread_registry
+    from test.unit.utils.resource_manager import get_test_resource_manager
+    _THREADREAPER_AVAILABLE = True
+except ImportError:
+    _THREADREAPER_AVAILABLE = False
+from spiderfoot import SpiderFootEvent, SpiderFootPlugin, SpiderFootTarget, SpiderFootHelpers, SpiderFootThreadPool
+from spiderfoot.observability.logger import logWorkerSetup
+from spiderfoot import SpiderFootDb
+from spiderfoot.scan.scan_state_map import (
+    DB_STATUS_ABORT_REQUESTED,
+    DB_STATUS_ABORTED,
+    DB_STATUS_ERROR_FAILED,
+    DB_STATUS_FINISHED,
+    DB_STATUS_RUNNING,
+    DB_STATUS_STARTED,
+    DB_STATUS_STARTING,
+)
+
+import logging
+log = logging.getLogger("spiderfoot.scanner")
+
+
+def startSpiderFootScanner(loggingQueue: Any, *args, **kwargs) -> SpiderFootScanner:
+    """Initialize and start the SpiderFootScanner.
+
+    Args:
+        loggingQueue (Queue): Queue for logging events
+        *args: Additional arguments for SpiderFootScanner
+        **kwargs: Additional keyword arguments for SpiderFootScanner
+
+    Returns:
+        SpiderFootScanner: Initialized SpiderFootScanner object
+    """
+    # Ensure modules directory is in Python path for dynamic imports
+    import sys
+    import os
+    modules_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'modules')
+    modules_dir = os.path.abspath(modules_dir)
+    if modules_dir not in sys.path:
+        sys.path.insert(0, modules_dir)
+    logWorkerSetup(loggingQueue)
+    return SpiderFootScanner(*args, **kwargs)
+
+
+class SpiderFootScanner():
+    """SpiderFootScanner object.
+
+    Attributes:
+        scanId (str): unique ID of the scan
+        status (str): status of the scan
+    """
+
+    def __init__(
+        self,
+        scanName: str,
+        scanId: str,
+        targetValue: str,
+        targetType: str,
+        moduleList: list,
+        globalOpts: dict,
+        start: bool = True,
+    ) -> None:
+        """Initialize the scanner with target details, modules, and global options."""
+        # Instance attribute initialization (moved from class-level)
+        self.__scanId = None
+        self.__status = None
+        self.__config = None
+        self.__sf = None
+        self.__dbh = None
+        self.__targetValue = None
+        self.__targetType = None
+        self.__moduleList = []
+        self.__target = None
+        self.__moduleInstances = {}
+        self.__modconfig = {}
+        self.__scanName = None
+
+        if not isinstance(globalOpts, dict):
+            raise TypeError(
+                f"globalOpts is {type(globalOpts)}; expected dict()")
+        if not globalOpts:
+            raise ValueError("globalOpts is empty")
+
+        self.__config = deepcopy(globalOpts)
+        self.__dbh = SpiderFootDb(self.__config)
+
+        if not isinstance(scanName, str):
+            raise TypeError(f"scanName is {type(scanName)}; expected str()")
+        if not scanName:
+            raise ValueError("scanName value is blank")
+
+        self.__scanName = scanName
+
+        if not isinstance(scanId, str):
+            raise TypeError(f"scanId is {type(scanId)}; expected str()")
+        if not scanId:
+            raise ValueError("scanId value is blank")
+
+        self.__scanId = scanId
+
+        if not isinstance(targetValue, str):
+            raise TypeError(
+                f"targetValue is {type(targetValue)}; expected str()")
+        if not targetValue:
+            raise ValueError("targetValue value is blank")
+
+        self.__targetValue = targetValue
+
+        if not isinstance(targetType, str):
+            raise TypeError(
+                f"targetType is {type(targetType)}; expected str()")
+        if not targetType:
+            raise ValueError("targetType value is blank")
+
+        self.__targetType = targetType
+        if not isinstance(moduleList, list):
+            raise TypeError(
+                f"moduleList is {type(moduleList)}; expected list()")
+        if not moduleList:
+            raise ValueError("moduleList is empty")
+
+        # Filter out empty/whitespace-only entries
+        moduleList = [m.strip() for m in moduleList if m and m.strip()]
+        if not moduleList:
+            raise ValueError("moduleList contains no valid module names")
+
+        # Always ensure sfp__stor_db (the DB storage module) is included.
+        # Without it, no scan results get saved to the database.
+        if "sfp__stor_db" not in moduleList:
+            moduleList.append("sfp__stor_db")
+
+        self.__moduleList = moduleList
+        self.__sf = SpiderFoot(self.__config)
+        self.__sf.dbh = self.__dbh
+
+        # Create a unique ID for this scan in the back-end DB.
+        if scanId:
+            self.__scanId = scanId
+        else:
+            self.__scanId = SpiderFootHelpers.genScanInstanceId()
+
+        # Improved exception handling for scanInstanceCreate
+        try:
+            self.__sf.scanId = self.__scanId
+            # Check if scan instance was already created (e.g., by API layer)
+            existing = self.__dbh.scanInstanceGet(self.__scanId)
+            if not existing:
+                self.__dbh.scanInstanceCreate(
+                    self.__scanId, self.__scanName, self.__targetValue)
+        except Exception as e:
+            self.__sf.status(f"Scan [{self.__scanId}] failed to create scan instance: {e}")
+            self.__setStatus(DB_STATUS_ERROR_FAILED, None, time.time() * 1000)
+            raise
+
+        # Create our target
+        # Improved exception handling: log exception details for debugging
+        try:
+            self.__target = SpiderFootTarget(
+                self.__targetValue, self.__targetType)
+        except (TypeError, ValueError) as e:
+            self.__sf.status(f"Scan [{self.__scanId}] failed: {e}")
+            self.__setStatus(DB_STATUS_ERROR_FAILED, None, time.time() * 1000)
+            raise ValueError(f"Invalid target: {e}") from None
+
+        # Ensure all modules have an 'opts' key to prevent KeyError in configSerialize
+        if '__modules__' in self.__config:
+            for modname, modcfg in self.__config['__modules__'].items():
+                if 'opts' not in modcfg:
+                    modcfg['opts'] = {}
+
+        # Save the config current set for this scan
+        # Improved exception handling for scanConfigSet
+        try:
+            self.__config['_modulesenabled'] = self.__moduleList
+            self.__dbh.scanConfigSet(
+                self.__scanId, self.__sf.configSerialize(deepcopy(self.__config)))
+        except Exception as e:
+            self.__sf.status(f"Scan [{self.__scanId}] failed to save config: {e}")
+            self.__setStatus(DB_STATUS_ERROR_FAILED, None, time.time() * 1000)
+            raise
+
+        # Process global options that point to other places for data
+
+        # If a proxy server was specified, set it up
+        proxy_type = self.__config.get('_socks1type')
+        if proxy_type:
+            # Proxy type mapping for clarity and maintainability
+            proxy_types = {'4': 'socks4://', '5': 'socks5://', 'HTTP': 'http://', 'TOR': 'socks5h://'}
+            proxy_proto = proxy_types.get(proxy_type.upper() if isinstance(proxy_type, str) else proxy_type)
+            if not proxy_proto:
+                self.__sf.status(
+                    f"Scan [{self.__scanId}] failed: Invalid proxy type: {proxy_type}")
+                self.__setStatus(DB_STATUS_ERROR_FAILED, None, time.time() * 1000)
+                raise ValueError(f"Invalid proxy type: {proxy_type}")
+
+            proxy_host = self.__config.get('_socks2addr', '')
+
+            if not proxy_host:
+                self.__sf.status(
+                    f"Scan [{self.__scanId}] failed: Proxy type is set ({proxy_type}) but proxy address value is blank")
+                self.__setStatus(DB_STATUS_ERROR_FAILED, None, time.time() * 1000)
+                raise ValueError(
+                    f"Proxy type is set ({proxy_type}) but proxy address value is blank")
+
+            proxy_port = int(self.__config.get('_socks3port') or 0)
+
+            if not proxy_port:
+                if proxy_type in ['4', '5']:
+                    proxy_port = 1080
+                elif proxy_type.upper() == 'HTTP':
+                    proxy_port = 8080
+                elif proxy_type.upper() == 'TOR':
+                    proxy_port = 9050
+
+            proxy_username = self.__config.get('_socks4user', '')
+            proxy_password = self.__config.get('_socks5pwd', '')
+
+            if proxy_username or proxy_password:
+                proxy_auth = f"{proxy_username}:{proxy_password}"
+                proxy = f"{proxy_proto}{proxy_auth}@{proxy_host}:{proxy_port}"
+            else:
+                proxy = f"{proxy_proto}{proxy_host}:{proxy_port}"
+
+            self.__sf.debug(f"Using proxy: {proxy}")
+            self.__sf.socksProxy = proxy
+        else:
+            self.__sf.socksProxy = None
+
+        # Improved exception handling for DNS override
+        try:
+            if self.__config['_dnsserver']:
+                res = dns.resolver.Resolver()
+                res.nameservers = [self.__config['_dnsserver']]
+                dns.resolver.override_system_resolver(res)
+            else:
+                dns.resolver.restore_system_resolver()
+        except Exception as e:
+            self.__sf.status(f"Scan [{self.__scanId}] failed to set DNS resolver: {e}")
+            self.__setStatus(DB_STATUS_ERROR_FAILED, None, time.time() * 1000)
+            raise
+
+        # Set the user agent
+        # Improved exception handling for user agent setup
+        try:
+            self.__config['_useragent'] = self.__sf.optValueToData(
+                self.__config['_useragent'])
+        except Exception as e:
+            self.__sf.status(f"Scan [{self.__scanId}] failed to set user agent: {e}")
+            self.__setStatus(DB_STATUS_ERROR_FAILED, None, time.time() * 1000)
+            raise
+
+        # Improved exception handling for TLD setup
+        try:
+            tld_data = self.__sf.cacheGet(
+                "internet_tlds", self.__config['_internettlds_cache'])
+            if tld_data is None:
+                tld_data = self.__sf.optValueToData(self.__config['_internettlds'])
+                if tld_data is None:
+                    self.__sf.status(
+                        f"Scan [{self.__scanId}] failed: Could not update TLD list")
+                    self.__setStatus(DB_STATUS_ERROR_FAILED, None, time.time() * 1000)
+                    raise ValueError("Could not update TLD list")
+                self.__sf.cachePut("internet_tlds", tld_data)
+            self.__config['_internettlds'] = tld_data.splitlines()
+        except Exception as e:
+            self.__sf.status(f"Scan [{self.__scanId}] failed to set up TLDs: {e}")
+            self.__setStatus(DB_STATUS_ERROR_FAILED, None, time.time() * 1000)
+            raise
+
+        self.__setStatus("INITIALIZING", time.time() * 1000, None)
+
+        self.__sharedThreadPool = SpiderFootThreadPool(
+            threads=self.__config.get("_maxthreads", 3), name='sharedThreadPool')
+
+        self.eventQueue = None
+
+        # --- BEGIN: Module config validation and instance creation for test coverage ---
+        for modName in self.__moduleList:
+            if not modName:
+                continue
+            if modName not in self.__config['__modules__']:
+                continue
+            try:
+                module = __import__('modules.' + modName, globals(), locals(), [modName])
+            except ImportError:
+                continue
+            try:
+                mod = getattr(module, modName)()
+                mod.__name__ = modName
+            except Exception as e:
+                continue
+            # Defensive: handle missing or malformed module config
+            modcfg = self.__config['__modules__'].get(modName)
+            if not isinstance(modcfg, dict):
+                modcfg = {}
+                self.__config['__modules__'][modName] = modcfg
+            if 'opts' not in modcfg or modcfg['opts'] is None:
+                modcfg['opts'] = {}
+            if 'opts' in modcfg and not isinstance(modcfg['opts'], dict):
+                raise TypeError(f"Module {modName} 'opts' is not a dict")
+            # Only add to __moduleInstances, do not run setup etc. here
+            self.__moduleInstances[modName] = mod
+        # --- END: Module config validation and instance creation ---
+
+        if start:
+            self.__startScan()
+
+    @property
+    def scanId(self) -> str:
+        """Return the unique identifier for this scan."""
+        return self.__scanId
+
+    @property
+    def status(self) -> str:
+        """Return the current status of the scan."""
+        return self.__status
+
+    def __setStatus(self, status: str, started: float = None, ended: float = None) -> None:
+        """Update the scan status and persist it to the database."""
+        if not isinstance(status, str):
+            raise TypeError(f"status is {type(status)}; expected str()")
+
+        if status not in [
+            "INITIALIZING",
+            DB_STATUS_STARTING,
+            DB_STATUS_STARTED,
+            DB_STATUS_RUNNING,
+            DB_STATUS_ABORT_REQUESTED,
+            DB_STATUS_ABORTED,
+            "ABORTING",
+            DB_STATUS_FINISHED,
+            DB_STATUS_ERROR_FAILED
+        ]:
+            raise ValueError(f"Invalid scan status {status}")
+
+        self.__status = status
+        self.__dbh.scanInstanceSet(self.__scanId, started, ended, status)
+
+    def _log_module_error(self, modName, msg, exc):
+        """Log a formatted error message for a specific module."""
+        self.__sf.error(f"Module {modName} {msg}: {exc}")
+
+    def __startScan(self) -> None:
+        """Load modules, fire initial events, and execute the scan lifecycle."""
+        failed = True
+        self.__scanStartTime = time.time()
+
+        try:
+            self.__setStatus(DB_STATUS_STARTING, time.time() * 1000, None)
+            self.__sf.status(
+                f"Scan [{self.__scanId}] for '{self.__target.targetValue}' initiated.")
+
+            # Wire new service layer into this scan
+            try:
+                from spiderfoot.service_integration import (
+                    integrate_services, wire_scan_services,
+                )
+                integrate_services(self.__config)
+                wire_scan_services(self, self.__scanId)
+            except Exception as e:
+                self.__sf.debug(f"Service integration skipped: {e}")
+
+            self.eventQueue = queue.Queue()
+
+            self.__sharedThreadPool.start()
+
+            self.__sf.debug(f"Loading {len(self.__moduleList)} modules ...")
+
+            # --- Registry-driven loading (Cycle 22) ---
+            # Try the ModuleLoader first; fall back to legacy __import__ loop.
+            _used_module_loader = False
+            _module_loader = getattr(self, '_module_loader', None)
+            if _module_loader is not None:
+                try:
+                    load_result = _module_loader.load_modules(
+                        self.__moduleList,
+                        self.__config,
+                        sf=self.__sf,
+                        scan_id=self.__scanId,
+                        dbh=self.__dbh,
+                        target=self.__target,
+                        shared_pool=self.__sharedThreadPool,
+                        event_queue=self.eventQueue,
+                    )
+                    self.__moduleInstances = load_result.modules
+                    # Populate __modconfig from loaded modules' opts
+                    for modName, mod in self.__moduleInstances.items():
+                        modcfg = self.__config.get('__modules__', {}).get(modName, {})
+                        if isinstance(modcfg, dict) and 'opts' in modcfg:
+                            self.__modconfig[modName] = deepcopy(modcfg['opts'])
+                            for opt in list(self.__config.keys()):
+                                self.__modconfig[modName][opt] = deepcopy(self.__config[opt])
+                    _used_module_loader = True
+                    self.__sf.debug(
+                        f"ModuleLoader: {load_result.loaded} loaded, "
+                        f"{load_result.failed} failed, order={load_result.order_method}"
+                    )
+                except Exception as e:
+                    self.__sf.debug(f"ModuleLoader failed, falling back to legacy: {e}")
+                    self.__moduleInstances = {}
+
+            # --- Legacy loading fallback ---
+            if not _used_module_loader:
+                for modName in self.__moduleList:
+                    if not modName:
+                        continue
+
+                    if modName not in self.__config['__modules__']:
+                        self.__sf.error(f"Failed to load module: {modName}")
+                        continue
+
+                    try:
+                        module = __import__(
+                            'modules.' + modName, globals(), locals(), [modName])
+                    except ImportError:
+                        self.__sf.error(f"Failed to load module: {modName}")
+                        continue
+
+                    try:
+                        mod = getattr(module, modName)()
+                        mod.__name__ = modName
+                    except Exception as e:
+                        self.__sf.error(
+                            f"Module {modName} initialization failed: {e}")
+                        continue
+
+                    # Defensive: handle missing or malformed module config
+                    modcfg = self.__config['__modules__'].get(modName)
+                    if not isinstance(modcfg, dict):
+                        modcfg = {}
+                        self.__config['__modules__'][modName] = modcfg
+                    # If 'opts' is missing or None, set to {}
+                    if 'opts' not in modcfg or modcfg['opts'] is None:
+                        modcfg['opts'] = {}
+                    # If 'opts' is present and not a dict, raise TypeError
+                    if 'opts' in modcfg and not isinstance(modcfg['opts'], dict):
+                        raise TypeError(f"Module {modName} 'opts' is not a dict")
+                    # Ignore extra keys, do not require 'meta', always proceed
+
+                    try:
+                        self.__modconfig[modName] = deepcopy(modcfg['opts'])
+                        for opt in list(self.__config.keys()):
+                            self.__modconfig[modName][opt] = deepcopy(self.__config[opt])
+
+                        mod.clearListeners()
+                        mod.setScanId(self.__scanId)
+                        mod.setSharedThreadPool(self.__sharedThreadPool)
+                        mod.setDbh(self.__dbh)
+                        mod.setup(self.__sf, self.__modconfig[modName])
+
+                        # Wire new services into module (no-op for legacy modules)
+                        try:
+                            from spiderfoot.service_integration import wire_module_services
+                            wire_module_services(mod, self.__config)
+                        except Exception as e:
+                            log.debug("wire_module_services failed for %s: %s", modName, e)
+                    except Exception as e:
+                        self.__sf.error(
+                            f"Module {modName} setup failed: {e}")
+                        mod.errorState = True
+                        continue
+
+                    if self.__config['_socks1type'] != '':
+                        try:
+                            mod._updateSocket(socket)
+                        except Exception as e:
+                            self.__sf.error(
+                                f"Module {modName} socket setup failed: {e}")
+                            continue
+
+                    if self.__config['__outputfilter']:
+                        try:
+                            mod.setOutputFilter(self.__config['__outputfilter'])
+                        except Exception as e:
+                            self.__sf.error(
+                                f"Module {modName} output filter setup failed: {e}")
+                            continue
+
+                    try:
+                        newTarget = mod.enrichTarget(self.__target)
+                        if newTarget is not None:
+                            self.__target = newTarget
+                    except Exception as e:
+                        self._log_module_error(modName, "target enrichment failed", e)
+                        continue
+
+                    try:
+                        mod.setTarget(self.__target)
+                    except Exception as e:
+                        self._log_module_error(modName, f"failed to set target '{self.__target}'", e)
+                        continue
+
+                    try:
+                        mod.outgoingEventQueue = self.eventQueue
+                        mod.incomingEventQueue = queue.Queue()
+                        self.__sf.debug(
+                            f"Module {modName} queues initialized: "
+                            f"incoming={{mod.incomingEventQueue is not None}}, "
+                            f"outgoing={{mod.outgoingEventQueue is not None}}"
+                        )
+                        # Explicitly check both queues
+                        if mod.incomingEventQueue is None or mod.outgoingEventQueue is None:
+                            self.__sf.error(f"Module {modName} queue validation failed after setup")
+                            continue
+                    except Exception as e:
+                        self._log_module_error(modName, "event queue setup failed", e)
+                        continue
+
+                    self.__moduleInstances[modName] = mod
+                    self.__sf.status(f"{modName} module loaded.")
+
+                # Legacy: sort by _priority
+                self.__moduleInstances = OrderedDict(
+                    sorted(self.__moduleInstances.items(), key=lambda m: m[-1]._priority))
+
+            self.__sf.debug(
+                f"Scan [{self.__scanId}] loaded {len(self.__moduleInstances)} modules.")
+
+            if not self.__moduleInstances:
+                self.__setStatus(DB_STATUS_ERROR_FAILED, None, time.time() * 1000)
+                self.__dbh.close()
+                return
+
+            self.__setStatus(DB_STATUS_RUNNING)
+
+            psMod = SpiderFootPlugin()
+            psMod.__name__ = "SpiderFoot UI"
+            psMod.setTarget(self.__target)
+            psMod.setDbh(self.__dbh)
+            psMod.clearListeners()
+            psMod.outgoingEventQueue = self.eventQueue
+            psMod.incomingEventQueue = queue.Queue()
+
+            rootEvent = SpiderFootEvent("ROOT", self.__targetValue, "", None)
+            psMod.notifyListeners(rootEvent)
+            firstEvent = SpiderFootEvent(self.__targetType, self.__targetValue,
+                                         "SpiderFoot UI", rootEvent)
+            psMod.notifyListeners(firstEvent)
+
+            if (
+                self.__targetType == 'INTERNET_NAME'
+                and self.__sf.isDomain(
+                    self.__targetValue,
+                    self.__config['_internettlds'],
+                )
+            ):
+                firstEvent = SpiderFootEvent(
+                    'DOMAIN_NAME', self.__targetValue, "SpiderFoot UI", rootEvent)
+                psMod.notifyListeners(firstEvent)
+
+            scanstatus = self.__dbh.scanInstanceGet(self.__scanId)
+            if scanstatus and scanstatus[5] == DB_STATUS_ABORT_REQUESTED:
+                raise AssertionError(DB_STATUS_ABORT_REQUESTED)
+
+            self.waitForThreads()
+            failed = False
+
+        except (KeyboardInterrupt, AssertionError):
+            self.__sf.status(f"Scan [{self.__scanId}] aborted.")
+            self.__setStatus(DB_STATUS_ABORTED, None, time.time() * 1000)
+
+        except Exception as e:
+            self.__sf.error(f"Scan [{self.__scanId}] failed: {str(e)}")
+
+        finally:
+            scan_end_time = time.time()
+            if not failed:
+                self.__setStatus(DB_STATUS_FINISHED, None, scan_end_time * 1000)
+                self.runCorrelations()
+                self.__sf.status(f"Scan [{self.__scanId}] completed.")
+
+            # Record scan completion in metrics / event bus / vector
+            try:
+                from spiderfoot.service_integration import complete_scan_services
+                status = DB_STATUS_FINISHED if not failed else "ERROR"
+                duration = scan_end_time - (self.__scanStartTime or scan_end_time)
+                complete_scan_services(self.__scanId, status, duration)
+            except Exception as e:
+                log.debug("complete_scan_services failed for scan %s: %s", self.__scanId, e)
+
+            self.__dbh.close()
+
+    def runCorrelations(self) -> None:
+        """Execute correlation rules against the completed scan results."""
+        rules = self.__config.get('__correlationrules__')
+        if not rules:
+            log.info("No correlation rules configured for scan %s, skipping.", self.__scanId)
+            return
+
+        from spiderfoot.correlation.rule_executor import RuleExecutor
+        from spiderfoot.correlation.event_enricher import EventEnricher
+        from spiderfoot.correlation.result_aggregator import ResultAggregator
+
+        self.__sf.status(
+            f"Running {len(rules)} correlation rules on scan {self.__scanId}.")
+        executor = RuleExecutor(self.__dbh, rules, scan_ids=[self.__scanId])
+        results = executor.run()
+        enricher = EventEnricher(self.__dbh)
+        for rule_id, result in results.items():
+            if 'events' in result:
+                result['events'] = enricher.enrich_sources(self.__scanId, result['events'])
+                result['events'] = enricher.enrich_entities(self.__scanId, result['events'])
+        aggregator = ResultAggregator()
+        agg_count = aggregator.aggregate(list(results.values()), method='count')
+        self.__sf.status(f"Correlated {agg_count} results for scan {self.__scanId}")
+
+    def waitForThreads(self) -> None:
+        """Dispatch events to modules and block until all processing is complete."""
+        if not self.eventQueue:
+            return
+
+        counter = 0
+
+        try:
+            for mod in self.__moduleInstances.values():
+                if not (mod.incomingEventQueue and mod.outgoingEventQueue):
+                    self.__sf.error(f"Module {mod.__name__} has uninitialized queues, skipping")
+                    continue
+                mod.start()
+            final_passes = 3
+
+            while True:
+                log_status = counter % 10 == 0
+                counter += 1
+
+                if log_status:
+                    scanstatus = self.__dbh.scanInstanceGet(self.__scanId)
+                    if scanstatus and scanstatus[5] == DB_STATUS_ABORT_REQUESTED:
+                        raise AssertionError(DB_STATUS_ABORT_REQUESTED)
+
+                try:
+                    sfEvent = self.eventQueue.get_nowait()
+                    self.__sf.debug(
+                        f"waitForThreads() got event, {sfEvent.eventType}, from eventQueue.")
+                except queue.Empty:
+                    if self.threadsFinished(log_status):
+                        sleep(.1)
+                        if self.threadsFinished(log_status):
+                            if final_passes < 1:
+                                break
+                            for mod in self.__moduleInstances.values():
+                                if not mod.errorState and mod.incomingEventQueue is not None:
+                                    mod.incomingEventQueue.put(DB_STATUS_FINISHED)
+                            sleep(.1)
+                            while not self.threadsFinished(log_status):
+                                log_status = counter % 100 == 0
+                                counter += 1
+                                sleep(.01)
+                            final_passes -= 1
+                    else:
+                        sleep(.1)
+                    continue
+
+                if not isinstance(sfEvent, SpiderFootEvent):
+                    raise TypeError(
+                        f"sfEvent is {type(sfEvent)}; expected SpiderFootEvent")
+
+                for mod in self.__moduleInstances.values():
+                    if mod._stopScanning:
+                        raise AssertionError(f"{mod.__name__} requested stop")
+
+                    if not mod.errorState and mod.incomingEventQueue is not None:
+                        watchedEvents = mod.watchedEvents()
+                        if sfEvent.eventType in watchedEvents or "*" in watchedEvents:
+                            mod.incomingEventQueue.put(deepcopy(sfEvent))
+
+                # Forward to real-time event bridge (WebSocket relay)
+                try:
+                    bridge = getattr(self, '_event_bridge', None)
+                    if bridge is not None:
+                        bridge.forward(sfEvent)
+                except Exception as e:
+                    log.debug("Event bridge forwarding failed: %s", e)
+
+        finally:
+            for mod in self.__moduleInstances.values():
+                mod._stopScanning = True
+            self.__sharedThreadPool.shutdown(wait=True)
+
+    def threadsFinished(self, log_status: bool = False) -> bool:
+        """Check whether all module queues are empty and no modules are running."""
+        if self.eventQueue is None:
+            return True
+
+        modules_waiting = dict()
+        for m in self.__moduleInstances.values():
+            try:
+                if m.incomingEventQueue is not None:
+                    modules_waiting[m.__name__] = m.incomingEventQueue.qsize()
+            except Exception as e:
+                with suppress(Exception):
+                    m.errorState = True
+        modules_waiting = sorted(
+            modules_waiting.items(), key=lambda x: x[-1], reverse=True)
+
+        modules_running = []
+        for m in self.__moduleInstances.values():
+            try:
+                if m.running:
+                    modules_running.append(m.__name__)
+            except Exception as e:
+                with suppress(Exception):
+                    m.errorState = True
+
+        modules_errored = []
+        for m in self.__moduleInstances.values():
+            try:
+                if m.errorState:
+                    modules_errored.append(m.__name__)
+            except Exception as e:
+                with suppress(Exception):
+                    m.errorState = True
+
+        queues_empty = [qsize == 0 for m, qsize in modules_waiting]
+
+        for mod in self.__moduleInstances.values():
+            if mod.errorState and mod.incomingEventQueue is not None:
+                self.__sf.debug(
+                    f"Clearing and unsetting incomingEventQueue for errored module {mod.__name__}.")
+                with suppress(Exception):
+                    while 1:
+                        mod.incomingEventQueue.get_nowait()
+                mod.incomingEventQueue = None
+
+        if not modules_running and not queues_empty:
+            self.__sf.debug("Clearing queues for stalled/aborted modules.")
+            for mod in self.__moduleInstances.values():
+                with suppress(Exception):
+                    while True:
+                        mod.incomingEventQueue.get_nowait()
+
+        if log_status:
+            events_queued = ", ".join(
+                [f"{mod}: {qsize:,}" for mod, qsize in modules_waiting[:5] if qsize > 0])
+            if not events_queued:
+                events_queued = 'None'
+            self.__sf.debug(
+                f"Events queued: {sum([m[-1] for m in modules_waiting]):,} ({events_queued})")
+            if modules_running:
+                self.__sf.debug(
+                    f"Modules running: {len(modules_running):,} ({', '.join(modules_running)})")
+            if modules_errored:
+                self.__sf.debug(
+                    f"Modules errored: {len(modules_errored):,} ({', '.join(modules_errored)})")
+
+        if all(queues_empty) and not modules_running:
+            return True
+        return False
+
+    def shutdown(self) -> None:
+        """Explicitly shutdown the scanner and clean up resources.
+
+        This method ensures proper cleanup of threads and database connections,
+        preventing resource leaks during testing.
+        """
+        try:
+            # Stop all modules
+            if hasattr(self, '_SpiderFootScanner__moduleInstances'):
+                for mod in self.__moduleInstances.values():
+                    with suppress(Exception):
+                        mod._stopScanning = True
+
+            # Shutdown the shared thread pool
+            if hasattr(self, '_SpiderFootScanner__sharedThreadPool') and self.__sharedThreadPool:
+                with suppress(Exception):
+                    self.__sharedThreadPool.shutdown(wait=False)  # Don't wait to prevent hanging
+
+            # Close database connection
+            if hasattr(self, '_SpiderFootScanner__dbh') and self.__dbh:
+                with suppress(Exception):
+                    self.__dbh.close()
+
+            # Set status to aborted if not already finished
+            if (
+                hasattr(self, '_SpiderFootScanner__status')
+                and self.__status not in [
+                    DB_STATUS_FINISHED,
+                    DB_STATUS_ERROR_FAILED,
+                    DB_STATUS_ABORTED,
+                ]
+            ):
+                with suppress(Exception):
+                    self.__setStatus(DB_STATUS_ABORTED, None, time.time() * 1000)
+
+        except Exception as e:
+            # Complete silent failure to prevent issues during cleanup
+            pass
+
+# End of scanner.py

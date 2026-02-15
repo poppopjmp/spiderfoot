@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: adblock."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_adblock
@@ -13,11 +17,13 @@
 
 import adblockparser
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_adblock(SpiderFootPlugin):
-
+class sfp_adblock(SpiderFootModernPlugin):
+    """SpiderFoot plug-in to test if external/internally linked pages
+    would be blocked by AdBlock Plus."""
     meta = {
         'name': "AdBlock Check",
         'summary': "Check if linked pages would be blocked by AdBlock Plus.",
@@ -61,33 +67,33 @@ class sfp_adblock(SpiderFootPlugin):
     rules = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.rules = None
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["LINKED_URL_INTERNAL", "LINKED_URL_EXTERNAL", "PROVIDER_JAVASCRIPT"]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["URL_ADBLOCKED_INTERNAL", "URL_ADBLOCKED_EXTERNAL"]
 
-    def retrieveBlocklist(self, blocklist_url):
+    def retrieveBlocklist(self, blocklist_url: str):
+        """RetrieveBlocklist."""
         if not blocklist_url:
             return None
 
-        blocklist = self.sf.cacheGet(f"adblock_{blocklist_url}", 24)
+        blocklist = self.cache_get(f"adblock_{blocklist_url}", 24)
 
         if blocklist is not None:
             return self.setBlocklistRules(blocklist)
 
-        res = self.sf.fetchUrl(blocklist_url, timeout=30)
+        res = self.fetch_url(blocklist_url, timeout=30)
 
         if res['code'] != "200":
             self.error(
@@ -101,11 +107,11 @@ class sfp_adblock(SpiderFootPlugin):
             self.errorState = True
             return None
 
-        self.sf.cachePut(f"adblock_{blocklist_url}", res['content'])
+        self.cache_put(f"adblock_{blocklist_url}", res['content'])
 
         return self.setBlocklistRules(res['content'])
 
-    def setBlocklistRules(self, blocklist):
+    def setBlocklistRules(self, blocklist: str) -> None:
         """Parse AdBlock Plus blocklist and set blocklist rules.
 
         Args:
@@ -123,7 +129,8 @@ class sfp_adblock(SpiderFootPlugin):
             self.error(f"Parsing error handling AdBlock list: {e}")
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

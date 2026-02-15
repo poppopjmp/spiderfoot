@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: ipstack."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_ipstack
@@ -13,10 +17,13 @@
 
 import json
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_ipstack(SpiderFootPlugin):
+class sfp_ipstack(SpiderFootModernPlugin):
+
+    """Identifies the physical location of IP addresses identified using ipstack.com."""
 
     meta = {
         'name': "ipstack",
@@ -55,26 +62,26 @@ class sfp_ipstack(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ['IP_ADDRESS']
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["GEOINFO"]
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -96,7 +103,7 @@ class sfp_ipstack(SpiderFootPlugin):
 
         self.results[eventData] = True
 
-        res = self.sf.fetchUrl("http://api.ipstack.com/" + eventData + "?access_key=" + self.opts['api_key'],
+        res = self.fetch_url("http://api.ipstack.com/" + eventData + "?access_key=" + self.opts['api_key'],
                                timeout=self.opts['_fetchtimeout'], useragent=self.opts['_useragent'])
         if res['content'] is None:
             self.info("No GeoIP info found for " + eventData)

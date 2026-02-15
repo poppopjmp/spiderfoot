@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: dnsraw."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_dnsraw
@@ -17,11 +21,12 @@ import dns.query
 import dns.rdatatype
 import dns.resolver
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_dnsraw(SpiderFootPlugin):
-
+class sfp_dnsraw(SpiderFootModernPlugin):
+    """SpiderFoot plugin for collecting raw DNS records such as MX, TXT and others."""
     meta = {
         'name': "DNS Raw Records",
         'summary': "Retrieves raw DNS records such as MX, TXT and others.",
@@ -43,29 +48,29 @@ class sfp_dnsraw(SpiderFootPlugin):
     events = None
     checked = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.events = self.tempStorage()
         self.checked = self.tempStorage()
         self.__dataSource__ = "DNS"
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ['INTERNET_NAME', 'DOMAIN_NAME', 'DOMAIN_NAME_PARENT']
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["PROVIDER_MAIL", "PROVIDER_DNS", "RAW_DNS_RECORDS", "DNS_TEXT", "DNS_SPF",
                 'INTERNET_NAME', 'INTERNET_NAME_UNRESOLVED',
                 'AFFILIATE_INTERNET_NAME', 'AFFILIATE_INTERNET_NAME_UNRESOLVED']
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -177,7 +182,7 @@ class sfp_dnsraw(SpiderFootPlugin):
             else:
                 evt_type = 'AFFILIATE_INTERNET_NAME'
 
-            if self.opts['verify'] and not self.sf.resolveHost(domain) and not self.sf.resolveHost6(domain):
+            if self.opts['verify'] and not self.resolve_host(domain) and not self.resolve_host6(domain):
                 self.debug(f"Host {domain} could not be resolved")
                 evt_type += '_UNRESOLVED'
 

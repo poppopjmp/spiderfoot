@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""Tests for sfp_matrix module."""
+
 import pytest
 from modules.sfp_matrix import sfp_matrix
 from spiderfoot import SpiderFootEvent

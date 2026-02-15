@@ -1,12 +1,17 @@
+from __future__ import annotations
+
+"""Tests for sfp_accounts module."""
+
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch
 
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 from modules.sfp_accounts import sfp_accounts
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 
 
-class TestModuleIntegrationAccounts(unittest.TestCase):
+class TestModuleIntegrationAccounts(TestModuleBase):
 
     def setUp(self):
         self.default_options = {

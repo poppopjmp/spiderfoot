@@ -1,8 +1,20 @@
+"""Thread pool executor for concurrent module execution.
+
+Provides :class:`SpiderFootThreadPool`, a reusable thread pool that spawns
+worker threads once and dispatches scan module tasks to them for the
+duration of a scan.
+"""
+
+from __future__ import annotations
+
 import queue
 import logging
 import threading
 from time import sleep
 from contextlib import suppress
+from typing import Callable
+from collections.abc import Iterable
+from types import TracebackType
 
 
 class SpiderFootThreadPool:
@@ -51,6 +63,7 @@ class SpiderFootThreadPool:
         self._lock = threading.Lock()
 
     def start(self) -> None:
+        """Start all worker threads in the pool."""
         self.log.debug(
             f'Starting thread pool "{self.name}" with {self.threads:,} threads')
         for i in range(self.threads):
@@ -60,11 +73,14 @@ class SpiderFootThreadPool:
 
     @property
     def stop(self) -> bool:
+        """Return whether the pool is stopping."""
         return self._stop
 
     @stop.setter
-    def stop(self, val: bool):
-        assert val in (True, False), "stop must be either True or False"
+    def stop(self, val: bool) -> None:
+        """Set the stop flag for all workers."""
+        if not isinstance(val, bool):
+            raise TypeError("stop must be either True or False")
         for t in self.pool:
             with suppress(Exception):
                 t.stop = val
@@ -116,7 +132,7 @@ class SpiderFootThreadPool:
                 q.close()
         return results
 
-    def submit(self, callback, *args, **kwargs) -> None:
+    def submit(self, callback: Callable, *args, **kwargs) -> None:
         """Submit a function call to the pool. The "taskName" and "maxThreads"
         arguments are optional.
 
@@ -156,6 +172,7 @@ class SpiderFootThreadPool:
         return queuedTasks + runningTasks
 
     def inputQueue(self, taskName: str = "default") -> str:
+        """Get or create the input queue for a task."""
         try:
             return self.inputQueues[taskName]
         except KeyError:
@@ -163,13 +180,14 @@ class SpiderFootThreadPool:
             return self.inputQueues[taskName]
 
     def outputQueue(self, taskName: str = "default") -> str:
+        """Get or create the output queue for a task."""
         try:
             return self.outputQueues[taskName]
         except KeyError:
             self.outputQueues[taskName] = queue.Queue(self.qsize)
             return self.outputQueues[taskName]
 
-    def map(self, callback, iterable, *args, **kwargs) -> None:  # noqa: A003
+    def map(self, callback: Callable, iterable: Iterable, *args, **kwargs) -> None:  # noqa: A003
         """map.
 
         Args:
@@ -191,6 +209,7 @@ class SpiderFootThreadPool:
         yield from self.results(taskName, wait=True)
 
     def results(self, taskName: str = "default", wait: bool = False) -> None:
+        """Yield results from the output queue for a task."""
         while 1:
             result = False
             with suppress(Exception):
@@ -203,14 +222,16 @@ class SpiderFootThreadPool:
                 # sleep briefly to save CPU
                 sleep(.1)
 
-    def feedQueue(self, callback, iterable, args, kwargs) -> None:
+    def feedQueue(self, callback: Callable, iterable: Iterable, args: tuple, kwargs: dict) -> None:
+        """Feed tasks from an iterable into the input queue."""
         for i in iterable:
             if self.stop:
                 break
             self.submit(callback, i, *args, **kwargs)
 
     @property
-    def finished(self):
+    def finished(self) -> bool:
+        """Check whether all tasks have completed."""
         if self.stop:
             return True
 
@@ -223,16 +244,25 @@ class SpiderFootThreadPool:
         inputQueuesEmpty = [q.empty() for q in self.inputQueues.values()]
         return not inputThreadAlive and all(inputQueuesEmpty) and all(finishedThreads)
 
-    def __enter__(self):
+    def __enter__(self) -> SpiderFootThreadPool:
+        """Enter the thread pool context manager."""
         return self
 
-    def __exit__(self, exception_type, exception_value, traceback):
+    def __exit__(
+        self,
+        exception_type: type[BaseException] | None,
+        exception_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
+        """Exit the thread pool context manager and shut down."""
         self.shutdown()
 
 
 class ThreadPoolWorker(threading.Thread):
+    """Worker thread that processes tasks from module input queues."""
 
-    def __init__(self, pool, name: str = None) -> None:
+    def __init__(self, pool: SpiderFootThreadPool, name: str = None) -> None:
+        """Initialize the ThreadPoolWorker."""
 
         self.log = logging.getLogger(f"spiderfoot.{__name__}")
         self.pool = pool
@@ -243,6 +273,7 @@ class ThreadPoolWorker(threading.Thread):
         super().__init__(name=name)
 
     def run(self) -> None:
+        """Run the worker loop, processing tasks from input queues."""
         # Round-robin through each module's input queue
         while not self.stop:
             ran = False
@@ -259,10 +290,9 @@ class ThreadPoolWorker(threading.Thread):
                     try:
                         result = callback(*args, **kwargs)
                         ran = True
-                    except Exception:  # noqa: B902
-                        import traceback
-                        self.log.error(
-                            f'Error in thread worker {self.name}: {traceback.format_exc()}')
+                    except Exception as e:  # noqa: B902
+                        self.log.exception(
+                            'Error in thread worker %s', self.name)
                         break
                     if saveResult:
                         self.pool.outputQueue(self.taskName).put(result)

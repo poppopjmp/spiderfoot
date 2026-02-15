@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: junkfiles."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_junkfiles
@@ -12,10 +16,13 @@
 
 import random
 
-from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_junkfiles(SpiderFootPlugin):
+class sfp_junkfiles(SpiderFootModernPlugin):
+
+    """Looks for old/temporary and other similar files."""
 
     meta = {
         'name': "Junk File Finder",
@@ -47,32 +54,32 @@ class sfp_junkfiles(SpiderFootPlugin):
     skiphosts = None
     bases = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.hosts = self.tempStorage()
         self.skiphosts = self.tempStorage()
         self.bases = self.tempStorage()
         self.__dataSource__ = "Target Website"
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["LINKED_URL_INTERNAL"]
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["JUNK_FILE"]
 
     # Test how trustworthy a result is
-    def checkValidity(self, junkUrl):
+    def checkValidity(self, junkUrl: str) -> bool:
         # Try and fetch an obviously missing version of the junk file
+        """Check Validity."""
         fetch = junkUrl + str(random.SystemRandom().randint(0, 99999999))
-        res = self.sf.fetchUrl(fetch, headOnly=True,
+        res = self.fetch_url(fetch, headOnly=True,
                                timeout=self.opts['_fetchtimeout'],
                                useragent=self.opts['_useragent'],
                                verify=False)
@@ -83,7 +90,8 @@ class sfp_junkfiles(SpiderFootPlugin):
         return True
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -123,7 +131,7 @@ class sfp_junkfiles(SpiderFootPlugin):
 
                     self.results[fetch] = True
 
-                    res = self.sf.fetchUrl(fetch, headOnly=True,
+                    res = self.fetch_url(fetch, headOnly=True,
                                            timeout=self.opts['_fetchtimeout'],
                                            useragent=self.opts['_useragent'],
                                            sizeLimit=10000000,
@@ -164,7 +172,7 @@ class sfp_junkfiles(SpiderFootPlugin):
 
             self.results[fetch] = True
 
-            res = self.sf.fetchUrl(fetch, headOnly=True,
+            res = self.fetch_url(fetch, headOnly=True,
                                    timeout=self.opts['_fetchtimeout'],
                                    useragent=self.opts['_useragent'],
                                    verify=False)
@@ -206,7 +214,7 @@ class sfp_junkfiles(SpiderFootPlugin):
 
             self.results[fetch] = True
 
-            res = self.sf.fetchUrl(fetch, headOnly=True,
+            res = self.fetch_url(fetch, headOnly=True,
                                    timeout=self.opts['_fetchtimeout'],
                                    useragent=self.opts['_useragent'],
                                    verify=False)

@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: greensnow."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:        sfp_greensnow
@@ -12,10 +16,13 @@
 
 from netaddr import IPAddress, IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_greensnow(SpiderFootPlugin):
+class sfp_greensnow(SpiderFootModernPlugin):
+
+    """Check if a netblock or IP address is malicious according to greensnow.co."""
 
     meta = {
         'name': "Greensnow",
@@ -56,15 +63,13 @@ class sfp_greensnow(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             'IP_ADDRESS',
             'AFFILIATE_IPADDR',
@@ -72,7 +77,8 @@ class sfp_greensnow(SpiderFootPlugin):
             'NETBLOCK_MEMBER',
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "BLACKLISTED_IPADDR",
             "BLACKLISTED_AFFILIATE_IPADDR",
@@ -84,16 +90,17 @@ class sfp_greensnow(SpiderFootPlugin):
             "MALICIOUS_SUBNET",
         ]
 
-    def query(self, qry, targetType):
+    def query(self, qry: str, targetType: str) -> str | None:
+        """Query the data source."""
         cid = "_greensnow"
         url = "https://blocklist.greensnow.co/greensnow.txt"
 
         data = dict()
-        data["content"] = self.sf.cacheGet(
+        data["content"] = self.cache_get(
             "sfmal_" + cid, self.opts.get('cacheperiod', 0))
 
         if data["content"] is None:
-            data = self.sf.fetchUrl(
+            data = self.fetch_url(
                 url, timeout=self.opts['_fetchtimeout'], useragent=self.opts['_useragent'])
 
             if data["code"] != "200":
@@ -106,7 +113,7 @@ class sfp_greensnow(SpiderFootPlugin):
                 self.errorState = True
                 return None
 
-            self.sf.cachePut("sfmal_" + cid, data['content'])
+            self.cache_put("sfmal_" + cid, data['content'])
 
         for line in data["content"].split('\n'):
             ip = line.strip().lower()
@@ -128,7 +135,8 @@ class sfp_greensnow(SpiderFootPlugin):
 
         return None
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

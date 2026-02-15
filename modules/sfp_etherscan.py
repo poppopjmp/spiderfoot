@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: etherscan."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_etherscan
@@ -14,11 +18,12 @@
 import json
 import time
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_etherscan(SpiderFootPlugin):
-
+class sfp_etherscan(SpiderFootModernPlugin):
+    """SpiderFoot plugin for querying Etherscan API."""
     meta = {
         'name': "Etherscan",
         'summary': "Queries etherscan.io to find the balance of identified ethereum wallet addresses.",
@@ -59,15 +64,13 @@ class sfp_etherscan(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             "ETHEREUM_ADDRESS"
         ]
@@ -75,16 +78,18 @@ class sfp_etherscan(SpiderFootPlugin):
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "ETHEREUM_BALANCE",
             "RAW_RIR_DATA"
         ]
 
-    def query(self, qry):
+    def query(self, qry: str) -> dict | None:
+        """Query the data source."""
         queryString = f"https://api.etherscan.io/api?module=account&action=balance&address={qry}&tag=latest&apikey={self.opts['api_key']}"
         # Wallet balance
-        res = self.sf.fetchUrl(queryString,
+        res = self.fetch_url(queryString,
                                timeout=self.opts['_fetchtimeout'],
                                useragent=self.opts['_useragent'])
 
@@ -102,7 +107,8 @@ class sfp_etherscan(SpiderFootPlugin):
         return None
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

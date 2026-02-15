@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: cybercrimetracker."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:        sfp_cybercrimetracker
@@ -10,11 +14,12 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_cybercrimetracker(SpiderFootPlugin):
-
+class sfp_cybercrimetracker(SpiderFootModernPlugin):
+    """SpiderFoot plugin to check if a host/domain or IP address is malicious according to CyberCrime-Tracker.net."""
     meta = {
         'name': "CyberCrime-Tracker.net",
         'summary': "Check if a host/domain or IP address is malicious according to CyberCrime-Tracker.net.",
@@ -52,15 +57,13 @@ class sfp_cybercrimetracker(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             "INTERNET_NAME",
             "IP_ADDRESS",
@@ -69,7 +72,8 @@ class sfp_cybercrimetracker(SpiderFootPlugin):
             "CO_HOSTED_SITE"
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "BLACKLISTED_IPADDR",
             "BLACKLISTED_INTERNET_NAME",
@@ -83,7 +87,8 @@ class sfp_cybercrimetracker(SpiderFootPlugin):
             "MALICIOUS_COHOST"
         ]
 
-    def queryBlacklist(self, target):
+    def queryBlacklist(self, target: str) -> bool:
+        """Query Blacklist."""
         blacklist = self.retrieveBlacklist()
 
         if not blacklist:
@@ -96,13 +101,14 @@ class sfp_cybercrimetracker(SpiderFootPlugin):
 
         return False
 
-    def retrieveBlacklist(self):
-        blacklist = self.sf.cacheGet('cybercrime-tracker', 24)
+    def retrieveBlacklist(self) -> list | None:
+        """RetrieveBlacklist."""
+        blacklist = self.cache_get('cybercrime-tracker', 24)
 
         if blacklist is not None:
             return self.parseBlacklist(blacklist)
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             "https://cybercrime-tracker.net/all.php",
             timeout=10,
             useragent=self.opts['_useragent'],
@@ -119,11 +125,11 @@ class sfp_cybercrimetracker(SpiderFootPlugin):
             self.errorState = True
             return None
 
-        self.sf.cachePut("cybercrime-tracker", res['content'])
+        self.cache_put("cybercrime-tracker", res['content'])
 
         return self.parseBlacklist(res['content'])
 
-    def parseBlacklist(self, blacklist):
+    def parseBlacklist(self, blacklist: str) -> list:
         """Parse plaintext blacklist.
 
         Args:
@@ -153,7 +159,8 @@ class sfp_cybercrimetracker(SpiderFootPlugin):
 
         return hosts
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

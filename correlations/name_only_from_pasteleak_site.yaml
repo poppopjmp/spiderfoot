@@ -14,7 +14,7 @@ collections:
   collect:
       - method: exact
         field: type
-        value: INTERNET_NAME
+        value: HUMAN_NAME
       - method: exact
         field: source.type
         value:
@@ -22,7 +22,7 @@ collections:
   collect:
       - method: exact
         field: type
-        value: INTERNET_NAME
+        value: HUMAN_NAME
       - method: exact
         field: source.type
         value:

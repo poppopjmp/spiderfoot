@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: dnscommonsrv."""
+
 # -*- coding: utf-8 -*-
 # -----------------------------------------------------------------------------
 # Name:         sfp_dnscommonsrv
@@ -13,11 +17,12 @@
 
 import dns.resolver
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_dnscommonsrv(SpiderFootPlugin):
-
+class sfp_dnscommonsrv(SpiderFootModernPlugin):
+    """SpiderFoot plugin to brute-force common DNS SRV records."""
     meta = {
         'name': "DNS Common SRV",
         'summary': "Attempts to identify hostnames through brute-forcing common DNS SRV records.",
@@ -73,21 +78,21 @@ class sfp_dnscommonsrv(SpiderFootPlugin):
         '_xmpp-server._tcp'
     ]
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.events = self.tempStorage()
         self.__dataSource__ = "DNS"
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ['INTERNET_NAME', 'DOMAIN_NAME']
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["INTERNET_NAME", "AFFILIATE_INTERNET_NAME"]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -125,7 +130,7 @@ class sfp_dnscommonsrv(SpiderFootPlugin):
 
             try:
                 answers = res.query(name, 'SRV', timeout=10)
-            except Exception:
+            except Exception as e:
                 answers = []
 
             if not answers:

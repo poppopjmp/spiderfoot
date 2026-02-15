@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: filemeta."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_filemeta
@@ -22,11 +26,12 @@ import exifread
 
 import pptx
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_filemeta(SpiderFootPlugin):
-
+class sfp_filemeta(SpiderFootModernPlugin):
+    """SpiderFoot plugin for extracting file metadata."""
     meta = {
         'name': "File Metadata Extractor",
         'summary': "Extracts meta data from documents and images.",
@@ -49,26 +54,26 @@ class sfp_filemeta(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.__dataSource__ = "Target Website"
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["LINKED_URL_INTERNAL", "INTERESTING_FILE"]
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["RAW_FILE_META_DATA", "SOFTWARE_USED"]
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -87,7 +92,7 @@ class sfp_filemeta(SpiderFootPlugin):
             if "." + fileExt.lower() in eventData.lower():
                 # Fetch the file, allow much more time given that these files are
                 # typically large.
-                ret = self.sf.fetchUrl(eventData, timeout=self.opts['timeout'],
+                ret = self.fetch_url(eventData, timeout=self.opts['timeout'],
                                        useragent=self.opts['_useragent'], disableContentEncoding=True,
                                        sizeLimit=10000000,
                                        verify=False)

@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: focsec."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:        sfp_focsec
@@ -13,11 +17,12 @@
 import json
 import urllib
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_focsec(SpiderFootPlugin):
-
+class sfp_focsec(SpiderFootModernPlugin):
+    """SpiderFoot plugin for looking up IP address information from Focsec."""
     meta = {
         'name': "Focsec",
         'summary': "Look up IP address information from Focsec.",
@@ -53,21 +58,20 @@ class sfp_focsec(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.errorState = False
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             "IP_ADDRESS",
             "IPV6_ADDRESS"
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "RAW_RIR_DATA",
             "GEOINFO",
@@ -77,7 +81,7 @@ class sfp_focsec(SpiderFootPlugin):
             "TOR_EXIT_NODE",
         ]
 
-    def query(self, qry):
+    def query(self, qry: str) -> dict | None:
         """Retrieve IP address information from Focsec.
 
         Args:
@@ -91,7 +95,7 @@ class sfp_focsec(SpiderFootPlugin):
             'api_key': self.opts["api_key"],
         })
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://api.focsec.com/v1/ip/{qry}?{params}",
             timeout=self.opts["_fetchtimeout"],
             useragent=self.opts['_useragent']
@@ -142,7 +146,8 @@ class sfp_focsec(SpiderFootPlugin):
 
         return None
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

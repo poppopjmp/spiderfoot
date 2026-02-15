@@ -1,0 +1,19 @@
+id: similar_domain_found
+version: "1"
+meta:
+  name: Similar domain name detected
+  description: >
+    A domain name similar to the target was detected (e.g., via
+    typosquatting, homograph attacks, or look-alike domains).
+    Similar domains are commonly used in phishing campaigns to
+    impersonate the target organisation and trick users into
+    providing credentials or sensitive data.
+  risk: MEDIUM
+collections:
+  collect:
+      - method: exact
+        field: type
+        value: SIMILARDOMAIN
+aggregation:
+  field: data
+headline: "Similar/look-alike domain found: {data}"

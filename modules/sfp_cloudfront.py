@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: cloudfront."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:   sfp_cloudfront
@@ -12,10 +16,12 @@
 
 import dns.resolver
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_cloudfront(SpiderFootPlugin):
+class sfp_cloudfront(SpiderFootModernPlugin):
+    """SpiderFoot plugin to identify domains using Amazon CloudFront CDN."""
     meta = {
         "name": "Amazon CloudFront Detector",
         "summary": "Identify domains using Amazon CloudFront CDN.",
@@ -56,19 +62,18 @@ class sfp_cloudfront(SpiderFootPlugin):
     # CloudFront specific HTTP headers
     CLOUDFRONT_HEADERS = ["X-Amz-Cf-Id", "Via"]
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME", "INTERNET_NAME", "AFFILIATE_INTERNET_NAME"]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "CLOUD_PROVIDER",
             "CLOUD_INSTANCE_TYPE",
@@ -76,7 +81,7 @@ class sfp_cloudfront(SpiderFootPlugin):
             "RAW_DNS_RECORDS",
         ]
 
-    def queryDns(self, domain):
+    def queryDns(self, domain: str):
         """Check if domain has CloudFront CNAME records."""
         try:
             answers = dns.resolver.resolve(domain, "CNAME")
@@ -91,10 +96,10 @@ class sfp_cloudfront(SpiderFootPlugin):
             self.debug(f"DNS resolution failed for {domain}: {e}")
             return None
 
-    def checkHeaders(self, domain):
+    def checkHeaders(self, domain: str) -> bool:
         """Check if domain's HTTP headers indicate CloudFront usage."""
         url = f"https://{domain}"
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             url,
             timeout=self.opts["_fetchtimeout"],
             useragent=self.opts["_useragent"],
@@ -117,7 +122,8 @@ class sfp_cloudfront(SpiderFootPlugin):
         return False
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""Tests for sfp__stor_stdout module."""
+
 import pytest
 import unittest
 from unittest.mock import patch, MagicMock, Mock
@@ -5,13 +9,13 @@ import sys
 from io import StringIO
 
 from modules.sfp__stor_stdout import sfp__stor_stdout
-from sflib import SpiderFoot
-from spiderfoot.event import SpiderFootEvent
-from test.unit.utils.test_base import SpiderFootTestBase
+from spiderfoot.sflib import SpiderFoot
+from spiderfoot.events.event import SpiderFootEvent
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModuleStor_stdout(SpiderFootTestBase):
+class TestModuleStor_stdout(TestModuleBase):
     """Comprehensive test suite for stdout storage module.
     
     Tests output formatting, filtering, and proper event handling.
@@ -153,7 +157,8 @@ class TestModuleStor_stdout(SpiderFootTestBase):
                 'IP_ADDRESS': 'IP Address',
                 'ROOT': 'Root'
             },
-            '_showonlyrequested': False
+            '_showonlyrequested': False,
+            '_maxlength': 1000  # Ensure no truncation
         }
         module.setup(self.sf_instance, test_opts)
         module.getScanId = MagicMock(return_value="test_scan_id")
@@ -166,12 +171,34 @@ class TestModuleStor_stdout(SpiderFootTestBase):
             event.visibility = 1
             event.risk = 0
             module.handleEvent(event)
-        output = mock_print.call_args_list
-        # Join all output into a single string for easier assertions
-        output_str = "".join([call[0][0] for call in output])
+        
+        # Check that print was called for each event
+        self.assertEqual(len(mock_print.call_args_list), 3)
+        
+        # Check that each IP address appears in the printed outputs
+        # The module uses tab-delimited format: module\tevent_type\tdata
+        # Extract and verify each call's content
+        found_ips = set()
+        for call in mock_print.call_args_list:
+            if call[0]:  # call[0] contains the positional arguments
+                # The first argument is the formatted string
+                formatted_string = str(call[0][0])
+                # Look for IP addresses in the formatted string
+                for i in range(3):
+                    expected_ip = f"192.168.1.{i}"
+                    if expected_ip in formatted_string:
+                        found_ips.add(expected_ip)
+        
+        # Verify all IP addresses were found
         for i in range(3):
-            self.assertIn(f"192.168.1.{i}", output_str)
-        self.assertIn("IP Address", output_str)  # Check for display name
+            expected_ip = f"192.168.1.{i}"
+            self.assertIn(expected_ip, found_ips,
+                          f"Expected IP {expected_ip} not found. Found IPs: {found_ips}. "
+                          f"Print calls: {[str(call[0][0]) if call[0] else 'empty' for call in mock_print.call_args_list]}")
+        
+        # Verify the display name appears at least once
+        all_output = " ".join(str(call[0][0]) if call[0] else "" for call in mock_print.call_args_list)
+        self.assertIn("IP Address", all_output)  # Check for display name
 
     @patch('sys.stdout', new_callable=StringIO)
     def test_handle_event_with_special_characters(self, mock_stdout):

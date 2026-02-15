@@ -1,9 +1,14 @@
+from __future__ import annotations
+
+"""Tests for sfp_onionsearchengine module."""
+
 import pytest
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch
 
 from modules.sfp_onionsearchengine import sfp_onionsearchengine
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent
 
 
@@ -14,7 +19,7 @@ class DummyEventListener:
     def notifyListeners(self, event):
         self.events.append(event)
 
-class TestModuleIntegrationOnionsearchengine(unittest.TestCase):
+class TestModuleIntegrationOnionsearchengine(TestModuleBase):
     def setUp(self):
         self.options = {
             '_useragent': 'SpiderFootTestAgent',
@@ -32,8 +37,8 @@ class TestModuleIntegrationOnionsearchengine(unittest.TestCase):
         self.listener = DummyEventListener()
         self.module.notifyListeners = self.listener.notifyListeners
 
-    @patch('sflib.SpiderFoot.fetchUrl')
-    @patch('sflib.SpiderFoot.urlFQDN', lambda self, url: 'sometarget.onion')
+    @patch('spiderfoot.sflib.SpiderFoot.fetchUrl')
+    @patch('spiderfoot.sflib.SpiderFoot.urlFQDN', lambda self, url: 'sometarget.onion')
     def test_handleEvent_emits_events_on_domain(self, mock_fetchUrl):
         # Simulate search result page and .onion page
         def fetchUrl_side_effect(url, **kwargs):

@@ -1,10 +1,17 @@
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent
+from __future__ import annotations
 
-class sfp_unwiredlabs(SpiderFootPlugin):
+"""SpiderFoot plug-in module: unwiredlabs."""
+
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+
+class sfp_unwiredlabs(SpiderFootModernPlugin):
+    """Queries UnwiredLabs for geolocation data based on cell towers, WiFi, or IP."""
+
     meta = {
         'name': "UnwiredLabs Geolocation API",
         'summary': "Queries UnwiredLabs for geolocation data based on cell towers, WiFi, or IP.",
-        'flags': ['apikey'],
+        'flags': ['apikey', 'experimental'],
         'useCases': ["Investigate", "Footprint"],
         'categories': ["Real World"],
         'dataSource': {
@@ -38,8 +45,9 @@ class sfp_unwiredlabs(SpiderFootPlugin):
         "output_format": "Output format: summary (default) or full."
     }
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
         self.debug(f"[setup] Options: {self.opts}")
         # Option validation
@@ -59,13 +67,16 @@ class sfp_unwiredlabs(SpiderFootPlugin):
             self.error("[setup] output_format must be 'summary' or 'full'.")
             raise ValueError("output_format must be 'summary' or 'full'.")
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["IP_ADDRESS", "MAC_ADDRESS", "CELL_TOWER"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["UNWIREDLABS_GEOINFO"]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         self.debug(f"[handleEvent] Received event: {event.eventType}")
         # Stub event filtering logic
         if event.eventType not in self.watchedEvents():
@@ -74,5 +85,6 @@ class sfp_unwiredlabs(SpiderFootPlugin):
         self.debug("[handleEvent] (stub) Would process and emit UnwiredLabs events here.")
         return None
 
-    def shutdown(self):
+    def shutdown(self) -> None:
+        """Shutdown."""
         self.debug("[shutdown] Shutting down UnwiredLabs module.")

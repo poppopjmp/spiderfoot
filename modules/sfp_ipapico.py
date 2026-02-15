@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: ipapico."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:        sfp_ipapico
@@ -14,10 +18,13 @@
 import json
 import time
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_ipapico(SpiderFootPlugin):
+class sfp_ipapico(SpiderFootModernPlugin):
+
+    """Queries ipapi.co to identify geolocation of IP Addresses using ipapi.co API"""
 
     meta = {
         'name': "ipapi.co",
@@ -48,15 +55,13 @@ class sfp_ipapico(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             "IP_ADDRESS",
             "IPV6_ADDRESS"
@@ -65,16 +70,18 @@ class sfp_ipapico(SpiderFootPlugin):
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "GEOINFO",
             "RAW_RIR_DATA"
         ]
 
-    def query(self, qry):
+    def query(self, qry: str) -> dict | None:
+        """Query the data source."""
         queryString = f"https://ipapi.co/{qry}/json/"
 
-        res = self.sf.fetchUrl(queryString,
+        res = self.fetch_url(queryString,
                                timeout=self.opts['_fetchtimeout'],
                                useragent=self.opts['_useragent'])
         time.sleep(1.5)
@@ -91,7 +98,8 @@ class sfp_ipapico(SpiderFootPlugin):
         return None
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

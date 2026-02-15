@@ -1,0 +1,19 @@
+id: netblock_discovered
+version: "1"
+meta:
+  name: Network block ownership identified
+  description: >
+    Network blocks (IP ranges) owned by or associated with the
+    target were identified. Understanding the target's IP space
+    is fundamental to defining the complete attack surface and
+    identifying all Internet-facing assets within their
+    network range.
+  risk: INFO
+collections:
+  collect:
+      - method: regex
+        field: type
+        value: NETBLOCK_MEMBER|NETBLOCK_OWNER
+aggregation:
+  field: data
+headline: "Network block identified: {data}"

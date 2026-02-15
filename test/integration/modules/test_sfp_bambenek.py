@@ -1,9 +1,13 @@
+from __future__ import annotations
+
+"""Tests for sfp_bambenek module."""
+
 # filepath: spiderfoot/test/integration/modules/test_sfpbambenek.py
 import pytest
 from unittest.mock import patch
 import os
 
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 from modules.sfp_bambenek import sfp_bambenek
 

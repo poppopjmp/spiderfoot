@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 """Test helper utilities for SpiderFoot testing."""
 
+from __future__ import annotations
+
 import pytest
 import tempfile
 import os
 import json
 from unittest.mock import Mock, patch, MagicMock
-from typing import Dict, List, Any, Optional
+from typing import Any
 
 
 class TestHelpers:

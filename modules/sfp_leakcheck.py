@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: leakcheck."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:        sfp_leakcheck
@@ -13,10 +17,13 @@
 import json
 import time
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_leakcheck(SpiderFootPlugin):
+class sfp_leakcheck(SpiderFootModernPlugin):
+    """Gather breach data from LeakCheck API."""
+
     meta = {
         "name": "LeakCheck.io",
         "summary": "Gather breach data from LeakCheck API.",
@@ -51,15 +58,13 @@ class sfp_leakcheck(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             "DOMAIN_NAME",
             "EMAILADDR",
@@ -67,7 +72,8 @@ class sfp_leakcheck(SpiderFootPlugin):
         ]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "EMAILADDR",
             "EMAILADDR_COMPROMISED",
@@ -84,7 +90,8 @@ class sfp_leakcheck(SpiderFootPlugin):
         ]
 
     # Query LeakCheck
-    def query(self, event):
+    def query(self, event: SpiderFootEvent) -> dict | None:
+        """Query the data source."""
         if event.eventType == "EMAILADDR":
             queryString = f"https://leakcheck.io/api/v2/query/{event.data}?type=email"
         elif event.eventType == "DOMAIN_NAME":
@@ -97,7 +104,7 @@ class sfp_leakcheck(SpiderFootPlugin):
         headers = {"Accept": "application/json",
                    "X-API-Key": self.opts["api_key"]}
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             queryString,
             headers=headers,
             timeout=15,
@@ -122,7 +129,7 @@ class sfp_leakcheck(SpiderFootPlugin):
                 "Too many requests performed in a short time. Please wait before trying again."
             )
             time.sleep(5)
-            res = self.sf.fetchUrl(
+            res = self.fetch_url(
                 queryString,
                 headers=headers,
                 timeout=15,
@@ -146,7 +153,8 @@ class sfp_leakcheck(SpiderFootPlugin):
             return None
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

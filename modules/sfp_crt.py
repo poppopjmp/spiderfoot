@@ -11,15 +11,20 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: crt."""
+
 import json
 import time
 import urllib.parse
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_crt(SpiderFootPlugin):
-
+class sfp_crt(SpiderFootModernPlugin):
+    """SpiderFoot plugin to gather information about SSL certificates from crt.sh."""
     meta = {
         'name': "Certificate Transparency",
         'summary': "Gather hostnames from historical certificates in crt.sh.",
@@ -53,19 +58,18 @@ class sfp_crt(SpiderFootPlugin):
     cert_ids = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.errorState = False
         self.results = self.tempStorage()
         self.cert_ids = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ['DOMAIN_NAME', 'INTERNET_NAME']
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "SSL_CERTIFICATE_RAW",
             "RAW_RIR_DATA",
@@ -76,13 +80,14 @@ class sfp_crt(SpiderFootPlugin):
             "CO_HOSTED_SITE_DOMAIN"
         ]
 
-    def queryDomain(self, qry: str):
+    def queryDomain(self, qry: str) -> dict:
+        """Query Domain."""
         params = {
             'q': '%.' + qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),
             'output': 'json'
         }
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             "https://crt.sh/?" + urllib.parse.urlencode(params),
             timeout=30,
             useragent=self.opts['_useragent']
@@ -92,7 +97,8 @@ class sfp_crt(SpiderFootPlugin):
 
         return self.parseApiResponse(res)
 
-    def parseApiResponse(self, res: dict):
+    def parseApiResponse(self, res: dict) -> dict | None:
+        """Parse ApiResponse."""
         if not res:
             self.error("No response from crt.sh")
             return None
@@ -128,7 +134,8 @@ class sfp_crt(SpiderFootPlugin):
 
         return None
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         if self.errorState:
             return
 
@@ -193,7 +200,7 @@ class sfp_crt(SpiderFootPlugin):
                 'd': str(cert_id)
             }
 
-            res = self.sf.fetchUrl(
+            res = self.fetch_url(
                 'https://crt.sh/?' + urllib.parse.urlencode(params),
                 timeout=30,
                 useragent=self.opts['_useragent']
@@ -241,7 +248,7 @@ class sfp_crt(SpiderFootPlugin):
 
             if self.getTarget().matches(domain, includeChildren=True, includeParents=True):
                 evt_type = 'INTERNET_NAME'
-                if self.opts['verify'] and not self.sf.resolveHost(domain) and not self.sf.resolveHost6(domain):
+                if self.opts['verify'] and not self.resolve_host(domain) and not self.resolve_host6(domain):
                     self.debug(f"Host {domain} could not be resolved")
                     evt_type += '_UNRESOLVED'
             else:

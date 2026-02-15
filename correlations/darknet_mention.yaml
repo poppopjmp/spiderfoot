@@ -1,0 +1,22 @@
+id: darknet_mention
+version: "1"
+meta:
+  name: Target mentioned on the dark web
+  description: >
+    Content or URLs referencing the target were found on dark web
+    (Tor hidden services, .onion sites). This indicates the target
+    has a presence or is being discussed in underground forums or
+    marketplaces.
+
+    Dark web mentions may indicate data leaks, credential sales,
+    vulnerability discussions, or other threat actor activity
+    targeting the organisation.
+  risk: HIGH
+collections:
+  collect:
+      - method: regex
+        field: type
+        value: DARKNET_MENTION_CONTENT|DARKNET_MENTION_URL
+aggregation:
+  field: entity.data
+headline: "Target mentioned on the dark web: {entity.data}"

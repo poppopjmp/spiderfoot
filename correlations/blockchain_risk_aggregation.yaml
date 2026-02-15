@@ -1,0 +1,33 @@
+id: blockchain_risk_aggregation
+version: "1"
+meta:
+  name: High-risk cryptocurrency activity detection
+  description: >
+    Aggregates blockchain analysis results to identify high-risk
+    cryptocurrency activities. This correlation fires when multiple
+    types of cryptocurrency risk indicators are found for the same
+    target, such as sanctions list matches combined with exchange
+    attributions or money laundering indicators.
+
+    The presence of multiple cryptocurrency risk signals strongly
+    suggests illicit financial activity requiring immediate
+    investigation and potential reporting to financial intelligence
+    units.
+  risk: HIGH
+collections:
+  collect:
+      - method: regex
+        field: type
+        value: BITCOIN_ADDRESS|ETHEREUM_ADDRESS|BITCOIN_BALANCE
+  collect:
+      - method: regex
+        field: type
+        value: MALICIOUS_.*|BLACKLIST_.*
+aggregation:
+  field: entity.data
+analysis:
+  - method: threshold
+    minimum: 2
+    field: type
+    count_unique_only: true
+headline: "High-risk cryptocurrency activity detected for: {entity.data}"

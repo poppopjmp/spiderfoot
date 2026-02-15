@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: haveibeenpwned."""
+
 # -------------------------------------------------------------------------------
 # Name:         sfp_haveibeenpwned
 # Purpose:      Query haveibeenpwned.com to see if an e-mail account has been hacked.
@@ -13,10 +17,13 @@ import json
 import re
 import time
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_haveibeenpwned(SpiderFootPlugin):
+class sfp_haveibeenpwned(SpiderFootModernPlugin):
+
+    """Check HaveIBeenPwned.com for hacked e-mail addresses identified in breaches."""
 
     meta = {
         'name': "HaveIBeenPwned",
@@ -58,26 +65,26 @@ class sfp_haveibeenpwned(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
 
         # Clear / reset any other class member variables here
         # or you risk them persisting between threads.
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["EMAILADDR", "PHONE_NUMBER"]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["EMAILADDR_COMPROMISED", "PHONE_NUMBER_COMPROMISED", "LEAKSITE_CONTENT", "LEAKSITE_URL"]
 
-    def query(self, qry):
+    def query(self, qry: str) -> dict | None:
+        """Query the data source."""
         if self.opts['api_key']:
             version = "3"
         else:
@@ -93,7 +100,7 @@ class sfp_haveibeenpwned(SpiderFootPlugin):
         while retry < 2:
             # https://haveibeenpwned.com/API/v2#RateLimiting
             time.sleep(1.5)
-            res = self.sf.fetchUrl(url, timeout=self.opts['_fetchtimeout'],
+            res = self.fetch_url(url, timeout=self.opts['_fetchtimeout'],
                                    useragent="SpiderFoot", headers=hdrs)
 
             if res['code'] == "200":
@@ -121,7 +128,8 @@ class sfp_haveibeenpwned(SpiderFootPlugin):
 
         return None
 
-    def queryPaste(self, qry):
+    def queryPaste(self, qry: str) -> dict | None:
+        """Query Paste."""
         url = f"https://haveibeenpwned.com/api/v3/pasteaccount/{qry}"
         headers = {
             'Accept': "application/json",
@@ -133,7 +141,7 @@ class sfp_haveibeenpwned(SpiderFootPlugin):
         while retry < 2:
             # https://haveibeenpwned.com/API/v2#RateLimiting
             time.sleep(1.5)
-            res = self.sf.fetchUrl(url, timeout=self.opts['_fetchtimeout'],
+            res = self.fetch_url(url, timeout=self.opts['_fetchtimeout'],
                                    useragent="SpiderFoot", headers=headers)
 
             if res['code'] == "200":
@@ -162,7 +170,8 @@ class sfp_haveibeenpwned(SpiderFootPlugin):
         return None
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -237,7 +246,7 @@ class sfp_haveibeenpwned(SpiderFootPlugin):
                 if self.checkForStop():
                     return
 
-                res = self.sf.fetchUrl(
+                res = self.fetch_url(
                     link, timeout=self.opts['_fetchtimeout'], useragent=self.opts['_useragent'])
 
                 if res['content'] is None:

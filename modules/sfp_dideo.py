@@ -1,9 +1,17 @@
-from spiderfoot import SpiderFootPlugin, SpiderFootEvent
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: dideo."""
+
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 import re
 import json
 
 
-class sfp_dideo(SpiderFootPlugin):
+class sfp_dideo(SpiderFootModernPlugin):
+    
+    """Monitors Dideo.ir for new videos and emits events."""
+
     meta = {
         'name': "Dideo.ir Monitor",
         'summary': "Monitors Dideo.ir for new videos and emits events.",
@@ -31,11 +39,12 @@ class sfp_dideo(SpiderFootPlugin):
         "max_videos": "Maximum number of videos to fetch per search."
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize the sfp dideo."""
         super().__init__()
         self.sf = None
 
-    def setup(self, sfc, userOpts=None):
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """
         Setup plugin with SpiderFoot context and user options.
 
@@ -44,16 +53,18 @@ class sfp_dideo(SpiderFootPlugin):
         """
         if userOpts is None:
             userOpts = {}
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
         self.opts.update(userOpts)
 
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["ROOT"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["DIDEO_VIDEO"]
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """
         Handle ROOT event, search Dideo.ir for each keyword, emit DIDEO_VIDEO events for found videos.
 
@@ -68,12 +79,12 @@ class sfp_dideo(SpiderFootPlugin):
             return
         try:
             max_videos = int(self.opts.get("max_videos", 10))
-        except Exception:
+        except Exception as e:
             max_videos = 10
         for keyword in [k.strip() for k in keywords.split(",") if k.strip()]:
             url = f"https://www.dideo.ir/search/{self.sf.urlFuzz(keyword)}"
             self.debug(f"Searching Dideo.ir for keyword: {keyword} (URL: {url})")
-            res = self.sf.fetchUrl(url, timeout=15, useragent=self.opts.get('_useragent', 'SpiderFoot'))
+            res = self.fetch_url(url, timeout=15, useragent=self.opts.get('_useragent', 'SpiderFoot'))
             if not res or not res.get('content'):
                 self.error(f"No response from Dideo.ir for keyword: {keyword}")
                 continue
@@ -119,7 +130,7 @@ class sfp_dideo(SpiderFootPlugin):
                 break
         return videos
 
-    def shutdown(self):
+    def shutdown(self) -> None:
         """
         Shutdown plugin (no-op).
         """

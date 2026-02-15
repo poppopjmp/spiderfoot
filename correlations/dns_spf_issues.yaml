@@ -1,0 +1,22 @@
+id: dns_spf_issues
+version: "1"
+meta:
+  name: DNS SPF record found
+  description: >
+    SPF (Sender Policy Framework) DNS records were found for the
+    target domain. While SPF is a positive security control, the
+    specific SPF configuration should be reviewed for overly
+    permissive settings (e.g., +all) that could allow email
+    spoofing.
+
+    Weak SPF records can enable phishing attacks impersonating
+    the target domain.
+  risk: INFO
+collections:
+  collect:
+      - method: exact
+        field: type
+        value: DNS_SPF
+aggregation:
+  field: entity.data
+headline: "SPF record found for domain: {entity.data}"

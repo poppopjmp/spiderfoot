@@ -1,13 +1,17 @@
+from __future__ import annotations
+
+"""Tests for sfp_callername module."""
+
 import pytest
 import unittest
 
 from modules.sfp_callername import sfp_callername
-from sflib import SpiderFoot
-from test.unit.utils.test_base import SpiderFootTestBase
+from spiderfoot.sflib import SpiderFoot
+from test.unit.utils.test_module_base import TestModuleBase
 from test.unit.utils.test_helpers import safe_recursion
 
 
-class TestModuleCallername(SpiderFootTestBase):
+class TestModuleCallername(TestModuleBase):
 
     def test_opts(self):
         module = sfp_callername()

@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: uceprotect."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_uceprotect
@@ -14,10 +18,13 @@
 
 from netaddr import IPNetwork
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_uceprotect(SpiderFootPlugin):
+class sfp_uceprotect(SpiderFootModernPlugin):
+
+    """Check if a netblock or IP address is in the UCEPROTECT database."""
 
     meta = {
         'name': "UCEPROTECT",
@@ -57,14 +64,12 @@ class sfp_uceprotect(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return [
             'IP_ADDRESS',
             'AFFILIATE_IPADDR',
@@ -72,7 +77,8 @@ class sfp_uceprotect(SpiderFootPlugin):
             'NETBLOCK_MEMBER'
         ]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "BLACKLISTED_IPADDR",
             "BLACKLISTED_AFFILIATE_IPADDR",
@@ -85,10 +91,11 @@ class sfp_uceprotect(SpiderFootPlugin):
         ]
 
     # Swap 1.2.3.4 to 4.3.2.1
-    def reverseAddr(self, ipaddr):
+    def reverseAddr(self, ipaddr: str) -> str:
+        """ReverseAddr."""
         return '.'.join(reversed(ipaddr.split('.')))
 
-    def queryDnsblLevel1(self, qaddr):
+    def queryDnsblLevel1(self, qaddr: str) -> list | None:
         """Query UCEPROTECT DNS Level 1 for an IPv4 address.
 
         Args:
@@ -104,13 +111,13 @@ class sfp_uceprotect(SpiderFootPlugin):
         try:
             lookup = self.reverseAddr(qaddr) + '.dnsbl-1.uceprotect.net'
             self.debug(f"Checking UCEPROTECT blacklist: {lookup}")
-            return self.sf.resolveHost(lookup)
+            return self.resolve_host(lookup)
         except Exception as e:
             self.debug(f"UCEPROTECT did not resolve {qaddr} / {lookup}: {e}")
 
         return None
 
-    def queryDnsblLevel2(self, qaddr):
+    def queryDnsblLevel2(self, qaddr: str) -> list | None:
         """Query UCEPROTECT DNS Level 2 for an IPv4 address.
 
         Args:
@@ -126,13 +133,14 @@ class sfp_uceprotect(SpiderFootPlugin):
         try:
             lookup = self.reverseAddr(qaddr) + '.dnsbl-2.uceprotect.net'
             self.debug(f"Checking UCEPROTECT blacklist: {lookup}")
-            return self.sf.resolveHost(lookup)
+            return self.resolve_host(lookup)
         except Exception as e:
             self.debug(f"UCEPROTECT did not resolve {qaddr} / {lookup}: {e}")
 
         return None
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
 

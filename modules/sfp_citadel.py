@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: citadel."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:        sfp_citadel
@@ -16,11 +20,12 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_citadel(SpiderFootPlugin):
-
+class sfp_citadel(SpiderFootModernPlugin):
+    """SpiderFoot plugin to search Leak-Lookup.com's database of breaches."""
     meta = {
         'name': "Leak-Lookup",
         'summary': "Searches Leak-Lookup.com's database of breaches.",
@@ -68,28 +73,28 @@ class sfp_citadel(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
         self.__dataSource__ = "Leak-Lookup.com"
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ['EMAILADDR']
 
     # What events this module produces
     # This is to support the end user in selecting modules based on events
     # produced.
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["EMAILADDR_COMPROMISED"]
 
     # Query email address
     # https://leak-lookup.com/api
-    def queryEmail(self, email):
+    def queryEmail(self, email: str) -> dict | None:
+        """Query Email."""
         apikey = self.opts['api_key']
 
         if not apikey:
@@ -102,7 +107,7 @@ class sfp_citadel(SpiderFootPlugin):
             'key': apikey
         }
 
-        res = self.sf.fetchUrl("https://leak-lookup.com/api/search",
+        res = self.fetch_url("https://leak-lookup.com/api/search",
                                postData=urllib.parse.urlencode(params),
                                timeout=self.opts['timeout'],
                                useragent=self.opts['_useragent'])
@@ -123,7 +128,8 @@ class sfp_citadel(SpiderFootPlugin):
         return None
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

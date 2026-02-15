@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: dnsgrep."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:        sfp_dnsgrep
@@ -19,11 +23,12 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_dnsgrep(SpiderFootPlugin):
-
+class sfp_dnsgrep(SpiderFootModernPlugin):
+    """SpiderFoot plugin for retrieving domain names from Rapid7 Sonar Project data sets using DNSGrep API."""
     meta = {
         'name': "DNSGrep",
         'summary': "Obtain Passive DNS information from Rapid7 Sonar Project using DNSGrep API.",
@@ -66,28 +71,28 @@ class sfp_dnsgrep(SpiderFootPlugin):
 
     results = None
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in userOpts.keys():
-            self.opts[opt] = userOpts[opt]
-
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME"]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["INTERNET_NAME", "INTERNET_NAME_UNRESOLVED", "RAW_RIR_DATA"]
 
     # Query the DNSGrep REST API
-    def query(self, qry):
+    def query(self, qry: str) -> dict | None:
+        """Query the data source."""
         params = {
             'q': '.' + qry.encode('raw_unicode_escape').decode("ascii", errors='replace')
         }
 
-        res = self.sf.fetchUrl('https://dns.bufferover.run/dns?' + urllib.parse.urlencode(params),
+        res = self.fetch_url('https://dns.bufferover.run/dns?' + urllib.parse.urlencode(params),
                                timeout=self.opts['timeout'],
                                useragent=self.opts['_useragent'])
 
@@ -107,7 +112,8 @@ class sfp_dnsgrep(SpiderFootPlugin):
         return None
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data
@@ -135,7 +141,7 @@ class sfp_dnsgrep(SpiderFootPlugin):
             for r in fdns:
                 try:
                     ip, domain = r.split(',')
-                except Exception:
+                except Exception as e:
                     continue
 
                 domains.append(domain)
@@ -146,7 +152,7 @@ class sfp_dnsgrep(SpiderFootPlugin):
             for r in rdns:
                 try:
                     ip, domain = r.split(',')
-                except Exception:
+                except Exception as e:
                     continue
 
                 domains.append(domain)
@@ -160,7 +166,7 @@ class sfp_dnsgrep(SpiderFootPlugin):
 
             evt_type = "INTERNET_NAME"
 
-            if self.opts["dns_resolve"] and not self.sf.resolveHost(domain) and not self.sf.resolveHost6(domain):
+            if self.opts["dns_resolve"] and not self.resolve_host(domain) and not self.resolve_host6(domain):
                 self.debug(f"Host {domain} could not be resolved")
                 evt_type += "_UNRESOLVED"
 

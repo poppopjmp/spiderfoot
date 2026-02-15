@@ -1,0 +1,155 @@
+# =============================================================================
+# LiteLLM Proxy Configuration for SpiderFoot
+# =============================================================================
+# Unified LLM gateway providing:
+#   - Model routing (OpenAI, Ollama, Azure, Anthropic, local)
+#   - Cost tracking per model/request
+#   - Rate limiting and fallback chains
+#   - API key management
+#   - Prometheus metrics on /metrics
+#
+# Documentation: https://docs.litellm.ai/docs/proxy/configs
+# =============================================================================
+
+model_list:
+  # --- OpenRouter Models (multi-provider gateway) ---
+  - model_name: "gpt-4o"
+    litellm_params:
+      model: "openrouter/openai/gpt-4o"
+      api_key: "os.environ/OPENROUTER_API_KEY"
+      max_tokens: 4096
+
+  - model_name: "gpt-4o-mini"
+    litellm_params:
+      model: "openrouter/openai/gpt-4o-mini"
+      api_key: "os.environ/OPENROUTER_API_KEY"
+      max_tokens: 4096
+
+  - model_name: "gpt-3.5-turbo"
+    litellm_params:
+      model: "openrouter/openai/gpt-3.5-turbo"
+      api_key: "os.environ/OPENROUTER_API_KEY"
+      max_tokens: 4096
+
+  - model_name: "claude-sonnet"
+    litellm_params:
+      model: "openrouter/anthropic/claude-sonnet-4-20250514"
+      api_key: "os.environ/OPENROUTER_API_KEY"
+      max_tokens: 4096
+
+  - model_name: "claude-haiku"
+    litellm_params:
+      model: "openrouter/anthropic/claude-3-5-haiku-20241022"
+      api_key: "os.environ/OPENROUTER_API_KEY"
+      max_tokens: 4096
+
+  # --- Gemma 3 27B (used for CTI report generation) ---
+  - model_name: "gemma3-27b"
+    litellm_params:
+      model: "openrouter/google/gemma-3-27b-it"
+      api_key: "os.environ/OPENROUTER_API_KEY"
+      max_tokens: 65536
+
+  # --- Direct OpenAI Models (optional, if OPENAI_API_KEY set) ---
+  - model_name: "openai/gpt-4o"
+    litellm_params:
+      model: "openai/gpt-4o"
+      api_key: "os.environ/OPENAI_API_KEY"
+      max_tokens: 4096
+
+  # --- Direct Anthropic Models (optional, if ANTHROPIC_API_KEY set) ---
+  - model_name: "anthropic/claude-sonnet"
+    litellm_params:
+      model: "anthropic/claude-sonnet-4-20250514"
+      api_key: "os.environ/ANTHROPIC_API_KEY"
+      max_tokens: 4096
+
+  # --- Local Ollama Models (connect to host or sidecar) ---
+  - model_name: "ollama/llama3"
+    litellm_params:
+      model: "ollama/llama3"
+      api_base: "os.environ/OLLAMA_API_BASE"
+
+  - model_name: "ollama/mistral"
+    litellm_params:
+      model: "ollama/mistral"
+      api_base: "os.environ/OLLAMA_API_BASE"
+
+  - model_name: "ollama/codellama"
+    litellm_params:
+      model: "ollama/codellama"
+      api_base: "os.environ/OLLAMA_API_BASE"
+
+  # --- Embedding Models ---
+  - model_name: "text-embedding-3-small"
+    litellm_params:
+      model: "openai/text-embedding-3-small"
+      api_key: "os.environ/OPENAI_API_KEY"
+
+  - model_name: "text-embedding-3-large"
+    litellm_params:
+      model: "openai/text-embedding-3-large"
+      api_key: "os.environ/OPENAI_API_KEY"
+
+  # --- Ollama Embedding Models (local) ---
+  - model_name: "ollama/nomic-embed-text"
+    litellm_params:
+      model: "ollama/nomic-embed-text"
+      api_base: "os.environ/OLLAMA_API_BASE"
+
+  - model_name: "ollama/mxbai-embed-large"
+    litellm_params:
+      model: "ollama/mxbai-embed-large"
+      api_base: "os.environ/OLLAMA_API_BASE"
+
+  - model_name: "ollama/all-minilm"
+    litellm_params:
+      model: "ollama/all-minilm"
+      api_base: "os.environ/OLLAMA_API_BASE"
+
+  # --- OpenRouter Embedding Models ---
+  - model_name: "openrouter/text-embedding-3-small"
+    litellm_params:
+      model: "openrouter/openai/text-embedding-3-small"
+      api_key: "os.environ/OPENROUTER_API_KEY"
+
+# --- General Settings ---
+litellm_settings:
+  # Enable cost tracking
+  success_callback: ["prometheus"]
+  failure_callback: ["prometheus"]
+  # Drop requests without valid keys
+  drop_params: true
+  # Cache responses to reduce costs
+  cache: true
+  cache_params:
+    type: "redis"
+    host: "redis"
+    port: 6379
+    db: 2
+  # Set overall request timeout
+  request_timeout: 120
+  # Max retries on transient failures
+  num_retries: 2
+
+# --- Router Settings ---
+router_settings:
+  # Load-balance between models with same name
+  routing_strategy: "simple-shuffle"
+  # Fallback chain: try cheaper model on failure
+  model_group_alias:
+    "default": "gpt-4o-mini"
+    "fast": "gpt-4o-mini"
+    "smart": "claude-sonnet"
+    "local": "ollama/llama3"
+    # Embedding aliases
+    "embed-default": "text-embedding-3-small"
+    "embed-local": "ollama/nomic-embed-text"
+
+# --- General Proxy Settings ---
+general_settings:
+  master_key: "os.environ/LITELLM_MASTER_KEY"
+  database_url: "os.environ/LITELLM_DATABASE_URL"
+  otel: true
+  # Expose Prometheus metrics
+  alerting: ["prometheus"]

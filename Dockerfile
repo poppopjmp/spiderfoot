@@ -1,10 +1,10 @@
 #
-# Spiderfoot Dockerfile - Enterprise Edition
-# Improved version with virtual environment support and FastAPI
+# Spiderfoot Dockerfile
+# Multi-stage build with virtual environment support and FastAPI
 #
 
 # Build stage
-FROM python:3.11-slim-bullseye as builder
+FROM python:3.11-slim-bookworm AS builder
 
 # Install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -41,6 +41,16 @@ RUN pip install --no-cache-dir -U pip==25.0.1 && \
     # Install additional security tools
     pip install --no-cache-dir dnstwist snallygaster trufflehog wafw00f
 
+# Build React frontend SPA
+COPY frontend/ /build/frontend/
+RUN cd /build/frontend && \
+    npm ci --no-audit --no-fund && \
+    npx tsc --noEmit || true && \
+    npx vite build && \
+    mkdir -p /build/spiderfoot/static/react && \
+    cp -r /build/frontend/dist/* /build/spiderfoot/static/react/ 2>/dev/null || \
+    cp -r /home/spiderfoot/spiderfoot/static/react/ /build/spiderfoot/static/react/ 2>/dev/null || true
+
 # Download and build tools
 RUN mkdir -p /tools/bin && \
     # Nuclei
@@ -60,7 +70,13 @@ RUN mkdir -p /tools/bin && \
     mkdir /tools/CMSeeK/Results
 
 # Runtime stage
-FROM python:3.11-slim-bullseye
+FROM python:3.11-slim-bookworm
+
+LABEL maintainer="SpiderFoot <support@spiderfoot.net>" \
+      org.opencontainers.image.title="SpiderFoot" \
+      org.opencontainers.image.description="OSINT automation platform" \
+      org.opencontainers.image.source="https://github.com/poppopjmp/spiderfoot" \
+      org.opencontainers.image.licenses="MIT"
 
 # Install only runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -84,6 +100,9 @@ COPY --from=builder /opt/venv /opt/venv
 
 # Copy tools from builder
 COPY --from=builder /tools /tools
+
+# Copy built React SPA from builder
+COPY --from=builder /build/spiderfoot/static/react /home/spiderfoot/spiderfoot/static/react
 
 # Set up environment with virtual environment
 ENV SPIDERFOOT_DATA=/home/spiderfoot/data \
@@ -113,7 +132,8 @@ COPY --chown=spiderfoot:spiderfoot . .
 
 # Copy and set up the startup script
 COPY --chown=root:root docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh && \
+    chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Remove any database files from application directory to prevent conflicts
 RUN rm -f /home/spiderfoot/spiderfoot.db && \
@@ -144,9 +164,13 @@ USER spiderfoot
 # Expose ports for both web UI and API
 EXPOSE 5001 8001
 
-# Default command with support for both web UI and API
+# Health check for API endpoint
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8001/api/v1/health')" || exit 1
+
+# Default command: FastAPI server
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh", "python"]
-CMD ["sf.py", "--both", "-l", "0.0.0.0:5001", "--api-listen", "0.0.0.0:8001"]
+CMD ["sf.py", "--api", "--api-listen", "0.0.0.0:8001"]
 
 # ---
 # NOTE: For persistent storage, logs, cache, and config, ensure the following paths are writeable by the spiderfoot user inside the container:

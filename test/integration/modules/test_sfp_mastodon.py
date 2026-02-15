@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""Tests for sfp_mastodon module."""
+
 import pytest
 from modules.sfp_mastodon import sfp_mastodon
 from spiderfoot import SpiderFootEvent

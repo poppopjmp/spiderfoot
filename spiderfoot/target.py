@@ -1,31 +1,44 @@
+"""Scan target abstraction.
+
+Provides the :class:`SpiderFootTarget` class that encapsulates a scan's
+root target (domain, IP address, hostname, etc.), validates its type, and
+offers helpers for determining whether discovered hosts and IPs fall within
+the target's scope.
+"""
+
+from __future__ import annotations
+
 import sys
 import typing
 
 import netaddr
 
 
-if sys.version_info >= (3, 8):  # PEP 589 support (TypedDict)
-    TargetAlias = typing.TypedDict("TargetAlias", {"type": str, "value": str})
-else:
-    TargetAlias = typing.Dict[str, str]
+class TargetAlias(typing.TypedDict):
+        """Typed dictionary for a target alias entry."""
+
+        type: str
+        value: str
 
 
 class SpiderFootTarget():
     """SpiderFoot target.
 
     Attributes:
-        validTypes (typing.List[str]): valid event types accepted as a target
+        validTypes (typing.FrozenSet[str]): valid event types accepted as a target
         targetType (str): target type
         targetValue (str): target value
-        targetAliases (typing.List[TargetAlias]): target aliases
+        targetAliases (list[TargetAlias]): target aliases
     """
 
-    _validTypes = ["IP_ADDRESS", 'IPV6_ADDRESS', "NETBLOCK_OWNER", "NETBLOCKV6_OWNER", "INTERNET_NAME",
-                   "EMAILADDR", "HUMAN_NAME", "BGP_AS_OWNER", 'PHONE_NUMBER', "USERNAME",
-                   "BITCOIN_ADDRESS"]
+    _validTypes: frozenset[str] = frozenset({
+        "IP_ADDRESS", "IPV6_ADDRESS", "NETBLOCK_OWNER", "NETBLOCKV6_OWNER",
+        "INTERNET_NAME", "EMAILADDR", "HUMAN_NAME", "BGP_AS_OWNER",
+        "PHONE_NUMBER", "USERNAME", "BITCOIN_ADDRESS",
+    })
     _targetType: str
     _targetValue: str
-    _targetAliases: typing.List[TargetAlias]
+    _targetAliases: list[TargetAlias]
 
     def __init__(self, targetValue: str, typeName: str) -> None:
         """Initialize SpiderFoot target.
@@ -38,12 +51,18 @@ class SpiderFootTarget():
         self.targetValue = targetValue
         self.targetAliases = list()
 
+    def __repr__(self) -> str:
+        """Return a string representation of the target."""
+        return f"SpiderFootTarget({self._targetValue!r}, {self._targetType!r})"
+
     @property
     def targetType(self) -> str:
+        """Return the target type."""
         return self._targetType
 
     @targetType.setter
     def targetType(self, targetType: str) -> None:
+        """Set and validate the target type."""
         if not isinstance(targetType, str):
             raise TypeError(
                 f"targetType is {type(targetType)}; expected str()")
@@ -56,10 +75,12 @@ class SpiderFootTarget():
 
     @property
     def targetValue(self) -> str:
+        """Return the target value."""
         return self._targetValue
 
     @targetValue.setter
     def targetValue(self, targetValue: str) -> None:
+        """Set and validate the target value."""
         if not isinstance(targetValue, str):
             raise TypeError(
                 f"targetValue is {type(targetValue)}; expected str()")
@@ -69,11 +90,13 @@ class SpiderFootTarget():
         self._targetValue = targetValue
 
     @property
-    def targetAliases(self) -> typing.List[TargetAlias]:
+    def targetAliases(self) -> list[TargetAlias]:
+        """Return the list of target aliases."""
         return self._targetAliases
 
     @targetAliases.setter
-    def targetAliases(self, value: typing.List[TargetAlias]) -> None:
+    def targetAliases(self, value: list[TargetAlias]) -> None:
+        """Set the list of target aliases."""
         self._targetAliases = value
 
     def setAlias(self, value: str, typeName: str) -> None:
@@ -107,32 +130,32 @@ class SpiderFootTarget():
 
         self.targetAliases.append(alias)
 
-    def _getEquivalents(self, typeName: str) -> typing.List[str]:
+    def _getEquivalents(self, typeName: str) -> list[str]:
         """Get all aliases of the specfied target data type.
 
         Args:
             typeName (str): Target data type
 
         Returns:
-            typing.List[str]: target aliases
+            list[str]: target aliases
         """
-        ret: typing.List[str] = list()
+        ret: list[str] = list()
         for item in self.targetAliases:
             if item['type'] == typeName:
                 ret.append(item['value'].lower())
         return ret
 
-    def getNames(self) -> typing.List[str]:
+    def getNames(self) -> list[str]:
         """Get all domains associated with the target.
 
         Returns:
-            typing.List[str]: domains associated with the target
+            list[str]: domains associated with the target
         """
         e = self._getEquivalents("INTERNET_NAME")
         if self.targetType in ["INTERNET_NAME", "EMAILADDR"] and self.targetValue.lower() not in e:
             e.append(self.targetValue.lower())
 
-        names: typing.List[str] = list()
+        names: list[str] = list()
         for name in e:
             if isinstance(name, bytes):
                 names.append(name.decode("utf-8"))
@@ -141,11 +164,11 @@ class SpiderFootTarget():
 
         return names
 
-    def getAddresses(self) -> typing.List[str]:
+    def getAddresses(self) -> list[str]:
         """Get all IP subnet or IP address aliases associated with the target.
 
         Returns:
-            typing.List[str]: List of IP subnets and addresses
+            list[str]: List of IP subnets and addresses
         """
         e = self._getEquivalents("IP_ADDRESS")
         if self.targetType == "IP_ADDRESS":
@@ -196,8 +219,9 @@ class SpiderFootTarget():
         if self.targetType in ["HUMAN_NAME", "PHONE_NUMBER", "USERNAME", "BITCOIN_ADDRESS"]:
             return True
 
-        # TODO: review handling of other potential self.targetType target types:
-        # "INTERNET_NAME", "EMAILADDR", "BGP_AS_OWNER"
+        # NOTE(v6): Consider adding explicit scope matching for INTERNET_NAME
+        # (suffix match), EMAILADDR (domain match), and BGP_AS_OWNER (AS lookup).
+        # Currently these fall through to the IP/domain checks below.
 
         # For IP addreses, check if it is an alias of the target or within the target's subnet.
         if netaddr.valid_ipv4(value) or netaddr.valid_ipv6(value):

@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: bambenek."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:   sfp_bambanek
@@ -11,10 +15,12 @@
 # -------------------------------------------------------------------------------
 
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_bambenek(SpiderFootPlugin):
+class sfp_bambenek(SpiderFootModernPlugin):
+    """SpiderFoot plugin to check if a host/domain or IP appears in Bambenek Consulting feeds."""
     meta = {
         "name": "Bambenek Consulting",
         "summary": "Check if a host/domain or IP appears in Bambenek Consulting feeds.",
@@ -55,7 +61,7 @@ class sfp_bambenek(SpiderFootPlugin):
 
     # Be sure to completely clear any class variables in setup()
     # or you risk data persisting between scan runs.
-    def setup(self, sfc, userOpts=dict()):
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """
         Set up the plugin with SpiderFoot context and user options.
 
@@ -63,7 +69,7 @@ class sfp_bambenek(SpiderFootPlugin):
             sfc (SpiderFoot): The SpiderFoot context object.
             userOpts (dict): User-supplied options for the module.
         """
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.opts.update(userOpts)
 
@@ -80,7 +86,7 @@ class sfp_bambenek(SpiderFootPlugin):
             ),
         }
 
-    def retrieveDataFromFeed(self, url):
+    def retrieveDataFromFeed(self, url: str) -> list:
         """
         Retrieve and cache data from a Bambenek feed URL.
 
@@ -89,13 +95,13 @@ class sfp_bambenek(SpiderFootPlugin):
         Returns:
             list: List of parsed items from the feed.
         """
-        data = self.sf.cacheGet("bambenek_" + url, self.opts["cacheperiod"])
+        data = self.cache_get("bambenek_" + url, self.opts["cacheperiod"])
         if data:
             self.debug(f"Using cached data from Bambenek feed: {url}")
             return self.parseData(data)
 
         self.debug(f"Fetching data from Bambenek feed: {url}")
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             url, timeout=self.opts["_fetchtimeout"], useragent=self.opts["_useragent"]
         )
         if res["code"] != "200":
@@ -107,7 +113,7 @@ class sfp_bambenek(SpiderFootPlugin):
             return []
 
         try:
-            self.sf.cachePut(
+            self.cache_put(
                 "bambenek_" + url, res["content"], self.opts["cacheperiod"]
             )
             return self.parseData(res["content"])
@@ -115,7 +121,7 @@ class sfp_bambenek(SpiderFootPlugin):
             self.error(f"Error processing Bambenek data: {str(e)}")
             return []
 
-    def parseData(self, data):
+    def parseData(self, data: str) -> list:
         """
         Parse feed data into a list of items.
 
@@ -137,7 +143,7 @@ class sfp_bambenek(SpiderFootPlugin):
         return items
 
     # What events is this module interested in for input
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
         """
         Return a list of event types this module is interested in.
 
@@ -153,7 +159,7 @@ class sfp_bambenek(SpiderFootPlugin):
         ]
 
     # What events this module produces
-    def producedEvents(self):
+    def producedEvents(self) -> list:
         """
         Return a list of event types this module produces.
 
@@ -174,7 +180,7 @@ class sfp_bambenek(SpiderFootPlugin):
         ]
 
     # Check if an IP or domain is malicious
-    def queryFeed(self, qry, feed_type):
+    def queryFeed(self, qry: str, feed_type: str) -> bool:
         """
         Check if a query value is present in the specified feed type.
 
@@ -193,7 +199,7 @@ class sfp_bambenek(SpiderFootPlugin):
         return False
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
         """
         Handle incoming events, check Bambenek feeds, and emit events for matches.
 

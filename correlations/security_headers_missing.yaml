@@ -1,0 +1,29 @@
+id: security_headers_missing
+version: "1"
+meta:
+  name: Web server with unusual or security-relevant headers
+  description: >
+    The web server returned unusual HTTP headers that may
+    indicate misconfiguration or missing security controls.
+    Strange headers can reveal internal infrastructure details,
+    debugging information, or technology stack specifics that
+    aid attackers.
+
+    Missing security headers like Content-Security-Policy,
+    Strict-Transport-Security, or X-Frame-Options leave the
+    application vulnerable to XSS, clickjacking, and downgrade
+    attacks.
+  risk: MEDIUM
+collections:
+  collect:
+      - method: exact
+        field: type
+        value: WEBSERVER_STRANGEHEADER
+aggregation:
+  field: entity.data
+analysis:
+  - method: threshold
+    minimum: 2
+    field: data
+    count_unique_only: true
+headline: "Multiple unusual headers found on: {entity.data}"

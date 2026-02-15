@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: twilio."""
+
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:         sfp_twilio
@@ -13,10 +17,13 @@
 import base64
 import json
 
-from spiderfoot import SpiderFootEvent, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_twilio(SpiderFootPlugin):
+class sfp_twilio(SpiderFootModernPlugin):
+
+    """Obtain information from Twilio about phone numbers. Ensure you have the Caller Name add-on installed in Twilio."""
 
     meta = {
         'name': "Twilio",
@@ -58,23 +65,23 @@ class sfp_twilio(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
-
-        for opt in list(userOpts.keys()):
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["PHONE_NUMBER"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return ["COMPANY_NAME", "RAW_RIR_DATA"]
 
     # When querying third parties, it's best to have a dedicated function
     # to do so and avoid putting it in handleEvent()
-    def queryPhoneNumber(self, phoneNumber):
+    def queryPhoneNumber(self, phoneNumber: str):
 
+        """Query PhoneNumber."""
         token = (base64.b64encode(self.opts['api_key_account_sid'].encode(
             'utf8') + ":".encode('utf-8') + self.opts['api_key_auth_token'].encode('utf-8'))).decode('utf-8')
 
@@ -83,7 +90,7 @@ class sfp_twilio(SpiderFootPlugin):
             'Authorization': "Basic " + token
         }
 
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://lookups.twilio.com/v1/PhoneNumbers/{phoneNumber}?Type=caller-name",
             headers=headers,
             timeout=15,
@@ -113,7 +120,8 @@ class sfp_twilio(SpiderFootPlugin):
         return res.get('content')
 
     # Handle events sent to this module
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

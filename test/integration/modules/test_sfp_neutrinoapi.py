@@ -1,9 +1,14 @@
+from __future__ import annotations
+
+"""Tests for sfp_neutrinoapi module."""
+
 import pytest
 import unittest
+from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch
 
 from modules.sfp_neutrinoapi import sfp_neutrinoapi
-from sflib import SpiderFoot
+from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 
@@ -14,7 +19,7 @@ class DummyEventListener:
     def notifyListeners(self, event):
         self.events.append(event)
 
-class TestModuleIntegrationNeutrinoapi(unittest.TestCase):
+class TestModuleIntegrationNeutrinoapi(TestModuleBase):
     def setUp(self):
         self.options = {
             'user_id': 'dummy_user',
@@ -29,7 +34,7 @@ class TestModuleIntegrationNeutrinoapi(unittest.TestCase):
         self.listener = DummyEventListener()
         self.module.notifyListeners = self.listener.notifyListeners
 
-    @patch('sflib.SpiderFoot.fetchUrl')
+    @patch('spiderfoot.sflib.SpiderFoot.fetchUrl')
     def test_handleEvent_emits_events_on_valid_ip(self, mock_fetch):
         # Simulate NeutrinoAPI responses for all three API calls
         def fetchUrl_side_effect(url, **kwargs):

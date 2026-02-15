@@ -10,13 +10,20 @@
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
+from __future__ import annotations
+
+"""SpiderFoot plug-in module: zonefiles."""
+
 import json
 import time
 
-from spiderfoot import SpiderFootEvent, SpiderFootHelpers, SpiderFootPlugin
+from spiderfoot import SpiderFootEvent, SpiderFootHelpers
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 
-class sfp_zonefiles(SpiderFootPlugin):
+class sfp_zonefiles(SpiderFootModernPlugin):
+
+    """Search ZoneFiles.io Domain query API for domain information."""
 
     meta = {
         'name': "ZoneFile.io",
@@ -55,18 +62,17 @@ class sfp_zonefiles(SpiderFootPlugin):
     results = None
     errorState = False
 
-    def setup(self, sfc, userOpts=dict()):
-        self.sf = sfc
+    def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
+        """Set up the module."""
+        super().setup(sfc, userOpts or {})
         self.results = self.tempStorage()
         self.errorState = False
-
-        for opt in userOpts.keys():
-            self.opts[opt] = userOpts[opt]
-
-    def watchedEvents(self):
+    def watchedEvents(self) -> list:
+        """Return the list of events this module watches."""
         return ["DOMAIN_NAME"]
 
-    def producedEvents(self):
+    def producedEvents(self) -> list:
+        """Return the list of events this module produces."""
         return [
             "RAW_RIR_DATA",
             "IP_ADDRESS",
@@ -76,7 +82,7 @@ class sfp_zonefiles(SpiderFootPlugin):
             "SOFTWARE_USED",
         ]
 
-    def queryDomain(self, qry):
+    def queryDomain(self, qry: str) -> dict:
         """Query a domain.
 
         Args:
@@ -89,7 +95,7 @@ class sfp_zonefiles(SpiderFootPlugin):
         headers = {
             "Accept": "application/json"
         }
-        res = self.sf.fetchUrl(
+        res = self.fetch_url(
             f"https://zonefiles.io/q/{self.opts['api_key']}/{qry}",
             headers=headers,
             timeout=30,
@@ -100,7 +106,8 @@ class sfp_zonefiles(SpiderFootPlugin):
 
         return self.parseApiResponse(res)
 
-    def parseApiResponse(self, res: dict):
+    def parseApiResponse(self, res: dict) -> dict | None:
+        """Parse ApiResponse."""
         if not res:
             self.error("No response from ZoneFiles.")
             return None
@@ -138,7 +145,8 @@ class sfp_zonefiles(SpiderFootPlugin):
 
         return data
 
-    def handleEvent(self, event):
+    def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         if self.errorState:
             return
 

@@ -1,0 +1,21 @@
+#
+# SpiderFoot API Service
+# Runs the FastAPI REST API
+#
+ARG BASE_IMAGE=spiderfoot-base:latest
+FROM ${BASE_IMAGE}
+
+LABEL service="api"
+LABEL description="SpiderFoot REST API service"
+
+ENV SF_SERVICE=api \
+    SF_API_HOST=0.0.0.0 \
+    SF_API_PORT=8001 \
+    SF_API_WORKERS=4
+
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+    CMD curl -f http://localhost:8001/healthz || exit 1
+
+EXPOSE 8001
+
+CMD ["python", "-m", "spiderfoot.service_runner", "--service", "api", "--port", "8001"]
