@@ -50,8 +50,10 @@ x-sf-build: &sf-build
 
 networks:
   sf-frontend:
+    name: sf-frontend
     driver: bridge
   sf-backend:
+    name: sf-backend
     driver: bridge
     internal: true
 
@@ -84,19 +86,20 @@ services:
       - "traefik.http.routers.minio-console.rule=PathPrefix(`/minio`)"
       - "traefik.http.routers.minio-console.entrypoints=websecure"
       - "traefik.http.routers.minio-console.tls=true"
-      - "traefik.http.routers.minio-console.middlewares=security-headers@file"
+      - "traefik.http.routers.minio-console.middlewares=strip-minio@file,security-headers@file"
       - "traefik.http.routers.minio-console.service=minio-console"
       - "traefik.http.services.minio-console.loadbalancer.server.port=9001"
       # MinIO API (S3) — internal services use minio:9000, this route is for external S3 clients
       - "traefik.http.routers.minio-api.rule=PathPrefix(`/s3`)"
       - "traefik.http.routers.minio-api.entrypoints=websecure"
       - "traefik.http.routers.minio-api.tls=true"
-      - "traefik.http.routers.minio-api.middlewares=security-headers@file"
+      - "traefik.http.middlewares.strip-s3.stripprefix.prefixes=/s3"
+      - "traefik.http.routers.minio-api.middlewares=strip-s3,security-headers@file"
       - "traefik.http.routers.minio-api.service=minio-api"
       - "traefik.http.services.minio-api.loadbalancer.server.port=9000"
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-spiderfoot}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-changeme123}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       MINIO_PROMETHEUS_AUTH_TYPE: public
       MINIO_BROWSER_REDIRECT_URL: ${SF_MINIO_CONSOLE_URL:-https://localhost/minio/}
     volumes:
@@ -125,8 +128,8 @@ services:
       minio:
         condition: service_healthy
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-spiderfoot}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-changeme123}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     volumes:
       - mc-bin:/opt/mc-share
     entrypoint: >
@@ -172,7 +175,7 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-spiderfoot}
       POSTGRES_USER: ${POSTGRES_USER:-spiderfoot}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     command: ["postgres", "-c", "max_connections=500"]
     volumes:
       - postgres-data:/var/lib/postgresql/data
@@ -213,7 +216,7 @@ services:
       SF_SERVICE_ROLE: api
       SF_DEPLOYMENT_MODE: microservice
       SF_REDIS_URL: redis://redis:6379/0
-      SF_POSTGRES_DSN: postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-spiderfoot}
+      SF_POSTGRES_DSN: postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-spiderfoot}
       SF_API_HOST: "0.0.0.0"
       SF_API_PORT: "8001"
       SF_API_WORKERS: ${SF_API_WORKERS:-2}
@@ -246,7 +249,7 @@ services:
       # RAG / LLM settings (routed through LiteLLM proxy)
       SF_LLM_PROVIDER: ${SF_LLM_PROVIDER:-mock}
       SF_LLM_MODEL: ${SF_LLM_MODEL:-}
-      SF_LLM_API_KEY: ${SF_LLM_API_KEY:-sk-sf-litellm-dev-key}
+      SF_LLM_API_KEY: ${SF_LLM_API_KEY}
       SF_LLM_API_BASE: ${SF_LLM_API_BASE:-http://litellm:4000}
       # Vector correlation settings
       SF_VECTOR_CORRELATION_ENABLED: ${SF_VECTOR_CORRELATION_ENABLED:-true}
@@ -255,20 +258,20 @@ services:
       SF_VECTOR_RERANK_ACCURACY: ${SF_VECTOR_RERANK_ACCURACY:-high}
       # MinIO / S3-compatible object storage
       SF_MINIO_ENDPOINT: "minio:9000"
-      SF_MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-spiderfoot}
-      SF_MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-changeme123}
+      SF_MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      SF_MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
       SF_MINIO_SECURE: "false"
       SF_MINIO_REPORTS_BUCKET: ${SF_MINIO_REPORTS_BUCKET:-sf-reports}
       SF_MINIO_DATA_BUCKET: ${SF_MINIO_DATA_BUCKET:-sf-data}
       SF_MINIO_LOGS_BUCKET: ${SF_MINIO_LOGS_BUCKET:-sf-logs}
       # ── Auth / RBAC ──
-      SF_JWT_SECRET: ${SF_JWT_SECRET:-change-me-in-production-please}
+      SF_JWT_SECRET: ${SF_JWT_SECRET}
       SF_JWT_EXPIRY_HOURS: ${SF_JWT_EXPIRY_HOURS:-24}
       SF_JWT_REFRESH_EXPIRY_HOURS: ${SF_JWT_REFRESH_EXPIRY_HOURS:-168}
       SF_AUTH_REQUIRED: ${SF_AUTH_REQUIRED:-true}
       SF_RBAC_ENFORCE: ${SF_RBAC_ENFORCE:-true}
       SF_ADMIN_USERNAME: ${SF_ADMIN_USERNAME:-admin}
-      SF_ADMIN_PASSWORD: ${SF_ADMIN_PASSWORD:-admin}
+      SF_ADMIN_PASSWORD: ${SF_ADMIN_PASSWORD}
       SF_ADMIN_EMAIL: ${SF_ADMIN_EMAIL:-admin@spiderfoot.local}
       SF_MAX_LOGIN_ATTEMPTS: ${SF_MAX_LOGIN_ATTEMPTS:-5}
     depends_on:
@@ -477,7 +480,6 @@ services:
       - sf-backend
     volumes:
       - ./config/vector.toml:/etc/vector/vector.toml:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
       - vector-data:/var/lib/vector
       - vector-logs:/var/log/vector
     environment:
@@ -489,11 +491,13 @@ services:
       SF_S3_BUCKET: ${SF_S3_BUCKET:-spiderfoot-data-archive}
       SF_S3_REGION: ${SF_S3_REGION:-us-east-1}
       # MinIO S3-compatible endpoint for log/event archival
-      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-spiderfoot}
-      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-changeme123}
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
       SF_MINIO_ENDPOINT: "http://minio:9000"
       SF_MINIO_LOGS_BUCKET: ${SF_MINIO_LOGS_BUCKET:-sf-logs}
     depends_on:
+      docker-socket-proxy:
+        condition: service_started
       api:
         condition: service_healthy
       minio:
@@ -525,8 +529,8 @@ services:
       - ./infra/loki/local-config.yaml:/etc/loki/local-config.yaml:ro
     command: -config.file=/etc/loki/local-config.yaml
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-spiderfoot}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-changeme123}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     depends_on:
       minio:
         condition: service_healthy
@@ -565,7 +569,7 @@ services:
       - "traefik.http.services.grafana.loadbalancer.server.port=3000"
     environment:
       GF_SECURITY_ADMIN_USER: ${GF_SECURITY_ADMIN_USER:-admin}
-      GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD:-spiderfoot}
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD}
       GF_SERVER_ROOT_URL: ${GF_SERVER_ROOT_URL:-https://localhost/grafana/}
       GF_SERVER_SERVE_FROM_SUB_PATH: "true"
       GF_AUTH_ANONYMOUS_ENABLED: "true"
@@ -573,7 +577,7 @@ services:
       GF_USERS_ALLOW_SIGN_UP: "false"
       GF_INSTALL_PLUGINS: "grafana-piechart-panel"
       # Database connection for PostgreSQL datasource
-      SF_POSTGRES_DSN: postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-spiderfoot}
+      SF_POSTGRES_DSN: postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-spiderfoot}
     volumes:
       - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
       - ./infra/grafana/dashboards:/var/lib/grafana/dashboards:ro
@@ -706,7 +710,7 @@ services:
       # LLM via LiteLLM proxy
       SF_LLM_PROVIDER: ${SF_LLM_PROVIDER:-mock}
       SF_LLM_API_BASE: ${SF_LLM_API_BASE:-http://litellm:4000}
-      SF_LLM_API_KEY: ${SF_LLM_API_KEY:-sk-sf-litellm-dev-key}
+      SF_LLM_API_KEY: ${SF_LLM_API_KEY}
       SF_LLM_MODEL: ${SF_LLM_MODEL:-gpt-4o-mini}
       # Qdrant vector DB for report context
       SF_QDRANT_BACKEND: "http"
@@ -763,18 +767,18 @@ services:
     environment:
       SF_SERVICE: celery-worker
       SF_REDIS_URL: redis://redis:6379/0
-      SF_POSTGRES_DSN: postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-spiderfoot}
+      SF_POSTGRES_DSN: postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-spiderfoot}
       SF_LOG_LEVEL: ${SF_LOG_LEVEL:-INFO}
       SF_TIKA_URL: "http://tika:9998"
       SF_MINIO_ENDPOINT: "minio:9000"
-      SF_MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-spiderfoot}
-      SF_MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-changeme123}
+      SF_MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      SF_MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
       SF_MINIO_SECURE: "false"
       SF_MINIO_REPORTS_BUCKET: ${SF_MINIO_REPORTS_BUCKET:-sf-reports}
       SF_MINIO_DATA_BUCKET: ${SF_MINIO_DATA_BUCKET:-sf-data}
       SF_LLM_PROVIDER: ${SF_LLM_PROVIDER:-mock}
       SF_LLM_API_BASE: ${SF_LLM_API_BASE:-http://litellm:4000}
-      SF_LLM_API_KEY: ${SF_LLM_API_KEY:-sk-sf-litellm-dev-key}
+      SF_LLM_API_KEY: ${SF_LLM_API_KEY}
       SF_LLM_MODEL: ${SF_LLM_MODEL:-}
       SF_QDRANT_BACKEND: "http"
       SF_QDRANT_HOST: "qdrant"
@@ -836,7 +840,7 @@ services:
     environment:
       SF_SERVICE: celery-beat
       SF_REDIS_URL: redis://redis:6379/0
-      SF_POSTGRES_DSN: postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-spiderfoot}
+      SF_POSTGRES_DSN: postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-spiderfoot}
       SF_LOG_LEVEL: ${SF_LOG_LEVEL:-INFO}
     entrypoint: ["/usr/local/bin/docker-entrypoint.sh"]
     command:
@@ -878,11 +882,12 @@ services:
       - "traefik.http.routers.flower.tls=true"
       - "traefik.http.routers.flower.middlewares=security-headers@file"
       - "traefik.http.services.flower.loadbalancer.server.port=5555"
+      - "traefik.docker.network=sf-frontend"
     environment:
       SF_REDIS_URL: redis://redis:6379/0
       FLOWER_BROKER_URL: redis://redis:6379/0
       FLOWER_URL_PREFIX: /flower
-      FLOWER_BASIC_AUTH: ${FLOWER_BASIC_AUTH:-admin:spiderfoot}
+      FLOWER_BASIC_AUTH: ${FLOWER_BASIC_AUTH}
     entrypoint: ["/usr/local/bin/docker-entrypoint.sh"]
     command:
       - "python"
@@ -939,11 +944,11 @@ services:
     volumes:
       - ./infra/litellm/config.yaml:/app/config.yaml:ro
     environment:
-      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY:-sk-sf-litellm-dev-key}
-      LITELLM_DATABASE_URL: postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/litellm
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
+      LITELLM_DATABASE_URL: postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD}@postgres:5432/litellm
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
-      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-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}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
       OLLAMA_API_BASE: ${OLLAMA_API_BASE:-http://host.docker.internal:11434}
       # OTEL tracing to Vector
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://vector:4317"
@@ -1020,11 +1025,11 @@ services:
       PGHOST: postgres
       PGPORT: "5432"
       PGUSER: ${POSTGRES_USER:-spiderfoot}
-      PGPASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
       PGDATABASE: ${POSTGRES_DB:-spiderfoot}
       MINIO_ENDPOINT: "http://minio:9000"
-      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-spiderfoot}
-      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-changeme123}
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
       BACKUP_BUCKET: sf-pg-backups
       BACKUP_SCHEDULE_HOURS: ${SF_PG_BACKUP_SCHEDULE:-6}
       BACKUP_RETENTION_DAYS: ${SF_PG_BACKUP_RETENTION:-30}

@@ -32,7 +32,7 @@ scrape_configs:
   - job_name: "traefik"
     metrics_path: "/metrics"
     static_configs:
-      - targets: ["traefik:8080"]
+      - targets: ["traefik:8082"]
         labels:
           service: "traefik"
 

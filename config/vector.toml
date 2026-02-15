@@ -30,6 +30,7 @@ data_dir = "/var/lib/vector"
 # Collect container logs from all SpiderFoot services
 [sources.sf_docker_logs]
 type = "docker_logs"
+docker_host = "tcp://docker-socket-proxy:2375"
 include_labels = ["com.docker.compose.project=spiderfoot"]
 
 # HTTP source for scan events (SpiderFoot pushes events here)
@@ -86,6 +87,17 @@ inputs = ["sf_events_http"]
 source = '''
   .pipeline = "spiderfoot"
   .ingestion_timestamp = now()
+  
+  # Ensure label fields have defaults (required for Loki sink)
+  if !exists(.container_name) || is_null(.container_name) {
+    .container_name = "spiderfoot-events"
+  }
+  if !exists(.level) || is_null(.level) {
+    .level = "INFO"
+  }
+  if !exists(.log_format) || is_null(.log_format) {
+    .log_format = "structured"
+  }
   
   # Categorize by event type
   event_str = to_string(.event_type) ?? ""
@@ -157,12 +169,12 @@ condition = '(to_int(.risk) ?? 0) >= 60'
 # SINKS
 # ---------------------------------------------------------------------------
 
-# Console output for development/debugging
-[sinks.console_debug]
-type = "console"
-inputs = ["enrich_events"]
-encoding.codec = "json"
-# Enable only in development:
+# Console output for development/debugging (disabled by default)
+# Uncomment to enable:
+# [sinks.console_debug]
+# type = "console"
+# inputs = ["enrich_events"]
+# encoding.codec = "json"
 # target = "stdout"
 
 # Elasticsearch for scan events (searchable event store)

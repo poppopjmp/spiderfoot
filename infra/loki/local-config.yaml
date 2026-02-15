@@ -36,8 +36,8 @@ storage_config:
   aws:
     endpoint: http://minio:9000
     bucketnames: sf-loki-data
-    access_key_id: spiderfoot
-    secret_access_key: changeme123
+    access_key_id: ${MINIO_ROOT_USER}
+    secret_access_key: ${MINIO_ROOT_PASSWORD}
     s3forcepathstyle: true
     insecure: true
 

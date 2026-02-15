@@ -21,7 +21,7 @@ datasources:
     uid: prometheus
     type: prometheus
     access: proxy
-    url: http://prometheus:9090
+    url: http://prometheus:9090/prometheus
     editable: true
     jsonData:
       httpMethod: POST

@@ -40,7 +40,7 @@ http:
     dashboard-auth:
       basicAuth:
         users:
-          - "${TRAEFIK_DASHBOARD_USER:-admin}:${TRAEFIK_DASHBOARD_PASS:-$$2y$$05$$k7H8LRkHkN0eCmJ4XqYH5eZ0P.f7Q.PqG3XnvFBuX8i3Jm8LoLyXy}"
+          - "admin:$2y$05$Rr7nUg6MlrAeeUmdOVQ06.2IS0.8zoApEM0EiFuuxvvEy26x8dC3e"
         realm: "SpiderFoot Dashboard"
 
     # --- Security headers ---

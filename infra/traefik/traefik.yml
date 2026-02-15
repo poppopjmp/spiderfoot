@@ -25,6 +25,8 @@ entryPoints:
     address: ":443"
     http:
       tls: {}
+  metrics:
+    address: ":8082"
 
 # --- API / Dashboard ---
 api:
@@ -62,7 +64,7 @@ ping:
 # --- Metrics (Prometheus) ---
 metrics:
   prometheus:
-    entryPoint: "websecure"
+    entryPoint: "metrics"
     addEntryPointsLabels: true
     addServicesLabels: true
     addRoutersLabels: true

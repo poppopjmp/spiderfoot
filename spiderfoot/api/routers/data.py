@@ -25,7 +25,7 @@ async def list_entity_types(api_key: str = optional_auth_dep) -> dict:
         api_key (str): API key for authentication.
 
     Returns:
-        dict: Entity types as list of [event, event_descr, event_type] tuples.
+        dict: ``{"entity_types": ["IP_ADDRESS", "DOMAIN_NAME", ...]}``
 
     Raises:
         HTTPException: On error.
@@ -36,13 +36,22 @@ async def list_entity_types(api_key: str = optional_auth_dep) -> dict:
         try:
             rows = dbh.eventTypes()
             if rows:
-                return {"entity_types": rows}
+                # rows are tuples: (event_descr, event_code, event_raw, event_type)
+                # The frontend expects a flat list of event code strings.
+                codes = sorted(set(
+                    r[1] if isinstance(r, (list, tuple)) and len(r) > 1 else str(r)
+                    for r in rows
+                ))
+                return {"entity_types": codes}
         except Exception:
             pass
         # Fallback to config-based event types
         sf = SpiderFoot(config.get_config())
         types = sf.getEventTypes()
-        return {"entity_types": types}
+        # types may be a dict keyed by event code or a list
+        if isinstance(types, dict):
+            return {"entity_types": sorted(types.keys())}
+        return {"entity_types": sorted(set(str(t) for t in types)) if types else []}
     except Exception as e:
         log.exception("Failed to list entity types")
         raise HTTPException(status_code=500, detail=f"Failed to list entity types: {e}") from e
