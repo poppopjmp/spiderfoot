@@ -266,6 +266,18 @@ export default function ScansPage() {
                             <RotateCcw className="h-4 w-4" />
                           </button>
                         )}
+                        <button
+                          onClick={() => setConfirm({
+                            title: 'Delete Scan',
+                            message: `Delete "${scan.name || scan.target}"? This cannot be undone.`,
+                            action: () => { deleteMut.mutate(scan.scan_id); setConfirm(null); },
+                            danger: true,
+                          })}
+                          className="btn-icon text-dark-400 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Delete scan"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
                         <DropdownMenu
                           trigger={<button className="btn-icon text-dark-400 hover:text-dark-200"><MoreVertical className="h-4 w-4" /></button>}
                         >
@@ -278,12 +290,22 @@ export default function ScansPage() {
                             icon={Download}
                             onClick={() => {
                               scanApi.exportEvents(scan.scan_id, { filetype: 'csv' }).then((r) => {
-                                const url = URL.createObjectURL(r.data);
+                                const blob = r.data as Blob;
+                                if (!blob || blob.size === 0) {
+                                  setToast({ type: 'error', message: 'Export returned empty data' });
+                                  return;
+                                }
+                                const url = URL.createObjectURL(blob);
                                 const a = document.createElement('a');
                                 a.href = url;
                                 a.download = `${scan.name || scan.scan_id}.csv`;
+                                document.body.appendChild(a);
                                 a.click();
+                                document.body.removeChild(a);
                                 URL.revokeObjectURL(url);
+                                setToast({ type: 'success', message: 'CSV exported' });
+                              }).catch(() => {
+                                setToast({ type: 'error', message: 'CSV export failed' });
                               });
                             }}
                           >Export CSV</DropdownItem>

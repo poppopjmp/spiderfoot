@@ -17,6 +17,8 @@ import {
   Users,
   User,
   Shield,
+  Key,
+  Lock,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useAuthStore } from '../lib/auth';
@@ -121,6 +123,44 @@ export default function Layout() {
               Users
             </NavLink>
           )}
+
+          {/* SSO Settings (admin only) */}
+          {isAuthenticated && hasPermission('config:write') && (
+            <NavLink
+              to="/sso-settings"
+              onClick={() => { if (window.innerWidth < 1024) setSidebarOpen(false); }}
+              className={({ isActive }) =>
+                clsx(
+                  'flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors',
+                  isActive
+                    ? 'bg-spider-600/20 text-spider-400'
+                    : 'text-dark-300 hover:bg-dark-800 hover:text-dark-100',
+                )
+              }
+            >
+              <Lock className="h-4 w-4 flex-shrink-0" />
+              SSO Settings
+            </NavLink>
+          )}
+
+          {/* API Keys (all authenticated users) */}
+          {isAuthenticated && (
+            <NavLink
+              to="/api-keys"
+              onClick={() => { if (window.innerWidth < 1024) setSidebarOpen(false); }}
+              className={({ isActive }) =>
+                clsx(
+                  'flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors',
+                  isActive
+                    ? 'bg-spider-600/20 text-spider-400'
+                    : 'text-dark-300 hover:bg-dark-800 hover:text-dark-100',
+                )
+              }
+            >
+              <Key className="h-4 w-4 flex-shrink-0" />
+              API Keys
+            </NavLink>
+          )}
         </nav>
 
         {/* Services dropdown */}
@@ -204,7 +244,7 @@ export default function Layout() {
           <img src="/spiderfoot-icon.png" alt="SpiderFoot" className="h-5 w-5" />
           <span className="text-sm font-bold text-white">SpiderFoot</span>
         </div>
-        <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="px-6 py-8">
           <Outlet />
         </div>
       </main>

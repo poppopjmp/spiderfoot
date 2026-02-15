@@ -134,6 +134,9 @@ class SSOProvider:
     allowed_domains: str = ""  # comma-separated
     auto_create_users: bool = True
     attribute_mapping: str = ""  # JSON: {"email": "mail", "name": "displayName"}
+    # Group → role mapping for OAuth2/OIDC (Keycloak, Azure AD, etc.)
+    group_attribute: str = "groups"  # Claim name in userinfo that contains groups
+    admin_group: str = ""  # Group name that maps to admin role
     created_at: float = 0.0
     updated_at: float = 0.0
 
@@ -146,6 +149,9 @@ class SSOProvider:
             "default_role": self.default_role,
             "allowed_domains": self.allowed_domains,
             "auto_create_users": self.auto_create_users,
+            "attribute_mapping": self.attribute_mapping,
+            "group_attribute": self.group_attribute,
+            "admin_group": self.admin_group,
             "created_at": self.created_at,
             "updated_at": self.updated_at,
         }
@@ -156,6 +162,7 @@ class SSOProvider:
                 "token_url": self.token_url,
                 "userinfo_url": self.userinfo_url,
                 "scopes": self.scopes,
+                "jwks_uri": self.jwks_uri,
             })
             if include_secrets:
                 d["client_secret"] = self.client_secret
@@ -171,6 +178,7 @@ class SSOProvider:
                 "ldap_url": self.ldap_url,
                 "ldap_base_dn": self.ldap_base_dn,
                 "ldap_user_filter": self.ldap_user_filter,
+                "ldap_group_filter": self.ldap_group_filter,
                 "ldap_tls": self.ldap_tls,
             })
             if include_secrets:
@@ -224,3 +232,50 @@ class AuthConfig:
             "session_ttl_hours": self.session_ttl_hours,
             "auth_required": self.auth_required,
         }
+
+
+@dataclass
+class ApiKey:
+    """Represents an API key for programmatic access."""
+    id: str = ""
+    user_id: str = ""
+    name: str = ""
+    key_prefix: str = ""  # first 8 chars for identification
+    key_hash: str = ""    # bcrypt hash of the full key
+    role: str = "viewer"
+    status: str = "active"
+    expires_at: float = 0.0  # 0 = never
+    allowed_modules: str = ""  # JSON list of module names, empty = all
+    allowed_endpoints: str = ""  # JSON list of endpoint patterns, empty = all
+    rate_limit: int = 0  # requests per minute, 0 = unlimited
+    last_used: float = 0.0
+    created_at: float = 0.0
+    updated_at: float = 0.0
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+    def is_active(self) -> bool:
+        if self.status != "active":
+            return False
+        if self.expires_at > 0 and time.time() > self.expires_at:
+            return False
+        return True
+
+    def to_dict(self, include_sensitive: bool = False) -> dict[str, Any]:
+        d = {
+            "id": self.id,
+            "user_id": self.user_id,
+            "name": self.name,
+            "key_prefix": self.key_prefix,
+            "role": self.role,
+            "status": self.status,
+            "expires_at": self.expires_at,
+            "allowed_modules": self.allowed_modules,
+            "allowed_endpoints": self.allowed_endpoints,
+            "rate_limit": self.rate_limit,
+            "last_used": self.last_used,
+            "created_at": self.created_at,
+            "updated_at": self.updated_at,
+        }
+        if include_sensitive:
+            d["key_hash"] = self.key_hash
+        return d

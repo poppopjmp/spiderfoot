@@ -43,6 +43,8 @@ PUBLIC_PATHS = frozenset({
 
 # Path prefixes that are public
 PUBLIC_PREFIXES = (
+    "/health/",
+    "/api/health/",
     "/api/auth/sso/callback/",
     "/api/auth/sso/saml/acs/",
     "/api/auth/sso/oauth2/login/",
@@ -77,23 +79,59 @@ class AuthMiddleware(BaseHTTPMiddleware):
         self, request: Request, call_next: RequestResponseEndpoint
     ) -> Response:
         path = request.url.path
-
-        # Skip auth for public paths
-        if _is_public_path(path):
-            request.state.user = None
-            return await call_next(request)
+        is_public = _is_public_path(path)
 
         # Extract token from Authorization header
         auth_header = request.headers.get("authorization", "")
         token = None
+        api_key_raw = None
         if auth_header.startswith("Bearer "):
-            token = auth_header[7:]
+            bearer_val = auth_header[7:]
+            # API keys start with "sf_"
+            if bearer_val.startswith("sf_"):
+                api_key_raw = bearer_val
+            else:
+                token = bearer_val
 
         # Also check query param (for backward compat)
-        if not token:
-            token = request.query_params.get("api_key", "")
+        if not token and not api_key_raw:
+            qp = request.query_params.get("api_key", "")
+            if qp:
+                if qp.startswith("sf_"):
+                    api_key_raw = qp
+                else:
+                    token = qp
 
-        if token:
+        # Also check X-API-Key header
+        if not token and not api_key_raw:
+            x_api_key = request.headers.get("x-api-key", "")
+            if x_api_key:
+                if x_api_key.startswith("sf_"):
+                    api_key_raw = x_api_key
+                else:
+                    token = x_api_key
+
+        if api_key_raw:
+            try:
+                from spiderfoot.auth.service import get_auth_service
+                auth_svc = get_auth_service()
+                user_ctx = auth_svc.api_key_to_user_context(api_key_raw)
+                request.state.user = user_ctx
+            except Exception as e:
+                log.debug("API key validation failed: %s", e)
+                request.state.user = None
+                if self.config.auth_required and not is_public:
+                    from fastapi.responses import JSONResponse
+                    return JSONResponse(
+                        status_code=401,
+                        content={
+                            "error": {
+                                "code": "UNAUTHORIZED",
+                                "message": "Invalid or expired API key",
+                            }
+                        },
+                    )
+        elif token:
             try:
                 from spiderfoot.auth.service import get_auth_service
                 auth_svc = get_auth_service()
@@ -103,7 +141,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
                 log.debug("Token validation failed: %s", e)
                 request.state.user = None
 
-                if self.config.auth_required:
+                if self.config.auth_required and not is_public:
                     from fastapi.responses import JSONResponse
                     return JSONResponse(
                         status_code=401,
@@ -117,7 +155,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
         else:
             request.state.user = None
 
-            if self.config.auth_required and not _is_public_path(path):
+            if self.config.auth_required and not is_public:
                 from fastapi.responses import JSONResponse
                 return JSONResponse(
                     status_code=401,

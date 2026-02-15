@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import {
   scanApi, healthApi, formatEpoch, formatDuration,
-  type Scan,
+  type Scan, type HealthComponent,
 } from '../lib/api';
 import {
   Radar, PlusCircle, Activity, CheckCircle, XCircle, AlertTriangle,
@@ -27,8 +27,8 @@ export default function DashboardPage() {
   });
 
   const { data: health } = useQuery({
-    queryKey: ['health'],
-    queryFn: healthApi.check,
+    queryKey: ['health-dashboard'],
+    queryFn: healthApi.dashboard,
     retry: 1,
     refetchInterval: 30_000,
   });
@@ -142,12 +142,20 @@ export default function DashboardPage() {
                 <p className="section-label mb-3">Components</p>
                 <div className="space-y-2">
                   {health?.components && Object.keys(health.components).length > 0 ? (
-                    Object.entries(health.components).map(([name, comp]) => (
+                    Object.entries(health.components)
+                      .sort(([, a], [, b]) => {
+                        // Sort: up first, then degraded, then unknown, then down
+                        const order: Record<string, number> = { up: 0, degraded: 1, unknown: 2, down: 3 };
+                        const aComp = a as HealthComponent;
+                        const bComp = b as HealthComponent;
+                        return (order[aComp.status] ?? 2) - (order[bComp.status] ?? 2);
+                      })
+                      .map(([name, comp]: [string, any]) => (
                       <div key={name} className="flex items-center justify-between text-xs">
                         <span className="text-dark-300 capitalize">{name.replace(/_/g, ' ')}</span>
                         <span className="flex items-center gap-2">
                           <span className={comp.status === 'up' ? 'text-green-400' : comp.status === 'degraded' ? 'text-yellow-400' : comp.status === 'unknown' ? 'text-dark-500' : 'text-red-400'}>
-                            {comp.status}
+                            {comp.status === 'up' ? 'healthy' : comp.status === 'unknown' ? 'n/a' : comp.status}
                           </span>
                           {comp.latency_ms != null && <span className="text-dark-600 tabular-nums">{comp.latency_ms}ms</span>}
                         </span>
@@ -167,6 +175,27 @@ export default function DashboardPage() {
                   )}
                 </div>
               </div>
+
+              {/* Summary stats from components */}
+              {health?.components && (() => {
+                const entries = Object.values(health.components) as HealthComponent[];
+                const up = entries.filter((c: HealthComponent) => c.status === 'up').length;
+                const degraded = entries.filter((c: HealthComponent) => c.status === 'degraded').length;
+                const down = entries.filter((c: HealthComponent) => c.status === 'down').length;
+                const total = entries.length;
+                return (
+                  <div className="pt-3 border-t border-dark-700/50">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-dark-400">{total} subsystems</span>
+                      <span className="flex items-center gap-3">
+                        {up > 0 && <span className="text-green-400">{up} healthy</span>}
+                        {degraded > 0 && <span className="text-yellow-400">{degraded} degraded</span>}
+                        {down > 0 && <span className="text-red-400">{down} down</span>}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           </div>
 

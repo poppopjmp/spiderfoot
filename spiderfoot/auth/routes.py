@@ -96,6 +96,26 @@ class SSOProviderRequest(BaseModel):
     allowed_domains: str = ""
     auto_create_users: bool = True
     attribute_mapping: str = "{}"
+    group_attribute: str = "groups"
+    admin_group: str = ""
+
+
+class CreateApiKeyRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=255)
+    role: str = Field(default="viewer")
+    expires_in_days: int = Field(default=0, ge=0)  # 0 = never
+    allowed_modules: str = Field(default="")  # JSON list or comma-separated
+    allowed_endpoints: str = Field(default="")
+    rate_limit: int = Field(default=0, ge=0)
+
+
+class UpdateApiKeyRequest(BaseModel):
+    name: Optional[str] = None
+    role: Optional[str] = None
+    status: Optional[str] = None
+    allowed_modules: Optional[str] = None
+    allowed_endpoints: Optional[str] = None
+    rate_limit: Optional[int] = None
 
 
 # ---------- Dependency ----------
@@ -362,6 +382,196 @@ async def revoke_session(session_id: str, request: Request):
     if not svc.revoke_session(session_id):
         raise HTTPException(status_code=404, detail="Session not found")
     return {"message": "Session revoked"}
+
+
+# ═══════════════════════════════════════════════════════════
+# API KEY MANAGEMENT
+# ═══════════════════════════════════════════════════════════
+
+@router.get("/api-keys")
+async def list_api_keys(
+    user_id: str = Query(default="", description="Filter by user ID (admin only)"),
+    user: UserContext = Depends(require_permission("user:read")),
+):
+    """List API keys. Admins see all; others see only their own."""
+    svc = _get_auth_svc()
+    from spiderfoot.rbac import has_permission
+    if user_id and has_permission(user.role, "user:read"):
+        keys = svc.list_api_keys(user_id=user_id)
+    elif has_permission(user.role, "user:read"):
+        keys = svc.list_api_keys()
+    else:
+        keys = svc.list_api_keys(user_id=user.user_id)
+    return {"items": [k.to_dict() for k in keys]}
+
+
+@router.get("/api-keys/mine")
+async def list_my_api_keys(request: Request):
+    """List current user's API keys."""
+    ctx: UserContext | None = getattr(request.state, "user", None)
+    if not ctx or not ctx.user_id:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    svc = _get_auth_svc()
+    keys = svc.list_api_keys(user_id=ctx.user_id)
+    return {"items": [k.to_dict() for k in keys]}
+
+
+@router.post("/api-keys", status_code=201)
+async def create_api_key(
+    body: CreateApiKeyRequest,
+    request: Request,
+):
+    """Create an API key for the current user."""
+    ctx: UserContext | None = getattr(request.state, "user", None)
+    if not ctx or not ctx.user_id:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    svc = _get_auth_svc()
+
+    # Validate role: user can only create keys with their role or lower
+    from spiderfoot.rbac import parse_role
+    requested_role = parse_role(body.role)
+    user_role = parse_role(ctx.role.value if hasattr(ctx.role, 'value') else str(ctx.role))
+    if requested_role.level > user_role.level:
+        raise HTTPException(
+            status_code=403,
+            detail=f"Cannot create API key with role '{body.role}' (higher than your role)"
+        )
+
+    expires_at = 0.0
+    if body.expires_in_days > 0:
+        expires_at = time.time() + body.expires_in_days * 86400
+
+    try:
+        api_key, raw_key = svc.create_api_key(
+            user_id=ctx.user_id,
+            name=body.name,
+            role=body.role,
+            expires_at=expires_at,
+            allowed_modules=body.allowed_modules,
+            allowed_endpoints=body.allowed_endpoints,
+            rate_limit=body.rate_limit,
+        )
+        result = api_key.to_dict()
+        result["key"] = raw_key  # Only returned at creation time
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/api-keys/for-user/{target_user_id}", status_code=201)
+async def create_api_key_for_user(
+    target_user_id: str,
+    body: CreateApiKeyRequest,
+    user: UserContext = Depends(require_permission("user:create")),
+):
+    """Create an API key for another user (admin only)."""
+    svc = _get_auth_svc()
+    expires_at = 0.0
+    if body.expires_in_days > 0:
+        expires_at = time.time() + body.expires_in_days * 86400
+
+    try:
+        api_key, raw_key = svc.create_api_key(
+            user_id=target_user_id,
+            name=body.name,
+            role=body.role,
+            expires_at=expires_at,
+            allowed_modules=body.allowed_modules,
+            allowed_endpoints=body.allowed_endpoints,
+            rate_limit=body.rate_limit,
+        )
+        result = api_key.to_dict()
+        result["key"] = raw_key
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/api-keys/{key_id}")
+async def get_api_key(
+    key_id: str,
+    request: Request,
+):
+    """Get API key details."""
+    ctx: UserContext | None = getattr(request.state, "user", None)
+    if not ctx or not ctx.user_id:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    svc = _get_auth_svc()
+    api_key = svc.get_api_key(key_id)
+    if not api_key:
+        raise HTTPException(status_code=404, detail="API key not found")
+
+    # Non-admins can only see their own keys
+    from spiderfoot.rbac import has_permission
+    if api_key.user_id != ctx.user_id and not has_permission(ctx.role, "user:read"):
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    return api_key.to_dict()
+
+
+@router.patch("/api-keys/{key_id}")
+async def update_api_key(
+    key_id: str,
+    body: UpdateApiKeyRequest,
+    user: UserContext = Depends(require_permission("user:update")),
+):
+    """Update an API key (admin only)."""
+    svc = _get_auth_svc()
+    updates = body.model_dump(exclude_none=True)
+    try:
+        api_key = svc.update_api_key(key_id, updates)
+        if not api_key:
+            raise HTTPException(status_code=404, detail="API key not found")
+        return api_key.to_dict()
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.delete("/api-keys/{key_id}", status_code=204)
+async def delete_api_key(
+    key_id: str,
+    request: Request,
+):
+    """Delete an API key. Users can delete their own; admins can delete any."""
+    ctx: UserContext | None = getattr(request.state, "user", None)
+    if not ctx or not ctx.user_id:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    svc = _get_auth_svc()
+    api_key = svc.get_api_key(key_id)
+    if not api_key:
+        raise HTTPException(status_code=404, detail="API key not found")
+
+    from spiderfoot.rbac import has_permission
+    if api_key.user_id != ctx.user_id and not has_permission(ctx.role, "user:delete"):
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    svc.delete_api_key(key_id)
+
+
+@router.post("/api-keys/{key_id}/revoke")
+async def revoke_api_key(
+    key_id: str,
+    request: Request,
+):
+    """Revoke an API key. Users can revoke their own; admins can revoke any."""
+    ctx: UserContext | None = getattr(request.state, "user", None)
+    if not ctx or not ctx.user_id:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    svc = _get_auth_svc()
+    api_key = svc.get_api_key(key_id)
+    if not api_key:
+        raise HTTPException(status_code=404, detail="API key not found")
+
+    from spiderfoot.rbac import has_permission
+    if api_key.user_id != ctx.user_id and not has_permission(ctx.role, "user:update"):
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    svc.revoke_api_key(key_id)
+    return {"message": "API key revoked"}
 
 
 # ═══════════════════════════════════════════════════════════

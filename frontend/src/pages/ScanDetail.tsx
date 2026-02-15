@@ -102,7 +102,7 @@ export default function ScanDetailPage() {
                 <RotateCcw className="h-4 w-4" /> Rerun
               </button>
             )}
-            <ExportDropdown scanId={scanId} scanName={scan?.name ?? ''} />
+            <ExportDropdown scanId={scanId} scanName={scan?.name ?? ''} onToast={setToast} />
           </div>
         </div>
       </div>
@@ -142,25 +142,49 @@ export default function ScanDetailPage() {
 }
 
 /* ── Export Dropdown ───────────────────────────────────────── */
-function ExportDropdown({ scanId, scanName }: { scanId: string; scanName: string }) {
+function ExportDropdown({ scanId, scanName, onToast }: { scanId: string; scanName: string; onToast: (t: { type: ToastType; message: string }) => void }) {
+  const [exporting, setExporting] = useState<string | null>(null);
+
   const download = async (type: string) => {
+    setExporting(type);
     try {
       const resp = await scanApi.exportEvents(scanId, { filetype: type });
-      const url = URL.createObjectURL(resp.data);
+      const blob = resp.data as Blob;
+      if (!blob || blob.size === 0) {
+        onToast({ type: 'error', message: `Export returned empty data` });
+        return;
+      }
+      const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = `${scanName || scanId}.${type}`;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    } catch { /* ignore */ }
+      onToast({ type: 'success', message: `${type.toUpperCase()} export downloaded` });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Export failed';
+      onToast({ type: 'error', message: `Export failed: ${msg}` });
+    } finally {
+      setExporting(null);
+    }
   };
 
   return (
     <DropdownMenu trigger={<button className="btn-secondary"><Download className="h-4 w-4" /> Export</button>}>
-      <DropdownItem icon={FileText} onClick={() => download('csv')}>CSV</DropdownItem>
-      <DropdownItem icon={FileText} onClick={() => download('xlsx')}>Excel (XLSX)</DropdownItem>
-      <DropdownItem icon={FileText} onClick={() => download('json')}>JSON</DropdownItem>
-      <DropdownItem icon={Share2} onClick={() => download('gexf')}>GEXF (Graph)</DropdownItem>
+      <DropdownItem icon={FileText} onClick={() => download('csv')}>
+        {exporting === 'csv' ? 'Exporting...' : 'CSV'}
+      </DropdownItem>
+      <DropdownItem icon={FileText} onClick={() => download('xlsx')}>
+        {exporting === 'xlsx' ? 'Exporting...' : 'Excel (XLSX)'}
+      </DropdownItem>
+      <DropdownItem icon={FileText} onClick={() => download('json')}>
+        {exporting === 'json' ? 'Exporting...' : 'JSON'}
+      </DropdownItem>
+      <DropdownItem icon={Share2} onClick={() => download('gexf')}>
+        {exporting === 'gexf' ? 'Exporting...' : 'GEXF (Graph)'}
+      </DropdownItem>
     </DropdownMenu>
   );
 }
@@ -1038,6 +1062,142 @@ function GeoMapTab({ scanId }: { scanId: string }) {
   );
 }
 
+/**
+ * Convert the agent report API response into clean Markdown.
+ *
+ * The agents service returns:
+ *   { agent, result_type, data: { ...structured }, confidence, ... }
+ * or on JSON-parse failure:
+ *   { agent, result_type, data: { raw_report: "..." }, confidence: 0.5, ... }
+ */
+function extractReportMarkdown(resp: Record<string, unknown>, target: string): string {
+  // Navigate into the nested response
+  const outer = resp ?? {};
+  let reportData: Record<string, unknown> = (outer.data ?? outer) as Record<string, unknown>;
+
+  // If data.raw_report exists, try to parse it as JSON first
+  if (typeof reportData.raw_report === 'string') {
+    let raw = reportData.raw_report as string;
+    // Strip markdown code fences (```json ... ```)
+    raw = raw.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
+    try {
+      reportData = JSON.parse(raw);
+    } catch {
+      // raw_report is plain text / markdown — use as-is
+      return raw;
+    }
+  }
+
+  // If it already looks like markdown (starts with # or contains ---), use directly
+  if (typeof reportData === 'string') return reportData;
+  const keys = Object.keys(reportData);
+  if (keys.length === 0) return '*No report data available.*';
+
+  // Check if it has structured report fields
+  const hasStructured = ['title', 'executive_summary', 'key_findings', 'risk_rating'].some(k => k in reportData);
+  if (!hasStructured) {
+    // If it looks like markdown text in a 'report'/'content'/'markdown' field
+    const textField = (reportData.report ?? reportData.content ?? reportData.markdown ?? reportData.text) as string | undefined;
+    if (typeof textField === 'string') return textField;
+    return '```json\n' + JSON.stringify(reportData, null, 2) + '\n```';
+  }
+
+  // Build markdown from structured JSON report
+  const lines: string[] = [];
+  const title = (reportData.title as string) || `OSINT Report — ${target}`;
+  const riskRating = (reportData.risk_rating as string) || 'info';
+
+  lines.push(`# ${title}`);
+  lines.push('');
+  lines.push(`**Risk Rating:** ${riskBadgeText(riskRating)}`);
+  lines.push(`**Generated:** ${new Date().toLocaleString()}`);
+  lines.push('');
+  lines.push('---');
+  lines.push('');
+
+  // Executive Summary
+  if (reportData.executive_summary) {
+    lines.push('## Executive Summary', '');
+    lines.push(reportData.executive_summary as string);
+    lines.push('');
+  }
+
+  // Key Findings
+  const findings = reportData.key_findings as Array<Record<string, string>> | undefined;
+  if (findings?.length) {
+    lines.push('## Key Findings', '');
+    findings.forEach((f, i) => {
+      const sev = f.severity ?? 'info';
+      lines.push(`### ${i + 1}. ${f.title ?? 'Finding'} [${sev.toUpperCase()}]`, '');
+      if (f.description) lines.push(f.description, '');
+      if (f.evidence) lines.push(`> **Evidence:** ${f.evidence}`, '');
+      if (f.recommendation) lines.push(`**Recommendation:** ${f.recommendation}`, '');
+    });
+  }
+
+  // Attack Surface Summary
+  const surface = reportData.attack_surface_summary as Record<string, unknown> | undefined;
+  if (surface) {
+    lines.push('## Attack Surface Summary', '');
+    lines.push('| Metric | Count |', '|--------|------:|');
+    if (surface.domains != null) lines.push(`| Domains | ${surface.domains} |`);
+    if (surface.hosts != null) lines.push(`| Hosts | ${surface.hosts} |`);
+    if (surface.emails != null) lines.push(`| Emails | ${surface.emails} |`);
+    if (surface.open_ports != null) lines.push(`| Open Ports | ${surface.open_ports} |`);
+    const techs = surface.technologies as string[] | undefined;
+    if (techs?.length) lines.push(`| Technologies | ${techs.join(', ')} |`);
+    const exposed = surface.exposed_services as string[] | undefined;
+    if (exposed?.length) lines.push(`| Exposed Services | ${exposed.join(', ')} |`);
+    lines.push('');
+  }
+
+  // Threat Assessment
+  if (reportData.threat_assessment) {
+    lines.push('## Threat Assessment', '');
+    lines.push(reportData.threat_assessment as string);
+    lines.push('');
+  }
+
+  // Recommendations
+  const recs = reportData.recommendations as Array<Record<string, string>> | undefined;
+  if (recs?.length) {
+    lines.push('## Recommendations', '');
+    recs.forEach((r) => {
+      const prio = r.priority ?? 'general';
+      lines.push(`- **[${prio.toUpperCase().replace('_', ' ')}]** ${r.action}`);
+      if (r.rationale) lines.push(`  *${r.rationale}*`);
+    });
+    lines.push('');
+  }
+
+  // Methodology
+  if (reportData.methodology) {
+    lines.push('## Methodology', '');
+    lines.push(reportData.methodology as string);
+    lines.push('');
+  }
+
+  // Tags
+  const tags = reportData.tags as string[] | undefined;
+  if (tags?.length) {
+    lines.push('---', '');
+    lines.push(`**Tags:** ${tags.map(t => `\`${t}\``).join(' ')}`);
+    lines.push('');
+  }
+
+  lines.push('---', '*Report generated by SpiderFoot AI Threat Intel Analyzer*');
+  return lines.join('\n');
+}
+
+function riskBadgeText(risk: string): string {
+  const r = risk.toLowerCase();
+  if (r === 'critical') return '🔴 CRITICAL';
+  if (r === 'high') return '🟠 HIGH';
+  if (r === 'medium') return '🟡 MEDIUM';
+  if (r === 'low') return '🟢 LOW';
+  return 'ℹ️ INFO';
+}
+
 /* ── AI Report Tab ────────────────────────────────────────── */
 function ReportTab({ scanId, scan }: { scanId: string; scan?: Scan }) {
   const [reportContent, setReportContent] = useState<string>('');
@@ -1097,7 +1257,7 @@ function ReportTab({ scanId, scan }: { scanId: string; scan?: Scan }) {
       });
     },
     onSuccess: (data) => {
-      const md = data?.report ?? data?.content ?? data?.markdown ?? JSON.stringify(data, null, 2);
+      const md = extractReportMarkdown(data, scan?.target ?? '');
       setReportContent(md);
       localStorage.setItem(storageKey, md);
     },
@@ -1200,13 +1360,32 @@ function ReportTab({ scanId, scan }: { scanId: string; scan?: Scan }) {
     let inTable = false;
     let inBlockquote = false;
     let inList = false;
+    let inCodeBlock = false;
 
     lines.forEach((line) => {
+      // Fenced code blocks (``` ... ```)
+      if (line.trim().startsWith('```')) {
+        if (inCodeBlock) {
+          html.push('</code></pre>');
+          inCodeBlock = false;
+        } else {
+          inCodeBlock = true;
+          html.push('<pre class="bg-dark-900 border border-dark-700/50 rounded-lg p-4 my-3 overflow-x-auto"><code class="text-xs font-mono text-dark-300">');
+        }
+        return;
+      }
+      if (inCodeBlock) {
+        // Escape HTML inside code blocks
+        const escaped = line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        html.push(escaped);
+        return;
+      }
+
       // HR
       if (/^---+$/.test(line.trim())) {
         if (inList) { html.push('</ul>'); inList = false; }
         if (inBlockquote) { html.push('</blockquote>'); inBlockquote = false; }
-        html.push('<hr class="border-dark-700/50 my-4" />');
+        html.push('<hr class="border-dark-700/50 my-6" />');
         return;
       }
 
@@ -1216,47 +1395,61 @@ function ReportTab({ scanId, scan }: { scanId: string; scan?: Scan }) {
         if (inList) { html.push('</ul>'); inList = false; }
         if (inBlockquote) { html.push('</blockquote>'); inBlockquote = false; }
         const level = hMatch[1].length;
-        const sizes: Record<number, string> = { 1: 'text-xl', 2: 'text-lg', 3: 'text-base', 4: 'text-sm', 5: 'text-sm', 6: 'text-xs' };
-        html.push(`<h${level} class="${sizes[level]} font-bold text-white mt-4 mb-2">${inlineFormat(hMatch[2])}</h${level}>`);
+        const sizes: Record<number, string> = {
+          1: 'text-2xl font-bold text-white mt-6 mb-3 pb-2 border-b border-dark-700/40',
+          2: 'text-xl font-bold text-white mt-5 mb-2',
+          3: 'text-lg font-semibold text-dark-100 mt-4 mb-2',
+          4: 'text-base font-semibold text-dark-200 mt-3 mb-1',
+          5: 'text-sm font-semibold text-dark-300 mt-2 mb-1',
+          6: 'text-xs font-semibold text-dark-400 mt-2 mb-1',
+        };
+        html.push(`<h${level} class="${sizes[level]}">${inlineFormat(hMatch[2])}</h${level}>`);
         return;
       }
 
       // Table row
       if (line.trim().startsWith('|')) {
-        if (!inTable) { html.push('<table class="w-full text-xs my-2"><tbody>'); inTable = true; }
+        if (!inTable) { html.push('<div class="overflow-x-auto my-3"><table class="w-full text-sm border border-dark-700/40 rounded-lg overflow-hidden"><tbody>'); inTable = true; }
         // Skip separator rows
         if (/^\|[-:|\s]+\|$/.test(line.trim())) return;
         const cells = line.split('|').filter((c) => c.trim() !== '');
         const isHeader = !html.some((l) => l.includes('<tr'));
-        html.push('<tr class="border-b border-dark-700/30">');
+        const rowClass = isHeader ? 'bg-dark-800/60' : 'hover:bg-dark-800/30 transition-colors';
+        html.push(`<tr class="border-b border-dark-700/30 ${rowClass}">`);
         cells.forEach((cell) => {
           const tag = isHeader ? 'th' : 'td';
-          const cls = isHeader ? 'table-header text-left' : 'table-cell text-dark-300';
+          const cls = isHeader ? 'px-4 py-2.5 text-left text-xs font-semibold text-dark-300 uppercase tracking-wider' : 'px-4 py-2 text-dark-300';
           const align = cell.trim().match(/^\d/) ? ' text-right' : '';
           html.push(`<${tag} class="${cls}${align}">${inlineFormat(cell.trim())}</${tag}>`);
         });
         html.push('</tr>');
         return;
       } else if (inTable) {
-        html.push('</tbody></table>');
+        html.push('</tbody></table></div>');
         inTable = false;
       }
 
       // Blockquote
       if (line.trim().startsWith('>')) {
-        if (!inBlockquote) { html.push('<blockquote class="border-l-2 border-spider-500 pl-3 my-2 text-dark-400 italic text-sm">'); inBlockquote = true; }
-        html.push(`<p>${inlineFormat(line.replace(/^>\s*/, ''))}</p>`);
+        if (!inBlockquote) { html.push('<blockquote class="border-l-3 border-spider-500 pl-4 py-2 my-3 bg-dark-800/30 rounded-r-lg">'); inBlockquote = true; }
+        html.push(`<p class="text-sm text-dark-300">${inlineFormat(line.replace(/^>\s*/, ''))}</p>`);
         return;
       } else if (inBlockquote) {
         html.push('</blockquote>');
         inBlockquote = false;
       }
 
-      // List items
-      const liMatch = line.match(/^(\d+\.|[-*])\s+(.*)/);
+      // List items (numbered or bulleted)
+      const liMatch = line.match(/^(\s*)(\d+\.|[-*])\s+(.*)/);
       if (liMatch) {
-        if (!inList) { html.push('<ul class="list-disc list-inside space-y-1 my-2 text-sm text-dark-300">'); inList = true; }
-        html.push(`<li>${inlineFormat(liMatch[2])}</li>`);
+        const isOrdered = /\d+\./.test(liMatch[2]);
+        if (!inList) {
+          const tag = isOrdered ? 'ol' : 'ul';
+          const listClass = isOrdered ? 'list-decimal' : 'list-disc';
+          html.push(`<${tag} class="${listClass} list-inside space-y-1.5 my-3 text-sm text-dark-300 pl-2">`);
+          inList = true;
+        }
+        html.push(`<li class="leading-relaxed">${inlineFormat(liMatch[3])}</li>`);
         return;
       } else if (inList && line.trim() === '') {
         html.push('</ul>');
@@ -1265,15 +1458,16 @@ function ReportTab({ scanId, scan }: { scanId: string; scan?: Scan }) {
 
       // Empty line
       if (line.trim() === '') {
-        html.push('<div class="h-2"></div>');
+        html.push('<div class="h-3"></div>');
         return;
       }
 
       // Regular paragraph
-      html.push(`<p class="text-sm text-dark-300 leading-relaxed">${inlineFormat(line)}</p>`);
+      html.push(`<p class="text-sm text-dark-300 leading-relaxed my-1">${inlineFormat(line)}</p>`);
     });
 
-    if (inTable) html.push('</tbody></table>');
+    if (inCodeBlock) html.push('</code></pre>');
+    if (inTable) html.push('</tbody></table></div>');
     if (inList) html.push('</ul>');
     if (inBlockquote) html.push('</blockquote>');
 
@@ -1287,6 +1481,51 @@ function ReportTab({ scanId, scan }: { scanId: string; scan?: Scan }) {
       .replace(/`(.+?)`/g, '<code class="bg-dark-700 px-1 py-0.5 rounded text-spider-400 text-xs font-mono">$1</code>');
   };
 
+  const exportMarkdown = () => {
+    if (!reportContent) return;
+    const blob = new Blob([reportContent], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${scan?.name || scanId}-report.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const exportPDF = () => {
+    if (!reportContent) return;
+    const html = renderMarkdown(reportContent);
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+    printWindow.document.write(`<!DOCTYPE html>
+<html><head><title>${scan?.name || scanId} - Report</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; color: #1a1a1a; line-height: 1.6; }
+  h1 { font-size: 24px; border-bottom: 2px solid #333; padding-bottom: 8px; }
+  h2 { font-size: 20px; margin-top: 24px; }
+  h3 { font-size: 16px; margin-top: 20px; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+  th, td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; font-size: 13px; }
+  th { background: #f5f5f5; font-weight: 600; }
+  code { background: #f0f0f0; padding: 2px 4px; border-radius: 3px; font-size: 12px; }
+  pre { background: #f5f5f5; padding: 12px; border-radius: 6px; overflow-x: auto; }
+  blockquote { border-left: 3px solid #6366f1; padding-left: 12px; margin: 12px 0; color: #555; }
+  ul, ol { padding-left: 24px; }
+  li { margin: 4px 0; }
+  hr { border: none; border-top: 1px solid #ddd; margin: 24px 0; }
+  strong { font-weight: 600; }
+  .meta { color: #666; font-size: 12px; margin-bottom: 24px; }
+  @media print { body { margin: 20px; } }
+</style></head><body>
+<div class="meta">Generated: ${new Date().toLocaleString()} | Target: ${scan?.target ?? ''} | Scan ID: ${scanId}</div>
+${html}
+</body></html>`);
+    printWindow.document.close();
+    setTimeout(() => { printWindow.print(); }, 500);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -1295,9 +1534,15 @@ function ReportTab({ scanId, scan }: { scanId: string; scan?: Scan }) {
         </p>
         <div className="flex items-center gap-2">
           {reportContent && !isEditing && (
-            <button className="btn-secondary" onClick={startEditing}>
-              <Edit3 className="h-4 w-4" /> Edit
-            </button>
+            <>
+              <DropdownMenu trigger={<button className="btn-secondary"><Download className="h-4 w-4" /> Export</button>}>
+                <DropdownItem icon={FileText} onClick={exportMarkdown}>Markdown (.md)</DropdownItem>
+                <DropdownItem icon={FileText} onClick={exportPDF}>PDF (Print)</DropdownItem>
+              </DropdownMenu>
+              <button className="btn-secondary" onClick={startEditing}>
+                <Edit3 className="h-4 w-4" /> Edit
+              </button>
+            </>
           )}
           {isEditing && (
             <>
@@ -1356,9 +1601,9 @@ function ReportTab({ scanId, scan }: { scanId: string; scan?: Scan }) {
           />
         </div>
       ) : reportContent ? (
-        <div className="card">
+        <div className="card p-6 lg:p-8">
           <div
-            className="markdown-report"
+            className="markdown-report max-w-none"
             dangerouslySetInnerHTML={{ __html: renderMarkdown(reportContent) }}
           />
         </div>

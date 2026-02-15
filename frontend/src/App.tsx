@@ -16,6 +16,8 @@ const WorkspacesPage = lazy(() => import('./pages/Workspaces'));
 const DocumentationPage = lazy(() => import('./pages/Documentation'));
 const AgentsPage = lazy(() => import('./pages/Agents'));
 const UsersPage = lazy(() => import('./pages/Users'));
+const SSOSettingsPage = lazy(() => import('./pages/SSOSettings'));
+const ApiKeysPage = lazy(() => import('./pages/ApiKeys'));
 
 function LazyFallback() {
   return (
@@ -90,6 +92,12 @@ export default function App() {
 
         {/* User Management (admin only) */}
         <Route path="users" element={<Suspense fallback={<LazyFallback />}><UsersPage /></Suspense>} />
+
+        {/* SSO Settings (admin only) */}
+        <Route path="sso-settings" element={<Suspense fallback={<LazyFallback />}><SSOSettingsPage /></Suspense>} />
+
+        {/* API Keys */}
+        <Route path="api-keys" element={<Suspense fallback={<LazyFallback />}><ApiKeysPage /></Suspense>} />
 
         {/* CherryPy URL redirects for backward compatibility */}
         <Route path="newscan" element={<Navigate to="/scans/new" replace />} />

@@ -1215,6 +1215,35 @@ async def export_scan_event_results(
             },
         )
 
+    if filetype.lower() == "json":
+        json_rows = []
+        for r in rows:
+            json_rows.append({
+                "updated": r[0],
+                "type": r[1],
+                "module": r[2],
+                "source": r[3],
+                "false_positive": r[4],
+                "data": r[5],
+            })
+        payload = json.dumps({
+            "scan_id": scan_id,
+            "total": len(json_rows),
+            "events": json_rows,
+        }, indent=2)
+        return Response(
+            content=payload,
+            media_type="application/json",
+            headers={
+                "Content-Disposition": f"attachment; filename=SpiderFoot-{scan_id}-eventresults.json",
+                "Pragma": "no-cache",
+            },
+        )
+
+    if filetype.lower() == "gexf":
+        # Redirect to the viz endpoint which handles GEXF generation
+        return await export_scan_viz(scan_id, gexf="1", api_key=api_key, svc=svc)
+
     raise HTTPException(status_code=400, detail="Invalid export filetype.")
 
 
