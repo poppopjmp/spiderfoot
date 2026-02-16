@@ -1,6 +1,6 @@
 # Docker Deployment Guide
 
-This guide covers deploying SpiderFoot using Docker Compose with the full 21-service microservices stack.
+This guide covers deploying SpiderFoot using Docker Compose with the full 21-service microservices stack, including the optional **active scan worker** with 33+ external recon tools.
 
 ---
 
@@ -61,6 +61,7 @@ The stack runs **21 containers** across two Docker networks:
 | **sf-jaeger** | jaegertracing/jaeger | 16686 | Distributed tracing UI |
 | **sf-pg-backup** | postgres:15-alpine | — | Cron sidecar for pg_dump → MinIO |
 | **sf-minio-init** | minio/mc | — | One-shot bucket creation |
+| **sf-celery-worker-active** | spiderfoot-active | — | Active scan worker (33+ tools) |
 
 ### Networks
 
@@ -181,6 +182,18 @@ For horizontal scaling, increase replicas of stateless services:
 ```bash
 docker compose -f docker-compose-microservices.yml up -d --scale sf-api=3
 ```
+
+### Active Scan Worker Scaling
+
+Scale the active scan worker independently for more concurrent scanning capacity:
+
+```bash
+docker compose -f docker-compose-microservices.yml up -d --scale celery-worker-active=3
+```
+
+Each instance competes for tasks from the `scan` queue via Celery's fair scheduling.
+See [Active Scan Worker Guide](active-scan-worker.md) for full details on the 33+ tools,
+resource requirements, and security considerations.
 
 For production deployments, consider the Helm chart in `helm/` for Kubernetes.
 

@@ -1809,12 +1809,13 @@ function SettingsTab({ scanId, scan }: { scanId: string; scan?: Scan }) {
             ['Name', scan?.name],
             ['Target', scan?.target],
             ['Status', scan?.status],
+            ['Profile', scan?.profile],
             ['Created', formatEpoch(scan?.created ?? 0)],
             ['Started', formatEpoch(scan?.started ?? 0)],
             ['Ended', formatEpoch(scan?.ended ?? 0)],
             ['Duration', formatDuration(scan?.started ?? 0, scan?.ended ?? 0)],
             ['Results', scan?.result_count?.toString()],
-          ].map(([label, val]) => (
+          ].filter(([, val]) => val != null).map(([label, val]) => (
             <div key={label as string}>
               <p className="text-xs text-dark-500">{label as string}</p>
               <p className="text-sm text-dark-200 font-mono break-all">{(val as string) || '—'}</p>

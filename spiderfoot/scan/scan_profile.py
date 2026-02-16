@@ -425,6 +425,76 @@ class ProfileManager:
             tags=["investigate", "targeted", "deep"],
         ))
 
+        self.register(ScanProfile(
+            name="tools-only",
+            display_name="External Tools Only",
+            description=(
+                "Run all external recon tools against the target. "
+                "Includes both pre-installed tools (nmap, nuclei, "
+                "testssl.sh, whatweb, dnstwist, etc.) and active "
+                "scan tools (httpx, subfinder, amass, dnsx, naabu, "
+                "gobuster, katana, nikto, gitleaks, and more). "
+                "Requires the active scan worker container."
+            ),
+            category=ProfileCategory.RECONNAISSANCE,
+            include_flags=["tool"],
+            include_modules=[
+                # ── Pre-installed base-image tools ──
+                "sfp_tool_cmseek",
+                "sfp_tool_dnstwist",
+                "sfp_tool_gobuster",
+                "sfp_tool_nbtscan",
+                "sfp_tool_onesixtyone",
+                "sfp_tool_phoneinfoga",
+                "sfp_tool_retirejs",
+                "sfp_tool_snallygaster",
+                "sfp_tool_testsslsh",
+                "sfp_tool_trufflehog",
+                "sfp_tool_wafw00f",
+                "sfp_tool_wappalyzer",
+                "sfp_tool_whatweb",
+                # ── Pre-existing modules (no tool_ prefix) ──
+                "sfp_httpx",
+                "sfp_nuclei",
+                "sfp_subfinder",
+                # ── Active worker DNS & subdomain tools ──
+                "sfp_tool_amass",
+                "sfp_tool_dnsx",
+                "sfp_tool_massdns",
+                # ── Active worker URL / crawling tools ──
+                "sfp_tool_gau",
+                "sfp_tool_waybackurls",
+                "sfp_tool_gospider",
+                "sfp_tool_hakrawler",
+                "sfp_tool_katana",
+                # ── Active worker fuzzing / parameter tools ──
+                "sfp_tool_ffuf",
+                "sfp_tool_arjun",
+                # ── Active worker screenshots ──
+                "sfp_tool_gowitness",
+                # ── Active worker vulnerability scanning ──
+                "sfp_tool_nikto",
+                "sfp_tool_dalfox",
+                # ── Active worker secret/JS analysis ──
+                "sfp_tool_gitleaks",
+                "sfp_tool_linkfinder",
+                # ── Active worker port scanning ──
+                "sfp_tool_naabu",
+                "sfp_tool_masscan",
+                # ── Active worker SSL/TLS ──
+                "sfp_tool_tlsx",
+                "sfp_tool_sslyze",
+                "sfp_tool_sslscan",
+                # ── Core helpers (DNS resolution to feed tools) ──
+                "sfp_dnsresolve",
+                "sfp_spider",
+            ],
+            exclude_flags=["errorprone"],
+            max_threads=4,
+            timeout_minutes=120,
+            tags=["tools", "active", "recon", "external", "comprehensive"],
+        ))
+
     # ------------------------------------------------------------------
     # CRUD
     # ------------------------------------------------------------------

@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import logging
 import multiprocessing as mp
+import os
 import time
 import traceback
 from typing import Any
@@ -40,7 +41,7 @@ logger = logging.getLogger("sf.tasks.scan")
     max_retries=0,           # Scans should not auto-retry
     acks_late=True,          # Only ack on success/failure
     track_started=True,
-    reject_on_worker_lost=True,
+    reject_on_worker_lost=False,  # Do NOT redeliver — dedup guard handles recovery
     time_limit=86400,        # 24h hard limit
     soft_time_limit=82800,   # 23h soft limit
 )
@@ -73,6 +74,70 @@ def run_scan(
         dict with scan_id, status, duration, and event count.
     """
     start_time = time.time()
+
+    # ── Deduplication guard ─────────────────────────────────────────────
+    # When acks_late=True + reject_on_worker_lost=True, Celery will
+    # redeliver the task message after a worker restart.  This guard
+    # prevents a scan from being executed twice by checking the DB status
+    # before doing any real work.
+    #
+    # Terminal states (COMPLETED, ERROR-FAILED, ABORTED, etc.) should
+    # never be re-run.  A status of RUNNING means another worker is
+    # already processing this scan (stale redelivery).
+    try:
+        from spiderfoot.db import SpiderFootDb
+        _guard_db = SpiderFootDb(global_opts)
+        _existing = _guard_db.scanInstanceGet(scan_id)
+        _guard_db.close()
+        if _existing:
+            db_status = _existing.get("status", "") if isinstance(_existing, dict) else (
+                _existing[5] if isinstance(_existing, (list, tuple)) and len(_existing) > 5 else ""
+            )
+            _terminal = {"FINISHED", "COMPLETED", "ERROR-FAILED", "ABORTED",
+                         "ABORT-REQUESTED", "FAILED"}
+            if db_status in _terminal:
+                logger.warning(
+                    "scan.skipped_redelivery scan_id=%s status=%s — "
+                    "task was redelivered but scan already in terminal state",
+                    scan_id, db_status,
+                )
+                return {
+                    "scan_id": scan_id,
+                    "status": "skipped",
+                    "reason": f"Scan already in terminal state: {db_status}",
+                }
+            if db_status == "RUNNING":
+                # Check if the scan has been running for more than a few
+                # seconds — if so, another worker is handling it.
+                import redis as redis_lib
+                _redis = redis_lib.from_url(
+                    os.environ.get("SF_REDIS_URL", "redis://redis:6379/0")
+                )
+                _progress_key = f"sf:scan:progress:{scan_id}"
+                _last_update = _redis.hget(_progress_key, "updated_at")
+                if _last_update:
+                    _age = time.time() - float(_last_update)
+                    if _age < 120:  # Progress update within last 2 min
+                        logger.warning(
+                            "scan.skipped_duplicate scan_id=%s — "
+                            "another worker updated progress %.0fs ago",
+                            scan_id, _age,
+                        )
+                        return {
+                            "scan_id": scan_id,
+                            "status": "skipped",
+                            "reason": "Another worker is already running this scan",
+                        }
+                # If RUNNING but no recent progress, allow re-execution
+                # (original worker likely crashed without cleanup).
+                logger.info(
+                    "scan.reclaiming scan_id=%s — status RUNNING but "
+                    "no recent progress, reclaiming task", scan_id,
+                )
+    except Exception as guard_err:
+        # Don't block scan execution if the guard check fails
+        logger.debug("Deduplication guard failed for %s: %s", scan_id, guard_err)
+    # ── End deduplication guard ─────────────────────────────────────────
 
     # Update Celery task meta with scan info
     self.update_state(

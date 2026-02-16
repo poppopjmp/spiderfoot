@@ -15,7 +15,6 @@ from __future__ import annotations
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
-import sys
 import os.path
 import tempfile
 from netaddr import IPNetwork
@@ -166,7 +165,7 @@ class sfp_tool_onesixtyone(SpiderFootModernPlugin):
             try:
                 p = Popen(args, stdout=PIPE, stderr=PIPE)
                 out, stderr = p.communicate(input=None, timeout=60)
-                stdout = out.decode(sys.stdin.encoding)
+                stdout = out.decode('utf-8', errors='replace')
             except TimeoutExpired:
                 p.kill()
                 stdout, stderr = p.communicate()

@@ -15,7 +15,6 @@ from __future__ import annotations
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
-import sys
 import json
 import os.path
 from subprocess import PIPE, Popen, TimeoutExpired
@@ -123,7 +122,7 @@ class sfp_tool_snallygaster(SpiderFootModernPlugin):
         try:
             p = Popen(args, stdout=PIPE, stderr=PIPE)
             out, stderr = p.communicate(input=None, timeout=600)
-            stdout = out.decode(sys.stdin.encoding)
+            stdout = out.decode('utf-8', errors='replace')
         except TimeoutExpired:
             p.kill()
             stdout, stderr = p.communicate()
@@ -136,7 +135,7 @@ class sfp_tool_snallygaster(SpiderFootModernPlugin):
 
         if p.returncode != 0:
             self.error(
-                f"Unable to read onesixtyone output\nstderr: {stderr}\nstdout: {stdout}")
+                f"Unable to read snallygaster output\nstderr: {stderr}\nstdout: {stdout}")
             return
 
         if not stdout:

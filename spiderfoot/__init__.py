@@ -20,6 +20,7 @@ from .db import SpiderFootDb
 from .events import SpiderFootEvent
 from .helpers import SpiderFootHelpers
 from .plugins import SpiderFootPlugin
+from .plugins import SpiderFootModernPlugin
 from .target import SpiderFootTarget
 from .threadpool import SpiderFootThreadPool
 from .sflib import SpiderFoot
@@ -37,6 +38,7 @@ __all__ = [
     'SpiderFootEvent',
     'SpiderFootHelpers',
     'SpiderFootPlugin',
+    'SpiderFootModernPlugin',
     'SpiderFootTarget',
     'SpiderFootThreadPool',
     'SpiderFoot',

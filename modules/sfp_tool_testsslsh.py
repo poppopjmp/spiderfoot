@@ -16,7 +16,6 @@ from __future__ import annotations
 # -------------------------------------------------------------------------------
 
 import os
-import sys
 import json
 import tempfile
 from netaddr import IPNetwork
@@ -183,7 +182,7 @@ class sfp_tool_testsslsh(SpiderFootModernPlugin):
             try:
                 p = Popen(args, stdout=PIPE, stderr=PIPE)
                 out, stderr = p.communicate(input=None, timeout=300)
-                stdout = out.decode(sys.stdin.encoding)
+                stdout = out.decode('utf-8', errors='replace')
             except TimeoutExpired:
                 p.kill()
                 stdout, stderr = p.communicate()

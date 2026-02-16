@@ -15,7 +15,6 @@ from __future__ import annotations
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 
-import sys
 import os.path
 from netaddr import IPNetwork
 from subprocess import PIPE, Popen, TimeoutExpired
@@ -146,7 +145,7 @@ class sfp_tool_nbtscan(SpiderFootModernPlugin):
         try:
             p = Popen(args, stdout=PIPE, stderr=PIPE)
             out, _ = p.communicate(input=None, timeout=timeout)
-            stdout = out.decode(sys.stdin.encoding)
+            stdout = out.decode('utf-8', errors='replace')
         except TimeoutExpired:
             p.kill()
             stdout, stderr = p.communicate()

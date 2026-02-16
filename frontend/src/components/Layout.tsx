@@ -22,6 +22,7 @@ import {
   Sun,
   Moon,
   Monitor,
+  Cpu,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useAuthStore } from '../lib/auth';
@@ -39,6 +40,7 @@ const navItems: NavItem[] = [
   { name: 'Dashboard', to: '/', icon: LayoutDashboard },
   { name: 'New Scan', to: '/scans/new', icon: PlusCircle },
   { name: 'Scans', to: '/scans', icon: Radar },
+  { name: 'Modules', to: '/modules', icon: Cpu },
   { name: 'Workspaces', to: '/workspaces', icon: Briefcase },
   { name: 'Documentation', to: '/documentation', icon: BookOpen },
   { name: 'Settings', to: '/settings', icon: Settings },
