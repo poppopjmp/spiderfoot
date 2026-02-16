@@ -535,7 +535,7 @@ services:
       - sf-backend
     volumes:
       - ./infra/loki/local-config.yaml:/etc/loki/local-config.yaml:ro
-    command: -config.file=/etc/loki/local-config.yaml
+    command: -config.file=/etc/loki/local-config.yaml -config.expand-env=true
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
