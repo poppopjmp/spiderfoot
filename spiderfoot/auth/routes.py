@@ -14,11 +14,13 @@ Provides endpoints for:
 from __future__ import annotations
 
 import logging
+import os
 import secrets
 import time
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Query
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, Field
 
 from spiderfoot.rbac import UserContext, require_permission
@@ -26,6 +28,34 @@ from spiderfoot.rbac import UserContext, require_permission
 log = logging.getLogger("spiderfoot.auth.routes")
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
+
+# ── OAuth2 state store (Redis-backed CSRF protection) ─────────────────────
+
+_redis_client = None
+
+
+def _get_redis():
+    """Lazy-init Redis client for OAuth2 state storage."""
+    global _redis_client
+    if _redis_client is not None:
+        return _redis_client
+    redis_url = os.environ.get("SF_REDIS_URL", "")
+    if not redis_url:
+        log.warning("SF_REDIS_URL not set — OAuth2 state validation disabled")
+        return None
+    try:
+        import redis
+        _redis_client = redis.Redis.from_url(redis_url, decode_responses=True)
+        _redis_client.ping()
+        log.info("OAuth2 state store: Redis connected")
+        return _redis_client
+    except Exception as e:
+        log.warning("Redis unavailable for OAuth2 state store: %s", e)
+        return None
+
+
+_OAUTH2_STATE_PREFIX = "sf:oauth2:state:"
+_OAUTH2_STATE_TTL = 600  # 10 minutes
 
 
 # ---------- Request / Response models ----------
@@ -653,7 +683,7 @@ async def delete_sso_provider(
 
 @router.get("/sso/oauth2/login/{provider_id}")
 async def oauth2_login(provider_id: str, request: Request):
-    """Initiate OAuth2/OIDC login — returns the authorization URL."""
+    """Initiate OAuth2/OIDC login — redirects to the IdP authorization page."""
     svc = _get_auth_svc()
     provider = svc.get_sso_provider(provider_id)
     if not provider or not provider.enabled:
@@ -662,12 +692,20 @@ async def oauth2_login(provider_id: str, request: Request):
         raise HTTPException(status_code=400, detail="Not an OAuth2 provider")
 
     state = secrets.token_urlsafe(32)
-    # In production, store state in Redis for CSRF validation
+
+    # Store state in Redis for CSRF validation in callback
+    r = _get_redis()
+    if r:
+        try:
+            r.setex(f"{_OAUTH2_STATE_PREFIX}{state}", _OAUTH2_STATE_TTL, provider_id)
+        except Exception as e:
+            log.warning("Failed to store OAuth2 state in Redis: %s", e)
+
     base_url = str(request.base_url).rstrip("/")
     redirect_uri = f"{base_url}/api/auth/sso/callback/{provider_id}"
 
     url = svc.get_oauth2_login_url(provider, redirect_uri, state)
-    return {"authorization_url": url, "state": state}
+    return RedirectResponse(url=url, status_code=302)
 
 
 @router.get("/sso/callback/{provider_id}")
@@ -683,12 +721,33 @@ async def oauth2_callback(
     if not provider or not provider.enabled:
         raise HTTPException(status_code=404, detail="Provider not found")
 
+    # Validate OAuth2 state parameter (CSRF protection)
+    r = _get_redis()
+    if r and state:
+        try:
+            stored = r.get(f"{_OAUTH2_STATE_PREFIX}{state}")
+            r.delete(f"{_OAUTH2_STATE_PREFIX}{state}")  # one-time use
+            if stored is None:
+                log.warning("OAuth2 state expired or invalid: %s", state[:8])
+                return RedirectResponse(
+                    url="/login?error=OAuth2+state+expired+or+invalid.+Please+try+again.",
+                    status_code=302,
+                )
+            if stored != provider_id:
+                log.warning("OAuth2 state provider mismatch: expected=%s got=%s", stored, provider_id)
+                return RedirectResponse(
+                    url="/login?error=OAuth2+state+mismatch", status_code=302,
+                )
+        except Exception as e:
+            log.warning("Redis state check failed (allowing request): %s", e)
+    elif r and not state:
+        log.warning("OAuth2 callback missing state parameter — possible CSRF")
+
     base_url = str(request.base_url).rstrip("/")
     redirect_uri = f"{base_url}/api/auth/sso/callback/{provider_id}"
 
     try:
         # Exchange code for tokens and get user info
-        import asyncio
         result = await svc.exchange_oauth2_code(provider, code, redirect_uri)
         userinfo = result.get("userinfo", {})
 
@@ -706,14 +765,12 @@ async def oauth2_callback(
         )
 
         # Redirect to frontend with token
-        from fastapi.responses import RedirectResponse
         return RedirectResponse(
             url=f"/?access_token={access_token}&refresh_token={refresh_token}",
             status_code=302,
         )
     except Exception as e:
         log.error("OAuth2 callback error: %s", e)
-        from fastapi.responses import RedirectResponse
         return RedirectResponse(url=f"/login?error={str(e)}", status_code=302)
 
 
@@ -766,20 +823,20 @@ async def saml_acs(provider_id: str, request: Request):
             client["ip_address"], client["user_agent"], "saml"
         )
 
-        from fastapi.responses import RedirectResponse
-        return RedirectResponse(
+        from fastapi.responses import RedirectResponse as _Redir
+        return _Redir(
             url=f"/?access_token={access_token}&refresh_token={refresh_token}",
             status_code=302,
         )
     except Exception as e:
         log.error("SAML ACS error: %s", e)
-        from fastapi.responses import RedirectResponse
-        return RedirectResponse(url=f"/login?error={str(e)}", status_code=302)
+        from fastapi.responses import RedirectResponse as _Redir
+        return _Redir(url=f"/login?error={str(e)}", status_code=302)
 
 
 @router.get("/sso/saml/login/{provider_id}")
-async def saml_login(provider_id: str):
-    """Initiate SAML login — returns SSO redirect URL."""
+async def saml_login(provider_id: str, request: Request):
+    """Initiate SAML login — redirects to IdP SSO URL."""
     svc = _get_auth_svc()
     provider = svc.get_sso_provider(provider_id)
     if not provider or not provider.enabled:
@@ -787,5 +844,7 @@ async def saml_login(provider_id: str):
     if provider.protocol != "saml":
         raise HTTPException(status_code=400, detail="Not a SAML provider")
 
-    url = svc.get_saml_login_url(provider)
-    return {"redirect_url": url}
+    base_url = str(request.base_url).rstrip("/")
+    acs_url = f"{base_url}/api/auth/sso/saml/acs/{provider_id}"
+    url = svc.get_saml_login_url(provider, acs_url)
+    return RedirectResponse(url=url, status_code=302)

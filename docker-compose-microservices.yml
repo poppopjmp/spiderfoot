@@ -1185,6 +1185,56 @@ services:
           cpus: "0.25"
           memory: "128M"
 
+  # ---------------------------------------------------------------------------
+  # Keycloak — Identity Provider (SSO / OIDC / SAML testing)
+  # ---------------------------------------------------------------------------
+  # Runs Keycloak in dev mode for local SSO integration testing.
+  # Admin console:  http://localhost:9080  (admin / ${KC_ADMIN_PASSWORD})
+  # OIDC discovery: http://keycloak:8080/realms/spiderfoot/.well-known/openid-configuration
+  #
+  # After first start, run:
+  #   docker compose -f docker-compose-microservices.yml exec keycloak \
+  #     /bin/bash /opt/keycloak/scripts/setup-realm.sh
+  # to create the "spiderfoot" realm, OIDC client, and test users.
+  # ---------------------------------------------------------------------------
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    container_name: sf-keycloak
+    restart: unless-stopped
+    networks:
+      - sf-frontend
+      - sf-backend
+    ports:
+      - "${KC_PORT:-9080}:8080"
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD:-admin}
+      KC_HTTP_RELATIVE_PATH: /
+      KC_HEALTH_ENABLED: "true"
+      KC_METRICS_ENABLED: "false"
+      KC_DB: dev-file
+      KC_HOSTNAME_STRICT: "false"
+      KC_HTTP_ENABLED: "true"
+      KC_PROXY_HEADERS: xforwarded
+    command: ["start-dev"]
+    volumes:
+      - keycloak-data:/opt/keycloak/data
+      - ./scripts/keycloak-setup-realm.sh:/opt/keycloak/scripts/setup-realm.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/9000 && echo -e 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep -q '200\\|UP' <&3"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: "${KC_CPUS:-1.0}"
+          memory: "${KC_MEMORY:-768M}"
+    profiles:
+      - sso
+
 volumes:
   redis-data:
   postgres-data:
@@ -1196,3 +1246,4 @@ volumes:
   grafana-data:
   prometheus-data:
   traefik-logs:
+  keycloak-data:

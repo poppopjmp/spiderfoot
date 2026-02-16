@@ -1350,11 +1350,44 @@ class AuthService:
     # SSO: SAML helpers
     # ------------------------------------------------------------------
 
-    def get_saml_login_url(self, provider: SSOProvider) -> str:
-        """Build the SAML SSO redirect URL."""
+    def get_saml_login_url(self, provider: SSOProvider, acs_url: str = "") -> str:
+        """Build the SAML SSO redirect URL with a proper AuthnRequest.
+
+        Generates a deflate-encoded, base64-encoded SAML 2.0 AuthnRequest
+        per the HTTP-Redirect binding spec (SAMLBindings §3.4.4).
+        """
+        import base64
         import urllib.parse
+        import zlib
+
+        issuer = provider.sp_entity_id or "spiderfoot"
+        if not acs_url:
+            acs_url = provider.sp_acs_url or ""
+
+        request_id = f"_sf_{uuid.uuid4().hex}"
+        issue_instant = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+        authn_request = (
+            f'<samlp:AuthnRequest xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"'
+            f' xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"'
+            f' ID="{request_id}"'
+            f' Version="2.0"'
+            f' IssueInstant="{issue_instant}"'
+            f' Destination="{provider.idp_sso_url}"'
+            f' AssertionConsumerServiceURL="{acs_url}"'
+            f' ProtocolBinding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST">'
+            f'<saml:Issuer>{issuer}</saml:Issuer>'
+            f'<samlp:NameIDPolicy Format="urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress"'
+            f' AllowCreate="true"/>'
+            f'</samlp:AuthnRequest>'
+        )
+
+        # Deflate → base64 encode (HTTP-Redirect binding)
+        deflated = zlib.compress(authn_request.encode("utf-8"))[2:-4]  # raw deflate
+        encoded = base64.b64encode(deflated).decode("ascii")
+
         params = {
-            "SAMLRequest": "",  # Would be base64-encoded AuthnRequest
+            "SAMLRequest": encoded,
             "RelayState": provider.id,
         }
         return f"{provider.idp_sso_url}?{urllib.parse.urlencode(params)}"
