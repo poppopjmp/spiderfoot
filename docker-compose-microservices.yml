@@ -43,6 +43,8 @@
 # services are needed.
 # =============================================================================
 
+name: spiderfoot
+
 # Shared build definition (anchored for YAML reuse)
 x-sf-build: &sf-build
   build:
@@ -490,6 +492,7 @@ services:
       - ./config/vector.toml:/etc/vector/vector.toml:ro
       - vector-data:/var/lib/vector
       - vector-logs:/var/log/vector
+      - traefik-logs:/var/log/traefik:ro
     environment:
       VECTOR_CONFIG: /etc/vector/vector.toml
       SF_VECTOR_HTTP_PORT: ${SF_VECTOR_HTTP_PORT:-8686}
@@ -514,6 +517,12 @@ services:
         condition: service_started
       jaeger:
         condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8687/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     deploy:
       resources:
         limits:

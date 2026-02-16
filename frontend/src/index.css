@@ -168,6 +168,10 @@
   .badge-info { @apply bg-dark-700/60 text-dark-300 ring-1 ring-dark-600/30; }
   .badge-success { @apply bg-green-900/40 text-green-300 ring-1 ring-green-800/30; }
 
+  /* Status-specific badge classes (theme-aware) */
+  .badge-running { @apply bg-blue-900/30 text-blue-300 ring-1 ring-blue-800/30; }
+  .badge-skipped { @apply bg-dark-700/50 text-dark-400 ring-1 ring-dark-600/20; }
+
   /* ── Status Dots ─────────────────────────────────────────── */
   .status-dot {
     @apply w-2 h-2 rounded-full;
@@ -179,6 +183,34 @@
   .status-dot-finished { @apply status-dot bg-green-400; }
   .status-dot-failed { @apply status-dot bg-red-400; animation: pulse-glow 2s ease-in-out infinite; }
   .status-dot-aborted { @apply status-dot bg-yellow-400; }
+
+  /* ── Status text colors (theme-aware) ────────────────────── */
+  .status-text-running  { @apply text-blue-400; }
+  .status-text-finished { @apply text-green-400; }
+  .status-text-failed   { @apply text-red-400; }
+  .status-text-aborted  { @apply text-yellow-400; }
+  .status-text-skipped  { @apply text-dark-500; }
+  .status-text-default  { @apply text-dark-400; }
+
+  /* ── Health status colors (theme-aware) ──────────────────── */
+  .health-up       { @apply text-green-400; }
+  .health-degraded { @apply text-yellow-400; }
+  .health-down     { @apply text-red-400; }
+  .health-unknown  { @apply text-dark-500; }
+  .health-dot-up   { @apply bg-green-400; }
+
+  /* ── Correlation summary cards (theme-aware) ─────────────── */
+  .corr-card-high   { @apply bg-red-900/30 text-red-300 border-red-700/40; }
+  .corr-card-medium { @apply bg-yellow-900/30 text-yellow-300 border-yellow-700/40; }
+  .corr-card-low    { @apply bg-blue-900/30 text-blue-300 border-blue-700/40; }
+  .corr-card-info   { @apply bg-dark-700/30 text-dark-300 border-dark-600/40; }
+
+  /* ── Correlation text colors (theme-aware) ────────────────── */
+  .corr-text-critical { color: #f87171; }  /* red-400 */
+  .corr-text-high     { color: #fb923c; }  /* orange-400 */
+  .corr-text-medium   { color: #facc15; }  /* yellow-400 */
+  .corr-text-low      { color: #60a5fa; }  /* blue-400 */
+  .corr-text-info     { color: #9ca3af; }  /* gray-400 */
 
   /* ── Tables ──────────────────────────────────────────────── */
   .table-header {
@@ -273,5 +305,72 @@
   }
   .progress-fill {
     @apply h-full rounded-full transition-all duration-500 ease-out;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   Light Theme Overrides — Semantic Status & Badge Colors
+   ══════════════════════════════════════════════════════════════
+   Dark-theme badges use translucent dark backgrounds (e.g. bg-red-900/40)
+   which become invisible or muddy on light backgrounds.  These overrides
+   swap to opaque, saturated pastels with dark text for crisp contrast.
+   ══════════════════════════════════════════════════════════════ */
+[data-theme="light"] {
+  /* ── Badge severity ─────────────────────────────────────── */
+  .badge-critical { @apply bg-red-100 text-red-800 ring-red-300; }
+  .badge-high     { @apply bg-orange-100 text-orange-800 ring-orange-300; }
+  .badge-medium   { @apply bg-amber-100 text-amber-800 ring-amber-300; }
+  .badge-low      { @apply bg-blue-100 text-blue-800 ring-blue-300; }
+  .badge-info     { @apply bg-gray-100 text-gray-600 ring-gray-300; }
+  .badge-success  { @apply bg-emerald-100 text-emerald-800 ring-emerald-300; }
+
+  /* ── Status badges (scan state) ─────────────────────────── */
+  .badge-running  { @apply bg-blue-100 text-blue-800 ring-blue-300; }
+  .badge-skipped  { @apply bg-gray-100 text-gray-500 ring-gray-300; }
+
+  /* ── Status dots — use darker fills for visibility ──────── */
+  .status-dot-running  { @apply bg-blue-600; }
+  .status-dot-finished { @apply bg-emerald-600; }
+  .status-dot-failed   { @apply bg-red-600; }
+  .status-dot-aborted  { @apply bg-amber-600; }
+
+  /* ── Status text colors ─────────────────────────────────── */
+  .status-text-running  { @apply text-blue-700; }
+  .status-text-finished { @apply text-emerald-700; }
+  .status-text-failed   { @apply text-red-700; }
+  .status-text-aborted  { @apply text-amber-700; }
+  .status-text-skipped  { @apply text-gray-500; }
+  .status-text-default  { @apply text-gray-500; }
+
+  /* ── Health colors ──────────────────────────────────────── */
+  .health-up       { @apply text-emerald-700; }
+  .health-degraded { @apply text-amber-700; }
+  .health-down     { @apply text-red-700; }
+  .health-unknown  { @apply text-gray-500; }
+  .health-dot-up   { @apply bg-emerald-600; }
+
+  /* ── Risk pills ─────────────────────────────────────────── */
+  .risk-pill-high   { @apply bg-red-100 text-red-800; }
+  .risk-pill-medium { @apply bg-amber-100 text-amber-800; }
+  .risk-pill-low    { @apply bg-blue-100 text-blue-800; }
+  .risk-pill-info   { @apply bg-gray-100 text-gray-600; }
+
+  /* ── Correlation summary cards ──────────────────────────── */
+  .corr-card-high   { @apply bg-red-50 text-red-800 border-red-300; }
+  .corr-card-medium { @apply bg-amber-50 text-amber-800 border-amber-300; }
+  .corr-card-low    { @apply bg-blue-50 text-blue-800 border-blue-300; }
+  .corr-card-info   { @apply bg-gray-50 text-gray-600 border-gray-300; }
+
+  /* ── Correlation text colors ────────────────────────────── */
+  .corr-text-critical { color: #b91c1c; }  /* red-700 */
+  .corr-text-high     { color: #c2410c; }  /* orange-700 */
+  .corr-text-medium   { color: #a16207; }  /* yellow-700 */
+  .corr-text-low      { color: #1d4ed8; }  /* blue-700 */
+  .corr-text-info     { color: #6b7280; }  /* gray-500 */
+
+  /* ── Pulse animations — adjust glow for light backgrounds ─ */
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.3); }
+    50% { box-shadow: 0 0 10px 3px rgba(220, 38, 38, 0.12); }
   }
 }

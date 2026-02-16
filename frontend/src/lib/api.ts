@@ -572,22 +572,22 @@ export const SCAN_STATUSES = [
 
 export function statusColor(status: string): string {
   switch (status?.toUpperCase()) {
-    case 'RUNNING': case 'STARTING': return 'text-blue-400';
-    case 'FINISHED': return 'text-green-400';
-    case 'ABORTED': case 'STOPPED': return 'text-yellow-400';
-    case 'ERROR-FAILED': return 'text-red-400';
-    case 'SKIPPED': return 'text-dark-500';
-    default: return 'text-dark-400';
+    case 'RUNNING': case 'STARTING': return 'status-text-running';
+    case 'FINISHED': return 'status-text-finished';
+    case 'ABORTED': case 'STOPPED': return 'status-text-aborted';
+    case 'ERROR-FAILED': return 'status-text-failed';
+    case 'SKIPPED': return 'status-text-skipped';
+    default: return 'status-text-default';
   }
 }
 
 export function statusBadgeClass(status: string): string {
   switch (status?.toUpperCase()) {
-    case 'RUNNING': case 'STARTING': return 'badge bg-blue-900/50 text-blue-300';
+    case 'RUNNING': case 'STARTING': return 'badge badge-running';
     case 'FINISHED': return 'badge badge-success';
     case 'ABORTED': case 'STOPPED': return 'badge badge-medium';
     case 'ERROR-FAILED': return 'badge badge-critical';
-    case 'SKIPPED': return 'badge bg-dark-700/50 text-dark-400';
+    case 'SKIPPED': return 'badge badge-skipped';
     default: return 'badge badge-info';
   }
 }

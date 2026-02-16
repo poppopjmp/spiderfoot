@@ -151,9 +151,9 @@ export default function ScansPage() {
       {/* Stat Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <StatCard label="Total Scans" value={totalCount} icon={Radar} color="text-spider-400" loading={isLoading} delay={0} />
-        <StatCard label="Running" value={runningCount} icon={Activity} color="text-blue-400" loading={isLoading} delay={60} />
-        <StatCard label="Completed" value={finishedCount} icon={CheckCircle} color="text-green-400" loading={isLoading} delay={120} />
-        <StatCard label="Failed" value={failedCount} icon={XCircle} color="text-red-400" loading={isLoading} delay={180} />
+        <StatCard label="Running" value={runningCount} icon={Activity} color="status-text-running" loading={isLoading} delay={60} />
+        <StatCard label="Completed" value={finishedCount} icon={CheckCircle} color="status-text-finished" loading={isLoading} delay={120} />
+        <StatCard label="Failed" value={failedCount} icon={XCircle} color="status-text-failed" loading={isLoading} delay={180} />
       </div>
 
       {/* Toolbar */}

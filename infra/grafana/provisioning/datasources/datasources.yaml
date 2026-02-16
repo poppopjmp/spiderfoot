@@ -42,3 +42,15 @@ datasources:
       connMaxLifetime: 600
     secureJsonData:
       password: ${POSTGRES_PASSWORD}
+
+  # Jaeger — distributed tracing
+  - name: Jaeger
+    uid: jaeger
+    type: jaeger
+    access: proxy
+    url: http://jaeger:16686
+    editable: true
+    jsonData:
+      tracesToLogsV2:
+        datasourceUid: loki
+        filterByTraceID: true
