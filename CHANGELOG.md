@@ -3,6 +3,24 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.9.1] — 2026-02-17 — Docker Compose Profile Consolidation
+
+### Changed — Docker Compose Profiles
+- Consolidated `docker-compose-microservices.yml` and `docker-compose-simple.yml` into a **single compose file** using Docker Compose profiles
+- 5 core services (postgres, redis, api, celery-worker, frontend) always start without any profile
+- 7 opt-in profiles: `scan`, `proxy`, `storage`, `monitor`, `ai`, `scheduler`, `sso`
+- `full` meta-profile activates all profiles except `sso`
+- Core services use `${VAR:-fallback}` env var patterns for graceful degradation without optional services (embedding/reranker default to `mock`, qdrant to `memory`, minio/tika/OTEL to empty)
+
+### Removed
+- Deleted `docker-compose-simple.yml` (replaced by core-only profile of unified compose file)
+- Deleted `docker/env.simple.example` (replaced by `.env.example` profile sections)
+
+### Changed — Documentation
+- Updated README.md with profile-based Quick Start, Deployment Modes, and Services tables
+- Updated `docker_deployment.md`, `quickstart.md`, `getting_started.md`, `user_guide.md`, `installation.md`, `active-scan-worker.md` with profile commands
+- Restructured `.env.example` with profile-organized sections (core active, profile vars commented)
+
 ## [5.9.0] — 2026-02-16 — Platform Hardening, Scan Profiles & Light Theme
 
 ### Added — PostgreSQL Report Storage

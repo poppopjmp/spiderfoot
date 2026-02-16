@@ -148,33 +148,23 @@ Modules can find wordlists via `SF_WORDLISTS_PATH` environment variable
 | File | Action | Description |
 |------|--------|-------------|
 | `Dockerfile.active-worker` | **Created** | Multi-stage build: Go builder → C builder → wordlists → runtime |
-| `docker-compose-microservices.yml` | **Modified** | Added `celery-worker-active` service + `x-sf-active-build` anchor; general worker no longer handles `scan` queue |
-| `docker-compose-simple.yml` | **Modified** | Same pattern as above for the simple stack |
-| `docker/env.simple.example` | **Modified** | Added `CELERY_ACTIVE_WORKER_CONCURRENCY` setting |
+| `docker-compose-microservices.yml` | **Modified** | Added `celery-worker-active` service with `scan` profile + `x-sf-active-build` anchor; general worker no longer handles `scan` queue |
 | `documentation/active-scan-worker.md` | **Created** | This file |
 
 ## Build & Run
 
-### Full stack (microservices)
+### Using Docker Compose profiles
 
 ```bash
 # 1. Copy / edit environment
-cp docker/env.example .env
+cp .env.example .env
 
-# 2. Build base image first, then all services
-docker compose -f docker-compose-microservices.yml build api
-docker compose -f docker-compose-microservices.yml build
+# 2. Build base image first, then all services including active worker
+docker compose -f docker-compose-microservices.yml --profile scan build api
+docker compose -f docker-compose-microservices.yml --profile scan build
 
-# 3. Start everything
-docker compose -f docker-compose-microservices.yml up -d
-```
-
-### Simple stack
-
-```bash
-cp docker/env.simple.example .env
-docker compose -f docker-compose-simple.yml build api
-docker compose -f docker-compose-simple.yml up --build -d
+# 3. Start core + active scan worker
+docker compose -f docker-compose-microservices.yml --profile scan up -d
 ```
 
 ### Build order note

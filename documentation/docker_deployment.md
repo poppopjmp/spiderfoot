@@ -1,6 +1,6 @@
 # Docker Deployment Guide
 
-This guide covers deploying SpiderFoot using Docker Compose with the full 21-service microservices stack, including the optional **active scan worker** with 33+ external recon tools.
+This guide covers deploying SpiderFoot using Docker Compose with **profile-based** service activation. Start with just the 5 core services, then enable additional profiles as needed.
 
 ---
 
@@ -10,8 +10,15 @@ This guide covers deploying SpiderFoot using Docker Compose with the full 21-ser
 git clone https://github.com/poppopjmp/spiderfoot.git
 cd spiderfoot
 
-# Start the full stack
+# Copy and configure environment
+cp .env.example .env
+# Edit .env — change passwords, uncomment profile sections as needed
+
+# Core only (5 services)
 docker compose -f docker-compose-microservices.yml up --build -d
+
+# Full stack (all services except SSO)
+docker compose -f docker-compose-microservices.yml --profile full up --build -d
 
 # View logs
 docker compose -f docker-compose-microservices.yml logs -f
@@ -21,6 +28,15 @@ docker compose -f docker-compose-microservices.yml down
 ```
 
 ### Access Points
+
+**Core (no profile)** — `http://localhost:3000`:
+
+| URL | Service |
+|-----|---------|
+| `http://localhost:3000` | React SPA |
+| `http://localhost:3000/api/docs` | Swagger / OpenAPI |
+
+**Full stack (`--profile full`)** — `https://localhost` via Traefik:
 
 | URL | Service |
 |-----|---------|
@@ -34,34 +50,68 @@ docker compose -f docker-compose-microservices.yml down
 
 ---
 
+## Docker Compose Profiles
+
+Services are organized into **profiles** — activate only what you need:
+
+| Profile | Services | Description |
+|---------|----------|-------------|
+| *(core)* | postgres, redis, api, celery-worker, frontend | Always starts — minimal working set |
+| `scan` | celery-worker-active | Active recon tools (nmap, nuclei, httpx, …) |
+| `proxy` | traefik, docker-socket-proxy | Reverse proxy + TLS termination |
+| `storage` | minio, minio-init, qdrant, tika, pg-backup | Object storage, vector DB, document parsing |
+| `monitor` | vector, loki, grafana, prometheus, jaeger | Full observability stack |
+| `ai` | agents, litellm | AI analysis agents + LLM gateway |
+| `scheduler` | celery-beat, flower | Periodic tasks + Celery monitoring |
+| `sso` | keycloak | OIDC / SAML identity provider |
+| `full` | *all of the above except SSO* | Complete deployment |
+
+```bash
+# Mix and match profiles
+docker compose -f docker-compose-microservices.yml --profile proxy --profile storage up -d
+
+# Full stack + SSO
+docker compose -f docker-compose-microservices.yml --profile full --profile sso up -d
+```
+
+---
+
 ## Service Architecture
 
-The stack runs **21 containers** across two Docker networks:
+The stack uses two Docker networks (`sf-frontend`, `sf-backend`) and organizes services by profile:
+
+### Core Services (always running)
 
 | Service | Image | Port | Purpose |
-|---------|-------|------|--------|
-| **sf-traefik** | traefik:v3 | 443 | Reverse proxy, auto-TLS, routing, rate limiting |
-| **sf-docker-proxy** | tecnativa/docker-socket-proxy | — | Secure Docker API access for Traefik |
-| **sf-frontend-ui** | spiderfoot-frontend | 80 | React SPA served by Nginx |
+|---------|-------|------|---------|
+| **sf-postgres** | postgres:15-alpine | 5432 | Primary relational data store |
+| **sf-redis** | redis:7-alpine | 6379 | EventBus pub/sub, caching, Celery broker |
 | **sf-api** | spiderfoot-micro | 8001 | FastAPI REST + GraphQL API |
-| **sf-agents** | spiderfoot-micro | 8100 | 6 AI-powered analysis agents |
 | **sf-celery-worker** | spiderfoot-micro | — | Celery distributed task workers |
-| **sf-celery-beat** | spiderfoot-micro | — | Celery periodic task scheduler |
-| **sf-flower** | spiderfoot-micro | 5555 | Celery monitoring dashboard |
-| **sf-tika** | apache/tika | 9998 | Document parsing (PDF, DOCX, XLSX, etc.) |
-| **sf-litellm** | ghcr.io/berriai/litellm | 4000 | Unified LLM proxy (OpenAI, Anthropic, Ollama) |
-| **sf-postgres** | postgres:15-alpine | 5432 | Primary relational store |
-| **sf-redis** | redis:7-alpine | 6379 | EventBus, cache, Celery broker |
-| **sf-qdrant** | qdrant/qdrant | 6333 | Vector similarity search |
-| **sf-minio** | minio/minio | 9000 / 9001 | S3-compatible object storage |
-| **sf-vector** | timberio/vector | 8686 | Telemetry pipeline |
-| **sf-loki** | grafana/loki | 3100 | Log aggregation |
-| **sf-grafana** | grafana/grafana | 3000 | Dashboards, alerting, data exploration |
-| **sf-prometheus** | prom/prometheus | 9090 | Metrics collection |
-| **sf-jaeger** | jaegertracing/jaeger | 16686 | Distributed tracing UI |
-| **sf-pg-backup** | postgres:15-alpine | — | Cron sidecar for pg_dump → MinIO |
-| **sf-minio-init** | minio/mc | — | One-shot bucket creation |
-| **sf-celery-worker-active** | spiderfoot-active | — | Active scan worker (33+ tools) |
+| **sf-frontend-ui** | spiderfoot-frontend | 3000 | React SPA served by Nginx |
+
+### Profile Services
+
+| Service | Profile | Image | Port | Purpose |
+|---------|---------|-------|------|---------|
+| **sf-celery-worker-active** | `scan` | spiderfoot-active | — | Active scanning (33+ recon tools) |
+| **sf-traefik** | `proxy` | traefik:v3 | 443 | Reverse proxy, auto-TLS, routing |
+| **sf-docker-proxy** | `proxy` | tecnativa/docker-socket-proxy | — | Secure Docker API access |
+| **sf-minio** | `storage` | minio/minio | 9000 | S3-compatible object storage |
+| **sf-minio-init** | `storage` | minio/mc | — | One-shot bucket creation |
+| **sf-qdrant** | `storage` | qdrant/qdrant | 6333 | Vector similarity search |
+| **sf-tika** | `storage` | apache/tika | 9998 | Document parsing (PDF, DOCX, etc.) |
+| **sf-pg-backup** | `storage` | postgres:15-alpine | — | Cron sidecar: pg_dump → MinIO |
+| **sf-vector** | `monitor` | timberio/vector | 8686 | Telemetry pipeline |
+| **sf-loki** | `monitor` | grafana/loki | 3100 | Log aggregation |
+| **sf-grafana** | `monitor` | grafana/grafana | 3000 | Dashboards & alerting |
+| **sf-prometheus** | `monitor` | prom/prometheus | 9090 | Metrics collection |
+| **sf-jaeger** | `monitor` | jaegertracing/jaeger | 16686 | Distributed tracing |
+| **sf-agents** | `ai` | spiderfoot-micro | 8100 | 6 AI-powered analysis agents |
+| **sf-litellm** | `ai` | ghcr.io/berriai/litellm | 4000 | Unified LLM proxy |
+| **sf-celery-beat** | `scheduler` | spiderfoot-micro | — | Periodic task scheduler |
+| **sf-flower** | `scheduler` | spiderfoot-micro | 5555 | Celery monitoring dashboard |
+| **sf-keycloak** | `sso` | keycloak | 9080 | OIDC / SAML identity provider |
 
 ### Networks
 
@@ -97,7 +147,7 @@ Seven buckets are auto-created by `sf-minio-init` on first boot:
 | `sf-loki-data` | Loki log chunk storage |
 | `sf-loki-ruler` | Loki alerting rules |
 
-Access the MinIO Console at `https://localhost/minio/` (default credentials: `minioadmin` / `minioadmin`).
+Access the MinIO Console at `https://localhost/minio/` (requires `proxy` + `storage` profiles; default credentials: `minioadmin` / `minioadmin`).
 
 ---
 
@@ -111,10 +161,11 @@ The GraphQL API exposes `semanticSearch` and `vectorCollections` queries for sea
 
 ## Configuration
 
-Copy `docker/env.example` to `.env` and customise:
+Copy `.env.example` to `.env` and customise:
 
 ```bash
-cp docker/env.example .env
+cp .env.example .env
+# Uncomment profile-specific sections when activating profiles
 ```
 
 Key variables:
@@ -135,14 +186,16 @@ Key variables:
 
 ## TLS / HTTPS
 
-To enable TLS, Traefik handles certificate management automatically:
+TLS requires the `proxy` profile (Traefik). To enable:
 
 ```bash
 # Generate a self-signed cert (testing)
 ./generate-certificate
 
+# Start with proxy profile
+docker compose -f docker-compose-microservices.yml --profile proxy up -d
+
 # Traefik auto-discovers TLS certificates from the mounted certs directory
-# See docker-compose-microservices.yml for Traefik TLS configuration
 ```
 
 ---
@@ -187,10 +240,10 @@ docker compose -f docker-compose-microservices.yml up -d --scale sf-api=3
 
 ### Active Scan Worker Scaling
 
-Scale the active scan worker independently for more concurrent scanning capacity:
+The active scan worker requires the `scan` profile. Scale independently:
 
 ```bash
-docker compose -f docker-compose-microservices.yml up -d --scale celery-worker-active=3
+docker compose -f docker-compose-microservices.yml --profile scan up -d --scale celery-worker-active=3
 ```
 
 Each instance competes for tasks from the `scan` queue via Celery's fair scheduling.

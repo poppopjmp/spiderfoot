@@ -134,19 +134,31 @@ graph TB
 
 ## Quick Start
 
-### Option 1 — Docker Microservices (Recommended)
+### Option 1 — Docker Compose (Recommended)
 
 ```bash
 git clone https://github.com/poppopjmp/spiderfoot.git
 cd spiderfoot
 
 # Copy and configure environment
-cp docker/env.example .env
-# Edit .env with your API keys (OpenAI, Anthropic, etc.)
+cp .env.example .env
+# Edit .env — change passwords, uncomment profile sections as needed
 
-# Start the full 21-service stack
+# Core only (5 services: postgres, redis, api, worker, frontend)
 docker compose -f docker-compose-microservices.yml up --build -d
+
+# Full stack (all services except SSO)
+docker compose -f docker-compose-microservices.yml --profile full up --build -d
 ```
+
+**Core (no profile)** — `http://localhost:3000`:
+
+| URL | Service |
+|-----|--------|
+| `http://localhost:3000` | React SPA |
+| `http://localhost:3000/api/docs` | Swagger / OpenAPI |
+
+**Full stack (`--profile full`)** — `https://localhost` via Traefik:
 
 | URL | Service |
 |-----|--------|
@@ -167,43 +179,79 @@ python3 sf.py -l 127.0.0.1:5001
 
 ---
 
+## Docker Compose Profiles
+
+Services are organized into **profiles** — activate only what you need:
+
+| Profile | Services | Description |
+|---------|----------|-------------|
+| *(core)* | postgres, redis, api, celery-worker, frontend | Always starts — minimal working set |
+| `scan` | celery-worker-active | Active recon tools (nmap, nuclei, httpx, …) |
+| `proxy` | traefik, docker-socket-proxy | Reverse proxy + TLS termination |
+| `storage` | minio, minio-init, qdrant, tika, pg-backup | Object storage, vector DB, document parsing |
+| `monitor` | vector, loki, grafana, prometheus, jaeger | Full observability stack |
+| `ai` | agents, litellm | AI analysis agents + LLM gateway |
+| `scheduler` | celery-beat, flower | Periodic tasks + Celery monitoring |
+| `sso` | keycloak | OIDC / SAML identity provider |
+| `full` | *all of the above except SSO* | Complete deployment |
+
+```bash
+# Mix and match profiles
+docker compose -f docker-compose-microservices.yml --profile proxy --profile storage up -d
+
+# Full stack + SSO
+docker compose -f docker-compose-microservices.yml --profile full --profile sso up -d
+```
+
+---
+
 ## Deployment Modes
 
 | Mode | Command | Description |
 |------|---------|-------------|
 | **Monolith** | `python3 sf.py -l 0.0.0.0:5001` | Single process, SQLite, zero dependencies |
-| **Docker Compose** | `docker compose -f docker-compose-microservices.yml up -d` | 21 services, PostgreSQL, Redis, Qdrant, MinIO, Celery, Traefik |
+| **Docker Core** | `docker compose -f docker-compose-microservices.yml up -d` | 5 core services (PostgreSQL, Redis, API, Worker, Frontend) |
+| **Docker Full** | `docker compose -f docker-compose-microservices.yml --profile full up -d` | 21+ services with observability, AI, and storage |
 | **Kubernetes** | `helm install sf helm/` | Horizontal scaling with Helm chart |
 
 ---
 
 ## Services
 
-The microservices deployment runs **21 containers** on two Docker networks (`sf-frontend`, `sf-backend`):
+The Docker Compose deployment uses two networks (`sf-frontend`, `sf-backend`) and organizes services by profile:
+
+### Core Services (always running)
 
 | Service | Image | Port | Purpose |
 |---------|-------|------|---------|
-| **sf-traefik** | traefik:v3 | 443 | Reverse proxy, auto-TLS, routing, rate limiting |
-| **sf-docker-proxy** | tecnativa/docker-socket-proxy | — | Secure Docker API access for Traefik |
-| **sf-frontend-ui** | spiderfoot-frontend | 80 | React SPA served by Nginx |
-| **sf-api** | spiderfoot-micro | 8001 | FastAPI REST + GraphQL API, scan orchestration |
-| **sf-agents** | spiderfoot-micro | 8100 | 6 AI-powered analysis agents (LLM-backed) |
-| **sf-celery-worker** | spiderfoot-micro | — | Celery distributed task workers |
-| **sf-celery-beat** | spiderfoot-micro | — | Celery periodic task scheduler |
-| **sf-flower** | spiderfoot-micro | 5555 | Celery monitoring dashboard |
-| **sf-tika** | apache/tika | 9998 | Document parsing (PDF, DOCX, XLSX, etc.) |
-| **sf-litellm** | ghcr.io/berriai/litellm | 4000 | Unified LLM proxy (OpenAI, Anthropic, Ollama) |
 | **sf-postgres** | postgres:15-alpine | 5432 | Primary relational data store |
 | **sf-redis** | redis:7-alpine | 6379 | EventBus pub/sub, caching, Celery broker |
-| **sf-qdrant** | qdrant/qdrant | 6333 | Vector similarity search for semantic OSINT correlation |
-| **sf-minio** | minio/minio | 9000 / 9001 | S3-compatible object storage (logs, reports, backups) |
-| **sf-vector** | timberio/vector | 8686 / 4317 / 9598 | Unified telemetry pipeline (logs, metrics, traces) |
-| **sf-loki** | grafana/loki | 3100 | Log aggregation backend |
-| **sf-grafana** | grafana/grafana | 3000 | Dashboards, alerting, data exploration |
-| **sf-prometheus** | prom/prometheus | 9090 | Metrics collection and alerting |
-| **sf-jaeger** | jaegertracing/jaeger | 16686 | Distributed tracing UI |
-| **sf-pg-backup** | postgres:15-alpine | — | Cron sidecar: pg_dump → MinIO (`sf-pg-backups` bucket) |
-| **sf-minio-init** | minio/mc | — | One-shot: creates MinIO buckets on first boot |
+| **sf-api** | spiderfoot-micro | 8001 | FastAPI REST + GraphQL API, scan orchestration |
+| **sf-celery-worker** | spiderfoot-micro | — | Celery distributed task workers |
+| **sf-frontend-ui** | spiderfoot-frontend | 3000 | React SPA served by Nginx |
+
+### Profile Services
+
+| Service | Profile | Image | Port | Purpose |
+|---------|---------|-------|------|---------|
+| **sf-celery-worker-active** | `scan` | spiderfoot-active | — | Active scanning (33+ recon tools) |
+| **sf-traefik** | `proxy` | traefik:v3 | 443 | Reverse proxy, auto-TLS, routing |
+| **sf-docker-proxy** | `proxy` | tecnativa/docker-socket-proxy | — | Secure Docker API access |
+| **sf-minio** | `storage` | minio/minio | 9000 | S3-compatible object storage |
+| **sf-minio-init** | `storage` | minio/mc | — | One-shot bucket creation |
+| **sf-qdrant** | `storage` | qdrant/qdrant | 6333 | Vector similarity search |
+| **sf-tika** | `storage` | apache/tika | 9998 | Document parsing (PDF, DOCX, etc.) |
+| **sf-pg-backup** | `storage` | postgres:15-alpine | — | Cron sidecar: pg_dump → MinIO |
+| **sf-vector** | `monitor` | timberio/vector | 8686 | Telemetry pipeline |
+| **sf-loki** | `monitor` | grafana/loki | 3100 | Log aggregation |
+| **sf-grafana** | `monitor` | grafana/grafana | 3000 | Dashboards & alerting |
+| **sf-prometheus** | `monitor` | prom/prometheus | 9090 | Metrics collection |
+| **sf-jaeger** | `monitor` | jaegertracing/jaeger | 16686 | Distributed tracing |
+| **sf-agents** | `ai` | spiderfoot-micro | 8100 | 6 AI-powered analysis agents |
+| **sf-litellm** | `ai` | ghcr.io/berriai/litellm | 4000 | Unified LLM proxy |
+| **sf-celery-beat** | `scheduler` | spiderfoot-micro | — | Periodic task scheduler |
+| **sf-flower** | `scheduler` | spiderfoot-micro | 5555 | Celery monitoring dashboard |
+| **sf-keycloak** | `sso` | keycloak | 9080 | OIDC / SAML identity provider |
 
 ### Docker Volumes
 

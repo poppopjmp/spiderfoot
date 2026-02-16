@@ -62,19 +62,20 @@ For full functionality of enhanced modules:
 
 Docker is the easiest way to run SpiderFoot in a portable, isolated environment.
 
-- **Run with Docker:**
+- **Run with Docker Compose (profiles):**
 
   ```sh
-  docker run -p 5001:5001 poppopjmp/spiderfoot
+  cp .env.example .env
+  # Edit .env — change passwords, uncomment profile sections as needed
+
+  # Core only (5 services: postgres, redis, api, worker, frontend)
+  docker compose -f docker-compose-microservices.yml up --build -d
+
+  # Full stack (all services except SSO)
+  docker compose -f docker-compose-microservices.yml --profile full up --build -d
   ```
 
-- **Run with Docker Compose:**
-
-  ```sh
-  docker-compose up
-  ```
-
-- For production deployments, see [Production Deployment](../docs/PRODUCTION_DEPLOYMENT.md) for advanced configuration, persistent storage, and scaling tips.
+  See [Docker Deployment Guide](docker_deployment.md) for available profiles and advanced configuration.
 
 ---
 

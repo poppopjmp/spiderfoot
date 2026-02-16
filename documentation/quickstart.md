@@ -6,20 +6,26 @@ This guide will help you run your first scan in minutes using either the Docker 
 
 ---
 
-## Docker Microservices (Recommended)
+## Docker Compose (Recommended)
 
 1. **Clone and start the stack:**
 
    ```bash
    git clone https://github.com/poppopjmp/spiderfoot.git
    cd spiderfoot
-   cp docker/env.example .env
-   # Edit .env with your API keys (OpenAI, Anthropic, etc.)
+   cp .env.example .env
+   # Edit .env — change passwords, uncomment profile sections as needed
+
+   # Core only (5 services)
    docker compose -f docker-compose-microservices.yml up --build -d
+
+   # Or full stack (all services except SSO)
+   docker compose -f docker-compose-microservices.yml --profile full up --build -d
    ```
 
 2. **Open the Web UI:**
-   - Navigate to [https://localhost](https://localhost) in your browser.
+   - **Core mode:** Navigate to [http://localhost:3000](http://localhost:3000)
+   - **With proxy profile:** Navigate to [https://localhost](https://localhost)
    - Log in with the default credentials (`admin` / `admin`).
 
    ![Login](images/login.png)

@@ -58,6 +58,30 @@ _OAUTH2_STATE_PREFIX = "sf:oauth2:state:"
 _OAUTH2_STATE_TTL = 600  # 10 minutes
 
 
+def _get_external_base_url(request: Request) -> str:
+    """Reconstruct the external (browser-facing) base URL.
+
+    Behind a reverse proxy (Traefik, Nginx), request.base_url returns the
+    internal container address (e.g. http://sf-api:8001).  We need the
+    browser-visible URL so Keycloak's redirect_uri validation passes.
+
+    Priority:
+      1. SF_EXTERNAL_URL env var (explicit override)
+      2. X-Forwarded-Proto + X-Forwarded-Host headers (set by Traefik)
+      3. Fallback to request.base_url
+    """
+    explicit = os.environ.get("SF_EXTERNAL_URL", "").rstrip("/")
+    if explicit:
+        return explicit
+
+    proto = request.headers.get("x-forwarded-proto", "")
+    host = request.headers.get("x-forwarded-host", "")
+    if proto and host:
+        return f"{proto}://{host}"
+
+    return str(request.base_url).rstrip("/")
+
+
 # ---------- Request / Response models ----------
 
 class LoginRequest(BaseModel):
@@ -701,8 +725,9 @@ async def oauth2_login(provider_id: str, request: Request):
         except Exception as e:
             log.warning("Failed to store OAuth2 state in Redis: %s", e)
 
-    base_url = str(request.base_url).rstrip("/")
+    base_url = _get_external_base_url(request)
     redirect_uri = f"{base_url}/api/auth/sso/callback/{provider_id}"
+    log.info("OAuth2 login redirect_uri=%s", redirect_uri)
 
     url = svc.get_oauth2_login_url(provider, redirect_uri, state)
     return RedirectResponse(url=url, status_code=302)
@@ -711,11 +736,30 @@ async def oauth2_login(provider_id: str, request: Request):
 @router.get("/sso/callback/{provider_id}")
 async def oauth2_callback(
     provider_id: str,
-    code: str = Query(...),
+    code: str = Query(default=None),
     state: str = Query(default=""),
+    error: str = Query(default=None),
+    error_description: str = Query(default=None),
     request: Request = None,
 ):
     """OAuth2/OIDC callback — exchange code for tokens."""
+
+    # Handle IdP-side errors (user denied, misconfiguration, etc.)
+    if error:
+        msg = error_description or error
+        log.warning("OAuth2 IdP returned error: %s — %s", error, error_description)
+        return RedirectResponse(
+            url=f"/login?error={msg}",
+            status_code=302,
+        )
+
+    if not code:
+        log.warning("OAuth2 callback missing 'code' parameter")
+        return RedirectResponse(
+            url="/login?error=Missing+authorization+code.+Please+try+again.",
+            status_code=302,
+        )
+
     svc = _get_auth_svc()
     provider = svc.get_sso_provider(provider_id)
     if not provider or not provider.enabled:
@@ -743,8 +787,9 @@ async def oauth2_callback(
     elif r and not state:
         log.warning("OAuth2 callback missing state parameter — possible CSRF")
 
-    base_url = str(request.base_url).rstrip("/")
+    base_url = _get_external_base_url(request)
     redirect_uri = f"{base_url}/api/auth/sso/callback/{provider_id}"
+    log.info("OAuth2 callback redirect_uri=%s", redirect_uri)
 
     try:
         # Exchange code for tokens and get user info

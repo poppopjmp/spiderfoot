@@ -21,14 +21,30 @@
 #   - qdrant        : vector DB for RAG / correlations
 #   - minio         : S3-compatible object storage
 #
-# Usage:
-#   cp docker/env.example .env         # customise settings
-#   docker compose -f docker-compose-microservices.yml up --build -d
+# Profiles (Docker Compose --profile flag):
+#   (no flag)           → 5 core services  (postgres, redis, api, worker, frontend)
+#   --profile scan      → + active-scan worker  (nmap, nuclei, httpx, …)
+#   --profile proxy     → + Traefik reverse proxy + TLS
+#   --profile storage   → + MinIO, Qdrant, Tika, pg-backup
+#   --profile monitor   → + Vector, Loki, Grafana, Prometheus, Jaeger
+#   --profile ai        → + AI agents + LiteLLM gateway
+#   --profile scheduler → + Celery Beat + Flower
+#   --profile sso       → + Keycloak  (OIDC / SAML)
+#   --profile full      → all of the above  (except SSO)
 #
-# Access:
+# Usage:
+#   cp .env.example .env                                                          # configure
+#   docker compose -f docker-compose-microservices.yml up --build -d               # core only
+#   docker compose -f docker-compose-microservices.yml --profile full up --build -d # full stack
+#   docker compose -f docker-compose-microservices.yml --profile proxy --profile storage up -d
+#
+# Access (core only — no Traefik):
+#   Web UI           -> http://localhost:3000
+#   API (Swagger)    -> http://localhost:3000/api/docs
+#
+# Access (with --profile proxy):
 #   Web UI           -> https://localhost               (via Traefik)
 #   API (Swagger)    -> https://localhost/api/docs
-#   Dashboard        -> https://localhost/dashboard/     (basic auth)
 #   Grafana          -> https://localhost/grafana/
 #   Jaeger           -> https://localhost/jaeger/
 #   Prometheus       -> https://localhost/prometheus/
@@ -125,6 +141,9 @@ services:
         limits:
           cpus: "${MINIO_CPUS:-1.0}"
           memory: "${MINIO_MEMORY:-512M}"
+    profiles:
+      - storage
+      - full
 
   # MinIO bucket initializer — creates required buckets on first start
   # Also copies the mc binary to a shared volume for the pg-backup sidecar.
@@ -155,6 +174,9 @@ services:
         cp /usr/bin/mc /opt/mc-share/mc && chmod +x /opt/mc-share/mc;
         echo 'MinIO buckets initialized + mc binary shared';
       "
+    profiles:
+      - storage
+      - full
 
   redis:
     image: redis:7-alpine
@@ -224,6 +246,7 @@ services:
       SF_SERVICE: api
       SF_SERVICE_ROLE: api
       SF_DEPLOYMENT_MODE: microservice
+      SF_EXTERNAL_URL: "${SF_EXTERNAL_URL:-https://localhost}"
       SF_REDIS_URL: redis://redis:6379/0
       SF_POSTGRES_DSN: postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-spiderfoot}
       SF_API_HOST: "0.0.0.0"
@@ -231,45 +254,45 @@ services:
       SF_API_WORKERS: ${SF_API_WORKERS:-2}
       SF_LOG_LEVEL: ${SF_LOG_LEVEL:-INFO}
       SF_API_KEY: ${SF_API_KEY:-}
-      SF_VECTOR_URL: "http://vector:${SF_VECTOR_HTTP_PORT:-8686}"
+      SF_VECTOR_URL: "${SF_VECTOR_URL:-}"
       # Apache Tika for document analysis (used by sfp_document_analyzer module)
-      SF_TIKA_URL: "http://tika:9998"
+      SF_TIKA_URL: "${SF_TIKA_URL:-}"
       # OTEL tracing to Vector → Jaeger
-      OTEL_EXPORTER_OTLP_ENDPOINT: "http://vector:4317"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "${OTEL_EXPORTER_OTLP_ENDPOINT:-}"
       OTEL_SERVICE_NAME: "spiderfoot-api"
       # Qdrant vector DB settings
-      SF_QDRANT_BACKEND: "http"
-      SF_QDRANT_HOST: "qdrant"
-      SF_QDRANT_PORT: "6333"
-      SF_QDRANT_GRPC_PORT: "6334"
-      SF_QDRANT_PREFIX: "sf_"
+      SF_QDRANT_BACKEND: "${SF_QDRANT_BACKEND:-memory}"
+      SF_QDRANT_HOST: "${SF_QDRANT_HOST:-}"
+      SF_QDRANT_PORT: "${SF_QDRANT_PORT:-}"
+      SF_QDRANT_GRPC_PORT: "${SF_QDRANT_GRPC_PORT:-}"
+      SF_QDRANT_PREFIX: "${SF_QDRANT_PREFIX:-sf_}"
       # Embedding model settings
-      SF_EMBEDDING_PROVIDER: ${SF_EMBEDDING_PROVIDER:-litellm}
-      SF_EMBEDDING_MODEL: ${SF_EMBEDDING_MODEL:-text-embedding-3-small}
-      SF_EMBEDDING_DIMENSIONS: ${SF_EMBEDDING_DIMENSIONS:-1536}
-      SF_EMBEDDING_API_KEY: ${SF_LLM_API_KEY}
-      SF_EMBEDDING_API_BASE: ${SF_EMBEDDING_API_BASE:-http://litellm:4000}
+      SF_EMBEDDING_PROVIDER: ${SF_EMBEDDING_PROVIDER:-mock}
+      SF_EMBEDDING_MODEL: ${SF_EMBEDDING_MODEL:-}
+      SF_EMBEDDING_DIMENSIONS: ${SF_EMBEDDING_DIMENSIONS:-384}
+      SF_EMBEDDING_API_KEY: ${SF_LLM_API_KEY:-}
+      SF_EMBEDDING_API_BASE: ${SF_EMBEDDING_API_BASE:-}
       # Reranker settings
-      SF_RERANKER_PROVIDER: ${SF_RERANKER_PROVIDER:-litellm}
-      SF_RERANKER_MODEL: ${SF_RERANKER_MODEL:-gpt-4o-mini}
-      SF_RERANKER_API_KEY: ${SF_LLM_API_KEY}
-      SF_RERANKER_API_BASE: ${SF_RERANKER_API_BASE:-http://litellm:4000}
+      SF_RERANKER_PROVIDER: ${SF_RERANKER_PROVIDER:-mock}
+      SF_RERANKER_MODEL: ${SF_RERANKER_MODEL:-}
+      SF_RERANKER_API_KEY: ${SF_LLM_API_KEY:-}
+      SF_RERANKER_API_BASE: ${SF_RERANKER_API_BASE:-}
       SF_RERANKER_TOP_K: ${SF_RERANKER_TOP_K:-10}
       SF_RERANKER_SCORE_THRESHOLD: ${SF_RERANKER_SCORE_THRESHOLD:-0.3}
       # RAG / LLM settings (routed through LiteLLM proxy)
       SF_LLM_PROVIDER: ${SF_LLM_PROVIDER:-mock}
       SF_LLM_MODEL: ${SF_LLM_MODEL:-}
-      SF_LLM_API_KEY: ${SF_LLM_API_KEY}
-      SF_LLM_API_BASE: ${SF_LLM_API_BASE:-http://litellm:4000}
+      SF_LLM_API_KEY: ${SF_LLM_API_KEY:-}
+      SF_LLM_API_BASE: ${SF_LLM_API_BASE:-}
       # Vector correlation settings
-      SF_VECTOR_CORRELATION_ENABLED: ${SF_VECTOR_CORRELATION_ENABLED:-true}
+      SF_VECTOR_CORRELATION_ENABLED: ${SF_VECTOR_CORRELATION_ENABLED:-false}
       SF_VECTOR_SIMILARITY_THRESHOLD: ${SF_VECTOR_SIMILARITY_THRESHOLD:-0.7}
       SF_VECTOR_CROSS_SCAN_THRESHOLD: ${SF_VECTOR_CROSS_SCAN_THRESHOLD:-0.8}
       SF_VECTOR_RERANK_ACCURACY: ${SF_VECTOR_RERANK_ACCURACY:-high}
       # MinIO / S3-compatible object storage
-      SF_MINIO_ENDPOINT: "minio:9000"
-      SF_MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
-      SF_MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      SF_MINIO_ENDPOINT: "${SF_MINIO_ENDPOINT:-}"
+      SF_MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-}
+      SF_MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-}
       SF_MINIO_SECURE: "false"
       SF_MINIO_REPORTS_BUCKET: ${SF_MINIO_REPORTS_BUCKET:-sf-reports}
       SF_MINIO_DATA_BUCKET: ${SF_MINIO_DATA_BUCKET:-sf-data}
@@ -288,12 +311,6 @@ services:
       redis:
         condition: service_healthy
       postgres:
-        condition: service_healthy
-      qdrant:
-        condition: service_healthy
-      minio:
-        condition: service_healthy
-      tika:
         condition: service_healthy
     entrypoint: ["/usr/local/bin/docker-entrypoint.sh"]
     command: ["python", "-m", "spiderfoot.service_runner", "--service", "api", "--port", "8001"]
@@ -382,6 +399,9 @@ services:
         limits:
           cpus: "0.25"
           memory: "64M"
+    profiles:
+      - proxy
+      - full
 
   # ---------------------------------------------------------------------------
   # Traefik Reverse Proxy / API Gateway  (replaces Nginx since v5.3.17)
@@ -429,6 +449,9 @@ services:
         limits:
           cpus: "${TRAEFIK_CPUS:-0.5}"
           memory: "${TRAEFIK_MEMORY:-128M}"
+    profiles:
+      - proxy
+      - full
 
   # ---------------------------------------------------------------------------
   # Qdrant — Vector Database for RAG / Rerank Correlations
@@ -466,6 +489,9 @@ services:
         limits:
           cpus: "${QDRANT_CPUS:-1.0}"
           memory: "${QDRANT_MEMORY:-1G}"
+    profiles:
+      - storage
+      - full
 
   # ---------------------------------------------------------------------------
   # Vector.dev — Data Pipeline (logs, events, metrics)
@@ -528,6 +554,9 @@ services:
         limits:
           cpus: "${VECTOR_CPUS:-0.5}"
           memory: "${VECTOR_MEMORY:-256M}"
+    profiles:
+      - monitor
+      - full
 
   # ---------------------------------------------------------------------------
   # Loki — Log Aggregation (Grafana-native)
@@ -562,6 +591,9 @@ services:
         limits:
           cpus: "${LOKI_CPUS:-1.0}"
           memory: "${LOKI_MEMORY:-512M}"
+    profiles:
+      - monitor
+      - full
 
   # ---------------------------------------------------------------------------
   # Grafana — Dashboards & Observability UI
@@ -615,6 +647,9 @@ services:
         limits:
           cpus: "${GRAFANA_CPUS:-1.0}"
           memory: "${GRAFANA_MEMORY:-512M}"
+    profiles:
+      - monitor
+      - full
 
   # ---------------------------------------------------------------------------
   # Prometheus — Metrics Collection & Storage
@@ -657,6 +692,9 @@ services:
         limits:
           cpus: "${PROMETHEUS_CPUS:-1.0}"
           memory: "${PROMETHEUS_MEMORY:-512M}"
+    profiles:
+      - monitor
+      - full
 
   # ---------------------------------------------------------------------------
   # Apache Tika — Document Text / Metadata Extraction  (new in v5.3.17)
@@ -687,6 +725,9 @@ services:
         limits:
           cpus: "${TIKA_CPUS:-2.0}"
           memory: "${TIKA_MEMORY:-1G}"
+    profiles:
+      - storage
+      - full
 
   # ---------------------------------------------------------------------------
   # SpiderFoot Agents Service (AI analysis agents)
@@ -730,11 +771,11 @@ services:
       SF_LLM_API_KEY: ${SF_LLM_API_KEY}
       SF_LLM_MODEL: ${SF_LLM_MODEL:-gpt-4o-mini}
       # Qdrant vector DB for report context
-      SF_QDRANT_BACKEND: "http"
-      SF_QDRANT_HOST: "qdrant"
-      SF_QDRANT_PORT: "6333"
-      SF_QDRANT_GRPC_PORT: "6334"
-      SF_QDRANT_PREFIX: "sf_"
+      SF_QDRANT_BACKEND: "${SF_QDRANT_BACKEND:-memory}"
+      SF_QDRANT_HOST: "${SF_QDRANT_HOST:-}"
+      SF_QDRANT_PORT: "${SF_QDRANT_PORT:-}"
+      SF_QDRANT_GRPC_PORT: "${SF_QDRANT_GRPC_PORT:-}"
+      SF_QDRANT_PREFIX: "${SF_QDRANT_PREFIX:-sf_}"
       # Embedding model for semantic search
       SF_EMBEDDING_PROVIDER: ${SF_EMBEDDING_PROVIDER:-litellm}
       SF_EMBEDDING_MODEL: ${SF_EMBEDDING_MODEL:-text-embedding-3-small}
@@ -747,7 +788,7 @@ services:
       SF_RERANKER_API_KEY: ${SF_LLM_API_KEY}
       SF_RERANKER_API_BASE: ${SF_RERANKER_API_BASE:-http://litellm:4000}
       # OTEL tracing to Vector → Jaeger
-      OTEL_EXPORTER_OTLP_ENDPOINT: "http://vector:4317"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "${OTEL_EXPORTER_OTLP_ENDPOINT:-}"
       OTEL_SERVICE_NAME: "spiderfoot-agents"
     entrypoint: ["/usr/local/bin/docker-entrypoint.sh"]
     command: ["python", "-m", "spiderfoot.agents.service"]
@@ -769,6 +810,9 @@ services:
         limits:
           cpus: "${AGENTS_CPUS:-2.0}"
           memory: "${AGENTS_MEMORY:-2G}"
+    profiles:
+      - ai
+      - full
 
   # ---------------------------------------------------------------------------
   # Celery Worker — Async Task Execution  (new in v5.4.0)
@@ -793,38 +837,38 @@ services:
       SF_REDIS_URL: redis://redis:6379/0
       SF_POSTGRES_DSN: postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-spiderfoot}
       SF_LOG_LEVEL: ${SF_LOG_LEVEL:-INFO}
-      SF_TIKA_URL: "http://tika:9998"
-      SF_MINIO_ENDPOINT: "minio:9000"
-      SF_MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
-      SF_MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      SF_TIKA_URL: "${SF_TIKA_URL:-}"
+      SF_MINIO_ENDPOINT: "${SF_MINIO_ENDPOINT:-}"
+      SF_MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-}
+      SF_MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-}
       SF_MINIO_SECURE: "false"
       SF_MINIO_REPORTS_BUCKET: ${SF_MINIO_REPORTS_BUCKET:-sf-reports}
       SF_MINIO_DATA_BUCKET: ${SF_MINIO_DATA_BUCKET:-sf-data}
       SF_LLM_PROVIDER: ${SF_LLM_PROVIDER:-mock}
-      SF_LLM_API_BASE: ${SF_LLM_API_BASE:-http://litellm:4000}
-      SF_LLM_API_KEY: ${SF_LLM_API_KEY}
+      SF_LLM_API_BASE: ${SF_LLM_API_BASE:-}
+      SF_LLM_API_KEY: ${SF_LLM_API_KEY:-}
       SF_LLM_MODEL: ${SF_LLM_MODEL:-}
-      SF_QDRANT_BACKEND: "http"
-      SF_QDRANT_HOST: "qdrant"
-      SF_QDRANT_PORT: "6333"
-      SF_QDRANT_GRPC_PORT: "6334"
-      SF_QDRANT_PREFIX: "sf_"
+      SF_QDRANT_BACKEND: "${SF_QDRANT_BACKEND:-memory}"
+      SF_QDRANT_HOST: "${SF_QDRANT_HOST:-}"
+      SF_QDRANT_PORT: "${SF_QDRANT_PORT:-}"
+      SF_QDRANT_GRPC_PORT: "${SF_QDRANT_GRPC_PORT:-}"
+      SF_QDRANT_PREFIX: "${SF_QDRANT_PREFIX:-sf_}"
       # Embedding model settings
-      SF_EMBEDDING_PROVIDER: ${SF_EMBEDDING_PROVIDER:-litellm}
-      SF_EMBEDDING_MODEL: ${SF_EMBEDDING_MODEL:-text-embedding-3-small}
-      SF_EMBEDDING_DIMENSIONS: ${SF_EMBEDDING_DIMENSIONS:-1536}
-      SF_EMBEDDING_API_KEY: ${SF_LLM_API_KEY}
-      SF_EMBEDDING_API_BASE: ${SF_EMBEDDING_API_BASE:-http://litellm:4000}
+      SF_EMBEDDING_PROVIDER: ${SF_EMBEDDING_PROVIDER:-mock}
+      SF_EMBEDDING_MODEL: ${SF_EMBEDDING_MODEL:-}
+      SF_EMBEDDING_DIMENSIONS: ${SF_EMBEDDING_DIMENSIONS:-384}
+      SF_EMBEDDING_API_KEY: ${SF_LLM_API_KEY:-}
+      SF_EMBEDDING_API_BASE: ${SF_EMBEDDING_API_BASE:-}
       # Reranker settings
-      SF_RERANKER_PROVIDER: ${SF_RERANKER_PROVIDER:-litellm}
-      SF_RERANKER_MODEL: ${SF_RERANKER_MODEL:-gpt-4o-mini}
-      SF_RERANKER_API_KEY: ${SF_LLM_API_KEY}
-      SF_RERANKER_API_BASE: ${SF_RERANKER_API_BASE:-http://litellm:4000}
+      SF_RERANKER_PROVIDER: ${SF_RERANKER_PROVIDER:-mock}
+      SF_RERANKER_MODEL: ${SF_RERANKER_MODEL:-}
+      SF_RERANKER_API_KEY: ${SF_LLM_API_KEY:-}
+      SF_RERANKER_API_BASE: ${SF_RERANKER_API_BASE:-}
       SF_RERANKER_TOP_K: ${SF_RERANKER_TOP_K:-10}
       # Vector correlation
       SF_VECTOR_CORRELATION_ENABLED: ${SF_VECTOR_CORRELATION_ENABLED:-true}
       # OTEL tracing
-      OTEL_EXPORTER_OTLP_ENDPOINT: "http://vector:4317"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "${OTEL_EXPORTER_OTLP_ENDPOINT:-}"
       OTEL_SERVICE_NAME: "spiderfoot-celery-worker"
       # Worker concurrency (default 4 — one per queue priority)
       CELERY_WORKER_CONCURRENCY: ${CELERY_WORKER_CONCURRENCY:-4}
@@ -846,8 +890,6 @@ services:
       redis:
         condition: service_healthy
       postgres:
-        condition: service_healthy
-      minio:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "python", "-m", "celery", "-A", "spiderfoot.celery_app:celery_app", "inspect", "ping", "--timeout", "5"]
@@ -890,34 +932,34 @@ services:
       SF_REDIS_URL: redis://redis:6379/0
       SF_POSTGRES_DSN: postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-spiderfoot}
       SF_LOG_LEVEL: ${SF_LOG_LEVEL:-INFO}
-      SF_TIKA_URL: "http://tika:9998"
-      SF_MINIO_ENDPOINT: "minio:9000"
-      SF_MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
-      SF_MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      SF_TIKA_URL: "${SF_TIKA_URL:-}"
+      SF_MINIO_ENDPOINT: "${SF_MINIO_ENDPOINT:-}"
+      SF_MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-}
+      SF_MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-}
       SF_MINIO_SECURE: "false"
       SF_MINIO_REPORTS_BUCKET: ${SF_MINIO_REPORTS_BUCKET:-sf-reports}
       SF_MINIO_DATA_BUCKET: ${SF_MINIO_DATA_BUCKET:-sf-data}
       SF_LLM_PROVIDER: ${SF_LLM_PROVIDER:-mock}
-      SF_LLM_API_BASE: ${SF_LLM_API_BASE:-http://litellm:4000}
-      SF_LLM_API_KEY: ${SF_LLM_API_KEY}
+      SF_LLM_API_BASE: ${SF_LLM_API_BASE:-}
+      SF_LLM_API_KEY: ${SF_LLM_API_KEY:-}
       SF_LLM_MODEL: ${SF_LLM_MODEL:-}
-      SF_QDRANT_BACKEND: "http"
-      SF_QDRANT_HOST: "qdrant"
-      SF_QDRANT_PORT: "6333"
-      SF_QDRANT_GRPC_PORT: "6334"
-      SF_QDRANT_PREFIX: "sf_"
-      SF_EMBEDDING_PROVIDER: ${SF_EMBEDDING_PROVIDER:-litellm}
-      SF_EMBEDDING_MODEL: ${SF_EMBEDDING_MODEL:-text-embedding-3-small}
-      SF_EMBEDDING_DIMENSIONS: ${SF_EMBEDDING_DIMENSIONS:-1536}
-      SF_EMBEDDING_API_KEY: ${SF_LLM_API_KEY}
-      SF_EMBEDDING_API_BASE: ${SF_EMBEDDING_API_BASE:-http://litellm:4000}
-      SF_RERANKER_PROVIDER: ${SF_RERANKER_PROVIDER:-litellm}
-      SF_RERANKER_MODEL: ${SF_RERANKER_MODEL:-gpt-4o-mini}
-      SF_RERANKER_API_KEY: ${SF_LLM_API_KEY}
-      SF_RERANKER_API_BASE: ${SF_RERANKER_API_BASE:-http://litellm:4000}
+      SF_QDRANT_BACKEND: "${SF_QDRANT_BACKEND:-memory}"
+      SF_QDRANT_HOST: "${SF_QDRANT_HOST:-}"
+      SF_QDRANT_PORT: "${SF_QDRANT_PORT:-}"
+      SF_QDRANT_GRPC_PORT: "${SF_QDRANT_GRPC_PORT:-}"
+      SF_QDRANT_PREFIX: "${SF_QDRANT_PREFIX:-sf_}"
+      SF_EMBEDDING_PROVIDER: ${SF_EMBEDDING_PROVIDER:-mock}
+      SF_EMBEDDING_MODEL: ${SF_EMBEDDING_MODEL:-}
+      SF_EMBEDDING_DIMENSIONS: ${SF_EMBEDDING_DIMENSIONS:-384}
+      SF_EMBEDDING_API_KEY: ${SF_LLM_API_KEY:-}
+      SF_EMBEDDING_API_BASE: ${SF_EMBEDDING_API_BASE:-}
+      SF_RERANKER_PROVIDER: ${SF_RERANKER_PROVIDER:-mock}
+      SF_RERANKER_MODEL: ${SF_RERANKER_MODEL:-}
+      SF_RERANKER_API_KEY: ${SF_LLM_API_KEY:-}
+      SF_RERANKER_API_BASE: ${SF_RERANKER_API_BASE:-}
       SF_RERANKER_TOP_K: ${SF_RERANKER_TOP_K:-10}
       SF_VECTOR_CORRELATION_ENABLED: ${SF_VECTOR_CORRELATION_ENABLED:-true}
-      OTEL_EXPORTER_OTLP_ENDPOINT: "http://vector:4317"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "${OTEL_EXPORTER_OTLP_ENDPOINT:-}"
       OTEL_SERVICE_NAME: "spiderfoot-celery-worker-active"
       # Active worker concurrency — one scan can be CPU/network-heavy
       CELERY_WORKER_CONCURRENCY: ${CELERY_ACTIVE_WORKER_CONCURRENCY:-2}
@@ -942,8 +984,6 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
-      minio:
-        condition: service_healthy
     healthcheck:
       test: ["CMD", "python", "-m", "celery", "-A", "spiderfoot.celery_app:celery_app", "inspect", "ping", "--timeout", "5"]
       interval: 30s
@@ -955,6 +995,9 @@ services:
         limits:
           cpus: "${CELERY_ACTIVE_WORKER_CPUS:-4.0}"
           memory: "${CELERY_ACTIVE_WORKER_MEMORY:-4G}"
+    profiles:
+      - scan
+      - full
 
   # ---------------------------------------------------------------------------
   # Celery Beat — Periodic Task Scheduler  (new in v5.4.0)
@@ -995,6 +1038,9 @@ services:
         limits:
           cpus: "${CELERY_BEAT_CPUS:-0.25}"
           memory: "${CELERY_BEAT_MEMORY:-128M}"
+    profiles:
+      - scheduler
+      - full
 
   # ---------------------------------------------------------------------------
   # Flower — Celery Monitoring Dashboard  (new in v5.4.0)
@@ -1048,6 +1094,9 @@ services:
         limits:
           cpus: "${FLOWER_CPUS:-0.5}"
           memory: "${FLOWER_MEMORY:-256M}"
+    profiles:
+      - scheduler
+      - full
 
   # ---------------------------------------------------------------------------
   # LiteLLM Proxy — Unified LLM Gateway
@@ -1086,7 +1135,7 @@ services:
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
       OLLAMA_API_BASE: ${OLLAMA_API_BASE:-http://host.docker.internal:11434}
       # OTEL tracing to Vector
-      OTEL_EXPORTER_OTLP_ENDPOINT: "http://vector:4317"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "${OTEL_EXPORTER_OTLP_ENDPOINT:-}"
       OTEL_SERVICE_NAME: "litellm"
     command: ["--config", "/app/config.yaml", "--port", "4000", "--num_workers", "1"]
     depends_on:
@@ -1105,6 +1154,9 @@ services:
         limits:
           cpus: "${LITELLM_CPUS:-1.0}"
           memory: "${LITELLM_MEMORY:-1G}"
+    profiles:
+      - ai
+      - full
 
   # ---------------------------------------------------------------------------
   # Jaeger — Distributed Tracing
@@ -1142,6 +1194,9 @@ services:
         limits:
           cpus: "${JAEGER_CPUS:-1.0}"
           memory: "${JAEGER_MEMORY:-512M}"
+    profiles:
+      - monitor
+      - full
 
   # ---------------------------------------------------------------------------
   # PostgreSQL Backup Sidecar — pg_dump to MinIO
@@ -1184,6 +1239,9 @@ services:
         limits:
           cpus: "0.25"
           memory: "128M"
+    profiles:
+      - storage
+      - full
 
   # ---------------------------------------------------------------------------
   # Keycloak — Identity Provider (SSO / OIDC / SAML testing)
@@ -1214,7 +1272,12 @@ services:
       KC_HEALTH_ENABLED: "true"
       KC_METRICS_ENABLED: "false"
       KC_DB: dev-file
+      # Hostname v2: pin the issuer to the browser-facing URL so tokens are
+      # valid regardless of whether back-channel calls use the internal Docker
+      # hostname (keycloak:8080) or the external host port (localhost:9080).
+      KC_HOSTNAME: "http://localhost:${KC_PORT:-9080}"
       KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
       KC_HTTP_ENABLED: "true"
       KC_PROXY_HEADERS: xforwarded
     command: ["start-dev"]

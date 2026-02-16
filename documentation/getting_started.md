@@ -16,15 +16,20 @@ See the [Installation Guide](installation.md) for detailed steps. In summary:
   cd spiderfoot
   ```
 
-### Docker Microservices (Recommended)
+### Docker Compose (Recommended)
 
 ```bash
-cp docker/env.example .env
-# Edit .env with your API keys (OpenAI, Anthropic, etc.)
+cp .env.example .env
+# Edit .env — change passwords, uncomment profile sections as needed
+
+# Core only (5 services)
 docker compose -f docker-compose-microservices.yml up --build -d
+
+# Or full stack (all services except SSO)
+docker compose -f docker-compose-microservices.yml --profile full up --build -d
 ```
 
-Access the UI at [https://localhost](https://localhost).
+Access the UI at [http://localhost:3000](http://localhost:3000) (core) or [https://localhost](https://localhost) (with proxy profile).
 
 ### Standalone Mode
 
