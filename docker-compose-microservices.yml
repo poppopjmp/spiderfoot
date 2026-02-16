@@ -8,7 +8,8 @@
 #   - traefik       : reverse proxy / API gateway  (replaces nginx since v5.3.17)
 #   - tika          : Apache Tika full — document text/metadata extraction
 #   - agents        : AI-powered analysis agents  (LLM via LiteLLM)
-#   - celery-worker : async task execution  (scans, reports, exports)
+#   - celery-worker        : general tasks  (reports, exports, agents, monitoring)
+#   - celery-worker-active : dedicated active scanning  (scan queue only)
 #   - celery-beat   : periodic task scheduler
 #   - flower        : Celery monitoring dashboard
 #   - litellm       : unified LLM gateway (OpenAI, Anthropic, Ollama, …)
@@ -42,11 +43,19 @@
 # services are needed.
 # =============================================================================
 
+name: spiderfoot
+
 # Shared build definition (anchored for YAML reuse)
 x-sf-build: &sf-build
   build:
     context: .
     dockerfile: Dockerfile
+
+# Active scan worker build — extends the base image with recon tools
+x-sf-active-build: &sf-active-build
+  build:
+    context: .
+    dockerfile: Dockerfile.active-worker
 
 networks:
   sf-frontend:
@@ -483,6 +492,7 @@ services:
       - ./config/vector.toml:/etc/vector/vector.toml:ro
       - vector-data:/var/lib/vector
       - vector-logs:/var/log/vector
+      - traefik-logs:/var/log/traefik:ro
     environment:
       VECTOR_CONFIG: /etc/vector/vector.toml
       SF_VECTOR_HTTP_PORT: ${SF_VECTOR_HTTP_PORT:-8686}
@@ -507,6 +517,12 @@ services:
         condition: service_started
       jaeger:
         condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8687/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     deploy:
       resources:
         limits:
@@ -528,7 +544,7 @@ services:
       - sf-backend
     volumes:
       - ./infra/loki/local-config.yaml:/etc/loki/local-config.yaml:ro
-    command: -config.file=/etc/loki/local-config.yaml
+    command: -config.file=/etc/loki/local-config.yaml -config.expand-env=true
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
@@ -757,9 +773,11 @@ services:
   # ---------------------------------------------------------------------------
   # Celery Worker — Async Task Execution  (new in v5.4.0)
   # ---------------------------------------------------------------------------
-  # Processes background tasks: scan execution, report generation, exports,
-  # AI agent tasks, and monitoring jobs.  Uses the same SpiderFoot image with
-  # Celery worker entrypoint.  Redis serves as both broker and result backend.
+  # ---------------------------------------------------------------------------
+  # Celery Worker — General Tasks  (reports, exports, agents, monitoring)
+  # ---------------------------------------------------------------------------
+  # Handles all queues EXCEPT "scan" — active scanning is delegated to the
+  # dedicated celery-worker-active container which ships additional recon tools.
   # ---------------------------------------------------------------------------
 
   celery-worker:
@@ -819,7 +837,7 @@ services:
       - "spiderfoot.celery_app:celery_app"
       - "worker"
       - "--loglevel=info"
-      - "--queues=default,scan,report,export,agents,monitor"
+      - "--queues=default,report,export,agents,monitor"
       - "--concurrency=${CELERY_WORKER_CONCURRENCY:-4}"
       - "--hostname=worker@%h"
       - "--without-heartbeat"
@@ -842,6 +860,101 @@ services:
         limits:
           cpus: "${CELERY_WORKER_CPUS:-2.0}"
           memory: "${CELERY_WORKER_MEMORY:-2G}"
+
+  # ---------------------------------------------------------------------------
+  # Celery Worker — Active Scan  (dedicated scanning container)
+  # ---------------------------------------------------------------------------
+  # Subscribes ONLY to the "scan" queue.  Ships all active reconnaissance
+  # tools: nmap, nuclei, httpx, subfinder, gobuster, dnsx, naabu, katana,
+  # tlsx, ffuf, massdns, testssl.sh, CMSeeK, retire.js, wafw00f, and more.
+  #
+  # Build order: the base image (spiderfoot-micro:latest) must be built first.
+  #   docker compose build api && docker compose build celery-worker-active
+  # Or simply:
+  #   docker compose up --build -d
+  # ---------------------------------------------------------------------------
+
+  celery-worker-active:
+    <<: *sf-active-build
+    image: spiderfoot-active:latest
+    container_name: sf-celery-worker-active
+    restart: unless-stopped
+    networks:
+      - sf-backend
+      - sf-frontend
+    cap_add:
+      - NET_RAW          # nmap SYN scans, naabu raw sockets
+      - NET_ADMIN        # nmap OS detection, advanced scans
+    environment:
+      SF_SERVICE: celery-worker
+      SF_REDIS_URL: redis://redis:6379/0
+      SF_POSTGRES_DSN: postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-spiderfoot}
+      SF_LOG_LEVEL: ${SF_LOG_LEVEL:-INFO}
+      SF_TIKA_URL: "http://tika:9998"
+      SF_MINIO_ENDPOINT: "minio:9000"
+      SF_MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      SF_MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      SF_MINIO_SECURE: "false"
+      SF_MINIO_REPORTS_BUCKET: ${SF_MINIO_REPORTS_BUCKET:-sf-reports}
+      SF_MINIO_DATA_BUCKET: ${SF_MINIO_DATA_BUCKET:-sf-data}
+      SF_LLM_PROVIDER: ${SF_LLM_PROVIDER:-mock}
+      SF_LLM_API_BASE: ${SF_LLM_API_BASE:-http://litellm:4000}
+      SF_LLM_API_KEY: ${SF_LLM_API_KEY}
+      SF_LLM_MODEL: ${SF_LLM_MODEL:-}
+      SF_QDRANT_BACKEND: "http"
+      SF_QDRANT_HOST: "qdrant"
+      SF_QDRANT_PORT: "6333"
+      SF_QDRANT_GRPC_PORT: "6334"
+      SF_QDRANT_PREFIX: "sf_"
+      SF_EMBEDDING_PROVIDER: ${SF_EMBEDDING_PROVIDER:-litellm}
+      SF_EMBEDDING_MODEL: ${SF_EMBEDDING_MODEL:-text-embedding-3-small}
+      SF_EMBEDDING_DIMENSIONS: ${SF_EMBEDDING_DIMENSIONS:-1536}
+      SF_EMBEDDING_API_KEY: ${SF_LLM_API_KEY}
+      SF_EMBEDDING_API_BASE: ${SF_EMBEDDING_API_BASE:-http://litellm:4000}
+      SF_RERANKER_PROVIDER: ${SF_RERANKER_PROVIDER:-litellm}
+      SF_RERANKER_MODEL: ${SF_RERANKER_MODEL:-gpt-4o-mini}
+      SF_RERANKER_API_KEY: ${SF_LLM_API_KEY}
+      SF_RERANKER_API_BASE: ${SF_RERANKER_API_BASE:-http://litellm:4000}
+      SF_RERANKER_TOP_K: ${SF_RERANKER_TOP_K:-10}
+      SF_VECTOR_CORRELATION_ENABLED: ${SF_VECTOR_CORRELATION_ENABLED:-true}
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://vector:4317"
+      OTEL_SERVICE_NAME: "spiderfoot-celery-worker-active"
+      # Active worker concurrency — one scan can be CPU/network-heavy
+      CELERY_WORKER_CONCURRENCY: ${CELERY_ACTIVE_WORKER_CONCURRENCY:-2}
+      # Wordlists path for gobuster/ffuf/massdns
+      SF_WORDLISTS_PATH: "/tools/wordlists"
+    entrypoint: ["/usr/local/bin/docker-entrypoint.sh"]
+    command:
+      - "python"
+      - "-m"
+      - "celery"
+      - "-A"
+      - "spiderfoot.celery_app:celery_app"
+      - "worker"
+      - "--loglevel=info"
+      - "--queues=scan"
+      - "--concurrency=${CELERY_ACTIVE_WORKER_CONCURRENCY:-2}"
+      - "--hostname=active-scanner@%h"
+      - "--without-heartbeat"
+      - "--without-mingle"
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-m", "celery", "-A", "spiderfoot.celery_app:celery_app", "inspect", "ping", "--timeout", "5"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: "${CELERY_ACTIVE_WORKER_CPUS:-4.0}"
+          memory: "${CELERY_ACTIVE_WORKER_MEMORY:-4G}"
 
   # ---------------------------------------------------------------------------
   # Celery Beat — Periodic Task Scheduler  (new in v5.4.0)

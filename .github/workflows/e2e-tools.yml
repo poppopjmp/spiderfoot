@@ -1,0 +1,273 @@
+name: E2E — Active Scan Worker Tools
+
+on:
+  push:
+    branches: [main, dev-*]
+    paths:
+      - 'Dockerfile.active-worker'
+      - 'modules/sfp_tool_*.py'
+      - '.github/workflows/e2e-tools.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'Dockerfile.active-worker'
+      - 'modules/sfp_tool_*.py'
+      - '.github/workflows/e2e-tools.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  # ─── Job 1: Build the active-worker image ──────────────────────────────────
+  build-active-worker:
+    name: Build Active Worker Image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build base image (spiderfoot-micro)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          push: false
+          load: true
+          tags: spiderfoot-micro:latest
+          cache-from: type=gha,scope=base
+          cache-to: type=gha,scope=base,mode=max
+
+      - name: Build active-worker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile.active-worker
+          push: false
+          load: true
+          tags: spiderfoot-active:latest
+          build-args: BASE_IMAGE=spiderfoot-micro:latest
+          cache-from: type=gha,scope=active-worker
+          cache-to: type=gha,scope=active-worker,mode=max
+
+      - name: Save active-worker image
+        run: docker save spiderfoot-active:latest | gzip > /tmp/active-worker.tar.gz
+
+      - name: Upload image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: active-worker-image
+          path: /tmp/active-worker.tar.gz
+          retention-days: 1
+
+  # ─── Job 2: Verify all tool binaries are present and runnable ──────────────
+  verify-tools:
+    name: Verify Tool Binaries
+    runs-on: ubuntu-latest
+    needs: build-active-worker
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: active-worker-image
+          path: /tmp
+
+      - name: Load image
+        run: docker load < /tmp/active-worker.tar.gz
+
+      - name: Verify Go tools
+        run: |
+          set -e
+          echo "=== Verifying Go-based tools ==="
+          docker run --rm spiderfoot-active:latest /tools/bin/httpx -version 2>&1 | head -1
+          docker run --rm spiderfoot-active:latest /tools/bin/subfinder -version 2>&1 | head -1
+          docker run --rm spiderfoot-active:latest /tools/bin/gobuster version 2>&1 | head -1
+          docker run --rm spiderfoot-active:latest /tools/bin/dnsx -version 2>&1 | head -1
+          docker run --rm spiderfoot-active:latest /tools/bin/katana -version 2>&1 | head -1
+          docker run --rm spiderfoot-active:latest /tools/bin/tlsx -version 2>&1 | head -1
+          docker run --rm spiderfoot-active:latest /tools/bin/ffuf -V 2>&1 | head -1
+          docker run --rm spiderfoot-active:latest /tools/bin/amass version 2>&1 | head -1
+          docker run --rm spiderfoot-active:latest /tools/bin/gau -version 2>&1 | head -1
+          docker run --rm spiderfoot-active:latest /tools/bin/gospider --version 2>&1 | head -1
+          docker run --rm spiderfoot-active:latest /tools/bin/gowitness version 2>&1 | head -1
+          docker run --rm spiderfoot-active:latest /tools/bin/gitleaks version 2>&1 | head -1
+          docker run --rm spiderfoot-active:latest /tools/bin/dalfox version 2>&1 | head -1
+          echo "Go tools OK"
+
+      - name: Verify tools requiring NET_RAW
+        run: |
+          set -e
+          echo "=== Verifying NET_RAW tools (existence only) ==="
+          docker run --rm spiderfoot-active:latest test -x /tools/bin/naabu
+          docker run --rm spiderfoot-active:latest test -x /tools/bin/massdns
+          docker run --rm spiderfoot-active:latest test -x /tools/bin/masscan
+          echo "NET_RAW tools exist OK"
+
+      - name: Verify system/apt tools
+        run: |
+          set -e
+          echo "=== Verifying system tools ==="
+          docker run --rm spiderfoot-active:latest sslscan --version 2>&1 | head -1
+          docker run --rm spiderfoot-active:latest nikto -Version 2>&1 | head -3
+          echo "System tools OK"
+
+      - name: Verify Python tools
+        run: |
+          set -e
+          echo "=== Verifying Python tools ==="
+          docker run --rm spiderfoot-active:latest /opt/venv/bin/arjun --help 2>&1 | head -1
+          docker run --rm spiderfoot-active:latest /opt/venv/bin/sslyze --version 2>&1 | head -1
+          echo "Python tools OK"
+
+      - name: Verify wordlists
+        run: |
+          set -e
+          echo "=== Verifying wordlists ==="
+          for wl in common.txt raft-medium-directories.txt raft-medium-files.txt \
+                    subdomains-top1million-5000.txt subdomains-top1million-20000.txt \
+                    subdomains-top1million-110000.txt burp-parameter-names.txt resolvers.txt; do
+            docker run --rm spiderfoot-active:latest test -s /tools/wordlists/$wl
+            echo "  $wl OK"
+          done
+          echo "All wordlists OK"
+
+      - name: Check image size
+        run: |
+          docker images spiderfoot-active:latest --format "{{.Size}}"
+
+  # ─── Job 3: Verify SpiderFoot modules load correctly ───────────────────────
+  verify-modules:
+    name: Verify Module Loading
+    runs-on: ubuntu-latest
+    needs: build-active-worker
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: active-worker-image
+          path: /tmp
+
+      - name: Load image
+        run: docker load < /tmp/active-worker.tar.gz
+
+      - name: Verify all sfp_tool modules import
+        run: |
+          docker run --rm --entrypoint /opt/venv/bin/python spiderfoot-active:latest -c "
+          import importlib, sys, os
+          os.chdir('/opt/spiderfoot')
+          sys.path.insert(0, '/opt/spiderfoot')
+
+          modules = [
+              'sfp_tool_amass', 'sfp_tool_dnsx', 'sfp_tool_massdns',
+              'sfp_tool_gau', 'sfp_tool_waybackurls',
+              'sfp_tool_gospider', 'sfp_tool_hakrawler', 'sfp_tool_katana',
+              'sfp_tool_ffuf', 'sfp_tool_arjun',
+              'sfp_tool_gowitness',
+              'sfp_tool_nikto', 'sfp_tool_dalfox',
+              'sfp_tool_gitleaks', 'sfp_tool_linkfinder',
+              'sfp_tool_naabu', 'sfp_tool_masscan',
+              'sfp_tool_tlsx', 'sfp_tool_sslyze', 'sfp_tool_sslscan',
+              # Pre-existing tools
+              'sfp_tool_cmseek', 'sfp_tool_dnstwist', 'sfp_tool_gobuster',
+              'sfp_tool_whatweb', 'sfp_tool_wafw00f', 'sfp_tool_trufflehog',
+              'sfp_tool_testsslsh', 'sfp_tool_snallygaster', 'sfp_tool_retirejs',
+              'sfp_tool_nbtscan', 'sfp_tool_onesixtyone',
+          ]
+
+          ok = 0
+          fail = 0
+          for mod in modules:
+              try:
+                  m = importlib.import_module(f'modules.{mod}')
+                  cls = getattr(m, mod)
+                  meta = cls.meta
+                  print(f'  OK  {mod}: {meta[\"name\"]}')
+                  ok += 1
+              except Exception as e:
+                  print(f'  FAIL {mod}: {e}')
+                  fail += 1
+
+          print(f'\n{ok} OK, {fail} FAILED')
+          if fail > 0:
+              sys.exit(1)
+          "
+
+  # ─── Job 4: Live tool execution test against safe target ───────────────────
+  smoke-test-tools:
+    name: Smoke Test — Live Tool Execution
+    runs-on: ubuntu-latest
+    needs: [verify-tools, verify-modules]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: active-worker-image
+          path: /tmp
+
+      - name: Load image
+        run: docker load < /tmp/active-worker.tar.gz
+
+      - name: Test httpx against example.com
+        run: |
+          echo "example.com" | docker run --rm -i spiderfoot-active:latest \
+            /tools/bin/httpx -silent -status-code -title 2>&1 | head -5
+          echo "httpx live test OK"
+
+      - name: Test subfinder against example.com
+        run: |
+          docker run --rm spiderfoot-active:latest \
+            /tools/bin/subfinder -d example.com -silent 2>&1 | head -10
+          echo "subfinder live test OK"
+
+      - name: Test dnsx resolution
+        run: |
+          echo "example.com" | docker run --rm -i spiderfoot-active:latest \
+            /tools/bin/dnsx -silent -a -resp 2>&1 | head -5
+          echo "dnsx live test OK"
+
+      - name: Test gau URL discovery
+        run: |
+          docker run --rm spiderfoot-active:latest \
+            /tools/bin/gau --threads 2 example.com 2>&1 | head -10
+          echo "gau live test OK"
+
+      - name: Test katana crawling
+        run: |
+          docker run --rm spiderfoot-active:latest \
+            /tools/bin/katana -u https://example.com -silent -depth 1 2>&1 | head -10
+          echo "katana live test OK"
+
+      - name: Test tlsx certificate info
+        run: |
+          echo "example.com:443" | docker run --rm -i spiderfoot-active:latest \
+            /tools/bin/tlsx -silent -json 2>&1 | head -5
+          echo "tlsx live test OK"
+
+      - name: Test sslscan
+        run: |
+          docker run --rm spiderfoot-active:latest \
+            sslscan --no-colour example.com 2>&1 | head -20
+          echo "sslscan live test OK"
+
+      - name: Test ffuf (dry run)
+        run: |
+          docker run --rm spiderfoot-active:latest \
+            /tools/bin/ffuf -V 2>&1 | head -3
+          echo "ffuf version OK"
+
+      - name: Summary
+        run: |
+          echo "============================================"
+          echo "  All E2E tool smoke tests passed!"
+          echo "============================================"

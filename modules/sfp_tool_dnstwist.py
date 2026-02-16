@@ -149,7 +149,7 @@ class sfp_tool_dnstwist(SpiderFootModernPlugin):
                 content = stdout
             else:
                 self.error("Unable to read DNSTwist content.")
-                self.debug("Error running DNSTwist: " + stderr + ", " + stdout)
+                self.debug("Error running DNSTwist: " + stderr.decode('utf-8', errors='replace') + ", " + stdout.decode('utf-8', errors='replace'))
                 return
 
             # For each line in output, generate a SIMILARDOMAIN event

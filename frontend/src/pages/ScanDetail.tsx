@@ -308,12 +308,12 @@ function SummaryTab({ scanId, scan }: { scanId: string; scan?: Scan }) {
           <div className="flex flex-wrap gap-4">
             {Object.entries(corrBreakdown).map(([risk, count]) => {
               const bgClass = risk.toLowerCase() === 'critical' || risk.toLowerCase() === 'high'
-                ? 'bg-red-900/30 text-red-300 border-red-700/40'
+                ? 'corr-card-high'
                 : risk.toLowerCase() === 'medium'
-                ? 'bg-yellow-900/30 text-yellow-300 border-yellow-700/40'
+                ? 'corr-card-medium'
                 : risk.toLowerCase() === 'low'
-                ? 'bg-blue-900/30 text-blue-300 border-blue-700/40'
-                : 'bg-dark-700/30 text-dark-300 border-dark-600/40';
+                ? 'corr-card-low'
+                : 'corr-card-info';
               return (
                 <div key={risk} className={`px-4 py-3 rounded-lg border ${bgClass} text-center min-w-[100px]`}>
                   <p className="text-lg font-bold">{count}</p>
@@ -536,10 +536,10 @@ function CorrelationsTab({ scanId }: { scanId: string }) {
 
   const riskIcon = (risk: string) => {
     const r = risk?.toLowerCase();
-    if (r === 'high' || r === 'critical') return <AlertTriangle className="h-4 w-4 text-red-400" />;
-    if (r === 'medium') return <Info className="h-4 w-4 text-yellow-400" />;
-    if (r === 'low') return <Shield className="h-4 w-4 text-blue-400" />;
-    return <Info className="h-4 w-4 text-dark-400" />;
+    if (r === 'high' || r === 'critical') return <AlertTriangle className="h-4 w-4 corr-text-critical" />;
+    if (r === 'medium') return <Info className="h-4 w-4 corr-text-medium" />;
+    if (r === 'low') return <Shield className="h-4 w-4 corr-text-low" />;
+    return <Info className="h-4 w-4 corr-text-info" />;
   };
 
   const riskBadge = (risk: string) => {
@@ -1809,12 +1809,13 @@ function SettingsTab({ scanId, scan }: { scanId: string; scan?: Scan }) {
             ['Name', scan?.name],
             ['Target', scan?.target],
             ['Status', scan?.status],
+            ['Profile', scan?.profile],
             ['Created', formatEpoch(scan?.created ?? 0)],
             ['Started', formatEpoch(scan?.started ?? 0)],
             ['Ended', formatEpoch(scan?.ended ?? 0)],
             ['Duration', formatDuration(scan?.started ?? 0, scan?.ended ?? 0)],
             ['Results', scan?.result_count?.toString()],
-          ].map(([label, val]) => (
+          ].filter(([, val]) => val != null).map(([label, val]) => (
             <div key={label as string}>
               <p className="text-xs text-dark-500">{label as string}</p>
               <p className="text-sm text-dark-200 font-mono break-all">{(val as string) || '—'}</p>

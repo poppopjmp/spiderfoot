@@ -15,7 +15,6 @@ from __future__ import annotations
 # -------------------------------------------------------------------------------
 
 import os
-import sys
 import json
 import shutil
 import tempfile
@@ -138,7 +137,7 @@ class sfp_tool_retirejs(SpiderFootModernPlugin):
             )
             stdout, stderr = p.communicate(input=None, timeout=60)
             if p.returncode == 0 or p.returncode == 13:
-                content = stdout.decode(sys.stdin.encoding)
+                content = stdout.decode('utf-8', errors='replace')
             else:
                 self.error("Unable to read Retire.js content.")
                 self.debug(f"Error running Retire.js: {stderr} - {stdout}")

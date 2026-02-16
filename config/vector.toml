@@ -24,6 +24,13 @@
 data_dir = "/var/lib/vector"
 
 # ---------------------------------------------------------------------------
+# API — health / introspection endpoint (separate from the HTTP source)
+# ---------------------------------------------------------------------------
+[api]
+enabled = true
+address = "0.0.0.0:8687"
+
+# ---------------------------------------------------------------------------
 # SOURCES
 # ---------------------------------------------------------------------------
 
@@ -52,6 +59,12 @@ type = "opentelemetry"
 grpc.address = "0.0.0.0:4317"
 http.address = "0.0.0.0:4318"
 
+# Traefik access logs — ingested from the shared volume
+[sources.traefik_access_logs]
+type = "file"
+include = ["/var/log/traefik/access.log"]
+read_from = "beginning"
+
 # ---------------------------------------------------------------------------
 # TRANSFORMS
 # ---------------------------------------------------------------------------
@@ -71,8 +84,15 @@ source = '''
   }
   
   # Ensure level label is always set (Loki rejects empty labels)
-  if !exists(.level) {
+  if !exists(.level) || is_null(.level) || .level == "" {
     .level = "INFO"
+  }
+  # Normalise level to uppercase so route conditions match consistently
+  .level = upcase(to_string(.level) ?? "INFO")
+
+  # Ensure container_name is set (used as Loki "job" label)
+  if !exists(.container_name) || is_null(.container_name) || .container_name == "" {
+    .container_name = "unknown"
   }
   
   # Add source info
@@ -165,6 +185,18 @@ type = "filter"
 inputs = ["enrich_events"]
 condition = '(to_int(.risk) ?? 0) >= 60'
 
+# Enrich Traefik access logs with metadata for Loki
+[transforms.parse_traefik_logs]
+type = "remap"
+inputs = ["traefik_access_logs"]
+source = '''
+  .pipeline = "spiderfoot"
+  .container_name = "sf-traefik"
+  .level = "INFO"
+  .log_format = "access"
+  .ingestion_timestamp = now()
+'''
+
 # ---------------------------------------------------------------------------
 # SINKS
 # ---------------------------------------------------------------------------
@@ -194,10 +226,11 @@ condition = '(to_int(.risk) ?? 0) >= 60'
 # Loki for log aggregation
 [sinks.loki_logs]
 type = "loki"
-inputs = ["route_logs.errors", "route_logs.warnings", "route_logs.info", "route_logs._unmatched", "route_events.logs"]
+inputs = ["route_logs.errors", "route_logs.warnings", "route_logs.info", "route_logs._unmatched", "route_events.logs", "parse_traefik_logs"]
 endpoint = "${SF_LOKI_ENDPOINT:-http://loki:3100}"
 encoding.codec = "json"
 healthcheck.enabled = true
+out_of_order_action = "accept"
 
 [sinks.loki_logs.labels]
 service = "spiderfoot"

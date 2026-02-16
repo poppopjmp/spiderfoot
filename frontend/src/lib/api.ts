@@ -71,6 +71,8 @@ export interface Scan {
   // extended
   state_machine?: object;
   result_count?: number;
+  profile?: string;
+  engine?: string;
 }
 
 export interface ScanCreateRequest {
@@ -79,6 +81,7 @@ export interface ScanCreateRequest {
   modules?: string[];
   type_filter?: string[];
   engine?: string;
+  profile?: string;
 }
 
 export interface ScanCreateResponse {
@@ -232,7 +235,25 @@ export const scanApi = {
     api.post('/api/scans/bulk/stop', { scan_ids: ids }).then((r) => r.data),
   bulkDelete: (ids: string[]) =>
     api.post('/api/scans/bulk/delete', { scan_ids: ids }).then((r) => r.data),
+
+  profiles: () =>
+    api.get<{ profiles: ScanProfile[]; total: number }>('/api/scan-profiles').then((r) => r.data),
+
+  profile: (name: string) =>
+    api.get<ScanProfile>(`/api/scan-profiles/${name}`).then((r) => r.data),
 };
+
+export interface ScanProfile {
+  name: string;
+  display_name: string;
+  description: string;
+  category: string;
+  module_count: number;
+  modules: string[];
+  tags: string[];
+  max_threads: number;
+  timeout_minutes: number;
+}
 
 // ── Module / Data API ─────────────────────────────────────────
 export interface Module {
@@ -546,25 +567,27 @@ export function formatDuration(startEpoch: number, endEpoch: number): string {
 }
 
 export const SCAN_STATUSES = [
-  'CREATED', 'STARTING', 'RUNNING', 'FINISHED', 'ABORTED', 'ERROR-FAILED', 'STOPPED',
+  'CREATED', 'STARTING', 'RUNNING', 'FINISHED', 'ABORTED', 'ERROR-FAILED', 'STOPPED', 'SKIPPED',
 ] as const;
 
 export function statusColor(status: string): string {
   switch (status?.toUpperCase()) {
-    case 'RUNNING': case 'STARTING': return 'text-blue-400';
-    case 'FINISHED': return 'text-green-400';
-    case 'ABORTED': case 'STOPPED': return 'text-yellow-400';
-    case 'ERROR-FAILED': return 'text-red-400';
-    default: return 'text-dark-400';
+    case 'RUNNING': case 'STARTING': return 'status-text-running';
+    case 'FINISHED': return 'status-text-finished';
+    case 'ABORTED': case 'STOPPED': return 'status-text-aborted';
+    case 'ERROR-FAILED': return 'status-text-failed';
+    case 'SKIPPED': return 'status-text-skipped';
+    default: return 'status-text-default';
   }
 }
 
 export function statusBadgeClass(status: string): string {
   switch (status?.toUpperCase()) {
-    case 'RUNNING': case 'STARTING': return 'badge bg-blue-900/50 text-blue-300';
+    case 'RUNNING': case 'STARTING': return 'badge badge-running';
     case 'FINISHED': return 'badge badge-success';
     case 'ABORTED': case 'STOPPED': return 'badge badge-medium';
     case 'ERROR-FAILED': return 'badge badge-critical';
+    case 'SKIPPED': return 'badge badge-skipped';
     default: return 'badge badge-info';
   }
 }

@@ -70,7 +70,7 @@ jobs:
     needs: build-base
     strategy:
       matrix:
-        service: [scanner, api, frontend]
+        service: [scanner, api, frontend, active-worker]
         include:
           - service: scanner
             dockerfile: docker/Dockerfile.scanner
@@ -81,6 +81,9 @@ jobs:
           - service: frontend
             dockerfile: frontend/Dockerfile
             context: ./frontend
+          - service: active-worker
+            dockerfile: Dockerfile.active-worker
+            context: .
 
     steps:
       - uses: actions/checkout@v4

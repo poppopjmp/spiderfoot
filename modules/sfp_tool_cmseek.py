@@ -18,7 +18,7 @@ from __future__ import annotations
 import io
 import json
 import os.path
-from subprocess import PIPE, Popen
+from subprocess import PIPE, Popen, TimeoutExpired
 
 from spiderfoot import SpiderFootEvent
 from spiderfoot import SpiderFootHelpers
@@ -133,7 +133,12 @@ class sfp_tool_cmseek(SpiderFootModernPlugin):
         ]
         try:
             p = Popen(args, stdout=PIPE, stderr=PIPE)
-            stdout, stderr = p.communicate(input=None)
+            stdout, stderr = p.communicate(input=None, timeout=600)
+        except TimeoutExpired:
+            p.kill()
+            stdout, stderr = p.communicate()
+            self.debug(f"Timed out waiting for CMSeeK to finish on {eventData}")
+            return
         except Exception as e:
             self.error(f"Unable to run CMSeeK: {e}")
             return

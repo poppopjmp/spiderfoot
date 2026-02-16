@@ -2,15 +2,15 @@ import { useState, useMemo } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import {
-  dataApi, scanApi, type Module, type ScanCreateRequest,
+  dataApi, scanApi, type Module, type ScanCreateRequest, type ScanProfile,
 } from '../lib/api';
 import {
   Radar, Lock, Unlock, Zap,
-  ShieldCheck, FileText, Loader2, Upload, X,
+  ShieldCheck, FileText, Loader2, Upload, X, Layers,
 } from 'lucide-react';
 import { PageHeader, Tabs, SearchInput, Toast, type ToastType } from '../components/ui';
 
-type TabKey = 'usecase' | 'data' | 'module';
+type TabKey = 'usecase' | 'profile' | 'data' | 'module';
 
 const USE_CASES = [
   { key: 'all', label: 'All Modules', desc: 'Run every available module for maximum coverage' },
@@ -36,6 +36,7 @@ export default function NewScanPage() {
   const [target, setTarget] = useState('');
   const [scanName, setScanName] = useState('');
   const [useCase, setUseCase] = useState('all');
+  const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
   const [selectedModules, setSelectedModules] = useState<Set<string>>(new Set());
   const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set());
   const [moduleSearch, setModuleSearch] = useState('');
@@ -51,6 +52,12 @@ export default function NewScanPage() {
     queryKey: ['entity-types'],
     queryFn: dataApi.entityTypes,
   });
+  const { data: profilesData } = useQuery({
+    queryKey: ['scan-profiles'],
+    queryFn: () => scanApi.profiles(),
+  });
+
+  const profiles: ScanProfile[] = profilesData?.profiles ?? [];
 
   const modules: Module[] = modulesData?.items ?? [];
   const entityTypes: string[] = entityData?.entity_types ?? [];
@@ -99,6 +106,10 @@ export default function NewScanPage() {
   /* Determine which modules to use */
   const effectiveModules = useMemo(() => {
     if (tab === 'module') return [...selectedModules];
+    if (tab === 'profile' && selectedProfile) {
+      const p = profiles.find((pr) => pr.name === selectedProfile);
+      return p?.modules ?? [];
+    }
     if (tab === 'data') {
       // Find modules that produce any of the selected entity types
       return modules
@@ -117,7 +128,7 @@ export default function NewScanPage() {
         .map((m) => m.name);
     }
     return [];
-  }, [tab, selectedModules, selectedTypes, useCase, modules]);
+  }, [tab, selectedModules, selectedProfile, profiles, selectedTypes, useCase, modules]);
 
   /* Create scan */
   const createMut = useMutation({
@@ -142,6 +153,8 @@ export default function NewScanPage() {
     };
     if (tab === 'module' && selectedModules.size > 0) {
       payload.modules = [...selectedModules];
+    } else if (tab === 'profile' && selectedProfile) {
+      payload.profile = selectedProfile;
     } else if (tab === 'data' && selectedTypes.size > 0) {
       payload.type_filter = [...selectedTypes];
     } else if (tab === 'usecase' && useCase === 'quick') {
@@ -257,6 +270,8 @@ export default function NewScanPage() {
         <div className="text-sm text-dark-400">
           {tab === 'usecase' && useCase === 'all' ? (
             <span>All available modules will be used</span>
+          ) : tab === 'profile' && selectedProfile ? (
+            <span>Profile: {profiles.find((p) => p.name === selectedProfile)?.display_name ?? selectedProfile} ({effectiveModules.length} modules)</span>
           ) : (
             <span>{effectiveModules.length} module(s) selected</span>
           )}
@@ -284,6 +299,7 @@ export default function NewScanPage() {
         <Tabs<TabKey>
           tabs={[
             { key: 'usecase', label: 'By Use Case', icon: Zap },
+            { key: 'profile', label: 'By Profile', icon: Layers },
             { key: 'data', label: 'By Required Data', icon: FileText },
             { key: 'module', label: 'By Module', icon: ShieldCheck, count: tab === 'module' ? selectedModules.size : undefined },
           ]}
@@ -292,6 +308,53 @@ export default function NewScanPage() {
         />
 
         <div className="mt-5">
+          {/* By Profile */}
+          {tab === 'profile' && (
+            <div className="space-y-3 animate-fade-in">
+              <p className="text-sm text-dark-400 mb-3">
+                Select a pre-configured scan profile. Each profile includes a curated set of modules for a specific purpose.
+              </p>
+              {profiles.length === 0 ? (
+                <p className="text-sm text-dark-500 italic">No scan profiles available</p>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {profiles.map((p) => (
+                    <button
+                      key={p.name}
+                      onClick={() => setSelectedProfile(p.name)}
+                      className={`p-4 rounded-xl border text-left transition-all ${
+                        selectedProfile === p.name
+                          ? 'border-spider-500 bg-spider-600/10 ring-1 ring-spider-500/30'
+                          : 'border-dark-700 hover:border-dark-600 hover:bg-dark-700/30'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-3 h-3 rounded-full border-2 flex items-center justify-center ${
+                          selectedProfile === p.name ? 'border-spider-500' : 'border-dark-500'
+                        }`}>
+                          {selectedProfile === p.name && <div className="w-1.5 h-1.5 rounded-full bg-spider-500" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground">{p.display_name}</p>
+                          <p className="text-xs text-dark-400 mt-0.5">{p.description}</p>
+                          <div className="flex items-center gap-2 mt-1.5">
+                            <span className="badge bg-dark-700 text-dark-300 text-[10px] px-1.5 py-0">{p.module_count} modules</span>
+                            {p.category && (
+                              <span className="badge bg-spider-900/30 text-spider-400 text-[10px] px-1.5 py-0">{p.category}</span>
+                            )}
+                            {p.tags?.slice(0, 2).map((t) => (
+                              <span key={t} className="badge bg-dark-700/50 text-dark-400 text-[10px] px-1.5 py-0">{t}</span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* By Use Case */}
           {tab === 'usecase' && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 animate-fade-in">

@@ -342,12 +342,14 @@ export function StatusBadge({ status }: { status: string }) {
     : s === 'FINISHED' ? 'status-dot-finished'
     : s === 'ERROR-FAILED' ? 'status-dot-failed'
     : s.includes('ABORT') || s.includes('STOP') ? 'status-dot-aborted'
+    : s === 'SKIPPED' ? 'status-dot bg-dark-600'
     : 'status-dot bg-dark-500';
 
-  const badgeClass = s.includes('RUNNING') || s.includes('STARTING') ? 'badge bg-blue-900/30 text-blue-300 ring-1 ring-blue-800/30'
+  const badgeClass = s.includes('RUNNING') || s.includes('STARTING') ? 'badge-running'
     : s === 'FINISHED' ? 'badge-success'
     : s === 'ERROR-FAILED' ? 'badge-critical'
     : s.includes('ABORT') || s.includes('STOP') ? 'badge-medium'
+    : s === 'SKIPPED' ? 'badge-skipped'
     : 'badge-info';
 
   return (

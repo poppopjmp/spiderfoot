@@ -64,6 +64,7 @@ class ScanRequest(BaseModel):
     modules: list[str] | None = Field(None, description="List of module names to run")
     type_filter: list[str] | None = Field(None, description="List of event types to include")
     engine: str | None = Field(None, description="Scan engine profile name (from /api/engines)")
+    profile: str | None = Field(None, description="Scan profile name (e.g. 'tools-only', 'quick-recon')")
 
 
 class ScheduleCreateRequest(BaseModel):
@@ -77,6 +78,68 @@ class ScheduleCreateRequest(BaseModel):
     max_runs: int = Field(0, ge=0, description="Max runs (0 = unlimited)")
     description: str = ""
     tags: list[str] | None = None
+
+
+# -----------------------------------------------------------------------
+# Scan Profiles
+# -----------------------------------------------------------------------
+
+def _get_all_modules_dict() -> dict:
+    """Build the all_modules dict needed by ScanProfile.resolve_modules()."""
+    config = get_app_config()
+    sf = SpiderFoot(config.get_config())
+    return sf.getModules()
+
+
+def _profile_to_dict(p, all_modules: dict) -> dict:
+    """Serialize a ScanProfile, resolving effective modules."""
+    resolved = p.resolve_modules(all_modules)
+    return {
+        "name": p.name,
+        "display_name": p.display_name,
+        "description": p.description,
+        "category": p.category.value if hasattr(p.category, "value") else str(p.category),
+        "module_count": len(resolved),
+        "modules": resolved,
+        "tags": p.tags,
+        "max_threads": p.max_threads,
+        "timeout_minutes": p.timeout_minutes,
+    }
+
+
+@router.get("/scan-profiles", summary="List available scan profiles")
+def list_scan_profiles():
+    """Return all built-in and custom scan profiles."""
+    try:
+        from spiderfoot.scan.scan_profile import get_profile_manager
+        pm = get_profile_manager()
+        all_modules = _get_all_modules_dict()
+        profiles = [_profile_to_dict(p, all_modules) for p in pm.list_profiles()]
+        return {"profiles": profiles, "total": len(profiles)}
+    except Exception as e:
+        log.warning("Failed to load scan profiles: %s", e)
+        return {"profiles": [], "total": 0}
+
+
+@router.get("/scan-profiles/{profile_name}", summary="Get a specific scan profile")
+def get_scan_profile(profile_name: str):
+    """Return details of a specific scan profile."""
+    try:
+        from spiderfoot.scan.scan_profile import get_profile_manager
+        pm = get_profile_manager()
+        p = pm.get(profile_name)
+        if not p:
+            raise HTTPException(status_code=404, detail=f"Profile '{profile_name}' not found")
+        all_modules = _get_all_modules_dict()
+        result = _profile_to_dict(p, all_modules)
+        result["include_flags"] = p.include_flags
+        result["exclude_flags"] = p.exclude_flags
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        log.warning("Failed to load scan profile '%s': %s", profile_name, e)
+        raise HTTPException(status_code=500, detail="Failed to load profile")
 
 
 # -----------------------------------------------------------------------
@@ -675,6 +738,27 @@ async def create_scan(
                 log.info("Using scan engine '%s' for scan %s", scan_request.engine, scan_id)
             except Exception as e:
                 raise HTTPException(status_code=422, detail=f"Invalid engine: {e}")
+        elif scan_request.profile:
+            # Load modules from a scan profile (e.g. "tools-only", "quick-recon")
+            try:
+                from spiderfoot.scan.scan_profile import get_profile_manager
+                pm = get_profile_manager()
+                profile = pm.get(scan_request.profile)
+                if not profile:
+                    raise HTTPException(
+                        status_code=422,
+                        detail=f"Unknown scan profile: '{scan_request.profile}'",
+                    )
+                all_mods = _get_all_modules_dict()
+                modules = profile.resolve_modules(all_mods)
+                log.info(
+                    "Using scan profile '%s' (%d modules) for scan %s",
+                    scan_request.profile, len(modules), scan_id,
+                )
+            except HTTPException:
+                raise
+            except Exception as e:
+                raise HTTPException(status_code=422, detail=f"Invalid profile: {e}")
         else:
             all_modules = sf.modulesProducing(["*"])
             modules = scan_request.modules if scan_request.modules else all_modules

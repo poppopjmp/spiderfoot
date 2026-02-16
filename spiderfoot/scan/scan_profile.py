@@ -108,32 +108,35 @@ class ScanProfile:
         # Always exclude deprecated modules unless explicitly included
         effective_exclude_flags = set(self.exclude_flags) | {"deprecated"}
 
-        for mod_name, mod_info in all_modules.items():
-            meta = mod_info.get("meta", {})
-            flags = set(meta.get("flags", []))
-            cases = set(meta.get("useCases", []))
-            cats = set(meta.get("categories", []))
-            produced = set(mod_info.get("producedEvents", [])
-                           if callable(mod_info.get("producedEvents"))
-                           is False
-                           else mod_info.get("provides", []))
+        # When no filter criteria are specified, start with an empty set
+        # so only explicit include_modules are used.
+        has_filters = bool(
+            self.use_cases or self.include_flags or self.include_categories
+        )
 
-            # Start with use_case matching
-            if self.use_cases:
-                if not cases.intersection(self.use_cases):
-                    continue
+        if has_filters:
+            for mod_name, mod_info in all_modules.items():
+                meta = mod_info.get("meta", {})
+                flags = set(meta.get("flags", []))
+                cases = set(meta.get("useCases", []))
+                cats = set(meta.get("categories", []))
 
-            # Include by flags
-            if self.include_flags:
-                if not flags.intersection(self.include_flags):
-                    continue
+                # Start with use_case matching
+                if self.use_cases:
+                    if not cases.intersection(self.use_cases):
+                        continue
 
-            # Include by categories
-            if self.include_categories:
-                if not cats.intersection(self.include_categories):
-                    continue
+                # Include by flags
+                if self.include_flags:
+                    if not flags.intersection(self.include_flags):
+                        continue
 
-            selected.add(mod_name)
+                # Include by categories
+                if self.include_categories:
+                    if not cats.intersection(self.include_categories):
+                        continue
+
+                selected.add(mod_name)
 
         # Exclude by flags (always excludes deprecated)
         to_remove = set()
@@ -423,6 +426,76 @@ class ProfileManager:
             use_cases=["Investigate"],
             exclude_flags=["errorprone"],
             tags=["investigate", "targeted", "deep"],
+        ))
+
+        self.register(ScanProfile(
+            name="tools-only",
+            display_name="External Tools Only",
+            description=(
+                "Run all external recon tools against the target. "
+                "Includes both pre-installed tools (nmap, nuclei, "
+                "testssl.sh, whatweb, dnstwist, etc.) and active "
+                "scan tools (httpx, subfinder, amass, dnsx, naabu, "
+                "gobuster, katana, nikto, gitleaks, and more). "
+                "Requires the active scan worker container."
+            ),
+            category=ProfileCategory.RECONNAISSANCE,
+            include_flags=["tool"],
+            include_modules=[
+                # ── Pre-installed base-image tools ──
+                "sfp_tool_cmseek",
+                "sfp_tool_dnstwist",
+                "sfp_tool_gobuster",
+                "sfp_tool_nbtscan",
+                "sfp_tool_onesixtyone",
+                "sfp_tool_phoneinfoga",
+                "sfp_tool_retirejs",
+                "sfp_tool_snallygaster",
+                "sfp_tool_testsslsh",
+                "sfp_tool_trufflehog",
+                "sfp_tool_wafw00f",
+                "sfp_tool_wappalyzer",
+                "sfp_tool_whatweb",
+                # ── Pre-existing modules (no tool_ prefix) ──
+                "sfp_httpx",
+                "sfp_nuclei",
+                "sfp_subfinder",
+                # ── Active worker DNS & subdomain tools ──
+                "sfp_tool_amass",
+                "sfp_tool_dnsx",
+                "sfp_tool_massdns",
+                # ── Active worker URL / crawling tools ──
+                "sfp_tool_gau",
+                "sfp_tool_waybackurls",
+                "sfp_tool_gospider",
+                "sfp_tool_hakrawler",
+                "sfp_tool_katana",
+                # ── Active worker fuzzing / parameter tools ──
+                "sfp_tool_ffuf",
+                "sfp_tool_arjun",
+                # ── Active worker screenshots ──
+                "sfp_tool_gowitness",
+                # ── Active worker vulnerability scanning ──
+                "sfp_tool_nikto",
+                "sfp_tool_dalfox",
+                # ── Active worker secret/JS analysis ──
+                "sfp_tool_gitleaks",
+                "sfp_tool_linkfinder",
+                # ── Active worker port scanning ──
+                "sfp_tool_naabu",
+                "sfp_tool_masscan",
+                # ── Active worker SSL/TLS ──
+                "sfp_tool_tlsx",
+                "sfp_tool_sslyze",
+                "sfp_tool_sslscan",
+                # ── Core helpers (DNS resolution to feed tools) ──
+                "sfp_dnsresolve",
+                "sfp_spider",
+            ],
+            exclude_flags=["errorprone"],
+            max_threads=4,
+            timeout_minutes=120,
+            tags=["tools", "active", "recon", "external", "comprehensive"],
         ))
 
     # ------------------------------------------------------------------

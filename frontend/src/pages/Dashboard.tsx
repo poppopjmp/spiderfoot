@@ -58,9 +58,9 @@ export default function DashboardPage() {
       {/* Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Total Scans" value={total} icon={Radar} color="text-spider-400" loading={scansLoading} delay={0} />
-        <StatCard label="Running" value={running} icon={Activity} color="text-blue-400" loading={scansLoading} delay={60} />
-        <StatCard label="Completed" value={finished} icon={CheckCircle} color="text-green-400" loading={scansLoading} delay={120} />
-        <StatCard label="Failed" value={failed} icon={XCircle} color="text-red-400" loading={scansLoading} delay={180} />
+        <StatCard label="Running" value={running} icon={Activity} color="status-text-running" loading={scansLoading} delay={60} />
+        <StatCard label="Completed" value={finished} icon={CheckCircle} color="status-text-finished" loading={scansLoading} delay={120} />
+        <StatCard label="Failed" value={failed} icon={XCircle} color="status-text-failed" loading={scansLoading} delay={180} />
       </div>
 
       {/* Main Grid */}
@@ -154,7 +154,7 @@ export default function DashboardPage() {
                       <div key={name} className="flex items-center justify-between text-xs">
                         <span className="text-dark-300 capitalize">{name.replace(/_/g, ' ')}</span>
                         <span className="flex items-center gap-2">
-                          <span className={comp.status === 'up' ? 'text-green-400' : comp.status === 'degraded' ? 'text-yellow-400' : comp.status === 'unknown' ? 'text-dark-500' : 'text-red-400'}>
+                          <span className={comp.status === 'up' ? 'health-up' : comp.status === 'degraded' ? 'health-degraded' : comp.status === 'unknown' ? 'health-unknown' : 'health-down'}>
                             {comp.status === 'up' ? 'healthy' : comp.status === 'unknown' ? 'n/a' : comp.status}
                           </span>
                           {comp.latency_ms != null && <span className="text-dark-600 tabular-nums">{comp.latency_ms}ms</span>}
@@ -188,9 +188,9 @@ export default function DashboardPage() {
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-dark-400">{total} subsystems</span>
                       <span className="flex items-center gap-3">
-                        {up > 0 && <span className="text-green-400">{up} healthy</span>}
-                        {degraded > 0 && <span className="text-yellow-400">{degraded} degraded</span>}
-                        {down > 0 && <span className="text-red-400">{down} down</span>}
+                        {up > 0 && <span className="health-up">{up} healthy</span>}
+                        {degraded > 0 && <span className="health-degraded">{degraded} degraded</span>}
+                        {down > 0 && <span className="health-down">{down} down</span>}
                       </span>
                     </div>
                   </div>
@@ -230,22 +230,22 @@ export default function DashboardPage() {
 
 function HealthBadge({ status }: { status: string }) {
   if (status === 'up') return (
-    <span className="flex items-center gap-1.5 text-green-400 text-sm font-medium">
-      <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" /> Healthy
+    <span className="flex items-center gap-1.5 health-up text-sm font-medium">
+      <span className="w-2 h-2 rounded-full health-dot-up animate-pulse" /> Healthy
     </span>
   );
   if (status === 'degraded') return (
-    <span className="flex items-center gap-1.5 text-yellow-400 text-sm font-medium">
+    <span className="flex items-center gap-1.5 health-degraded text-sm font-medium">
       <AlertTriangle className="h-3.5 w-3.5" /> Degraded
     </span>
   );
   if (status === 'down') return (
-    <span className="flex items-center gap-1.5 text-red-400 text-sm font-medium">
+    <span className="flex items-center gap-1.5 health-down text-sm font-medium">
       <XCircle className="h-3.5 w-3.5" /> Down
     </span>
   );
   return (
-    <span className="flex items-center gap-1.5 text-dark-500 text-sm">
+    <span className="flex items-center gap-1.5 health-unknown text-sm">
       <Clock className="h-3.5 w-3.5" /> Unknown
     </span>
   );

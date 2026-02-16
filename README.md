@@ -24,6 +24,8 @@ SpiderFoot is an open-source intelligence (OSINT) automation platform. It integr
 - [Deployment Modes](#deployment-modes)
 - [Services](#services)
 - [Monitoring & Observability](#monitoring--observability)
+- [Active Scan Worker](#active-scan-worker)
+- [Scan Profiles](#scan-profiles)
 - [AI Agents](#ai-agents)
 - [Document Enrichment](#document-enrichment)
 - [User-Defined Input](#user-defined-input)
@@ -245,6 +247,96 @@ SpiderFoot includes a complete observability stack, with **Vector.dev** serving 
 ### Pre-built Dashboard
 
 A 12-panel Grafana dashboard is auto-provisioned with: Active Scans, Events Processed, High-Risk Findings, API Latency, LLM Token Usage, Event Rate, Risk Level distribution, Module Execution times, Service Logs, Error Rate, and Enrichment Pipeline metrics.
+
+---
+
+## Active Scan Worker
+
+SpiderFoot includes a **dedicated active scan worker** — a separate Celery container that ships **33+ external reconnaissance tools** for comprehensive target assessment. The active worker handles all scan tasks on a dedicated `scan` queue, keeping general tasks isolated.
+
+### Architecture
+
+```
+┌─────────────────────────────────────┐
+│         Redis (broker)              │
+└──────┬──────────────────┬───────────┘
+       │                  │
+       ▼                  ▼
+┌──────────────┐   ┌───────────────────────┐
+│ celery-worker│   │ celery-worker-active   │
+│ (general)    │   │ (scanning)             │
+│              │   │                        │
+│ queues:      │   │ queue: scan            │
+│ default,     │   │                        │
+│ report,      │   │ 33+ recon tools:       │
+│ export,      │   │ httpx, subfinder,      │
+│ agents,      │   │ amass, gobuster, dnsx, │
+│ monitor      │   │ naabu, masscan, katana,│
+│              │   │ nikto, nuclei, nmap,   │
+│              │   │ and 22 more...         │
+└──────────────┘   └───────────────────────┘
+```
+
+### Tools Included
+
+The active worker builds on top of the base image (which includes nmap, nuclei, testssl.sh, whatweb, dnstwist, CMSeeK, retire.js, trufflehog, wafw00f, nbtscan, onesixtyone, snallygaster) and adds:
+
+| Category | Tools |
+|----------|-------|
+| **DNS & Subdomains** | httpx, subfinder, amass, dnsx, massdns, gobuster |
+| **Web Crawling** | katana, gospider, hakrawler, gau, waybackurls |
+| **Web Fuzzing** | ffuf, arjun |
+| **Port Scanning** | naabu, masscan |
+| **Vulnerability** | nikto, dalfox |
+| **SSL/TLS** | tlsx, sslyze, sslscan |
+| **Secrets/JS** | gitleaks, linkfinder |
+| **Screenshots** | gowitness (with Chromium) |
+| **Wordlists** | 8 curated SecLists + DNS resolvers |
+
+### Build
+
+```bash
+# Build everything (base + active worker)
+docker compose -f docker-compose-microservices.yml up --build -d
+
+# Or build just the active worker
+docker build -f Dockerfile.active-worker -t spiderfoot-active:latest .
+```
+
+See [Active Scan Worker Guide](documentation/active-scan-worker.md) for full details.
+
+---
+
+## Scan Profiles
+
+SpiderFoot ships with **11 predefined scan profiles** for common use cases. Profiles control which modules are enabled, option overrides, and execution constraints.
+
+| Profile | Description | Key Modules |
+|---------|-------------|-------------|
+| **quick-recon** | Fast passive scan, no API keys | Passive modules only |
+| **full-footprint** | Comprehensive active footprinting | All non-Tor modules |
+| **passive-only** | Zero direct target interaction | Strictly passive |
+| **vuln-assessment** | Vulnerability & exposure focus | Vuln scanners, reputation |
+| **tools-only** | All external recon tools | 36 tool modules (requires active worker) |
+| **social-media** | Social media presence discovery | Social & secondary networks |
+| **dark-web** | Tor hidden service search | Tor-enabled modules |
+| **infrastructure** | DNS, ports, hosting, SSL mapping | DNS, infrastructure |
+| **api-powered** | Premium API data sources only | API-key modules |
+| **minimal** | Bare minimum for validation | DNS resolve, spider |
+| **investigate** | Deep targeted investigation | Investigation modules |
+
+### Tools-Only Profile
+
+The `tools-only` profile runs **all 36 external tool modules** against a target — both pre-installed base tools (13 `sfp_tool_*` modules), active worker tools (20 `sfp_tool_*` modules), and the pre-existing tool integrations (`sfp_httpx`, `sfp_subfinder`, `sfp_nuclei`). It includes `sfp_dnsresolve` and `sfp_spider` as core helpers to feed discovered data into the tool pipeline.
+
+```bash
+# Start a tools-only scan via API
+curl -X POST http://localhost/api/scans \
+  -H "Content-Type: application/json" \
+  -d '{"target": "example.com", "type": "DOMAIN_NAME", "profile": "tools-only"}'
+```
+
+Profiles are managed via `spiderfoot.scan.scan_profile.ProfileManager` — see [Developer Guide](documentation/developer_guide.md).
 
 ---
 
@@ -522,6 +614,7 @@ All services are configured via environment variables (see `docker/env.example`)
 | [Docker Deployment](documentation/docker_deployment.md) | Container deployment guide |
 | [Module Guide](documentation/modules.md) | Understanding and writing modules |
 | [Module Migration](documentation/MODULE_MIGRATION_GUIDE.md) | Migrating to ModernPlugin |
+| [Active Scan Worker](documentation/active-scan-worker.md) | 33+ external tool integration |
 | [Correlation Rules](correlations/README.md) | YAML correlation engine reference |
 | [Security Guide](documentation/security.md) | Authentication, hardening, audit |
 | [Developer Guide](documentation/developer_guide.md) | Contributing and code structure |
@@ -532,7 +625,7 @@ All services are configured via environment variables (see `docker/env.example`)
 
 ## Modules
 
-SpiderFoot has **283 modules**, most of which do not require API keys. Modules feed each other in a publisher/subscriber model for maximum data extraction.
+SpiderFoot has **300+ modules**, most of which do not require API keys. Modules feed each other in a publisher/subscriber model for maximum data extraction.
 
 ### Module Categories
 
@@ -546,7 +639,7 @@ SpiderFoot has **283 modules**, most of which do not require API keys. Modules f
 | **Crypto & Blockchain** | Bitcoin, Ethereum, Tron, BNB | ~8 |
 | **Reputation / Blacklists** | Spamhaus, SURBL, PhishTank, DNSBL | ~30 |
 | **Internal Analysis** | Extractors, validators, identifiers | ~25 |
-| **External Tools** | Nmap, DNSTwist, Nuclei, WhatWeb, CMSeeK | ~12 |
+| **External Tools** | 36 tools: httpx, amass, nmap, nuclei, nikto, gobuster, etc. | ~36 |
 | **Cloud Storage** | S3, Azure Blob, Google Cloud, DigitalOcean | ~5 |
 
 For the full module list, see [documentation/modules.md](documentation/modules.md).
@@ -787,4 +880,4 @@ SpiderFoot is licensed under the [MIT License](LICENSE).
 
 ---
 
-*Actively developed since 2012 — 283 modules, 94 correlation rules, 21-service Docker deployment with AI agents, vector search, and full observability.*
+*Actively developed since 2012 — 300+ modules, 36 external recon tools, 94 correlation rules, 21-service Docker deployment with AI agents, vector search, and full observability.*

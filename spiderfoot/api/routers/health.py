@@ -3,9 +3,8 @@ Health Check API Router for SpiderFoot.
 
 Exposes Kubernetes-compatible health probes and a comprehensive
 service status dashboard through FastAPI endpoints.  Wires together
-the existing ``HealthAggregator``, subsystem-specific checks
-(EventBus, Vector.dev, module health, report storage), and
-Prometheus-compatible metrics.
+subsystem-specific checks (PostgreSQL, Redis, Celery, Vector.dev,
+MinIO, app config) and Prometheus-compatible metrics.
 
 Endpoints:
   GET /health           - Overall health (liveness + readiness)
@@ -40,83 +39,13 @@ except ImportError:
 # Health check providers — lazy imports to avoid hard dependencies
 # -----------------------------------------------------------------------
 
-def _get_registry():
-    """Get or create a ServiceRegistry. Returns None if unavailable."""
-    try:
-        from spiderfoot.service_registry import ServiceRegistry
-        return ServiceRegistry()
-    except Exception as e:
-        return None
-
-
-def _check_database() -> dict[str, Any]:
-    """Deep database connectivity check (executes SELECT 1)."""
-    try:
-        registry = _get_registry()
-        if registry is None:
-            return {"status": "unknown", "message": "ServiceRegistry not available"}
-        data_svc = registry.get_optional("data")
-        if data_svc is None:
-            return {"status": "unknown", "message": "Data service not registered"}
-        if not hasattr(data_svc, "dbh") or not data_svc.dbh:
-            return {"status": "down", "message": "No database handle"}
-        # Attempt actual query
-        try:
-            if hasattr(data_svc.dbh, "conn"):
-                data_svc.dbh.conn.execute("SELECT 1")
-            return {"status": "up"}
-        except Exception as e:
-            return {"status": "down", "message": f"Query failed: {e}"}
-    except Exception as e:
-        return {"status": "down", "message": str(e)}
-
-
-def _check_eventbus() -> dict[str, Any]:
-    """EventBus health including circuit breaker and DLQ state."""
-    try:
-        registry = _get_registry()
-        if registry is None:
-            return {"status": "unknown", "message": "ServiceRegistry not available"}
-        bus = registry.get_optional("event_bus")
-        if bus is None:
-            return {"status": "unknown", "message": "EventBus not registered"}
-
-        # Check for ResilientEventBus with detailed health
-        if hasattr(bus, "health_check"):
-            import asyncio
-            try:
-                loop = asyncio.get_running_loop()
-            except RuntimeError:
-                loop = None
-
-            if loop and loop.is_running():
-                # Already in async context
-                return {"status": "up", "message": "Resilient bus active"}
-
-            result = asyncio.run(bus.health_check())
-            return {
-                "status": result.status.value if hasattr(result.status, "value") else str(result.status),
-                "backend": getattr(result, "backend", "unknown"),
-                "circuit_state": getattr(result, "circuit_state", "unknown"),
-                "dlq_size": getattr(result, "dlq_size", 0),
-            }
-
-        # Plain bus — just check existence
-        connected = getattr(bus, "is_connected", lambda: True)()
-        return {
-            "status": "up" if connected else "down",
-            "backend": type(bus).__name__,
-        }
-    except Exception as e:
-        return {"status": "down", "message": str(e)}
-
 
 def _check_vector() -> dict[str, Any]:
     """Vector.dev log pipeline health."""
     try:
         from spiderfoot.vector_bootstrap import VectorBootstrap, VectorBootstrapConfig
-        # Use VECTOR_API_URL env or Docker service name 'vector'
-        api_url = os.environ.get("VECTOR_API_URL", "http://vector:8686")
+        # Use VECTOR_API_URL env or Docker service name 'vector' on API port 8687
+        api_url = os.environ.get("VECTOR_API_URL", "http://vector:8687")
         cfg = VectorBootstrapConfig(
             vector_api_url=api_url,
             vector_graphql_url=f"{api_url}/graphql",
@@ -135,42 +64,6 @@ def _check_vector() -> dict[str, Any]:
         }
     except ImportError:
         return {"status": "unknown", "message": "VectorBootstrap not available"}
-    except Exception as e:
-        return {"status": "down", "message": str(e)}
-
-
-def _check_modules() -> dict[str, Any]:
-    """Module health aggregation from ModuleHealthMonitor."""
-    try:
-        from spiderfoot.plugins.module_health import get_health_monitor
-        monitor = get_health_monitor()
-        report = monitor.get_report()
-        summary = report.get("summary", {})
-        total = summary.get("total", 0)
-        if total == 0:
-            return {"status": "unknown", "message": "No modules registered"}
-
-        healthy = summary.get("healthy", 0)
-        unhealthy = summary.get("unhealthy", 0)
-        stalled = summary.get("stalled", 0)
-
-        if unhealthy > 0 or stalled > 0:
-            status = "degraded" if unhealthy < total // 2 else "down"
-        elif healthy < total:
-            status = "degraded"
-        else:
-            status = "up"
-
-        return {
-            "status": status,
-            "total": total,
-            "healthy": healthy,
-            "degraded": summary.get("degraded", 0),
-            "unhealthy": unhealthy,
-            "stalled": stalled,
-        }
-    except ImportError:
-        return {"status": "unknown", "message": "ModuleHealthMonitor not available"}
     except Exception as e:
         return {"status": "down", "message": str(e)}
 
@@ -211,91 +104,6 @@ def _check_app_config() -> dict[str, Any]:
         return {"status": "down", "message": str(e)}
 
 
-def _check_data_service() -> dict[str, Any]:
-    """DataService backend health — checks local, HTTP, or gRPC connectivity."""
-    try:
-        registry = _get_registry()
-        if registry is None:
-            return {"status": "unknown", "message": "ServiceRegistry not available"}
-
-        data_svc = registry.get_optional("data_service")
-        if data_svc is None:
-            # Fall back to checking raw DB via legacy path
-            return {"status": "unknown", "message": "DataService not registered"}
-
-        backend = getattr(data_svc, "config", None)
-        backend_name = backend.backend.value if backend else "unknown"
-
-        # For HTTP backend, do a lightweight probe
-        if backend_name == "http":
-            try:
-                # Try listing scans as a minimal roundtrip
-                result = data_svc.scan_instance_list()
-                return {
-                    "status": "up",
-                    "backend": backend_name,
-                    "url": getattr(data_svc, "_base_url", ""),
-                }
-            except Exception as e:
-                return {
-                    "status": "down",
-                    "backend": backend_name,
-                    "message": f"HTTP probe failed: {e}",
-                }
-
-        # For local backend, verify DB handle
-        if backend_name == "local":
-            dbh = getattr(data_svc, "dbh", None) or getattr(data_svc, "_dbh", None)
-            if dbh is None:
-                return {
-                    "status": "degraded",
-                    "backend": backend_name,
-                    "message": "DB handle not initialized (lazy init)",
-                }
-            try:
-                if hasattr(dbh, "conn"):
-                    dbh.conn.execute("SELECT 1")
-                return {"status": "up", "backend": backend_name}
-            except Exception as e:
-                return {
-                    "status": "down",
-                    "backend": backend_name,
-                    "message": str(e),
-                }
-
-        # Generic: service exists but we can't probe deeply
-        return {"status": "up", "backend": backend_name}
-
-    except Exception as e:
-        return {"status": "down", "message": str(e)}
-
-
-def _check_service_auth() -> dict[str, Any]:
-    """Inter-service authentication health."""
-    try:
-        from spiderfoot.security.service_auth import ServiceTokenIssuer
-        issuer = ServiceTokenIssuer()
-        # Determine mode from private attributes
-        if getattr(issuer, '_static_token', None):
-            mode = 'static'
-        elif getattr(issuer, '_secret', None):
-            mode = 'hmac'
-        else:
-            return {"status": "unknown", "message": "Service auth not configured"}
-        # Verify we can issue a token
-        token = issuer.get_token()
-        return {
-            "status": "up",
-            "mode": mode,
-            "service_name": issuer.service_name,
-            "token_preview": token[:12] + "..." if len(token) > 12 else "***",
-        }
-    except ImportError:
-        return {"status": "unknown", "message": "service_auth module not available"}
-    except Exception as e:
-        return {"status": "down", "message": str(e)}
-
-
 def _check_scan_hooks() -> dict[str, Any]:
     """Scan lifecycle hooks health and statistics."""
     try:
@@ -329,26 +137,6 @@ def _check_module_timeout() -> dict[str, Any]:
         }
     except ImportError:
         return {"status": "unknown", "message": "module_timeout module not available"}
-    except Exception as e:
-        return {"status": "down", "message": str(e)}
-
-
-def _check_output_validator() -> dict[str, Any]:
-    """Module output validator health and statistics."""
-    try:
-        from spiderfoot.plugins.module_output_validator import get_output_validator
-        validator = get_output_validator()
-        if validator.mode == "off":
-            return {"status": "unknown", "message": "Output validation disabled"}
-        violations = validator.get_stats()
-        return {
-            "status": "degraded" if violations else "up",
-            "mode": validator.mode,
-            "modules_with_violations": len(violations),
-            "violation_details": {k: v["undeclared"] for k, v in list(violations.items())[:5]} if violations else {},
-        }
-    except ImportError:
-        return {"status": "unknown", "message": "module_output_validator not available"}
     except Exception as e:
         return {"status": "down", "message": str(e)}
 
@@ -462,18 +250,12 @@ _SUBSYSTEM_CHECKS = {
     "postgresql": _check_postgresql,
     "redis": _check_redis,
     "celery": _check_celery,
-    "database": _check_database,
-    "eventbus": _check_eventbus,
-    "data_service": _check_data_service,
-    "modules": _check_modules,
-    "report_storage": _check_report_storage,
-    "app_config": _check_app_config,
     "vector": _check_vector,
-    "service_auth": _check_service_auth,
+    "minio": _check_minio,
+    "app_config": _check_app_config,
+    "report_storage": _check_report_storage,
     "scan_hooks": _check_scan_hooks,
     "module_timeout": _check_module_timeout,
-    "output_validator": _check_output_validator,
-    "minio": _check_minio,
 }
 
 _startup_time = time.time()
@@ -484,7 +266,7 @@ _startup_complete = False
 # Optional/auxiliary subsystems report individual status but
 # do not drag the overall health to "down".
 _CORE_SUBSYSTEMS = {
-    "postgresql", "redis", "celery", "minio",
+    "postgresql", "redis", "celery", "minio", "vector",
 }
 
 

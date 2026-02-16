@@ -97,7 +97,7 @@ celery_app.conf.worker_prefetch_multiplier = int(
     os.environ.get("SF_CELERY_PREFETCH", 1)  # 1 = fair scheduling
 )
 celery_app.conf.worker_max_tasks_per_child = int(
-    os.environ.get("SF_CELERY_MAX_TASKS_PER_CHILD", 50)
+    os.environ.get("SF_CELERY_MAX_TASKS_PER_CHILD", 200)
 )
 celery_app.conf.worker_max_memory_per_child = int(
     os.environ.get("SF_CELERY_MAX_MEMORY_MB", 2048)  # 2 GB
@@ -114,7 +114,7 @@ celery_app.conf.broker_transport_options = {
 # Task execution
 # ---------------------------------------------------------------------------
 celery_app.conf.task_acks_late = True          # Ack after completion (crash-safe)
-celery_app.conf.task_reject_on_worker_lost = True
+celery_app.conf.task_reject_on_worker_lost = False  # Do NOT redeliver on worker death — causes restart loops
 celery_app.conf.task_track_started = True      # Track STARTED state
 celery_app.conf.task_time_limit = int(
     os.environ.get("SF_CELERY_TASK_TIME_LIMIT", 86400)  # 24h hard limit

@@ -13,6 +13,7 @@ import LoginPage from './pages/Login';
 
 // Secondary pages (lazy loaded)
 const WorkspacesPage = lazy(() => import('./pages/Workspaces'));
+const ModulesPage = lazy(() => import('./pages/Modules'));
 const DocumentationPage = lazy(() => import('./pages/Documentation'));
 const AgentsPage = lazy(() => import('./pages/Agents'));
 const UsersPage = lazy(() => import('./pages/Users'));
@@ -80,6 +81,9 @@ export default function App() {
 
         {/* Workspaces — matches CherryPy: /workspaces, /workspacedetails */}
         <Route path="workspaces" element={<Suspense fallback={<LazyFallback />}><WorkspacesPage /></Suspense>} />
+
+        {/* Modules — browse & manage all loaded modules */}
+        <Route path="modules" element={<Suspense fallback={<LazyFallback />}><ModulesPage /></Suspense>} />
 
         {/* Documentation — matches CherryPy: /documentation */}
         <Route path="documentation" element={<Suspense fallback={<LazyFallback />}><DocumentationPage /></Suspense>} />

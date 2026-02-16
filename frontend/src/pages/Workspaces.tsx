@@ -632,18 +632,18 @@ export default function WorkspacesPage() {
                       );
                     }
                     const riskColor: Record<string, string> = {
-                      CRITICAL: 'text-red-400',
-                      HIGH: 'text-orange-400',
-                      MEDIUM: 'text-yellow-400',
-                      LOW: 'text-blue-400',
-                      INFO: 'text-dark-400',
+                      CRITICAL: 'corr-text-critical',
+                      HIGH: 'corr-text-high',
+                      MEDIUM: 'corr-text-medium',
+                      LOW: 'corr-text-low',
+                      INFO: 'corr-text-info',
                     };
                     const riskBg: Record<string, string> = {
-                      CRITICAL: 'bg-red-900/20',
-                      HIGH: 'bg-orange-900/20',
-                      MEDIUM: 'bg-yellow-900/20',
-                      LOW: 'bg-blue-900/20',
-                      INFO: 'bg-dark-700/50',
+                      CRITICAL: 'corr-card-high',
+                      HIGH: 'corr-card-high',
+                      MEDIUM: 'corr-card-medium',
+                      LOW: 'corr-card-low',
+                      INFO: 'corr-card-info',
                     };
                     return (
                       <div className="space-y-4">
@@ -653,20 +653,20 @@ export default function WorkspacesPage() {
                             <p className="text-xl font-bold text-foreground">{correlationCount || correlations.length}</p>
                             <p className="text-xs text-dark-400">Total</p>
                           </div>
-                          <div className="p-3 bg-red-900/20 rounded-lg text-center">
-                            <p className="text-xl font-bold text-red-400">{stats?.critical_count ?? 0}</p>
+                          <div className="p-3 corr-card-high rounded-lg text-center">
+                            <p className="text-xl font-bold corr-text-critical">{stats?.critical_count ?? 0}</p>
                             <p className="text-xs text-dark-400">Critical</p>
                           </div>
-                          <div className="p-3 bg-orange-900/20 rounded-lg text-center">
-                            <p className="text-xl font-bold text-orange-400">{stats?.high_count ?? 0}</p>
+                          <div className="p-3 corr-card-high rounded-lg text-center">
+                            <p className="text-xl font-bold corr-text-high">{stats?.high_count ?? 0}</p>
                             <p className="text-xs text-dark-400">High</p>
                           </div>
-                          <div className="p-3 bg-yellow-900/20 rounded-lg text-center">
-                            <p className="text-xl font-bold text-yellow-400">{stats?.medium_count ?? 0}</p>
+                          <div className="p-3 corr-card-medium rounded-lg text-center">
+                            <p className="text-xl font-bold corr-text-medium">{stats?.medium_count ?? 0}</p>
                             <p className="text-xs text-dark-400">Medium</p>
                           </div>
-                          <div className="p-3 bg-blue-900/20 rounded-lg text-center">
-                            <p className="text-xl font-bold text-blue-400">{(stats?.low_count ?? 0) + (stats?.info_count ?? 0)}</p>
+                          <div className="p-3 corr-card-low rounded-lg text-center">
+                            <p className="text-xl font-bold corr-text-low">{(stats?.low_count ?? 0) + (stats?.info_count ?? 0)}</p>
                             <p className="text-xs text-dark-400">Low/Info</p>
                           </div>
                         </div>

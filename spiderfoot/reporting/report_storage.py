@@ -3,7 +3,8 @@ Report Storage & Caching for SpiderFoot.
 
 Provides persistent storage and in-memory caching for generated reports.
 Supports multiple backends:
-  - SQLite (default, file-based)
+  - PostgreSQL (preferred, uses SF_POSTGRES_DSN)
+  - SQLite (file-based fallback)
   - In-memory (for testing / ephemeral use)
 
 Reports are stored with full metadata and can be queried by scan ID,
@@ -14,7 +15,7 @@ Usage::
 
     from spiderfoot.reporting.report_storage import ReportStore, StoreConfig
 
-    store = ReportStore(StoreConfig(db_path="reports.db"))
+    store = ReportStore(StoreConfig())           # auto-detects PostgreSQL
     store.save(report_data)
     report = store.get("report-id-123")
     reports = store.list_reports(scan_id="SCAN-001")
@@ -43,6 +44,7 @@ log = logging.getLogger("spiderfoot.report_storage")
 
 class StorageBackend(Enum):
     """Storage backend type."""
+    POSTGRESQL = "postgresql"
     SQLITE = "sqlite"
     MEMORY = "memory"
 
@@ -52,12 +54,25 @@ class StoreConfig:
     """Configuration for the report store."""
     backend: StorageBackend = StorageBackend.SQLITE
     db_path: str = ""  # Empty = auto-detect from SpiderFoot config
+    dsn: str = ""  # PostgreSQL DSN (auto-detected from SF_POSTGRES_DSN)
     cache_max_size: int = 100  # Max reports in LRU cache
     cache_ttl_seconds: float = DEFAULT_TTL_ONE_HOUR  # Cache entry TTL (1 hour)
     auto_cleanup_days: int = 90  # Auto-delete reports older than N days (0=disable)
 
     def __post_init__(self) -> None:
-        """Perform post-initialization validation."""
+        """Perform post-initialization validation.
+
+        Auto-detects PostgreSQL when SF_POSTGRES_DSN is set and no explicit
+        backend was chosen by the caller.
+        """
+        # Auto-upgrade to PostgreSQL if DSN available and backend wasn't
+        # explicitly forced to MEMORY.
+        if not self.dsn:
+            self.dsn = os.environ.get("SF_POSTGRES_DSN", "")
+
+        if self.dsn and self.backend != StorageBackend.MEMORY:
+            self.backend = StorageBackend.POSTGRESQL
+
         if not self.db_path and self.backend == StorageBackend.SQLITE:
             self.db_path = os.path.join(
                 os.environ.get("SF_DATA_DIR", "."),
@@ -393,14 +408,202 @@ class MemoryBackend:
 
 
 # ---------------------------------------------------------------------------
+# PostgreSQL storage backend
+# ---------------------------------------------------------------------------
+
+_PG_SCHEMA_SQL = """
+CREATE TABLE IF NOT EXISTS reports (
+    report_id TEXT PRIMARY KEY,
+    scan_id TEXT NOT NULL,
+    title TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'pending',
+    report_type TEXT NOT NULL DEFAULT 'full',
+    progress_pct DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+    message TEXT NOT NULL DEFAULT '',
+    executive_summary TEXT,
+    recommendations TEXT,
+    sections_json TEXT NOT NULL DEFAULT '[]',
+    metadata_json TEXT NOT NULL DEFAULT '{}',
+    generation_time_ms DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+    total_tokens_used INTEGER NOT NULL DEFAULT 0,
+    created_at DOUBLE PRECISION NOT NULL,
+    updated_at DOUBLE PRECISION NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_reports_scan_id ON reports(scan_id);
+CREATE INDEX IF NOT EXISTS idx_reports_status ON reports(status);
+CREATE INDEX IF NOT EXISTS idx_reports_created_at ON reports(created_at);
+"""
+
+
+class PostgreSQLBackend:
+    """PostgreSQL-based report storage.
+
+    Uses psycopg2 with a thread-local connection pattern identical to
+    the SQLite backend so it can be swapped in transparently.
+    """
+
+    def __init__(self, dsn: str) -> None:
+        """Initialize the PostgreSQLBackend."""
+        self._dsn = dsn
+        self._local = threading.local()
+        # Create schema on first connect
+        conn = self._get_conn()
+        with conn.cursor() as cur:
+            cur.execute(_PG_SCHEMA_SQL)
+        conn.commit()
+
+    def _get_conn(self):
+        """Get thread-local psycopg2 connection."""
+        if not hasattr(self._local, "conn") or self._local.conn is None or self._local.conn.closed:
+            import psycopg2
+            self._local.conn = psycopg2.connect(self._dsn, connect_timeout=5)
+            self._local.conn.autocommit = False
+        return self._local.conn
+
+    def save(self, data: dict[str, Any]) -> None:
+        """Insert or update a report (upsert)."""
+        conn = self._get_conn()
+        now = time.time()
+        with conn.cursor() as cur:
+            cur.execute(
+                """INSERT INTO reports
+                (report_id, scan_id, title, status, report_type, progress_pct,
+                 message, executive_summary, recommendations, sections_json,
+                 metadata_json, generation_time_ms, total_tokens_used,
+                 created_at, updated_at)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                ON CONFLICT (report_id) DO UPDATE SET
+                    scan_id = EXCLUDED.scan_id,
+                    title = EXCLUDED.title,
+                    status = EXCLUDED.status,
+                    report_type = EXCLUDED.report_type,
+                    progress_pct = EXCLUDED.progress_pct,
+                    message = EXCLUDED.message,
+                    executive_summary = EXCLUDED.executive_summary,
+                    recommendations = EXCLUDED.recommendations,
+                    sections_json = EXCLUDED.sections_json,
+                    metadata_json = EXCLUDED.metadata_json,
+                    generation_time_ms = EXCLUDED.generation_time_ms,
+                    total_tokens_used = EXCLUDED.total_tokens_used,
+                    updated_at = EXCLUDED.updated_at""",
+                (
+                    data["report_id"],
+                    data.get("scan_id", ""),
+                    data.get("title", ""),
+                    data.get("status", "pending"),
+                    data.get("report_type", "full"),
+                    data.get("progress_pct", 0.0),
+                    data.get("message", ""),
+                    data.get("executive_summary"),
+                    data.get("recommendations"),
+                    json.dumps(data.get("sections", []), default=str),
+                    json.dumps(data.get("metadata", {}), default=str),
+                    data.get("generation_time_ms", 0.0),
+                    data.get("total_tokens_used", 0),
+                    data.get("created_at", now),
+                    now,
+                ),
+            )
+        conn.commit()
+
+    def get(self, report_id: str) -> dict[str, Any] | None:
+        """Retrieve a report by ID."""
+        conn = self._get_conn()
+        with conn.cursor() as cur:
+            cur.execute("SELECT * FROM reports WHERE report_id = %s", (report_id,))
+            row = cur.fetchone()
+            if row is None:
+                return None
+            cols = [desc[0] for desc in cur.description]
+            return self._row_to_dict(dict(zip(cols, row)))
+
+    def delete(self, report_id: str) -> bool:
+        """Delete a report. Returns True if found."""
+        conn = self._get_conn()
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM reports WHERE report_id = %s", (report_id,))
+            deleted = cur.rowcount > 0
+        conn.commit()
+        return deleted
+
+    def list_reports(
+        self,
+        scan_id: str | None = None,
+        status: str | None = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> list[dict[str, Any]]:
+        """List reports with optional filters."""
+        conn = self._get_conn()
+        query = "SELECT * FROM reports"
+        params: list[Any] = []
+        conditions = []
+
+        if scan_id:
+            conditions.append("scan_id = %s")
+            params.append(scan_id)
+        if status:
+            conditions.append("status = %s")
+            params.append(status)
+
+        if conditions:
+            query += " WHERE " + " AND ".join(conditions)
+
+        query += " ORDER BY created_at DESC LIMIT %s OFFSET %s"
+        params.extend([limit, offset])
+
+        with conn.cursor() as cur:
+            cur.execute(query, params)
+            cols = [desc[0] for desc in cur.description]
+            return [self._row_to_dict(dict(zip(cols, row))) for row in cur.fetchall()]
+
+    def count(self, scan_id: str | None = None) -> int:
+        """Count reports, optionally filtered by scan_id."""
+        conn = self._get_conn()
+        with conn.cursor() as cur:
+            if scan_id:
+                cur.execute("SELECT COUNT(*) FROM reports WHERE scan_id = %s", (scan_id,))
+            else:
+                cur.execute("SELECT COUNT(*) FROM reports")
+            row = cur.fetchone()
+            return row[0] if row else 0
+
+    def cleanup_old(self, max_age_days: int) -> int:
+        """Delete reports older than max_age_days. Returns count deleted."""
+        if max_age_days <= 0:
+            return 0
+        cutoff = time.time() - (max_age_days * 86400)
+        conn = self._get_conn()
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM reports WHERE created_at < %s", (cutoff,))
+            deleted = cur.rowcount
+        conn.commit()
+        return deleted
+
+    def close(self) -> None:
+        """Close connection."""
+        if hasattr(self._local, "conn") and self._local.conn and not self._local.conn.closed:
+            self._local.conn.close()
+            self._local.conn = None
+
+    @staticmethod
+    def _row_to_dict(d: dict[str, Any]) -> dict[str, Any]:
+        """Convert a PostgreSQL row dict to a report dict."""
+        d["sections"] = json.loads(d.pop("sections_json", "[]"))
+        d["metadata"] = json.loads(d.pop("metadata_json", "{}"))
+        return d
+
+
+# ---------------------------------------------------------------------------
 # Main ReportStore (facade)
 # ---------------------------------------------------------------------------
 
 class ReportStore:
     """Unified report storage with caching.
 
-    Combines a persistent backend (SQLite or memory) with an LRU cache
-    for fast reads.
+    Combines a persistent backend (PostgreSQL, SQLite, or memory) with an
+    LRU cache for fast reads.
     """
 
     def __init__(self, config: StoreConfig | None = None) -> None:
@@ -414,7 +617,9 @@ class ReportStore:
         )
 
         # Initialize backend
-        if self.config.backend == StorageBackend.SQLITE:
+        if self.config.backend == StorageBackend.POSTGRESQL:
+            self._backend = PostgreSQLBackend(self.config.dsn)
+        elif self.config.backend == StorageBackend.SQLITE:
             self._backend = SQLiteBackend(self.config.db_path)
         else:
             self._backend = MemoryBackend()
