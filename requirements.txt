@@ -62,7 +62,7 @@ strawberry-graphql[fastapi]>=0.235.0,<1.0.0
 # gRPC inter-service communication
 grpcio>=1.60.0,<2.0.0
 grpcio-tools>=1.60.0,<2.0.0
-protobuf>=4.25.0,<6.0.0
+protobuf>=4.25.0,<7.0.0
 
 # Celery task queue + scheduling
 celery[redis]>=5.4.0,<6.0.0
