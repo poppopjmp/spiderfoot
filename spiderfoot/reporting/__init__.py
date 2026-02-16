@@ -43,6 +43,7 @@ from .report_preprocessor import (
 from .report_storage import (
     LRUCache,
     MemoryBackend,
+    PostgreSQLBackend,
     ReportStore,
     SQLiteBackend,
     StoreConfig,
