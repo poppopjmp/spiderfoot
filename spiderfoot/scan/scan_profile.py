@@ -108,32 +108,35 @@ class ScanProfile:
         # Always exclude deprecated modules unless explicitly included
         effective_exclude_flags = set(self.exclude_flags) | {"deprecated"}
 
-        for mod_name, mod_info in all_modules.items():
-            meta = mod_info.get("meta", {})
-            flags = set(meta.get("flags", []))
-            cases = set(meta.get("useCases", []))
-            cats = set(meta.get("categories", []))
-            produced = set(mod_info.get("producedEvents", [])
-                           if callable(mod_info.get("producedEvents"))
-                           is False
-                           else mod_info.get("provides", []))
+        # When no filter criteria are specified, start with an empty set
+        # so only explicit include_modules are used.
+        has_filters = bool(
+            self.use_cases or self.include_flags or self.include_categories
+        )
 
-            # Start with use_case matching
-            if self.use_cases:
-                if not cases.intersection(self.use_cases):
-                    continue
+        if has_filters:
+            for mod_name, mod_info in all_modules.items():
+                meta = mod_info.get("meta", {})
+                flags = set(meta.get("flags", []))
+                cases = set(meta.get("useCases", []))
+                cats = set(meta.get("categories", []))
 
-            # Include by flags
-            if self.include_flags:
-                if not flags.intersection(self.include_flags):
-                    continue
+                # Start with use_case matching
+                if self.use_cases:
+                    if not cases.intersection(self.use_cases):
+                        continue
 
-            # Include by categories
-            if self.include_categories:
-                if not cats.intersection(self.include_categories):
-                    continue
+                # Include by flags
+                if self.include_flags:
+                    if not flags.intersection(self.include_flags):
+                        continue
 
-            selected.add(mod_name)
+                # Include by categories
+                if self.include_categories:
+                    if not cats.intersection(self.include_categories):
+                        continue
+
+                selected.add(mod_name)
 
         # Exclude by flags (always excludes deprecated)
         to_remove = set()
