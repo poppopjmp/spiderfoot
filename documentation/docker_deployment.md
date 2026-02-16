@@ -85,15 +85,17 @@ The stack runs **21 containers** across two Docker networks:
 
 ## MinIO Object Storage
 
-Five buckets are auto-created by `sf-minio-init` on first boot:
+Seven buckets are auto-created by `sf-minio-init` on first boot:
 
 | Bucket | Contents |
 |--------|----------|
 | `sf-logs` | Vector.dev log archive |
 | `sf-reports` | Generated scan reports (HTML, PDF, JSON, CSV) |
 | `sf-pg-backups` | PostgreSQL daily pg_dump files |
-| `sf-qdrant` | Qdrant vector DB snapshots |
+| `sf-qdrant-snapshots` | Qdrant vector DB snapshots |
 | `sf-data` | General artefacts |
+| `sf-loki-data` | Loki log chunk storage |
+| `sf-loki-ruler` | Loki alerting rules |
 
 Access the MinIO Console at `https://localhost/minio/` (default credentials: `minioadmin` / `minioadmin`).
 

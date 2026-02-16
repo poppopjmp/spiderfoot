@@ -84,6 +84,7 @@ __all__ = [
     # Report storage
     "LRUCache",
     "MemoryBackend",
+    "PostgreSQLBackend",
     "ReportStore",
     "SQLiteBackend",
     "StoreConfig",

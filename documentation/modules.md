@@ -2,7 +2,7 @@
 
 *Author: poppopjmp*
 
-SpiderFoot includes **300+ modules** for data gathering, enrichment, and analysis, including **33 external tool integrations** for active reconnaissance. Modules can be combined to create powerful OSINT workflows tailored to your needs.
+SpiderFoot includes **300+ modules** for data gathering, enrichment, and analysis, including **36 external tool integrations** for active reconnaissance. Modules can be combined to create powerful OSINT workflows tailored to your needs.
 
 ---
 
@@ -185,7 +185,6 @@ Below is a complete list of all documented modules. Click a module name to view 
 | sfp_tool_tlsx | TLS certificate grabbing and configuration analysis. |
 | sfp_tool_trufflehog | Secret and credential detection in repositories and filesystems. |
 | sfp_tool_wafw00f | Web Application Firewall detection and fingerprinting. |
-| sfp_tool_wappalyzer | Technology stack detection via Wappalyzer rules. |
 | sfp_tool_waybackurls | Wayback Machine URL fetching. |
 | sfp_tool_whatweb | Website technology fingerprinting and identification. |
 | sfp_tool_wappalyzer | Technology stack detection via Wappalyzer rules. |

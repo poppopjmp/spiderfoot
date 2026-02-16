@@ -3,6 +3,81 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.9.0] — 2026-02-16 — Platform Hardening, Scan Profiles & Light Theme
+
+### Added — PostgreSQL Report Storage
+- **`PostgreSQLBackend`** for report storage — replaces SQLite in microservices deployments
+- Auto-detection of `SF_POSTGRES_DSN` from environment — zero-config upgrade
+- psycopg2-based backend with `ON CONFLICT` upsert, thread-local connections, same API as `SQLiteBackend`
+- `StoreConfig` auto-selects PostgreSQL when DSN is available, falls back to SQLite otherwise
+- `StorageBackend` enum expanded with `POSTGRESQL` variant
+- Health dashboard now reports `"backend": "postgresql"` when running in Docker
+
+### Added — Celery Task Queue for Scans
+- **`spiderfoot.tasks.scan`** — Celery-based scan execution replacing `BackgroundTasks`/`mp.Process`
+- `run_scan` task with 24h hard / 23h soft time limits, `acks_late=True`, deduplication guard
+- Crash recovery via dedup guard (checks terminal states, stale `RUNNING` with progress age)
+- Scan progress stored in Redis hashes (`sf:scan:progress:{scan_id}`) and published via pub/sub
+- `abort_scan`, `run_batch_scans`, `update_scan_progress` supporting tasks
+- **`celery_app.py`** — central Celery configuration with 6 task queues (`default`, `scan`, `report`, `export`, `agents`, `monitor`), auto-routing, JSON+msgpack serialization, beat schedule (hourly cleanup, 5-min health checks)
+
+### Added — Scan Profiles System
+- **`ScanProfile`** dataclass with module selection by flags, use cases, categories, explicit include/exclude
+- **`ProfileManager`** singleton with 10 built-in profiles: `quick-recon`, `full-footprint`, `passive-only`, `vuln-assessment`, `social-media`, `dark-web`, `infrastructure`, `api-powered`, `minimal`, `tools-only`
+- `ProfileCategory` enum (reconnaissance, vulnerability, social, infrastructure, dark_web, custom)
+- JSON import/export, directory loading, auto-exclude deprecated modules
+- API endpoints: `GET /scan-profiles`, `GET /scan-profiles/{name}`
+- Frontend profile picker in New Scan page with category badges and module counts
+
+### Added — Light Theme & Theme-Aware UI
+- Full `[data-theme="light"]` CSS with reversed semantic color scale
+- Theme-aware badge classes: `badge-critical`, `badge-high`, `badge-medium`, `badge-low`, `badge-info`, `badge-success`
+- Status dot, risk pill, health badge, and correlation card classes with proper light-background contrast
+- `StatusBadge` and `RiskPills` components with dual-theme CSS class system
+- Three-way theme toggle (Light / Dark / System) in sidebar
+
+### Added — Frontend Enhancements
+- **New Scan page**: 4-tab module selection (By Use Case, By Profile, By Required Data, By Module), target type auto-detection (domain/IP/email/phone/ASN/BTC/ETH/username/name), document upload with drag-and-drop
+- **Workspaces page**: multi-target workspace grouping with 6 tabs (overview, targets, scans, correlations, geomap, report)
+- **Correlations tab**: first-class tab in scan detail and workspace views, on-demand correlation runs, risk breakdown summary
+- **Dashboard**: health panel with `healthApi.dashboard`, stat cards from search/facets API, 15s auto-refresh
+- **Scans page**: server-side search with facets, bulk stop/delete operations
+- Services dropdown in sidebar: AI Agents, Grafana, Jaeger, Prometheus, Traefik, MinIO, Flower
+
+### Changed — Tool Module Modernization
+- 9 tool modules migrated to `SpiderFootModernPlugin` base class: `sfp_tool_whatweb`, `sfp_tool_trufflehog`, `sfp_tool_testsslsh`, `sfp_tool_snallygaster`, `sfp_tool_retirejs`, `sfp_tool_onesixtyone`, `sfp_tool_nbtscan`, `sfp_tool_dnstwist`, `sfp_tool_cmseek`
+- All tool modules now have `from __future__ import annotations`, typed return annotations, and `toolDetails` in `meta` dict
+- `setup()` signatures standardized with `super().setup(sfc, userOpts or {})`
+
+### Changed — Vector.dev Telemetry Pipeline
+- API health endpoint on port 8687 for container healthcheck
+- Loki sink fixes for 400-error prevention
+- Traefik access log source added
+- Jaeger datasource added to Grafana provisioning
+- Vector container healthcheck in docker-compose
+
+### Changed — Infrastructure & Docker
+- Docker CI workflow (`.github/workflows/docker.yml`) with two-stage build (base + 4-service matrix), GHCR push, semver tagging from `VERSION` file
+- MinIO now creates 7 buckets (`sf-logs`, `sf-reports`, `sf-pg-backups`, `sf-qdrant-snapshots`, `sf-data`, `sf-loki-data`, `sf-loki-ruler`)
+- `Dockerfile.active-worker` for active scan tools (external binaries)
+- Flower monitoring dashboard for Celery added to compose
+
+### Changed — Documentation
+- `modules.md`: corrected to 36 external tool integrations, removed duplicate `sfp_tool_wappalyzer` table entry
+- `docker_deployment.md`: corrected bucket list to 7 (was 5), fixed `sf-qdrant` → `sf-qdrant-snapshots` name
+- `README.md`: version badge updated to 5.9.0
+
+### Fixed — Bug Fixes
+- **Scan restart loop**: scans no longer restart endlessly when Celery workers reconnect
+- **Scan profiles API resolution**: profile-based module resolution now works correctly
+- **Light theme contrast**: badges, status dots, risk pills, correlation cards now readable on white backgrounds
+- **Health tab cleanup**: removed 6 broken health checks, kept 9 meaningful subsystem probes
+- **Loki `expand-env` flag**: added `-config.expand-env=true` to Loki command for envvar interpolation
+- **Report storage backend indicator**: health dashboard now correctly shows `postgresql` instead of `sqlite`
+- **Orphaned `fetchUrl` method** removed from `spiderfoot/__init__.py` (module-level function with `self` parameter)
+- **`__version__.py` fallback** corrected from nonsensical `5.245.0` to `5.9.0`
+- **`PostgreSQLBackend` missing from `__all__`** in `spiderfoot/reporting/__init__.py`
+
 ## [5.3.3] — Infrastructure Integration: Nemesis-Compatible Architecture
 
 ### Added — Monitoring Stack (Phase 1)
@@ -1721,7 +1796,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Added
 - `spiderfoot/api_gateway.py` — Circuit breaker, rate limiting, dual-mode routing
 
-## [5.9.0] — gRPC Interfaces
+## [5.9.0-cycle] — gRPC Interfaces (internal)
 
 ### Added
 - `proto/spiderfoot.proto` — Protobuf service definitions

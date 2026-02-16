@@ -2,13 +2,13 @@
 
 ## Overview
 
-SpiderFoot v5.8.0 implements a modular microservices architecture that can run
+SpiderFoot v5.9.0 implements a modular microservices architecture that can run
 in two modes:
 
 - **Monolith mode**: All services run in a single process (default, backward-compatible)
 - **Microservices mode**: 21 containers behind a Traefik v3 reverse proxy with full observability, AI agents, Celery task processing, and React SPA frontend
 
-## Service Topology (v5.8.0)
+## Service Topology (v5.9.0)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -672,7 +672,7 @@ migration instructions.
 | 5.8.0 | SpiderFootModernPlugin base class |
 | 5.8.1 | Service integration wiring |
 | 5.8.2 | ConfigService with env overrides |
-| 5.9.0 | gRPC service interfaces + protobuf |
+| 5.9.0 | Celery tasks, scan profiles, PostgreSQL reports, light theme |
 | 5.9.1 | API Gateway with circuit breaker |
 | 5.9.2 | Correlation Service (standalone) |
 | 5.10.0 | Module migration samples + guide |

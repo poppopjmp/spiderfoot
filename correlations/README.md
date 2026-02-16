@@ -93,7 +93,7 @@ In short, SpiderFoot translates the YAML rules into a combination queries agains
 
 ### The rules
 
-Each rule exists as a YAML file within the `/correlations` folder in the SpiderFoot installation path. As of v5.8.0, there are **94 correlation rules** covering network, infrastructure, identity, vulnerability, data leak, geographic, cryptocurrency, web, social media, and cross-scan workspace analysis:
+Each rule exists as a YAML file within the `/correlations` folder in the SpiderFoot installation path. As of v5.9.0, there are **94 correlation rules** covering network, infrastructure, identity, vulnerability, data leak, geographic, cryptocurrency, web, social media, and cross-scan workspace analysis:
 
 #### Scan-Scope Rules (69 rules)
 

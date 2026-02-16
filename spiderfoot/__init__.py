@@ -124,17 +124,4 @@ class SpiderFootModuleLoader:
 if not any(isinstance(finder, SpiderFootModuleFinder) for finder in sys.meta_path):
     sys.meta_path.insert(0, SpiderFootModuleFinder())
 
-def fetchUrl(self, url: str, fatal: bool = False, cookies: str | None = None, timeout: int = 30,
-             useragent: str = "SpiderFoot", headers: dict | None = None, noLog: bool = False,
-             postData: str | dict | None = None, dontMaskPassword: bool = False, sizeLimit: int | None = None,
-             headOnly: bool = False, verify: bool = True) -> None:
-    """Fetch a URL and return the response content."""
-    # Check for invalid URL types
-    if not isinstance(url, str):
-        return None
 
-    # Check for empty URL
-    if not url or not url.strip():
-        return None
-
-    # ...existing code...

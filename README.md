@@ -4,7 +4,7 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/poppopjmp/spiderfoot/master/LICENSE)
 [![Python](https://img.shields.io/badge/python-3.9+-blue)](https://www.python.org)
-[![Version](https://img.shields.io/badge/version-5.8.0-green)](VERSION)
+[![Version](https://img.shields.io/badge/version-5.9.0-green)](VERSION)
 [![Docker](https://img.shields.io/badge/docker-compose-2496ED?logo=docker)](docker-compose-microservices.yml)
 [![GraphQL](https://img.shields.io/badge/GraphQL-Strawberry-E10098?logo=graphql)](spiderfoot/api/graphql/)
 [![CI status](https://github.com/poppopjmp/spiderfoot/workflows/Tests/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"Tests")
