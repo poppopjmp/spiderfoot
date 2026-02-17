@@ -1,5 +1,5 @@
 <p align="center">
-<img src="https://raw.githubusercontent.com/poppopjmp/spiderfoot/master/spiderfoot/documentation/images/spiderfoot-header.png" />
+<img src="[https://raw.githubusercontent.com/poppopjmp/spiderfoot/master/spiderfoot/documentation/images/spiderfoot-header.png](https://github.com/poppopjmp/spiderfoot/blob/42bf4d7be0014a9194e512860fb3d02507de5ad9/documentation/images/spiderfoot-wide.png)" />
 </p>
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/poppopjmp/spiderfoot/master/LICENSE)
