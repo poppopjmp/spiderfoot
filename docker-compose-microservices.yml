@@ -61,17 +61,18 @@
 
 name: spiderfoot
 
-# Shared build definition (anchored for YAML reuse)
-x-sf-build: &sf-build
-  build:
-    context: .
-    dockerfile: Dockerfile
+# Centralized image naming for all services (built from the same Dockerfile) 
+# # Shared build definition (anchored for YAML reuse)
+# x-sf-build: &sf-build
+#   build:
+#     context: .
+#     dockerfile: Dockerfile
 
-# Active scan worker build — extends the base image with recon tools
-x-sf-active-build: &sf-active-build
-  build:
-    context: .
-    dockerfile: Dockerfile.active-worker
+# # Active scan worker build — extends the base image with recon tools
+# x-sf-active-build: &sf-active-build
+#   build:
+#     context: .
+#     dockerfile: Dockerfile.active-worker
 
 networks:
   sf-frontend:
@@ -222,8 +223,9 @@ services:
   # ---------------------------------------------------------------------------
 
   api:
-    <<: *sf-build
-    image: spiderfoot-micro:latest
+    # Build from the same Dockerfile but with a different target stage for the active scan worker (includes recon tools)
+    # <<: *sf-build
+    image: ghcr.io/poppopjmp/spiderfoot-api:latest
     container_name: sf-api
     restart: unless-stopped
     networks:
@@ -335,10 +337,10 @@ services:
   # ---------------------------------------------------------------------------
 
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    image: spiderfoot-frontend:latest
+    # build:
+    #   context: ./frontend
+    #   dockerfile: Dockerfile
+    image: ghcr.io/poppopjmp/spiderfoot-frontend:latest
     container_name: sf-frontend-ui
     restart: unless-stopped
     networks:
@@ -742,8 +744,8 @@ services:
   # ---------------------------------------------------------------------------
 
   agents:
-    <<: *sf-build
-    image: spiderfoot-micro:latest
+    # <<: *sf-build
+    image: ghcr.io/poppopjmp/spiderfoot-api:latest
     container_name: sf-agents
     restart: unless-stopped
     networks:
@@ -825,8 +827,8 @@ services:
   # ---------------------------------------------------------------------------
 
   celery-worker:
-    <<: *sf-build
-    image: spiderfoot-micro:latest
+    # <<: *sf-build
+    image: ghcr.io/poppopjmp/spiderfoot-api:latest
     container_name: sf-celery-worker
     restart: unless-stopped
     networks:
@@ -917,8 +919,8 @@ services:
   # ---------------------------------------------------------------------------
 
   celery-worker-active:
-    <<: *sf-active-build
-    image: spiderfoot-active:latest
+    # <<: *sf-active-build
+    image: ghcr.io/poppopjmp/spiderfoot-active-worker:latest
     container_name: sf-celery-worker-active
     restart: unless-stopped
     networks:
@@ -1009,8 +1011,8 @@ services:
   # ---------------------------------------------------------------------------
 
   celery-beat:
-    <<: *sf-build
-    image: spiderfoot-micro:latest
+    # <<: *sf-build
+    image: ghcr.io/poppopjmp/spiderfoot-api:latest
     container_name: sf-celery-beat
     restart: unless-stopped
     networks:
@@ -1049,8 +1051,8 @@ services:
   # ---------------------------------------------------------------------------
 
   flower:
-    <<: *sf-build
-    image: spiderfoot-micro:latest
+    # <<: *sf-build
+    image: ghcr.io/poppopjmp/spiderfoot-api:latest
     container_name: sf-flower
     restart: unless-stopped
     networks:
