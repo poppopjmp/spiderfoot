@@ -50,7 +50,7 @@ email-validator>=2.0.0,<3.0.0
 bleach>=6.0.0,<7.0.0
 
 # Data & integrations
-redis>=5.0.0,<6.0.0
+redis>=5.0.0,<8.0.0
 openai>=1.0.0,<3.0.0
 telethon>=1.36.0,<2.0.0
 python-dateutil>=2.8.0,<3.0.0
