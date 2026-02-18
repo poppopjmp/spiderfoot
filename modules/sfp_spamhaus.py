@@ -140,6 +140,9 @@ class sfp_spamhaus(SpiderFootModernPlugin):
         return None
 
     def handleEvent(self, event: SpiderFootEvent) -> None:
+        if self.errorState:
+            return
+
         """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data

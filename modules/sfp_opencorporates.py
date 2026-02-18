@@ -236,6 +236,8 @@ class sfp_opencorporates(SpiderFootModernPlugin):
             return
 
         for c in companies:
+            if self.checkForStop():
+                return
             company = c.get('company')
 
             if not company:

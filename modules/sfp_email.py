@@ -25,7 +25,13 @@ class sfp_email(SpiderFootModernPlugin):
         'name': "E-Mail Address Extractor",
         'summary': "Identify e-mail addresses in any obtained data.",
         'useCases': ["Passive", "Investigate", "Footprint"],
-        'categories': ["Content Analysis"]
+        'categories': ["Content Analysis"],
+        "dataSource": {
+            "website": None,
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": [],
+            "description": "Local data processing and extraction (no external API).",
+        },
     }
 
     opts = {

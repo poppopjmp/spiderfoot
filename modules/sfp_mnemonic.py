@@ -96,12 +96,13 @@ class sfp_mnemonic(SpiderFootModernPlugin):
     def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return [
-            'IP_ADDRESS',
-            'IPV6_ADDRESS',
-            'INTERNAL_IP_ADDRESS',
-            'CO_HOSTED_SITE',
-            'INTERNET_NAME',
-            'DOMAIN_NAME'
+            "IP_ADDRESS",
+            "IPV6_ADDRESS",
+            "INTERNAL_IP_ADDRESS",
+            "CO_HOSTED_SITE",
+            "INTERNET_NAME",
+            "DOMAIN_NAME",
+            "INTERNET_NAME_UNRESOLVED",
         ]
 
     def query(self, qry: str, limit: int = 500, offset: int = 0):

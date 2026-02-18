@@ -46,7 +46,6 @@ class sfp_4chan(SpiderFootModernPlugin):
         :param userOpts: User options
         """
         super().setup(sfc, userOpts or {})
-        self.opts.update(userOpts)
         self._seen_posts = set()
 
     def watchedEvents(self) -> list[str]:
@@ -91,6 +90,8 @@ class sfp_4chan(SpiderFootModernPlugin):
             return
         self.log.info(f"Monitoring 4chan boards: {', '.join(boards)} (max_threads={max_threads})")
         for board in boards:
+            if self.checkForStop():
+                return
             catalog = self._fetch_catalog(board)
             if not catalog:
                 continue
@@ -98,6 +99,8 @@ class sfp_4chan(SpiderFootModernPlugin):
             for page in catalog:
                 threads.extend(page.get("threads", []))
             for thread in threads[:max_threads]:
+                if self.checkForStop():
+                    return
                 thread_id = thread.get("no")
                 if not thread_id:
                     continue

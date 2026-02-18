@@ -39,7 +39,13 @@ class sfp_tool_retirejs(SpiderFootModernPlugin):
             "description": "Scanner detecting the use of JavaScript libraries with known vulnerabilities",
             "website": "http://retirejs.github.io/retire.js/",
             "repository": "https://github.com/RetireJS/retire.js"
-        }
+        },
+        "dataSource": {
+            "website": "https://retirejs.github.io/retire.js/",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": ["https://github.com/RetireJS/retire.js"],
+            "description": "Scanner for JavaScript libraries with known vulnerabilities.",
+        },
     }
 
     # Default options
@@ -59,6 +65,7 @@ class sfp_tool_retirejs(SpiderFootModernPlugin):
     def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
     def watchedEvents(self) -> list:
         """Return the list of events this module watches."""

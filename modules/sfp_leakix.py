@@ -83,9 +83,18 @@ class sfp_leakix(SpiderFootModernPlugin):
     # What events this module produces
     def producedEvents(self) -> list:
         """Return the list of events this module produces."""
-        return ["RAW_RIR_DATA", "GEOINFO", "TCP_PORT_OPEN",
-                "OPERATING_SYSTEM", "SOFTWARE_USED", "WEBSERVER_BANNER",
-                "LEAKSITE_CONTENT", "INTERNET_NAME"]
+        return [
+            "RAW_RIR_DATA",
+            "GEOINFO",
+            "TCP_PORT_OPEN",
+            "OPERATING_SYSTEM",
+            "SOFTWARE_USED",
+            "WEBSERVER_BANNER",
+            "LEAKSITE_CONTENT",
+            "INTERNET_NAME",
+            "INTERNET_NAME_UNRESOLVED",
+            "IP_ADDRESS",
+        ]
 
     # Query host
     # https://leakix.net/api-documentation

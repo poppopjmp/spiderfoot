@@ -92,6 +92,7 @@ class sfp_virustotal(SpiderFootModernPlugin):
     def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
     def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
@@ -117,7 +118,8 @@ class sfp_virustotal(SpiderFootModernPlugin):
             "INTERNET_NAME",
             "AFFILIATE_INTERNET_NAME",
             "INTERNET_NAME_UNRESOLVED",
-            "DOMAIN_NAME"
+            "DOMAIN_NAME",
+            "AFFILIATE_DOMAIN_NAME",
         ]
 
     def queryIp(self, qry: str) -> dict | None:

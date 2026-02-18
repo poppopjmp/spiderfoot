@@ -191,6 +191,7 @@ class sfp_template(SpiderFootModernPlugin):
     def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
+        self.errorState = False
         # self.tempStorage() basically returns a dict(), but we use self.tempStorage()
         # instead since on SpiderFoot HX, different mechanisms are used to persist
         # data for load distribution, avoiding excess memory consumption and fault
@@ -225,9 +226,11 @@ class sfp_template(SpiderFootModernPlugin):
             "DEVICE_TYPE",
             "TCP_PORT_OPEN",
             "TCP_PORT_OPEN_BANNER",
-            'RAW_RIR_DATA',
-            'GEOINFO',
-            'VULNERABILITY_GENERAL'
+            "RAW_RIR_DATA",
+            "GEOINFO",
+            "VULNERABILITY_GENERAL",
+            "AFFILIATE_IPADDR",
+            "IP_ADDRESS",
         ]
 
     # When querying third parties, it's best to have a dedicated function

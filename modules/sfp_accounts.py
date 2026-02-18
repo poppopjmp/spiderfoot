@@ -418,6 +418,8 @@ class sfp_accounts(SpiderFootModernPlugin):
             if self.opts['permutate']:
                 permutations = self.generatePermutations(user)
                 for puser in permutations:
+                    if self.checkForStop():
+                        return
                     res = self.checkSites(puser)
                     for site in res:
                         evt = SpiderFootEvent(

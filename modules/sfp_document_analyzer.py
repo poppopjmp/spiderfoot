@@ -181,6 +181,7 @@ class sfp_document_analyzer(SpiderFootModernPlugin):
 
     def setup(self, sfc, userOpts=None) -> None:
         super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
 
     # ---- Events ----

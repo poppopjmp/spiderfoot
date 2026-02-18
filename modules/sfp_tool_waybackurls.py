@@ -7,6 +7,8 @@ Requires: waybackurls binary in PATH or configured via waybackurls_path option.
 Install: go install -v github.com/tomnomnom/waybackurls@latest
 """
 
+from __future__ import annotations
+
 import os
 import subprocess
 
@@ -25,6 +27,12 @@ class sfp_tool_waybackurls(SpiderFootModernPlugin):
         "toolDetails": {
             "binaryName": "waybackurls",
             "installUrl": "https://github.com/tomnomnom/waybackurls",
+        },
+        "dataSource": {
+            "website": "https://github.com/tomnomnom/waybackurls",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": ["https://github.com/tomnomnom/waybackurls"],
+            "description": "Fetch historical URLs from the Wayback Machine.",
         },
     }
 
@@ -47,11 +55,9 @@ class sfp_tool_waybackurls(SpiderFootModernPlugin):
     results = None
 
     def setup(self, sfc, userOpts=None):
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
-        if userOpts:
-            for opt in list(self.opts.keys()):
-                self.opts[opt] = userOpts.get(opt, self.opts[opt])
 
     def watchedEvents(self):
         return ["DOMAIN_NAME"]

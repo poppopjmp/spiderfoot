@@ -50,7 +50,6 @@ class sfp_sublist3r(SpiderFootModernPlugin):
         super().setup(sfc, userOpts or {})
         self.debug("Setting up sfp_sublist3r")
         self.results = self.tempStorage()
-        self.opts.update(userOpts)
 
     def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
@@ -87,7 +86,7 @@ class sfp_sublist3r(SpiderFootModernPlugin):
 
         return list(set(ret))
 
-    def sendEvent(self, source: str, host: str) -> None:
+    def _emitEvent(self, source: str, host: str) -> None:
         """SendEvent."""
         if self.resolve_host(host) or self.resolve_host6(host):
             e = SpiderFootEvent("INTERNET_NAME", host, self.__name__, source)
@@ -116,6 +115,6 @@ class sfp_sublist3r(SpiderFootModernPlugin):
         for hostname in self.query(query):
             if target.matches(hostname, includeParents=True) and not \
                     target.matches(hostname, includeChildren=False):
-                self.sendEvent(event, hostname)
+                self._emitEvent(event, hostname)
             else:
                 self.debug(f"Invalid subdomain: {hostname}")

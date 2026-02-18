@@ -137,10 +137,10 @@ class sfp_dnsbrute(SpiderFootModernPlugin):
 
         for res in self.hostResults:
             if self.hostResults.get(res, False):
-                self.sendEvent(sourceEvent, res)
+                self._emitEvent(sourceEvent, res)
 
     # Store the result internally and notify listening modules
-    def sendEvent(self, source: str, result: str) -> None:
+    def _emitEvent(self, source: str, result: str) -> None:
         """SendEvent."""
         self.info("Found a brute-forced host: " + result)
         # Report the host

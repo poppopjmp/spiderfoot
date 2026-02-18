@@ -154,6 +154,8 @@ class sfp_hunter(SpiderFootModernPlugin):
         rescount = len(data['data'].get('emails', list()))
 
         while rescount <= maxgoal:
+            if self.checkForStop():
+                return
             for email in data['data'].get('emails', list()):
                 # Notify other modules of what you've found
                 em = email.get('value')

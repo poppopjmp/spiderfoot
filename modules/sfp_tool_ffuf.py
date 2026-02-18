@@ -7,6 +7,8 @@ Requires: ffuf binary in PATH or configured via ffuf_path option.
 Install: go install -v github.com/ffuf/ffuf/v2@latest
 """
 
+from __future__ import annotations
+
 import json
 import os
 import subprocess
@@ -27,6 +29,12 @@ class sfp_tool_ffuf(SpiderFootModernPlugin):
         "toolDetails": {
             "binaryName": "ffuf",
             "installUrl": "https://github.com/ffuf/ffuf",
+        },
+        "dataSource": {
+            "website": "https://github.com/ffuf/ffuf",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": ["https://github.com/ffuf/ffuf"],
+            "description": "Fast web fuzzer for directory, file, and parameter discovery.",
         },
     }
 
@@ -65,11 +73,9 @@ class sfp_tool_ffuf(SpiderFootModernPlugin):
     results = None
 
     def setup(self, sfc, userOpts=None):
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
-        if userOpts:
-            for opt in list(self.opts.keys()):
-                self.opts[opt] = userOpts.get(opt, self.opts[opt])
 
     def watchedEvents(self):
         return ["DOMAIN_NAME", "LINKED_URL_INTERNAL"]

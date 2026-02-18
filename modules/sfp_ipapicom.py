@@ -68,6 +68,7 @@ class sfp_ipapicom(SpiderFootModernPlugin):
     def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
     # What events is this module interested in for input
     def watchedEvents(self) -> list:
@@ -84,7 +85,8 @@ class sfp_ipapicom(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return [
             "GEOINFO",
-            "RAW_RIR_DATA"
+            "RAW_RIR_DATA",
+            "PHYSICAL_COORDINATES",
         ]
 
     def query(self, qry: str) -> dict | None:

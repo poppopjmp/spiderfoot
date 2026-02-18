@@ -8,6 +8,8 @@ Install: go install -v github.com/sensepost/gowitness@latest
 Note: Requires chromium/chrome for headless screenshotting.
 """
 
+from __future__ import annotations
+
 import json
 import os
 import subprocess
@@ -28,6 +30,12 @@ class sfp_tool_gowitness(SpiderFootModernPlugin):
         "toolDetails": {
             "binaryName": "gowitness",
             "installUrl": "https://github.com/sensepost/gowitness",
+        },
+        "dataSource": {
+            "website": "https://github.com/sensepost/gowitness",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": ["https://github.com/sensepost/gowitness"],
+            "description": "Web screenshot tool for visual analysis of discovered hosts.",
         },
     }
 
@@ -54,11 +62,9 @@ class sfp_tool_gowitness(SpiderFootModernPlugin):
     results = None
 
     def setup(self, sfc, userOpts=None):
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
-        if userOpts:
-            for opt in list(self.opts.keys()):
-                self.opts[opt] = userOpts.get(opt, self.opts[opt])
 
     def watchedEvents(self):
         return ["LINKED_URL_INTERNAL", "DOMAIN_NAME"]

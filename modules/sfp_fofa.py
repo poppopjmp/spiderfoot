@@ -141,6 +141,9 @@ class sfp_fofa(SpiderFootModernPlugin):
             return None
 
     def handleEvent(self, event: SpiderFootEvent) -> None:
+        if self.errorState:
+            return
+
         """
         Handle incoming events, query Fofa, and emit results as SpiderFootEvents.
         :param event: SpiderFootEvent

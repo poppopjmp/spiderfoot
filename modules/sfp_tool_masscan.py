@@ -7,6 +7,8 @@ Requires: masscan in PATH (built from source or installed via package manager).
 Note: Requires NET_RAW capability (setcap cap_net_raw+ep) and typically root.
 """
 
+from __future__ import annotations
+
 import json
 import os
 import subprocess
@@ -27,6 +29,12 @@ class sfp_tool_masscan(SpiderFootModernPlugin):
         "toolDetails": {
             "binaryName": "masscan",
             "installUrl": "https://github.com/robertdavidgraham/masscan",
+        },
+        "dataSource": {
+            "website": "https://github.com/robertdavidgraham/masscan",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": ["https://github.com/robertdavidgraham/masscan"],
+            "description": "Ultra-fast mass port scanner.",
         },
     }
 
@@ -55,11 +63,9 @@ class sfp_tool_masscan(SpiderFootModernPlugin):
     results = None
 
     def setup(self, sfc, userOpts=None):
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
-        if userOpts:
-            for opt in list(self.opts.keys()):
-                self.opts[opt] = userOpts.get(opt, self.opts[opt])
 
     def watchedEvents(self):
         return ["IP_ADDRESS", "NETBLOCK_OWNER"]

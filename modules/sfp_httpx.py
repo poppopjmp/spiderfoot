@@ -7,6 +7,8 @@ Requires: httpx binary in PATH or configured via httpx_path option.
 Install: go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
 """
 
+from __future__ import annotations
+
 import json
 import os
 import subprocess
@@ -28,6 +30,12 @@ class sfp_httpx(SpiderFootModernPlugin):
         "toolDetails": {
             "binaryName": "httpx",
             "installUrl": "https://github.com/projectdiscovery/httpx",
+        },
+        "dataSource": {
+            "website": "https://github.com/projectdiscovery/httpx",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": ["https://github.com/projectdiscovery/httpx"],
+            "description": "Fast HTTP probing and technology detection tool by ProjectDiscovery.",
         },
     }
 
@@ -70,11 +78,9 @@ class sfp_httpx(SpiderFootModernPlugin):
     results = None
 
     def setup(self, sfc, userOpts=None):
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
-        if userOpts:
-            for opt in list(self.opts.keys()):
-                self.opts[opt] = userOpts.get(opt, self.opts[opt])
 
     def watchedEvents(self):
         return [

@@ -61,6 +61,7 @@ class sfp_leakcheck(SpiderFootModernPlugin):
     def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
     # What events is this module interested in for input
     def watchedEvents(self) -> list:

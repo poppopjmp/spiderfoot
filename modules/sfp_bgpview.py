@@ -61,6 +61,7 @@ class sfp_bgpview(SpiderFootModernPlugin):
             userOpts (dict): User-supplied options for the module.
         """
         super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
     def watchedEvents(self) -> list:
         """

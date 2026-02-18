@@ -37,7 +37,6 @@ class sfp_aparat(SpiderFootModernPlugin):
     def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
-        self.opts.update(userOpts)
 
     def watchedEvents(self) -> list:
         """Return the list of events this module watches."""

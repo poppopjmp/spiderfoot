@@ -113,7 +113,11 @@ class sfp_fraudguard(SpiderFootModernPlugin):
             "MALICIOUS_IPADDR",
             "MALICIOUS_AFFILIATE_IPADDR",
             "MALICIOUS_SUBNET",
-            "MALICIOUS_NETBLOCK"
+            "MALICIOUS_NETBLOCK",
+            "AFFILIATE_IPADDR",
+            "AFFILIATE_IPV6_ADDRESS",
+            "IPV6_ADDRESS",
+            "IP_ADDRESS",
         ]
 
     def query(self, qry: str) -> dict | None:

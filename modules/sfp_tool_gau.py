@@ -7,6 +7,8 @@ Requires: gau binary in PATH or configured via gau_path option.
 Install: go install -v github.com/lc/gau/v2/cmd/gau@latest
 """
 
+from __future__ import annotations
+
 import os
 import subprocess
 import tempfile
@@ -26,6 +28,12 @@ class sfp_tool_gau(SpiderFootModernPlugin):
         "toolDetails": {
             "binaryName": "gau",
             "installUrl": "https://github.com/lc/gau",
+        },
+        "dataSource": {
+            "website": "https://github.com/lc/gau",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": ["https://github.com/lc/gau"],
+            "description": "Get All URLs tool fetching known URLs from web archives.",
         },
     }
 
@@ -52,11 +60,9 @@ class sfp_tool_gau(SpiderFootModernPlugin):
     results = None
 
     def setup(self, sfc, userOpts=None):
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
-        if userOpts:
-            for opt in list(self.opts.keys()):
-                self.opts[opt] = userOpts.get(opt, self.opts[opt])
 
     def watchedEvents(self):
         return ["DOMAIN_NAME"]

@@ -91,8 +91,17 @@ class sfp_networksdb(SpiderFootModernPlugin):
     # What events this module produces
     def producedEvents(self) -> list:
         """Return the list of events this module produces."""
-        return ["INTERNET_NAME", "IP_ADDRESS", "IPV6_ADDRESS", "NETBLOCK_MEMBER",
-                "CO_HOSTED_SITE", "GEOINFO", "RAW_RIR_DATA"]
+        return [
+            "INTERNET_NAME",
+            "IP_ADDRESS",
+            "IPV6_ADDRESS",
+            "NETBLOCK_MEMBER",
+            "CO_HOSTED_SITE",
+            "GEOINFO",
+            "RAW_RIR_DATA",
+            "DOMAIN_NAME",
+            "NETBLOCKV6_MEMBER",
+        ]
 
     # Query IP Address Info
     # https://networksdb.io/api/docs#ipinfo

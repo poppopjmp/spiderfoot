@@ -76,6 +76,7 @@ class sfp_flickr(SpiderFootModernPlugin):
     def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
     # What events is this module interested in for input
     def watchedEvents(self) -> list:
@@ -85,8 +86,14 @@ class sfp_flickr(SpiderFootModernPlugin):
     # What events this module produces
     def producedEvents(self) -> list:
         """Return the list of events this module produces."""
-        return ["EMAILADDR", "EMAILADDR_GENERIC", "INTERNET_NAME",
-                "DOMAIN_NAME", "LINKED_URL_INTERNAL"]
+        return [
+            "EMAILADDR",
+            "EMAILADDR_GENERIC",
+            "INTERNET_NAME",
+            "DOMAIN_NAME",
+            "LINKED_URL_INTERNAL",
+            "INTERNET_NAME_UNRESOLVED",
+        ]
 
     # Retrieve API key
     def retrieveApiKey(self) -> str | None:

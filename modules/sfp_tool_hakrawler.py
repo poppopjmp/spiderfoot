@@ -7,6 +7,8 @@ Requires: hakrawler binary in PATH or configured via hakrawler_path option.
 Install: go install -v github.com/hakluke/hakrawler@latest
 """
 
+from __future__ import annotations
+
 import os
 import subprocess
 
@@ -25,6 +27,12 @@ class sfp_tool_hakrawler(SpiderFootModernPlugin):
         "toolDetails": {
             "binaryName": "hakrawler",
             "installUrl": "https://github.com/hakluke/hakrawler",
+        },
+        "dataSource": {
+            "website": "https://github.com/hakluke/hakrawler",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": ["https://github.com/hakluke/hakrawler"],
+            "description": "Simple, fast web crawler for URL discovery.",
         },
     }
 
@@ -51,11 +59,9 @@ class sfp_tool_hakrawler(SpiderFootModernPlugin):
     results = None
 
     def setup(self, sfc, userOpts=None):
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
-        if userOpts:
-            for opt in list(self.opts.keys()):
-                self.opts[opt] = userOpts.get(opt, self.opts[opt])
 
     def watchedEvents(self):
         return ["DOMAIN_NAME", "LINKED_URL_INTERNAL"]

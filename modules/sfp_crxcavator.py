@@ -57,6 +57,7 @@ class sfp_crxcavator(SpiderFootModernPlugin):
     def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
     def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
@@ -168,6 +169,8 @@ class sfp_crxcavator(SpiderFootModernPlugin):
         locations = list()
 
         for result in results:
+            if self.checkForStop():
+                break
             if not isinstance(result, dict):
                 continue
 

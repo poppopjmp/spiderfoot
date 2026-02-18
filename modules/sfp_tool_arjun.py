@@ -6,6 +6,8 @@ by fuzzing GET/POST parameters.
 Requires: arjun (pip install arjun).
 """
 
+from __future__ import annotations
+
 import json
 import os
 import subprocess
@@ -26,6 +28,12 @@ class sfp_tool_arjun(SpiderFootModernPlugin):
         "toolDetails": {
             "binaryName": "arjun",
             "installUrl": "https://github.com/s0md3v/Arjun",
+        },
+        "dataSource": {
+            "website": "https://github.com/s0md3v/Arjun",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": ["https://github.com/s0md3v/Arjun"],
+            "description": "HTTP parameter discovery tool.",
         },
     }
 
@@ -54,11 +62,9 @@ class sfp_tool_arjun(SpiderFootModernPlugin):
     results = None
 
     def setup(self, sfc, userOpts=None):
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
-        if userOpts:
-            for opt in list(self.opts.keys()):
-                self.opts[opt] = userOpts.get(opt, self.opts[opt])
 
     def watchedEvents(self):
         return ["LINKED_URL_INTERNAL", "URL_FORM"]

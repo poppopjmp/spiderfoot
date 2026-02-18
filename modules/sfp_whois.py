@@ -32,7 +32,13 @@ class sfp_whois(SpiderFootModernPlugin):
         'summary': "Perform a WHOIS look-up on domain names and owned netblocks.",
         'flags': [],
         'useCases': ["Footprint", "Investigate", "Passive"],
-        'categories': ["Public Registries"]
+        'categories': ["Public Registries"],
+        "dataSource": {
+            "website": "https://www.iana.org/whois",
+            "model": "FREE_NOAUTH_LIMITED",
+            "references": ["https://tools.ietf.org/html/rfc3912"],
+            "description": "Domain and IP WHOIS registration data lookup.",
+        },
     }
 
     # Default options

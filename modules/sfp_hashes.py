@@ -28,7 +28,13 @@ class sfp_hashes(SpiderFootModernPlugin):
         'summary': "Identify MD5 and SHA hashes in web content, files and more.",
         'flags': [],
         'useCases': ["Footprint", "Investigate", "Passive"],
-        'categories': ["Content Analysis"]
+        'categories': ["Content Analysis"],
+        "dataSource": {
+            "website": None,
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": [],
+            "description": "Local data processing and extraction (no external API).",
+        },
     }
 
     # Default options

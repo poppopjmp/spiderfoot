@@ -30,7 +30,13 @@ class sfp_bitcoin(SpiderFootModernPlugin):
         'summary': "Identify bitcoin addresses in scraped webpages.",
         'flags': [],
         'useCases': ["Footprint", "Investigate", "Passive"],
-        'categories': ["Content Analysis"]
+        'categories': ["Content Analysis"],
+        "dataSource": {
+            "website": None,
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": [],
+            "description": "Local data processing and extraction (no external API).",
+        },
     }
 
     opts = {}

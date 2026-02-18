@@ -7,6 +7,8 @@ Requires: naabu in PATH (go install github.com/projectdiscovery/naabu/v2/cmd/naa
 Note: SYN scanning requires NET_RAW capability (setcap cap_net_raw+ep).
 """
 
+from __future__ import annotations
+
 import json
 import os
 import subprocess
@@ -27,6 +29,12 @@ class sfp_tool_naabu(SpiderFootModernPlugin):
         "toolDetails": {
             "binaryName": "naabu",
             "installUrl": "https://github.com/projectdiscovery/naabu",
+        },
+        "dataSource": {
+            "website": "https://github.com/projectdiscovery/naabu",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": ["https://github.com/projectdiscovery/naabu"],
+            "description": "High-speed port scanner by ProjectDiscovery.",
         },
     }
 
@@ -57,11 +65,9 @@ class sfp_tool_naabu(SpiderFootModernPlugin):
     results = None
 
     def setup(self, sfc, userOpts=None):
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
-        if userOpts:
-            for opt in list(self.opts.keys()):
-                self.opts[opt] = userOpts.get(opt, self.opts[opt])
 
     def watchedEvents(self):
         return ["IP_ADDRESS", "INTERNET_NAME", "DOMAIN_NAME"]

@@ -38,7 +38,13 @@ class sfp_customfeed(SpiderFootModernPlugin):
         'summary': "Check if a host/domain, netblock, ASN or IP is malicious according to your custom feed.",
         'flags': [],
         'useCases': ["Investigate", "Passive"],
-        'categories': ["Reputation Systems"]
+        'categories': ["Reputation Systems"],
+        "dataSource": {
+            "website": None,
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": [],
+            "description": "User-defined custom data feeds for threat intelligence.",
+        },
     }
 
     # Default options

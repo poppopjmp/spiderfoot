@@ -21,6 +21,12 @@ class sfp_telegram(SpiderFootModernPlugin):
         'flags': ["security"],
         'useCases': [ "Passive", "Investigate"],
         'categories': ["Social Media"],
+        "dataSource": {
+            "website": "https://telegram.org/",
+            "model": "FREE_NOAUTH_LIMITED",
+            "references": ["https://core.telegram.org/"],
+            "description": "Telegram user and group discovery.",
+        },
     }
 
     opts = {

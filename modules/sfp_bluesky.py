@@ -47,21 +47,29 @@ class sfp_bluesky(SpiderFootModernPlugin):
     def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
-        self.opts.update(userOpts)
+        self.errorState = False
         self.debug(f"[setup] Options: {self.opts}")
         # Option validation
         if not self.opts.get("access_token"):
             self.error("[setup] Bluesky access token is required.")
-            raise ValueError("Bluesky access token is required.")
+            self.errorState = True
+
+            return
         if not self.opts.get("username"):
             self.error("[setup] Bluesky username is required.")
-            raise ValueError("Bluesky username is required.")
+            self.errorState = True
+
+            return
         if not isinstance(self.opts.get("max_posts"), int) or self.opts["max_posts"] <= 0:
             self.error("[setup] max_posts must be a positive integer.")
-            raise ValueError("max_posts must be a positive integer.")
+            self.errorState = True
+
+            return
         if self.opts.get("output_format") not in ["summary", "full"]:
             self.error("[setup] output_format must be 'summary' or 'full'.")
-            raise ValueError("output_format must be 'summary' or 'full'.")
+            self.errorState = True
+
+            return
 
     def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
@@ -72,6 +80,9 @@ class sfp_bluesky(SpiderFootModernPlugin):
         return ["BLUESKY_POST"]
 
     def handleEvent(self, event: SpiderFootEvent) -> None:
+        if self.errorState:
+            return
+
         """
         Handle event: fetch Bluesky posts for the configured username and emit BLUESKY_POST events.
         """

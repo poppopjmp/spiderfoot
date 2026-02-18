@@ -31,7 +31,13 @@ class sfp_countryname(SpiderFootModernPlugin):
         'summary': "Identify country names in any obtained data.",
         'flags': [],
         'useCases': ["Footprint", "Investigate", "Passive"],
-        'categories': ["Content Analysis"]
+        'categories': ["Content Analysis"],
+        "dataSource": {
+            "website": None,
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": [],
+            "description": "Local data processing and extraction (no external API).",
+        },
     }
 
     opts = {

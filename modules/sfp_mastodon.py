@@ -48,21 +48,28 @@ class sfp_mastodon(SpiderFootModernPlugin):
     def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
-        self.opts.update(userOpts)
         self.debug(f"[setup] Options: {self.opts}")
         # Option validation
         if not self.opts.get("access_token"):
             self.error("[setup] Mastodon access token is required.")
-            raise ValueError("Mastodon access token is required.")
+            self.errorState = True
+
+            return
         if not self.opts.get("username"):
             self.error("[setup] Mastodon username is required.")
-            raise ValueError("Mastodon username is required.")
+            self.errorState = True
+
+            return
         if not isinstance(self.opts.get("max_posts"), int) or self.opts["max_posts"] <= 0:
             self.error("[setup] max_posts must be a positive integer.")
-            raise ValueError("max_posts must be a positive integer.")
+            self.errorState = True
+
+            return
         if self.opts.get("output_format") not in ["summary", "full"]:
             self.error("[setup] output_format must be 'summary' or 'full'.")
-            raise ValueError("output_format must be 'summary' or 'full'.")
+            self.errorState = True
+
+            return
 
     def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
@@ -73,6 +80,9 @@ class sfp_mastodon(SpiderFootModernPlugin):
         return ["MASTODON_POST"]
 
     def handleEvent(self, event: SpiderFootEvent) -> None:
+        if self.errorState:
+            return
+
         """Handle an event received by this module."""
         self.debug(f"[handleEvent] Received event: {event.eventType}")
         allowed_types = [t.strip() for t in self.opts.get("event_types", "").split(",") if t.strip()]

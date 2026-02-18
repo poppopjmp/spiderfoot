@@ -66,6 +66,7 @@ class sfp_nameapi(SpiderFootModernPlugin):
     def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
     def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
@@ -118,6 +119,8 @@ class sfp_nameapi(SpiderFootModernPlugin):
             self.errorState = True
             return
 
+        if eventData in self.results:
+            return
         self.results[eventData] = True
 
         data = self.queryEmailAddr(eventData)

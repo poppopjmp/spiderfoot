@@ -182,6 +182,8 @@ class sfp_arin(SpiderFootModernPlugin):
                     else:
                         ref = ret["pocs"]["pocRef"]
                     for p in ref:
+                        if self.checkForStop():
+                            break
                         name = p["@name"]
                         if "," in name:
                             sname = name.split(", ", 1)
@@ -206,6 +208,8 @@ class sfp_arin(SpiderFootModernPlugin):
                     else:
                         ref = ret["pocs"]["pocRef"]
                     for p in ref:
+                        if self.checkForStop():
+                            return
                         # We just want the raw data so we can get potential
                         # e-mail addresses.
                         self.query("contact", p["$"])

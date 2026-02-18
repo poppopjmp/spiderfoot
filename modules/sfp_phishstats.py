@@ -92,6 +92,8 @@ class sfp_phishstats(SpiderFootModernPlugin):
             "MALICIOUS_NETBLOCK",
             "MALICIOUS_SUBNET",
             "RAW_RIR_DATA",
+            "AFFILIATE_IPADDR",
+            "IP_ADDRESS",
         ]
 
     # Check whether the IP address is malicious using PhishStats API

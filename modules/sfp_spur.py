@@ -80,6 +80,7 @@ class sfp_spur(SpiderFootModernPlugin):
     def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
     # What events is this module interested in for input
     # For a list of all events, check sfdb.py.

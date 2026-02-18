@@ -114,6 +114,8 @@ class sfp_psbdmp(SpiderFootModernPlugin):
             return
 
         for n in data:
+            if self.checkForStop():
+                return
             e = SpiderFootEvent("LEAKSITE_URL", n, self.__name__, event)
             self.notifyListeners(e)
 

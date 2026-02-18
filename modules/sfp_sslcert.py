@@ -30,7 +30,13 @@ class sfp_sslcert(SpiderFootModernPlugin):
         'summary': "Gather information about SSL certificates used by the target's HTTPS sites.",
         'flags': [],
         'useCases': ["Footprint", "Investigate"],
-        'categories': ["Crawling and Scanning"]
+        'categories': ["Crawling and Scanning"],
+        "dataSource": {
+            "website": None,
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": [],
+            "description": "Analyze SSL/TLS certificates for hostnames, expiry, and chain validation.",
+        },
     }
 
     # Default options

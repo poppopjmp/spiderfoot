@@ -78,6 +78,7 @@ class sfp_shodan(SpiderFootModernPlugin):
     def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
     # What events is this module interested in for input
     def watchedEvents(self) -> list:
@@ -87,12 +88,22 @@ class sfp_shodan(SpiderFootModernPlugin):
     # What events this module produces
     def producedEvents(self) -> list:
         """Return the list of events this module produces."""
-        return ["OPERATING_SYSTEM", "DEVICE_TYPE",
-                "TCP_PORT_OPEN", "TCP_PORT_OPEN_BANNER",
-                'RAW_RIR_DATA', 'GEOINFO', 'IP_ADDRESS',
-                'VULNERABILITY_CVE_CRITICAL',
-                'VULNERABILITY_CVE_HIGH', 'VULNERABILITY_CVE_MEDIUM',
-                'VULNERABILITY_CVE_LOW', 'VULNERABILITY_GENERAL']
+        return [
+            "OPERATING_SYSTEM",
+            "DEVICE_TYPE",
+            "TCP_PORT_OPEN",
+            "TCP_PORT_OPEN_BANNER",
+            "RAW_RIR_DATA",
+            "GEOINFO",
+            "IP_ADDRESS",
+            "VULNERABILITY_CVE_CRITICAL",
+            "VULNERABILITY_CVE_HIGH",
+            "VULNERABILITY_CVE_MEDIUM",
+            "VULNERABILITY_CVE_LOW",
+            "VULNERABILITY_GENERAL",
+            "BGP_AS_MEMBER",
+            "SOFTWARE_USED",
+        ]
 
     def queryHost(self, qry: str) -> dict | None:
         """Query Host."""

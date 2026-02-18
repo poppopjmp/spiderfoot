@@ -6,6 +6,8 @@ including cipher suites, protocol support, and known vulnerabilities.
 Requires: sslyze in PATH (pip install sslyze).
 """
 
+from __future__ import annotations
+
 import json
 import os
 import subprocess
@@ -26,6 +28,12 @@ class sfp_tool_sslyze(SpiderFootModernPlugin):
         "toolDetails": {
             "binaryName": "sslyze",
             "installUrl": "https://github.com/nabla-c0d3/sslyze",
+        },
+        "dataSource": {
+            "website": "https://github.com/nabla-c0d3/sslyze",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": ["https://github.com/nabla-c0d3/sslyze"],
+            "description": "Comprehensive SSL/TLS configuration analyzer.",
         },
     }
 
@@ -54,11 +62,9 @@ class sfp_tool_sslyze(SpiderFootModernPlugin):
     results = None
 
     def setup(self, sfc, userOpts=None):
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
-        if userOpts:
-            for opt in list(self.opts.keys()):
-                self.opts[opt] = userOpts.get(opt, self.opts[opt])
 
     def watchedEvents(self):
         return ["INTERNET_NAME", "IP_ADDRESS"]

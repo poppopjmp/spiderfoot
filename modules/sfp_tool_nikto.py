@@ -6,6 +6,8 @@ misconfigurations, outdated software, and known vulnerabilities.
 Requires: nikto in PATH (apt install nikto).
 """
 
+from __future__ import annotations
+
 import os
 import re
 import subprocess
@@ -26,6 +28,12 @@ class sfp_tool_nikto(SpiderFootModernPlugin):
         "toolDetails": {
             "binaryName": "nikto",
             "installUrl": "https://github.com/sullo/nikto",
+        },
+        "dataSource": {
+            "website": "https://github.com/sullo/nikto",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": ["https://github.com/sullo/nikto"],
+            "description": "Web server vulnerability scanner.",
         },
     }
 
@@ -54,11 +62,9 @@ class sfp_tool_nikto(SpiderFootModernPlugin):
     results = None
 
     def setup(self, sfc, userOpts=None):
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
-        if userOpts:
-            for opt in list(self.opts.keys()):
-                self.opts[opt] = userOpts.get(opt, self.opts[opt])
 
     def watchedEvents(self):
         return ["DOMAIN_NAME", "IP_ADDRESS", "LINKED_URL_INTERNAL"]

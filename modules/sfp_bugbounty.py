@@ -73,6 +73,7 @@ class sfp_bugbounty(SpiderFootModernPlugin):
 
     def setup(self, sfc, userOpts=None):
         super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
 
     def watchedEvents(self):

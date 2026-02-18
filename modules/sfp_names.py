@@ -30,7 +30,13 @@ class sfp_names(SpiderFootModernPlugin):
         'summary': "Attempt to identify human names in fetched content.",
         'flags': ["errorprone"],
         'useCases': ["Footprint", "Passive"],
-        'categories': ["Content Analysis"]
+        'categories': ["Content Analysis"],
+        "dataSource": {
+            "website": None,
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": [],
+            "description": "Local data processing and extraction (no external API).",
+        },
     }
 
     # Default options

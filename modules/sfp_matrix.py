@@ -48,21 +48,28 @@ class sfp_matrix(SpiderFootModernPlugin):
     def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
-        self.opts.update(userOpts)
         self.debug(f"[setup] Options: {self.opts}")
         # Option validation
         if not self.opts.get("access_token"):
             self.error("[setup] Matrix access token is required.")
-            raise ValueError("Matrix access token is required.")
+            self.errorState = True
+
+            return
         if not self.opts.get("room_id"):
             self.error("[setup] Matrix room_id is required.")
-            raise ValueError("Matrix room_id is required.")
+            self.errorState = True
+
+            return
         if not isinstance(self.opts.get("max_messages"), int) or self.opts["max_messages"] <= 0:
             self.error("[setup] max_messages must be a positive integer.")
-            raise ValueError("max_messages must be a positive integer.")
+            self.errorState = True
+
+            return
         if self.opts.get("output_format") not in ["summary", "full"]:
             self.error("[setup] output_format must be 'summary' or 'full'.")
-            raise ValueError("output_format must be 'summary' or 'full'.")
+            self.errorState = True
+
+            return
 
     def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
@@ -73,6 +80,9 @@ class sfp_matrix(SpiderFootModernPlugin):
         return ["MATRIX_MESSAGE"]
 
     def handleEvent(self, event: SpiderFootEvent) -> None:
+        if self.errorState:
+            return
+
         """Handle an event received by this module."""
         self.debug(f"[handleEvent] Received event: {event.eventType}")
         allowed_types = [t.strip() for t in self.opts.get("event_types", "").split(",") if t.strip()]

@@ -30,7 +30,13 @@ class sfp_crossref(SpiderFootModernPlugin):
         'summary': "Identify whether other domains are associated ('Affiliates') of the target by looking for links back to the target site(s).",
         'flags': [],
         'useCases': ["Footprint"],
-        'categories': ["Crawling and Scanning"]
+        'categories': ["Crawling and Scanning"],
+        "dataSource": {
+            "website": None,
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": [],
+            "description": "Local data processing and extraction (no external API).",
+        },
     }
 
     opts = {

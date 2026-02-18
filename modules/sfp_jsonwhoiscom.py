@@ -84,9 +84,19 @@ class sfp_jsonwhoiscom(SpiderFootModernPlugin):
     # What events this module produces
     def producedEvents(self) -> list:
         """Return the list of events this module produces."""
-        return ["RAW_RIR_DATA", "DOMAIN_REGISTRAR", "DOMAIN_WHOIS", "PROVIDER_DNS",
-                "EMAILADDR", "EMAILADDR_GENERIC", "PHONE_NUMBER", "PHYSICAL_ADDRESS",
-                "AFFILIATE_DOMAIN_UNREGISTERED"]
+        return [
+            "RAW_RIR_DATA",
+            "DOMAIN_REGISTRAR",
+            "DOMAIN_WHOIS",
+            "PROVIDER_DNS",
+            "EMAILADDR",
+            "EMAILADDR_GENERIC",
+            "PHONE_NUMBER",
+            "PHYSICAL_ADDRESS",
+            "AFFILIATE_DOMAIN_UNREGISTERED",
+            "AFFILIATE_DOMAIN_WHOIS",
+            "AFFILIATE_EMAILADDR",
+        ]
 
     # Query domain
     # https://jsonwhois.com/docs

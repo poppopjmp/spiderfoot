@@ -29,7 +29,13 @@ class sfp_pgp(SpiderFootModernPlugin):
         'summary': "Look up domains and e-mail addresses in PGP public key servers.",
         'flags': [],
         'useCases': ["Footprint", "Investigate", "Passive"],
-        'categories': ["Public Registries"]
+        'categories': ["Public Registries"],
+        "dataSource": {
+            "website": "https://keys.openpgp.org/",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": ["https://keys.openpgp.org/"],
+            "description": "PGP/GPG public key server lookups.",
+        },
     }
 
     results = None

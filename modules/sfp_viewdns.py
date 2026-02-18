@@ -74,6 +74,7 @@ class sfp_viewdns(SpiderFootModernPlugin):
     def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
         self.accum = list()
         self.cohostcount = 0

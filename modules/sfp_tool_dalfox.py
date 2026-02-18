@@ -6,6 +6,8 @@ on URLs with parameters.
 Requires: dalfox in PATH (go install github.com/hahwul/dalfox/v2@latest).
 """
 
+from __future__ import annotations
+
 import json
 import os
 import subprocess
@@ -26,6 +28,12 @@ class sfp_tool_dalfox(SpiderFootModernPlugin):
         "toolDetails": {
             "binaryName": "dalfox",
             "installUrl": "https://github.com/hahwul/dalfox",
+        },
+        "dataSource": {
+            "website": "https://github.com/hahwul/dalfox",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": ["https://github.com/hahwul/dalfox"],
+            "description": "XSS vulnerability scanner and parameter analysis tool.",
         },
     }
 
@@ -56,11 +64,9 @@ class sfp_tool_dalfox(SpiderFootModernPlugin):
     results = None
 
     def setup(self, sfc, userOpts=None):
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
-        if userOpts:
-            for opt in list(self.opts.keys()):
-                self.opts[opt] = userOpts.get(opt, self.opts[opt])
 
     def watchedEvents(self):
         return ["URL_FORM", "LINKED_URL_INTERNAL"]

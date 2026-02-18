@@ -74,6 +74,7 @@ class sfp_snov(SpiderFootModernPlugin):
     def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
     # What events is this module interested in for input
     # For a list of all events, check sfdb.py.
@@ -84,7 +85,11 @@ class sfp_snov(SpiderFootModernPlugin):
     # What events this module produces
     def producedEvents(self) -> list:
         """Return the list of events this module produces."""
-        return ["EMAILADDR", "EMAILADDR_GENERIC"]
+        return [
+            "EMAILADDR",
+            "EMAILADDR_GENERIC",
+            "RAW_RIR_DATA",
+        ]
 
     # Get Authentication token from Snov.IO API
     def queryAccessToken(self) -> str | None:

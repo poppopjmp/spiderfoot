@@ -88,9 +88,20 @@ class sfp_builtwith(SpiderFootModernPlugin):
     # What events this module produces
     def producedEvents(self) -> list:
         """Return the list of events this module produces."""
-        return ["INTERNET_NAME", "EMAILADDR", "EMAILADDR_GENERIC", "RAW_RIR_DATA",
-                "WEBSERVER_TECHNOLOGY", "PHONE_NUMBER", "DOMAIN_NAME",
-                "CO_HOSTED_SITE", "IP_ADDRESS", "WEB_ANALYTICS_ID"]
+        return [
+            "INTERNET_NAME",
+            "EMAILADDR",
+            "EMAILADDR_GENERIC",
+            "RAW_RIR_DATA",
+            "WEBSERVER_TECHNOLOGY",
+            "PHONE_NUMBER",
+            "DOMAIN_NAME",
+            "CO_HOSTED_SITE",
+            "IP_ADDRESS",
+            "WEB_ANALYTICS_ID",
+            "AFFILIATE_DOMAIN_NAME",
+            "AFFILIATE_INTERNET_NAME",
+        ]
 
     def queryRelationships(self, t: str):
         """Query Relationships."""

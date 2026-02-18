@@ -56,6 +56,7 @@ class sfp_punkspider(SpiderFootModernPlugin):
     def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
 
         # Clear / reset any other class member variables here
@@ -111,6 +112,9 @@ class sfp_punkspider(SpiderFootModernPlugin):
         return None
 
     def handleEvent(self, event: SpiderFootEvent) -> None:
+        if self.errorState:
+            return
+
         """Handle an event received by this module."""
         eventName = event.eventType
         eventData = event.data
