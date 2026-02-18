@@ -5,11 +5,11 @@ dlint==0.16.0
 flake8==7.3.0
 flake8-annotations==3.1.1
 flake8-blind-except==0.2.1
-flake8-bugbear==24.12.12
+flake8-bugbear==25.11.29
 flake8-builtins==3.1.0
 flake8-quotes==3.4.0
 flake8-return==1.2.0
-flake8-sfs==1.0.0
+flake8-sfs==1.0.1
 flake8-simplify==0.22.0
 pytest==8.4.1
 pytest-cov==6.2.1
