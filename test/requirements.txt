@@ -3,7 +3,7 @@ flask
 darglint==1.8.1
 dlint==0.16.0
 flake8==7.3.0
-flake8-annotations==3.1.1
+flake8-annotations==3.2.0
 flake8-blind-except==0.2.1
 flake8-bugbear==25.11.29
 flake8-builtins==3.1.0
