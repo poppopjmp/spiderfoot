@@ -744,8 +744,8 @@ services:
   # ---------------------------------------------------------------------------
 
   agents:
-    # <<: *sf-build
-    image: ghcr.io/poppopjmp/spiderfoot-api:latest
+    <<: *sf-build
+    image: ghcr.io/poppopjmp/spiderfoot-base:latest
     container_name: sf-agents
     restart: unless-stopped
     networks:
@@ -827,8 +827,8 @@ services:
   # ---------------------------------------------------------------------------
 
   celery-worker:
-    # <<: *sf-build
-    image: ghcr.io/poppopjmp/spiderfoot-api:latest
+    <<: *sf-build
+    image: ghcr.io/poppopjmp/spiderfoot-base:latest
     container_name: sf-celery-worker
     restart: unless-stopped
     networks:
@@ -1011,8 +1011,8 @@ services:
   # ---------------------------------------------------------------------------
 
   celery-beat:
-    # <<: *sf-build
-    image: ghcr.io/poppopjmp/spiderfoot-api:latest
+    <<: *sf-build
+    image: ghcr.io/poppopjmp/spiderfoot-base:latest
     container_name: sf-celery-beat
     restart: unless-stopped
     networks:
@@ -1051,8 +1051,8 @@ services:
   # ---------------------------------------------------------------------------
 
   flower:
-    # <<: *sf-build
-    image: ghcr.io/poppopjmp/spiderfoot-api:latest
+    <<: *sf-build
+    image: ghcr.io/poppopjmp/spiderfoot-base:latest
     container_name: sf-flower
     restart: unless-stopped
     networks:
