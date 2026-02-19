@@ -18,9 +18,7 @@ from __future__ import annotations
 import json
 import re
 import time
-import urllib.error
 import urllib.parse
-import urllib.request
 
 from spiderfoot import SpiderFootEvent, SpiderFootHelpers
 from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
@@ -31,16 +29,21 @@ class sfp_flickr(SpiderFootModernPlugin):
     meta = {
         'name': "Flickr",
         'summary': "Search Flickr for domains, URLs and emails related to the specified domain.",
-        'flags': [],
+        'flags': ["apikey"],
         'useCases': ["Footprint", "Investigate", "Passive"],
         'categories': ["Social Media"],
         'dataSource': {
             'website': "https://www.flickr.com/",
-            'model': "FREE_NOAUTH_UNLIMITED",
+            'model': "FREE_AUTH_UNLIMITED",
             'references': [
                 "https://www.flickr.com/services/api/",
                 "https://www.flickr.com/services/developer/api/",
-                "https://code.flickr.net/"
+            ],
+            'apiKeyInstructions': [
+                "Visit https://www.flickr.com/services/apps/create/apply/",
+                "Sign in with a Yahoo/Flickr account",
+                "Apply for a non-commercial API key",
+                "The API key is shown on the confirmation page"
             ],
             'favIcon': "https://combo.staticflickr.com/pw/favicon.ico",
             'logo': "https://combo.staticflickr.com/pw/favicon.ico",
@@ -57,6 +60,7 @@ class sfp_flickr(SpiderFootModernPlugin):
 
     # Default options
     opts = {
+        'api_key': '',
         'pause': 1,
         'per_page': 100,
         'maxpages': 20,
@@ -65,6 +69,7 @@ class sfp_flickr(SpiderFootModernPlugin):
 
     # Option descriptions
     optdescs = {
+        'api_key': 'Flickr API key. Free to register at https://www.flickr.com/services/apps/create/apply/',
         'pause': "Number of seconds to pause between fetches.",
         'per_page': "Maximum number of results per page.",
         'maxpages': "Maximum number of pages of results to fetch.",
@@ -76,6 +81,7 @@ class sfp_flickr(SpiderFootModernPlugin):
     def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
     # What events is this module interested in for input
     def watchedEvents(self) -> list:
@@ -85,28 +91,17 @@ class sfp_flickr(SpiderFootModernPlugin):
     # What events this module produces
     def producedEvents(self) -> list:
         """Return the list of events this module produces."""
-        return ["EMAILADDR", "EMAILADDR_GENERIC", "INTERNET_NAME",
-                "DOMAIN_NAME", "LINKED_URL_INTERNAL"]
-
-    # Retrieve API key
-    def retrieveApiKey(self) -> str | None:
-        """RetrieveApiKey."""
-        res = self.fetch_url(
-            "https://www.flickr.com/", timeout=self.opts['_fetchtimeout'], useragent=self.opts['_useragent'])
-
-        if res['content'] is None:
-            return None
-
-        keys = re.findall(
-            r'YUI_config.flickr.api.site_key = "([a-zA-Z0-9]+)"', str(res['content']))
-
-        if not keys:
-            return None
-
-        return keys[0]
+        return [
+            "EMAILADDR",
+            "EMAILADDR_GENERIC",
+            "INTERNET_NAME",
+            "DOMAIN_NAME",
+            "LINKED_URL_INTERNAL",
+            "INTERNET_NAME_UNRESOLVED",
+        ]
 
     # Query the REST API
-    def query(self, qry: str, api_key: str, page: int = 1, per_page: int = 200) -> dict | None:
+    def query(self, qry: str, page: int = 1, per_page: int = 200) -> dict | None:
         """Query the data source."""
         params = {
             "sort": "relevance",
@@ -124,7 +119,7 @@ class sfp_flickr(SpiderFootModernPlugin):
             "per_page": str(per_page),
             "page": str(page),
             "text": qry.encode('raw_unicode_escape').decode("ascii", errors='replace'),
-            "api_key": api_key,
+            "api_key": self.opts['api_key'],
             "format": "json"
         }
 
@@ -160,14 +155,12 @@ class sfp_flickr(SpiderFootModernPlugin):
             self.debug(f"Ignoring {eventData}, from self.")
             return
 
-        # Retrieve API key
-        api_key = self.retrieveApiKey()
-
-        if not api_key:
-            self.error("Failed to obtain API key")
+        if not self.opts['api_key']:
+            self.error(
+                f"You enabled {self.__class__.__name__} but did not set an API key!"
+            )
+            self.errorState = True
             return
-
-        self.debug(f"Retrieved API key: {api_key}")
 
         # Query API for event data
         hosts = list()
@@ -181,7 +174,7 @@ class sfp_flickr(SpiderFootModernPlugin):
             if self.errorState:
                 return
 
-            data = self.query(eventData, api_key, page=page, per_page=per_page)
+            data = self.query(eventData, page=page, per_page=per_page)
 
             if data is None:
                 return

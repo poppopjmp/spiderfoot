@@ -95,6 +95,7 @@ class sfp_nmap(SpiderFootModernPlugin):
     def setup(self, sfc, userOpts=None):
         """Set up the module."""
         super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
         self._nmap_checked = False
         self._nmap_available = False

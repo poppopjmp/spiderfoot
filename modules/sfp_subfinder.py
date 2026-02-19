@@ -8,6 +8,8 @@ Requires: subfinder binary in PATH or configured via subfinder_path option.
 Install: go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
 """
 
+from __future__ import annotations
+
 import json
 import os
 import subprocess
@@ -29,6 +31,12 @@ class sfp_subfinder(SpiderFootModernPlugin):
         "toolDetails": {
             "binaryName": "subfinder",
             "installUrl": "https://github.com/projectdiscovery/subfinder",
+        },
+        "dataSource": {
+            "website": "https://github.com/projectdiscovery/subfinder",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": ["https://github.com/projectdiscovery/subfinder"],
+            "description": "Passive subdomain enumeration tool by ProjectDiscovery.",
         },
     }
 
@@ -61,11 +69,9 @@ class sfp_subfinder(SpiderFootModernPlugin):
     results = None
 
     def setup(self, sfc, userOpts=None):
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
-        if userOpts:
-            for opt in list(self.opts.keys()):
-                self.opts[opt] = userOpts.get(opt, self.opts[opt])
 
     def watchedEvents(self):
         return ["DOMAIN_NAME", "ROOT"]

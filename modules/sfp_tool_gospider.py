@@ -7,6 +7,8 @@ Requires: gospider binary in PATH or configured via gospider_path option.
 Install: go install -v github.com/jaeles-project/gospider@latest
 """
 
+from __future__ import annotations
+
 import os
 import re
 import subprocess
@@ -26,6 +28,12 @@ class sfp_tool_gospider(SpiderFootModernPlugin):
         "toolDetails": {
             "binaryName": "gospider",
             "installUrl": "https://github.com/jaeles-project/gospider",
+        },
+        "dataSource": {
+            "website": "https://github.com/jaeles-project/gospider",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": ["https://github.com/jaeles-project/gospider"],
+            "description": "Fast web spider for link and JavaScript discovery.",
         },
     }
 
@@ -58,11 +66,9 @@ class sfp_tool_gospider(SpiderFootModernPlugin):
     results = None
 
     def setup(self, sfc, userOpts=None):
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
-        if userOpts:
-            for opt in list(self.opts.keys()):
-                self.opts[opt] = userOpts.get(opt, self.opts[opt])
 
     def watchedEvents(self):
         return ["DOMAIN_NAME", "LINKED_URL_INTERNAL"]

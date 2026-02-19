@@ -3,7 +3,28 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.9.2] — 2026-02-19 — Module Cleanup, Bug Fixes & Frontend Polish
+
+### Fixed — Frontend Visualization Bugs
+- **Modules page**: Enabled/Disabled stat cards now compute counts client-side from per-module status map; previously relied on server aggregate fields that could lag after toggling a module
+- **GeoMap tab**: Fixed latitude projection using correct simplemaps SVG bounds (83.65°N – 56°S) instead of ±90° pole-to-pole; southern-hemisphere markers were shifted up to 141 px northward
+
+### Changed
+- Version bump to 5.9.2 across all files (VERSION, package.json, Layout.tsx, README badge, Homebrew formula, ARCHITECTURE.md, overview.md, sfp_aprsfi User-Agent, test fixtures)
+
 ## [5.9.1] — 2026-02-17 — Docker Compose Profile Consolidation
+
+### Removed — Defunct Data Sources
+- Deleted 8 modules for offline/shutdown services: `sfp_crobat_api` (sonar.omnisint.io shut down 2022), `sfp_crxcavator` (CRXcavator shut down 2023), `sfp_dnsgrep` (bufferover.run shut down), `sfp_fsecure_riddler` (riddler.io discontinued 2021), `sfp_phishstats` (phishstats.info offline), `sfp_psbdmp` (psbdmp.cc offline), `sfp_punkspider` (punkspider.org shut down), `sfp_robtex` (free API deprecated)
+- Deleted corresponding unit and integration tests (16 test files)
+
+### Fixed — Module API Migrations
+- **sfp_flickr**: Replaced broken `retrieveApiKey()` (scraped `YUI_config.flickr.api.site_key`) with user-provided API key; changed model from `FREE_NOAUTH_UNLIMITED` to `FREE_AUTH_UNLIMITED`
+- **sfp_keybase**: Added null-safety checks and maintenance-mode note (Zoom acquisition 2020); removed unused imports
+- **sfp_virustotal**: Full v2 → v3 API migration (endpoints, auth header `x-apikey`, relationships API, response parsing)
+- **sfp_greynoise**: Full v2 → v3 API migration (IP lookup, GNQL queries, `cve` → `cves` field, response normalization)
+- **sfp_nameapi**: Fixed HTTP → HTTPS for API endpoint
+- **sfp_subdomainradar**: Fixed 3 critical API structure mismatches (auth header, response parsing, endpoint paths)
 
 ### Changed — Docker Compose Profiles
 - Consolidated `docker-compose-microservices.yml` and `docker-compose-simple.yml` into a **single compose file** using Docker Compose profiles

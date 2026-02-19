@@ -61,6 +61,7 @@ class sfp_searchcode(SpiderFootModernPlugin):
     def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
     def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
@@ -71,11 +72,13 @@ class sfp_searchcode(SpiderFootModernPlugin):
     def producedEvents(self) -> list:
         """Return the list of events this module produces."""
         return [
-            'EMAILADDR',
-            'EMAILADDR_GENERIC',
-            'LINKED_URL_INTERNAL',
-            'PUBLIC_CODE_REPO',
-            'RAW_RIR_DATA',
+            "EMAILADDR",
+            "EMAILADDR_GENERIC",
+            "LINKED_URL_INTERNAL",
+            "PUBLIC_CODE_REPO",
+            "RAW_RIR_DATA",
+            "INTERNET_NAME",
+            "INTERNET_NAME_UNRESOLVED",
         ]
 
     def query(self, qry: str, page: int = 1, per_page: int = 100) -> dict | None:

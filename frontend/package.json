@@ -1,6 +1,6 @@
 {
   "name": "spiderfoot-ui",
-  "version": "5.9.0",
+  "version": "5.9.2",
   "private": true,
   "description": "SpiderFoot Modern Web UI — React SPA",
   "type": "module",

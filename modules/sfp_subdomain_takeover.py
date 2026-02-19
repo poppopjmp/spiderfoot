@@ -31,7 +31,13 @@ class sfp_subdomain_takeover(SpiderFootModernPlugin):
         'summary': "Check if affiliated subdomains are vulnerable to takeover.",
         'flags': [],
         'useCases': ["Footprint", "Investigate"],
-        'categories': ["Crawling and Scanning"]
+        'categories': ["Crawling and Scanning"],
+        "dataSource": {
+            "website": "https://github.com/EdOverflow/can-i-take-over-xyz",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": ["https://github.com/EdOverflow/can-i-take-over-xyz"],
+            "description": "Detect potential subdomain takeover vulnerabilities via dangling CNAME records.",
+        },
     }
 
     # Default options
@@ -102,6 +108,8 @@ class sfp_subdomain_takeover(SpiderFootModernPlugin):
 
         if eventName == "AFFILIATE_INTERNET_NAME":
             for data in self.fingerprints:
+                if self.checkForStop():
+                    return
                 service = data.get("service")
                 cnames = data.get("cname")
                 fingerprints = data.get("fingerprint")
@@ -136,6 +144,8 @@ class sfp_subdomain_takeover(SpiderFootModernPlugin):
 
         if eventName == "AFFILIATE_INTERNET_NAME_UNRESOLVED":
             for data in self.fingerprints:
+                if self.checkForStop():
+                    return
                 service = data.get("service")
                 cnames = data.get("cname")
                 nxdomain = data.get("nxdomain")

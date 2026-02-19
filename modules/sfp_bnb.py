@@ -50,7 +50,6 @@ class sfp_bnb(SpiderFootModernPlugin):
     def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
-        self.opts.update(userOpts)
         # Option validation
         if not self.opts.get("api_key"):
             self.error("BNB module requires a BscScan API key.")

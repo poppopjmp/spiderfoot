@@ -7,6 +7,8 @@ Requires: katana binary in PATH or configured via katana_path option.
 Install: go install -v github.com/projectdiscovery/katana/cmd/katana@latest
 """
 
+from __future__ import annotations
+
 import json
 import os
 import subprocess
@@ -27,6 +29,12 @@ class sfp_tool_katana(SpiderFootModernPlugin):
         "toolDetails": {
             "binaryName": "katana",
             "installUrl": "https://github.com/projectdiscovery/katana",
+        },
+        "dataSource": {
+            "website": "https://github.com/projectdiscovery/katana",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": ["https://github.com/projectdiscovery/katana"],
+            "description": "Next-generation web crawler with headless browser support by ProjectDiscovery.",
         },
     }
 
@@ -63,11 +71,9 @@ class sfp_tool_katana(SpiderFootModernPlugin):
     results = None
 
     def setup(self, sfc, userOpts=None):
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
-        if userOpts:
-            for opt in list(self.opts.keys()):
-                self.opts[opt] = userOpts.get(opt, self.opts[opt])
 
     def watchedEvents(self):
         return ["DOMAIN_NAME", "LINKED_URL_INTERNAL"]

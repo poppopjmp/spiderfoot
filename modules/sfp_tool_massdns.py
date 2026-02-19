@@ -7,6 +7,8 @@ Requires: massdns binary in PATH or configured via massdns_path option.
 Install: git clone https://github.com/blechschmidt/massdns && cd massdns && make
 """
 
+from __future__ import annotations
+
 import os
 import subprocess
 import tempfile
@@ -26,6 +28,12 @@ class sfp_tool_massdns(SpiderFootModernPlugin):
         "toolDetails": {
             "binaryName": "massdns",
             "installUrl": "https://github.com/blechschmidt/massdns",
+        },
+        "dataSource": {
+            "website": "https://github.com/blechschmidt/massdns",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": ["https://github.com/blechschmidt/massdns"],
+            "description": "High-performance DNS stub resolver for bulk lookups.",
         },
     }
 
@@ -49,12 +57,10 @@ class sfp_tool_massdns(SpiderFootModernPlugin):
     _batch = None
 
     def setup(self, sfc, userOpts=None):
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
         self._batch = []
-        if userOpts:
-            for opt in list(self.opts.keys()):
-                self.opts[opt] = userOpts.get(opt, self.opts[opt])
 
     def watchedEvents(self):
         return ["INTERNET_NAME_UNRESOLVED"]

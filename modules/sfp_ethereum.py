@@ -68,22 +68,31 @@ class sfp_ethereum(SpiderFootModernPlugin):
     def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
-        self.opts.update(userOpts)
+
         self.debug(f"[setup] Options: {self.opts}")
         # Option validation
         if not self.opts.get("api_key"):
             self.error("[setup] API key is required.")
-            raise ValueError("API key is required for Ethereum module.")
+            self.errorState = True
+
+            return
         if not self.opts.get("addresses") or not str(self.opts.get("addresses")).strip():
             self.error("[setup] addresses is required.")
-            raise ValueError("addresses is required for Ethereum module.")
+            self.errorState = True
+
+            return
         if not isinstance(self.opts.get("max_transactions"), int) or self.opts["max_transactions"] <= 0:
             self.error("[setup] max_transactions must be a positive integer.")
-            raise ValueError("max_transactions must be a positive integer.")
+            self.errorState = True
+
+            return
         if self.opts.get("output_format") not in ["summary", "full"]:
             self.error("[setup] output_format must be 'summary' or 'full'.")
-            raise ValueError("output_format must be 'summary' or 'full'.")
+            self.errorState = True
+
+            return
 
     # What events is this module interested in for input
     def watchedEvents(self) -> list:
@@ -99,6 +108,9 @@ class sfp_ethereum(SpiderFootModernPlugin):
 
     # Handle events sent to this module
     def handleEvent(self, event: SpiderFootEvent) -> None:
+        if self.errorState:
+            return
+
         """Handle an event received by this module."""
         self.debug(f"[handleEvent] Received event: {event.eventType}")
         # Stub event filtering logic

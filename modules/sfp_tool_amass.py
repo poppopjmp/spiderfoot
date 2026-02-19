@@ -7,6 +7,8 @@ Requires: amass binary in PATH or configured via amass_path option.
 Install: go install -v github.com/owasp-amass/amass/v4/...@master
 """
 
+from __future__ import annotations
+
 import json
 import os
 import subprocess
@@ -27,6 +29,12 @@ class sfp_tool_amass(SpiderFootModernPlugin):
         "toolDetails": {
             "binaryName": "amass",
             "installUrl": "https://github.com/owasp-amass/amass",
+        },
+        "dataSource": {
+            "website": "https://github.com/owasp-amass/amass",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": ["https://github.com/owasp-amass/amass"],
+            "description": "OWASP attack surface mapping and subdomain enumeration.",
         },
     }
 
@@ -51,11 +59,9 @@ class sfp_tool_amass(SpiderFootModernPlugin):
     results = None
 
     def setup(self, sfc, userOpts=None):
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
-        if userOpts:
-            for opt in list(self.opts.keys()):
-                self.opts[opt] = userOpts.get(opt, self.opts[opt])
 
     def watchedEvents(self):
         return ["DOMAIN_NAME", "ROOT"]

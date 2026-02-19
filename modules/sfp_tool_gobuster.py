@@ -42,6 +42,12 @@ class sfp_tool_gobuster(SpiderFootModernPlugin):
             "website": "https://github.com/OJ/gobuster",
             "repository": "https://github.com/OJ/gobuster",
         },
+        "dataSource": {
+            "website": "https://github.com/OJ/gobuster",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": ["https://github.com/OJ/gobuster"],
+            "description": "Directory/file brute-forcing and DNS subdomain enumeration tool.",
+        },
     }
 
     # Default options
@@ -91,11 +97,12 @@ class sfp_tool_gobuster(SpiderFootModernPlugin):
     def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
     # What events is this module interested in for input
     def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
-        return ["URL"]
+        return ["LINKED_URL_INTERNAL"]
 
     # What events this module produces
     def producedEvents(self) -> list:

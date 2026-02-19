@@ -6,6 +6,8 @@ and paths embedded in JavaScript files.
 Requires: linkfinder in PATH (pip install linkfinder).
 """
 
+from __future__ import annotations
+
 import os
 import re
 import subprocess
@@ -26,6 +28,12 @@ class sfp_tool_linkfinder(SpiderFootModernPlugin):
             "binaryName": "linkfinder",
             "installUrl": "https://github.com/GerbenJavado/LinkFinder",
         },
+        "dataSource": {
+            "website": "https://github.com/GerbenJav);avado/LinkFinder",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": ["https://github.com/GerbenJavado/LinkFinder"],
+            "description": "JavaScript endpoint and API path extractor.",
+        },
     }
 
     opts = {
@@ -43,11 +51,9 @@ class sfp_tool_linkfinder(SpiderFootModernPlugin):
     results = None
 
     def setup(self, sfc, userOpts=None):
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
-        if userOpts:
-            for opt in list(self.opts.keys()):
-                self.opts[opt] = userOpts.get(opt, self.opts[opt])
 
     def watchedEvents(self):
         return ["URL_JAVASCRIPT"]

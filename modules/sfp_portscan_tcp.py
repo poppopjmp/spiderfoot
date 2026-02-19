@@ -72,6 +72,7 @@ class sfp_portscan_tcp(SpiderFootModernPlugin):
     def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
         self.__dataSource__ = "Target Network"
         self.lock = threading.Lock()
@@ -166,7 +167,7 @@ class sfp_portscan_tcp(SpiderFootModernPlugin):
         return self.portResults
 
     # Generate TCP_PORT_OPEN_BANNER event
-    def sendEvent(self, resArray: list, srcEvent: SpiderFootEvent) -> None:
+    def _emitEvent(self, resArray: list, srcEvent: SpiderFootEvent) -> None:
         """SendEvent."""
         for cp in resArray:
             if not resArray[cp]:
@@ -246,13 +247,13 @@ class sfp_portscan_tcp(SpiderFootModernPlugin):
                 if i < self.opts['maxthreads']:
                     portArr.append(port)
                 else:
-                    self.sendEvent(self.tryPortWrapper(ipAddr, portArr), event)
+                    self._emitEvent(self.tryPortWrapper(ipAddr, portArr), event)
                     i = 0
                     portArr = [port]
 
                 i += 1
 
             # Scan whatever is remaining
-            self.sendEvent(self.tryPortWrapper(ipAddr, portArr), event)
+            self._emitEvent(self.tryPortWrapper(ipAddr, portArr), event)
 
 # End of sfp_portscan_tcp class

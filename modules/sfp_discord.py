@@ -43,17 +43,23 @@ class sfp_discord(SpiderFootModernPlugin):
     def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
-        self.opts.update(userOpts)
+        self.errorState = False
         # Option validation
         if not self.opts.get("bot_token"):
             self.error("Discord bot token is required.")
-            raise ValueError("Discord bot token is required.")
+            self.errorState = True
+
+            return
         if not self.opts.get("channel_ids"):
             self.error("At least one Discord channel ID is required.")
-            raise ValueError("At least one Discord channel ID is required.")
+            self.errorState = True
+
+            return
         if not isinstance(self.opts.get("max_messages"), int) or self.opts["max_messages"] <= 0:
             self.error("max_messages must be a positive integer.")
-            raise ValueError("max_messages must be a positive integer.")
+            self.errorState = True
+
+            return
 
     def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
@@ -64,6 +70,9 @@ class sfp_discord(SpiderFootModernPlugin):
         return ["DISCORD_MESSAGE"]
 
     def handleEvent(self, event: SpiderFootEvent) -> None:
+        if self.errorState:
+            return
+
         """
         Handle event: fetch Discord messages for each channel and emit DISCORD_MESSAGE events.
         """

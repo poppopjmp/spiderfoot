@@ -54,7 +54,7 @@ class sfp_dideo(SpiderFootModernPlugin):
         if userOpts is None:
             userOpts = {}
         super().setup(sfc, userOpts or {})
-        self.opts.update(userOpts)
+        self.errorState = False
 
     def watchedEvents(self) -> list:
         """Return the list of events this module watches."""

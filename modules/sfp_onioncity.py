@@ -161,6 +161,8 @@ class sfp_onioncity(SpiderFootModernPlugin):
         ]
 
         for link in darknet_links:
+            if self.checkForStop():
+                return
             self.debug("Found a darknet mention: " + link)
             torlink = link.replace(".onion.link", ".onion")
             if self.opts['fetchlinks']:

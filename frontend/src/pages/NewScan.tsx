@@ -23,7 +23,7 @@ const USE_CASES = [
 /* Curated set of fast, reliable passive modules for quick scans */
 const QUICK_SCAN_MODULES = [
   'sfp_dnsresolve', 'sfp_dnsbrute', 'sfp_dnscommonsrv', 'sfp_dnstxt',
-  'sfp_hackertarget', 'sfp_robtex', 'sfp_ipinfo', 'sfp_whois',
+  'sfp_hackertarget', 'sfp_ipinfo', 'sfp_whois',
   'sfp_sslcert', 'sfp_webframework', 'sfp_httpheaders', 'sfp_spider',
   'sfp_crossref', 'sfp_pageinfo', 'sfp_similar', 'sfp_names',
   'sfp_email', 'sfp_geoinfo', 'sfp_portscan_tcp', 'sfp_socialprofiles',

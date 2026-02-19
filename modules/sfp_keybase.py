@@ -18,9 +18,7 @@ from __future__ import annotations
 
 import json
 import re
-import urllib.error
 import urllib.parse
-import urllib.request
 
 from spiderfoot import SpiderFootEvent
 from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
@@ -45,7 +43,9 @@ class sfp_keybase(SpiderFootModernPlugin):
             'favIcon': "https://keybase.io/images/icons/icon-keybase-logo-48.png",
             'logo': "https://keybase.io/images/icons/icon-keybase-logo-48.png",
             'description': "Keybase is a key directory that maps social media identities to encryption keys "
-            "in a publicly auditable manner.",
+            "in a publicly auditable manner. Note: Keybase has been in maintenance mode "
+            "since the Zoom acquisition in 2020. The API still functions for existing user "
+            "lookups but no new features are being developed.",
         }
     }
 
@@ -61,6 +61,7 @@ class sfp_keybase(SpiderFootModernPlugin):
     def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
     def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
@@ -106,10 +107,14 @@ class sfp_keybase(SpiderFootModernPlugin):
             useragent=self.opts['_useragent']
         )
 
+        if res is None or res.get('content') is None:
+            self.debug("No response from Keybase (service may be unavailable)")
+            return None
+
         # In this case, it will always be 200 if keybase is queried
         # The actual response codes are stored in status tag of the response
-        if res['code'] != '200':
-            self.error(f"Unexpected reply from Keybase: {res['code']}")
+        if str(res.get('code', '')) != '200':
+            self.error(f"Unexpected reply from Keybase: {res.get('code')}")
             return None
 
         try:

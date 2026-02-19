@@ -6,6 +6,8 @@ and certificate details.
 Requires: sslscan in PATH (apt install sslscan).
 """
 
+from __future__ import annotations
+
 import os
 import re
 import subprocess
@@ -25,6 +27,12 @@ class sfp_tool_sslscan(SpiderFootModernPlugin):
         "toolDetails": {
             "binaryName": "sslscan",
             "installUrl": "https://github.com/rbsec/sslscan",
+        },
+        "dataSource": {
+            "website": "https://github.com/rbsec/sslscan",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": ["https://github.com/rbsec/sslscan"],
+            "description": "SSL/TLS cipher suite enumeration tool.",
         },
     }
 
@@ -49,11 +57,9 @@ class sfp_tool_sslscan(SpiderFootModernPlugin):
     results = None
 
     def setup(self, sfc, userOpts=None):
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
-        if userOpts:
-            for opt in list(self.opts.keys()):
-                self.opts[opt] = userOpts.get(opt, self.opts[opt])
 
     def watchedEvents(self):
         return ["INTERNET_NAME", "IP_ADDRESS"]

@@ -96,7 +96,7 @@ class sfp_tiktok_osint(SpiderFootModernPlugin):
     def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
         return [
-            "SOCIAL_MEDIA_PROFILE_URL",
+            "SOCIAL_MEDIA",
             "USERNAME",
             "HUMAN_NAME",
             "EMAILADDR",

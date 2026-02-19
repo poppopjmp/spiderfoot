@@ -98,6 +98,7 @@ class sfp_nuclei(SpiderFootModernPlugin):
     def setup(self, sfc, userOpts=None):
         """Set up the module."""
         super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
         self._nuclei_checked = False
         self._nuclei_available = False

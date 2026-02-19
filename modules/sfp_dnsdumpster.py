@@ -46,9 +46,9 @@ class sfp_dnsdumpster(SpiderFootModernPlugin):
     def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.debug("Setting up sfp_dnsdumpster")
         self.results = self.tempStorage()
-        self.opts.update(userOpts)
 
     def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
@@ -126,7 +126,7 @@ class sfp_dnsdumpster(SpiderFootModernPlugin):
 
         return list(subdomains)
 
-    def sendEvent(self, source: str, host: str) -> None:
+    def _emitEvent(self, source: str, host: str) -> None:
         """SendEvent."""
         if self.resolve_host(host) or self.resolve_host6(host):
             e = SpiderFootEvent("INTERNET_NAME", host, self.__name__, source)
@@ -136,6 +136,9 @@ class sfp_dnsdumpster(SpiderFootModernPlugin):
         self.notifyListeners(e)
 
     def handleEvent(self, event: SpiderFootEvent) -> None:
+        if self.errorState:
+            return
+
         """Handle an event received by this module."""
         query = str(event.data).lower()
 
@@ -155,6 +158,6 @@ class sfp_dnsdumpster(SpiderFootModernPlugin):
         for hostname in self.query(query):
             if target.matches(hostname, includeParents=True) and not \
                     target.matches(hostname, includeChildren=False):
-                self.sendEvent(event, hostname)
+                self._emitEvent(event, hostname)
             else:
                 self.debug(f"Invalid subdomain: {hostname}")

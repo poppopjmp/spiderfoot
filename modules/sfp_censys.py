@@ -17,9 +17,6 @@ from __future__ import annotations
 import base64
 import json
 import time
-import urllib.error
-import urllib.parse
-import urllib.request
 from datetime import datetime
 
 from netaddr import IPNetwork
@@ -87,6 +84,7 @@ class sfp_censys(SpiderFootModernPlugin):
     def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
     def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
@@ -110,7 +108,10 @@ class sfp_censys(SpiderFootModernPlugin):
             "NETBLOCK_MEMBER",
             "NETBLOCKV6_MEMBER",
             "GEOINFO",
-            "RAW_RIR_DATA"
+            "RAW_RIR_DATA",
+            "INTERNET_NAME",
+            "IPV6_ADDRESS",
+            "IP_ADDRESS",
         ]
 
     def queryHosts(self, qry: str) -> dict:
@@ -135,8 +136,8 @@ class sfp_censys(SpiderFootModernPlugin):
 
         return self.parseApiResponse(res)
 
-    def queryHostsSearch(self, qry: str) -> dict:
-        """Query HostsSearch."""
+    def queryHostNames(self, qry: str) -> list | None:
+        """Fetch DNS hostnames associated with an IP via /hosts/{ip}/names."""
         secret = self.opts['censys_api_key_uid'] + \
             ':' + self.opts['censys_api_key_secret']
         auth = base64.b64encode(secret.encode('utf-8')).decode('utf-8')
@@ -145,12 +146,8 @@ class sfp_censys(SpiderFootModernPlugin):
             'Authorization': f"Basic {auth}"
         }
 
-        params = urllib.parse.urlencode({
-            'q': qry,
-        })
-
         res = self.fetch_url(
-            f"https://search.censys.io/api/v2/hosts/search/?{params}",
+            f"https://search.censys.io/api/v2/hosts/{qry}/names",
             timeout=self.opts['_fetchtimeout'],
             useragent="SpiderFoot",
             headers=headers
@@ -159,7 +156,11 @@ class sfp_censys(SpiderFootModernPlugin):
         # API rate limit: 0.4 actions/second (120.0 per 5 minute interval)
         time.sleep(self.opts['delay'])
 
-        return self.parseApiResponse(res)
+        data = self.parseApiResponse(res)
+        if not data:
+            return None
+
+        return data.get("result", {}).get("names", [])
 
     def parseApiResponse(self, res: dict) -> dict | None:
         """Parse ApiResponse."""
@@ -306,17 +307,24 @@ class sfp_censys(SpiderFootModernPlugin):
             try:
                 location = rec.get('location')
                 if location:
-                    geoinfo = ', '.join(
-                        [
-                            _f for _f in [
-                                location.get('city'),
-                                location.get('province'),
-                                location.get('postal_code'),
-                                location.get('country'),
-                                location.get('continent'),
-                            ] if _f
-                        ]
-                    )
+                    parts = [
+                        _f for _f in [
+                            location.get('city'),
+                            location.get('province'),
+                            location.get('postal_code'),
+                            location.get('country'),
+                            location.get('continent'),
+                        ] if _f
+                    ]
+
+                    coordinates = location.get('coordinates')
+                    if coordinates:
+                        lat = coordinates.get('latitude')
+                        lon = coordinates.get('longitude')
+                        if lat is not None and lon is not None:
+                            parts.append(f"({lat}, {lon})")
+
+                    geoinfo = ', '.join(parts)
                     if geoinfo:
                         e = SpiderFootEvent(
                             "GEOINFO", geoinfo, self.__name__, pevent)
@@ -347,6 +355,10 @@ class sfp_censys(SpiderFootModernPlugin):
                                     "TCP_PORT_OPEN", f"{addr}:{port}", self.__name__, pevent)
                                 self.notifyListeners(evt)
                                 if banner:
+                                    try:
+                                        banner = base64.b64decode(banner).decode('utf-8', errors='replace')
+                                    except Exception:
+                                        pass
                                     tcp_banners.append(banner)
 
                         software = service.get('software', list())
@@ -419,7 +431,7 @@ class sfp_censys(SpiderFootModernPlugin):
             try:
                 operating_system = rec.get('operating_system')
                 if operating_system:
-                    os = ' '.join(
+                    os_str = ' '.join(
                         filter(
                             None,
                             [
@@ -431,12 +443,29 @@ class sfp_censys(SpiderFootModernPlugin):
                         )
                     )
 
-                    if os:
+                    if os_str:
                         e = SpiderFootEvent(
-                            "OPERATING_SYSTEM", os, self.__name__, pevent)
+                            "OPERATING_SYSTEM", os_str, self.__name__, pevent)
                         self.notifyListeners(e)
             except Exception as e:
                 self.error(
                     f"Error encountered processing operating_system record for {addr}: {e}")
+
+            # Fetch DNS hostnames associated with this IP
+            if self.checkForStop():
+                return
+
+            try:
+                names = self.queryHostNames(addr)
+                if names:
+                    for name in names:
+                        if name and name not in self.results:
+                            self.results[name] = True
+                            e = SpiderFootEvent(
+                                "INTERNET_NAME", name, self.__name__, pevent)
+                            self.notifyListeners(e)
+            except Exception as e:
+                self.error(
+                    f"Error encountered processing host names for {addr}: {e}")
 
 # End of sfp_censys class

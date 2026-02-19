@@ -67,6 +67,7 @@ class sfp_seon(SpiderFootModernPlugin):
     def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
     # What events is this module interested in for input
     def watchedEvents(self) -> list:
@@ -102,6 +103,8 @@ class sfp_seon(SpiderFootModernPlugin):
             "TOR_EXIT_NODE",
             "VPN_HOST",
             "PROXY_HOST",
+            "EMAILADDR_DISPOSABLE",
+            "PHYSICAL_COORDINATES",
         ]
 
     def query(self, qry: str, eventName: str) -> dict | None:

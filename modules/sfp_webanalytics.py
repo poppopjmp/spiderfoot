@@ -31,7 +31,13 @@ class sfp_webanalytics(SpiderFootModernPlugin):
         'summary': "Identify web analytics IDs in scraped webpages and DNS TXT records.",
         'flags': [],
         'useCases': ["Footprint", "Investigate", "Passive"],
-        'categories': ["Content Analysis"]
+        'categories': ["Content Analysis"],
+        "dataSource": {
+            "website": None,
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": [],
+            "description": "Extract web analytics and tracking IDs from web content.",
+        },
     }
 
     opts = {}

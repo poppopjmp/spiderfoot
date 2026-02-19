@@ -238,6 +238,8 @@ class sfp_gleif(SpiderFootModernPlugin):
             self.info(f"Found {len(leis)} LEIs matching {eventData}")
 
         for lei in set(leis):
+            if self.checkForStop():
+                return
             if lei in self.results:
                 continue
 

@@ -268,7 +268,7 @@ class sfp_stackoverflow(SpiderFootModernPlugin):
 
         for ip in set(allIP4s):
             ip = str(ip)
-            e = SpiderFootEvent('AFFILIATE_IP_ADDRESS',
+            e = SpiderFootEvent('AFFILIATE_IPADDR',
                                 ip, self.__name__, event)
             self.notifyListeners(e)
 

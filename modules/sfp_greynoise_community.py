@@ -75,6 +75,7 @@ class sfp_greynoise_community(SpiderFootModernPlugin):
     def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
 
         # Clear / reset any other class member variables here

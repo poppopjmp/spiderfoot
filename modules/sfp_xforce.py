@@ -100,6 +100,7 @@ class sfp_xforce(SpiderFootModernPlugin):
     def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
         self.cohostcount = 0
     def watchedEvents(self) -> list:

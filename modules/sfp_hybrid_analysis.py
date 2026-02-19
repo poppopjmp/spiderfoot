@@ -80,7 +80,13 @@ class sfp_hybrid_analysis(SpiderFootModernPlugin):
 
     def producedEvents(self) -> list:
         """Return the list of events this module produces."""
-        return ["RAW_RIR_DATA", "INTERNET_NAME", "DOMAIN_NAME", "LINKED_URL_INTERNAL"]
+        return [
+            "RAW_RIR_DATA",
+            "INTERNET_NAME",
+            "DOMAIN_NAME",
+            "LINKED_URL_INTERNAL",
+            "INTERNET_NAME_UNRESOLVED",
+        ]
 
     def queryDomain(self, qry: str) -> dict:
         """Query a domain.
@@ -266,6 +272,8 @@ class sfp_hybrid_analysis(SpiderFootModernPlugin):
         domains = []
 
         for file_hash in hashes:
+            if self.checkForStop():
+                break
             results = self.queryHash(file_hash)
 
             if not results:

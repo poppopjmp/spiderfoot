@@ -132,10 +132,10 @@ class sfp_tldsearch(SpiderFootModernPlugin):
             if self.getTarget().matches(res, includeParents=True, includeChildren=True):
                 continue
             if self.tldResults[res] and res not in self.results:
-                self.sendEvent(sourceEvent, res)
+                self._emitEvent(sourceEvent, res)
 
     # Store the result internally and notify listening modules
-    def sendEvent(self, source: str, result: str) -> None:
+    def _emitEvent(self, source: str, result: str) -> None:
         """SendEvent."""
         self.info("Found a TLD with the target's name: " + result)
         self.results[result] = True

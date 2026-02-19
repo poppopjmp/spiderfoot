@@ -63,6 +63,7 @@ class sfp_sociallinks(SpiderFootModernPlugin):
     def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
     # What events is this module interested in for input
     def watchedEvents(self) -> list:
@@ -86,7 +87,8 @@ class sfp_sociallinks(SpiderFootModernPlugin):
             "COMPANY_NAME",
             "PHONE_NUMBER",
             "ACCOUNT_EXTERNAL_OWNED",
-            "RAW_RIR_DATA"
+            "RAW_RIR_DATA",
+            "USERNAME",
         ]
 
     def query(self, queryString: str) -> dict | None:

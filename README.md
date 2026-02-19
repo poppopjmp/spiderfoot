@@ -4,7 +4,7 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/poppopjmp/spiderfoot/master/LICENSE)
 [![Python](https://img.shields.io/badge/python-3.9+-blue)](https://www.python.org)
-[![Version](https://img.shields.io/badge/version-5.9.0-green)](VERSION)
+[![Version](https://img.shields.io/badge/version-5.9.2-green)](VERSION)
 [![Docker](https://img.shields.io/badge/docker-compose-2496ED?logo=docker)](docker-compose-microservices.yml)
 [![GraphQL](https://img.shields.io/badge/GraphQL-Strawberry-E10098?logo=graphql)](spiderfoot/api/graphql/)
 [![CI status](https://github.com/poppopjmp/spiderfoot/workflows/Tests/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"Tests")
@@ -13,7 +13,7 @@
 
 # SpiderFoot — OSINT Automation Platform
 
-SpiderFoot is an open-source intelligence (OSINT) automation platform. It integrates with **280+ data sources** to gather intelligence on IP addresses, domain names, hostnames, network subnets, ASNs, email addresses, phone numbers, usernames, Bitcoin addresses, and more. Written in **Python 3** and **MIT-licensed**.
+SpiderFoot is an open-source intelligence (OSINT) automation platform. It integrates with **300+ data sources** to gather intelligence on IP addresses, domain names, hostnames, network subnets, ASNs, email addresses, phone numbers, usernames, Bitcoin addresses, and more. Written in **Python 3** and **MIT-licensed**.
 
 ---
 

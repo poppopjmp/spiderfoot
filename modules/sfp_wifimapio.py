@@ -41,18 +41,23 @@ class sfp_wifimapio(SpiderFootModernPlugin):
     def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
-        self.opts.update(userOpts)
         self.debug(f"[setup] Options: {self.opts}")
         # Option validation
         if not self.opts.get("search_term") or not str(self.opts.get("search_term")).strip():
             self.error("[setup] search_term is required.")
-            raise ValueError("search_term is required.")
+            self.errorState = True
+
+            return
         if not isinstance(self.opts.get("max_results"), int) or self.opts["max_results"] <= 0:
             self.error("[setup] max_results must be a positive integer.")
-            raise ValueError("max_results must be a positive integer.")
+            self.errorState = True
+
+            return
         if self.opts.get("output_format") not in ["summary", "full"]:
             self.error("[setup] output_format must be 'summary' or 'full'.")
-            raise ValueError("output_format must be 'summary' or 'full'.")
+            self.errorState = True
+
+            return
 
     def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
@@ -63,6 +68,9 @@ class sfp_wifimapio(SpiderFootModernPlugin):
         return ["WIFIMAPIO_HOTSPOT"]
 
     def handleEvent(self, event: SpiderFootEvent) -> None:
+        if self.errorState:
+            return
+
         """Handle an event received by this module."""
         self.debug(f"[handleEvent] Received event: {event.eventType}")
         # Stub event filtering logic

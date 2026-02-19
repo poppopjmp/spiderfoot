@@ -89,7 +89,11 @@ class sfp_dnscommonsrv(SpiderFootModernPlugin):
 
     def producedEvents(self) -> list:
         """Return the list of events this module produces."""
-        return ["INTERNET_NAME", "AFFILIATE_INTERNET_NAME"]
+        return [
+            "INTERNET_NAME",
+            "AFFILIATE_INTERNET_NAME",
+            "DNS_SRV",
+        ]
 
     def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""

@@ -161,6 +161,9 @@ class sfp_criminalip(SpiderFootModernPlugin):
         return self.parseApiResponse(res)
 
     def handleEvent(self, event: SpiderFootEvent) -> None:
+        if self.errorState:
+            return
+
         """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module

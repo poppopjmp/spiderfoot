@@ -66,6 +66,10 @@ class sfp_creditcard(SpiderFootModernPlugin):
         creditCards = SpiderFootHelpers.extractCreditCardsFromText(eventData)
 
         for creditCard in set(creditCards):
+            if creditCard in self.results:
+                continue
+            self.results[creditCard] = True
+
             self.info(f"Found credit card number: {creditCard}")
             evt = SpiderFootEvent("CREDIT_CARD_NUMBER",
                                   creditCard, getattr(self, '__name__', self.__class__.__name__), event)

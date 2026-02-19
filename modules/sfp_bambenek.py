@@ -70,8 +70,8 @@ class sfp_bambenek(SpiderFootModernPlugin):
             userOpts (dict): User-supplied options for the module.
         """
         super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
-        self.opts.update(userOpts)
 
         # Initialize data cache
         self.feedCache = {

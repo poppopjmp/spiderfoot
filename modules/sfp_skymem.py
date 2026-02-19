@@ -120,6 +120,8 @@ class sfp_skymem(SpiderFootModernPlugin):
         domain_id = domain_ids[0]
 
         for page in range(1, 21):
+            if self.checkForStop():
+                return
             res = self.fetch_url(
                 f"http://www.skymem.info/domain/{domain_id}?p={page}",
                 timeout=self.opts['_fetchtimeout'],

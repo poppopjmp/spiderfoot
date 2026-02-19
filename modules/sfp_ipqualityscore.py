@@ -67,11 +67,9 @@ class sfp_ipqualityscore(SpiderFootModernPlugin):
 
     def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
-        if userOpts is None:
-            userOpts = {}
         super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
-        self.opts.update(userOpts)
 
     def watchedEvents(self) -> list:
         """Return the list of events this module watches."""

@@ -16,9 +16,6 @@ from __future__ import annotations
 
 import json
 import time
-import urllib.error
-import urllib.parse
-import urllib.request
 
 from netaddr import IPNetwork
 
@@ -40,7 +37,7 @@ class sfp_virustotal(SpiderFootModernPlugin):
             'website': "https://www.virustotal.com/",
             'model': "FREE_AUTH_LIMITED",
             'references': [
-                "https://developers.virustotal.com/reference"
+                "https://docs.virustotal.com/reference/overview"
             ],
             'apiKeyInstructions': [
                 "Visit https://www.virustotal.com/",
@@ -92,6 +89,7 @@ class sfp_virustotal(SpiderFootModernPlugin):
     def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
     def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
@@ -117,32 +115,46 @@ class sfp_virustotal(SpiderFootModernPlugin):
             "INTERNET_NAME",
             "AFFILIATE_INTERNET_NAME",
             "INTERNET_NAME_UNRESOLVED",
-            "DOMAIN_NAME"
+            "DOMAIN_NAME",
+            "AFFILIATE_DOMAIN_NAME",
         ]
 
-    def queryIp(self, qry: str) -> dict | None:
-        """Query Ip."""
-        params = urllib.parse.urlencode({
-            'ip': qry,
-            'apikey': self.opts['api_key'],
-        })
+    def _vtHeaders(self) -> dict:
+        """Return authentication headers for VirusTotal API v3."""
+        return {
+            'x-apikey': self.opts['api_key'],
+            'accept': 'application/json'
+        }
 
+    def queryIp(self, qry: str) -> dict | None:
+        """Query IP address via VirusTotal API v3."""
         res = self.fetch_url(
-            f"https://www.virustotal.com/vtapi/v2/ip-address/report?{params}",
+            f"https://www.virustotal.com/api/v3/ip_addresses/{qry}",
             timeout=self.opts['_fetchtimeout'],
-            useragent="SpiderFoot"
+            useragent="SpiderFoot",
+            headers=self._vtHeaders()
         )
 
         # Public API is limited to 4 queries per minute
         if self.opts['publicapi']:
             time.sleep(15)
 
-        if res['content'] is None:
+        if res is None or res['content'] is None:
+            self.info(f"No VirusTotal info found for {qry}")
+            return None
+
+        if str(res.get('code', '')) in ("204", "429"):
+            self.error("Your request to VirusTotal was throttled.")
+            self.errorState = True
+            return None
+
+        if str(res.get('code', '')) == "404":
             self.info(f"No VirusTotal info found for {qry}")
             return None
 
         try:
-            return json.loads(res['content'])
+            data = json.loads(res['content'])
+            return data.get('data', {})
         except Exception as e:
             self.error(f"Error processing JSON response from VirusTotal: {e}")
             self.errorState = True
@@ -150,19 +162,15 @@ class sfp_virustotal(SpiderFootModernPlugin):
         return None
 
     def queryDomain(self, qry: str) -> dict | None:
-        """Query Domain."""
-        params = urllib.parse.urlencode({
-            'domain': qry,
-            'apikey': self.opts['api_key'],
-        })
-
+        """Query Domain via VirusTotal API v3."""
         res = self.fetch_url(
-            f"https://www.virustotal.com/vtapi/v2/domain/report?{params}",
+            f"https://www.virustotal.com/api/v3/domains/{qry}",
             timeout=self.opts['_fetchtimeout'],
-            useragent="SpiderFoot"
+            useragent="SpiderFoot",
+            headers=self._vtHeaders()
         )
 
-        if res['code'] == "204":
+        if res is None or str(res.get('code', '')) in ("204", "429"):
             self.error("Your request to VirusTotal was throttled.")
             self.errorState = True
             return None
@@ -171,17 +179,49 @@ class sfp_virustotal(SpiderFootModernPlugin):
         if self.opts['publicapi']:
             time.sleep(15)
 
+        if str(res.get('code', '')) == "404":
+            self.info(f"No VirusTotal info found for {qry}")
+            return None
+
         if res['content'] is None:
             self.info(f"No VirusTotal info found for {qry}")
             return None
 
         try:
-            return json.loads(res['content'])
+            data = json.loads(res['content'])
+            return data.get('data', {})
         except Exception as e:
             self.error(f"Error processing JSON response from VirusTotal: {e}")
             self.errorState = True
 
         return None
+
+    def queryRelationship(self, domain: str, relationship: str) -> list:
+        """Query domain relationship (siblings/subdomains) via v3 API."""
+        domains = []
+        res = self.fetch_url(
+            f"https://www.virustotal.com/api/v3/domains/{domain}/{relationship}?limit=40",
+            timeout=self.opts['_fetchtimeout'],
+            useragent="SpiderFoot",
+            headers=self._vtHeaders()
+        )
+
+        if self.opts['publicapi']:
+            time.sleep(15)
+
+        if res is None or res['content'] is None:
+            return domains
+
+        try:
+            data = json.loads(res['content'])
+            for item in data.get('data', []):
+                domain_id = item.get('id')
+                if domain_id:
+                    domains.append(domain_id)
+        except Exception as e:
+            self.error(f"Error processing relationship response: {e}")
+
+        return domains
 
     def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
@@ -255,8 +295,14 @@ class sfp_virustotal(SpiderFootModernPlugin):
             if info is None:
                 continue
 
-            if len(info.get('detected_urls', [])) > 0:
-                self.info(f"Found VirusTotal URL data for {addr}")
+            # v3: Check last_analysis_stats for malicious/suspicious detections
+            attrs = info.get('attributes', {})
+            stats = attrs.get('last_analysis_stats', {})
+            malicious_count = stats.get('malicious', 0)
+            suspicious_count = stats.get('suspicious', 0)
+
+            if malicious_count > 0 or suspicious_count > 0:
+                self.info(f"Found VirusTotal detections for {addr}")
 
                 if eventName in ["IP_ADDRESS"] or eventName.startswith("NETBLOCK_"):
                     evt = "MALICIOUS_IPADDR"
@@ -278,7 +324,7 @@ class sfp_virustotal(SpiderFootModernPlugin):
                     evt = "MALICIOUS_COHOST"
                     infotype = "domain"
 
-                infourl = f"<SFURL>https://www.virustotal.com/en/{infotype}/{addr}/information/</SFURL>"
+                infourl = f"<SFURL>https://www.virustotal.com/gui/{infotype}/{addr}</SFURL>"
 
                 e = SpiderFootEvent(
                     evt, f"VirusTotal [{addr}]\n{infourl}",
@@ -289,17 +335,14 @@ class sfp_virustotal(SpiderFootModernPlugin):
 
             domains = list()
 
-            # Treat siblings as affiliates if they are of the original target, otherwise
-            # they are additional hosts within the target.
-            if 'domain_siblings' in info:
-                if eventName in ["IP_ADDRESS", "INTERNET_NAME"]:
-                    for domain in info['domain_siblings']:
-                        domains.append(domain)
+            # v3: Siblings and subdomains are fetched via relationships API
+            if eventName in ["IP_ADDRESS", "INTERNET_NAME"] and not self.sf.validIP(addr):
+                for domain in self.queryRelationship(addr, 'siblings'):
+                    domains.append(domain)
 
-            if 'subdomains' in info:
-                if eventName == "INTERNET_NAME":
-                    for domain in info['subdomains']:
-                        domains.append(domain)
+            if eventName == "INTERNET_NAME" and not self.sf.validIP(addr):
+                for domain in self.queryRelationship(addr, 'subdomains'):
+                    domains.append(domain)
 
             for domain in set(domains):
                 if domain in self.results:

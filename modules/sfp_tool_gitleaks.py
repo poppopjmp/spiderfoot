@@ -6,6 +6,8 @@ passwords, and tokens in git repositories and directories.
 Requires: gitleaks in PATH (go install github.com/gitleaks/gitleaks/v8@latest).
 """
 
+from __future__ import annotations
+
 import json
 import os
 import subprocess
@@ -26,6 +28,12 @@ class sfp_tool_gitleaks(SpiderFootModernPlugin):
         "toolDetails": {
             "binaryName": "gitleaks",
             "installUrl": "https://github.com/gitleaks/gitleaks",
+        },
+        "dataSource": {
+            "website": "https://github.com/gitleaks/gitleaks",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": ["https://github.com/gitleaks/gitleaks"],
+            "description": "Secret detection tool for git repositories.",
         },
     }
 
@@ -50,11 +58,9 @@ class sfp_tool_gitleaks(SpiderFootModernPlugin):
     results = None
 
     def setup(self, sfc, userOpts=None):
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
-        if userOpts:
-            for opt in list(self.opts.keys()):
-                self.opts[opt] = userOpts.get(opt, self.opts[opt])
 
     def watchedEvents(self):
         return ["PUBLIC_CODE_REPO"]

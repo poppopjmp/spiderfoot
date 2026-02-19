@@ -99,7 +99,11 @@ class sfp_threatminer(SpiderFootModernPlugin):
     # What events this module produces
     def producedEvents(self) -> list:
         """Return the list of events this module produces."""
-        return ["INTERNET_NAME", "CO_HOSTED_SITE"]
+        return [
+            "INTERNET_NAME",
+            "CO_HOSTED_SITE",
+            "INTERNET_NAME_UNRESOLVED",
+        ]
 
     def query(self, qry: str, querytype: str) -> dict | None:
         """Query the data source."""
@@ -176,6 +180,8 @@ class sfp_threatminer(SpiderFootModernPlugin):
 
         # qrylist now contains all IPs we want to look up
         for qry in qrylist:
+            if self.checkForStop():
+                break
             evtType = "CO_HOSTED_SITE"
             ret = self.query(qry, "passive")
             if ret is None:

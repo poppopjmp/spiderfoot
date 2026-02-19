@@ -33,7 +33,13 @@ class sfp_phone(SpiderFootModernPlugin):
         'summary': "Identify phone numbers in scraped webpages.",
         'flags': [],
         'useCases': ["Passive", "Footprint", "Investigate"],
-        'categories': ["Content Analysis"]
+        'categories': ["Content Analysis"],
+        "dataSource": {
+            "website": None,
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": [],
+            "description": "Local data processing and extraction (no external API).",
+        },
     }
 
     opts = {}

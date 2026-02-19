@@ -45,7 +45,6 @@ class sfp_apileak(SpiderFootModernPlugin):
     def setup(self, sfc: SpiderFoot, userOpts: dict = None) -> None:
         """Set up the module."""
         super().setup(sfc, userOpts or {})
-        self.opts.update(userOpts)
         # Support multiple patterns (comma-separated or list)
         patterns = self.opts["search_patterns"]
         if isinstance(patterns, str) and "," in patterns:
@@ -59,7 +58,7 @@ class sfp_apileak(SpiderFootModernPlugin):
 
     def watchedEvents(self) -> list:
         """Return the list of events this module watches."""
-        return ["DOMAIN_NAME", "EMAILADDR", "ORG_NAME"]
+        return ["DOMAIN_NAME", "EMAILADDR", "COMPANY_NAME"]
 
     def producedEvents(self) -> list:
         """Return the list of events this module produces."""

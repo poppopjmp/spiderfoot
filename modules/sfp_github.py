@@ -213,6 +213,8 @@ class sfp_github(SpiderFootModernPlugin):
 
         if not failed:
             for item in ret['items']:
+                if self.checkForStop():
+                    break
                 repo_info = self.buildRepoInfo(item)
                 if repo_info is not None:
                     if self.opts['namesonly'] and username != item['name']:
@@ -255,6 +257,8 @@ class sfp_github(SpiderFootModernPlugin):
         if not failed:
             # For each user matching the username, get their repos
             for item in ret['items']:
+                if self.checkForStop():
+                    return
                 if item.get('repos_url') is None:
                     self.debug(
                         "Incomplete Github information found (repos_url).")

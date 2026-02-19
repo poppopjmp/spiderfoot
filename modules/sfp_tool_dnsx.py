@@ -7,6 +7,8 @@ Requires: dnsx binary in PATH or configured via dnsx_path option.
 Install: go install -v github.com/projectdiscovery/dnsx/cmd/dnsx@latest
 """
 
+from __future__ import annotations
+
 import json
 import os
 import subprocess
@@ -27,6 +29,12 @@ class sfp_tool_dnsx(SpiderFootModernPlugin):
         "toolDetails": {
             "binaryName": "dnsx",
             "installUrl": "https://github.com/projectdiscovery/dnsx",
+        },
+        "dataSource": {
+            "website": "https://github.com/projectdiscovery/dnsx",
+            "model": "FREE_NOAUTH_UNLIMITED",
+            "references": ["https://github.com/projectdiscovery/dnsx"],
+            "description": "DNS resolution and record enumeration tool by ProjectDiscovery.",
         },
     }
 
@@ -55,11 +63,9 @@ class sfp_tool_dnsx(SpiderFootModernPlugin):
     results = None
 
     def setup(self, sfc, userOpts=None):
-        self.sf = sfc
+        super().setup(sfc, userOpts or {})
+        self.errorState = False
         self.results = self.tempStorage()
-        if userOpts:
-            for opt in list(self.opts.keys()):
-                self.opts[opt] = userOpts.get(opt, self.opts[opt])
 
     def watchedEvents(self):
         return ["INTERNET_NAME", "INTERNET_NAME_UNRESOLVED", "DOMAIN_NAME"]
