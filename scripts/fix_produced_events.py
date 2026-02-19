@@ -22,7 +22,6 @@ FIXES = {
     "sfp_leakix.py": ["INTERNET_NAME_UNRESOLVED", "IP_ADDRESS"],
     "sfp_mnemonic.py": ["INTERNET_NAME_UNRESOLVED"],
     "sfp_networksdb.py": ["DOMAIN_NAME", "NETBLOCKV6_MEMBER"],
-    "sfp_phishstats.py": ["AFFILIATE_IPADDR", "IP_ADDRESS"],
     "sfp_searchcode.py": ["INTERNET_NAME", "INTERNET_NAME_UNRESOLVED"],
     "sfp_seon.py": ["EMAILADDR_DISPOSABLE", "PHYSICAL_COORDINATES"],
     "sfp_shodan.py": ["BGP_AS_MEMBER", "SOFTWARE_USED"],

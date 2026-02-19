@@ -2,13 +2,13 @@
 
 ## Overview
 
-SpiderFoot v5.9.0 implements a modular microservices architecture that can run
+SpiderFoot v5.9.2 implements a modular microservices architecture that can run
 in two modes:
 
 - **Monolith mode**: All services run in a single process (default, backward-compatible)
 - **Microservices mode**: 21 containers behind a Traefik v3 reverse proxy with full observability, AI agents, Celery task processing, and React SPA frontend
 
-## Service Topology (v5.9.0)
+## Service Topology (v5.9.2)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐

@@ -319,7 +319,7 @@ class sfp_datalastic(SpiderFootModernPlugin):
                 self.__name__, event)
             self.notifyListeners(evt)
 
-            name = port.get('name', '')
+            name = port.get('port_name', '')
             country = port.get('country_name', '')
             lat = port.get('lat')
             lon = port.get('lon')
@@ -388,11 +388,18 @@ class sfp_datalastic(SpiderFootModernPlugin):
                     "COMPANY_NAME", owner, self.__name__, event)
                 self.notifyListeners(evt)
 
-            operator = rec.get('operator', '')
-            if operator and operator not in self.results:
-                self.results[operator] = True
+            commercial_mgr = rec.get('commercial_manager', '')
+            if commercial_mgr and commercial_mgr not in self.results:
+                self.results[commercial_mgr] = True
                 evt = SpiderFootEvent(
-                    "COMPANY_NAME", operator, self.__name__, event)
+                    "COMPANY_NAME", commercial_mgr, self.__name__, event)
+                self.notifyListeners(evt)
+
+            technical_mgr = rec.get('technical_manager', '')
+            if technical_mgr and technical_mgr not in self.results:
+                self.results[technical_mgr] = True
+                evt = SpiderFootEvent(
+                    "COMPANY_NAME", technical_mgr, self.__name__, event)
                 self.notifyListeners(evt)
 
             country = rec.get('beneficial_owner_country', '')

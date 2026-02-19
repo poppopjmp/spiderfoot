@@ -106,7 +106,7 @@ class sfp_aviationstack(SpiderFootModernPlugin):
             self.errorState = True
             return None
 
-        base = "http://api.aviationstack.com/v1"
+        base = "https://api.aviationstack.com/v1"
         qparams = f"access_key={api_key}"
         if params:
             for k, v in params.items():
@@ -136,8 +136,11 @@ class sfp_aviationstack(SpiderFootModernPlugin):
             self.error(
                 f"AviationStack API error: {err.get('message', err.get('code', 'unknown'))}"
             )
-            if err.get('code') in ('invalid_access_key', 'usage_limit_reached'):
+            if err.get('code') in ('invalid_access_key', 'usage_limit_reached',
+                                        'missing_access_key', 'inactive_user'):
                 self.errorState = True
+            if err.get('code') == 'rate_limit_reached':
+                self.error("AviationStack: Rate limit reached, slowing down.")
             return None
 
         return data
@@ -167,54 +170,54 @@ class sfp_aviationstack(SpiderFootModernPlugin):
                 self.__name__, event)
             self.notifyListeners(evt)
 
-            # Extract geo from departure
+            # Extract departure airport info (no lat/lon in departure object)
             dep = flight.get('departure', {})
             if dep:
-                lat = dep.get('latitude')
-                lon = dep.get('longitude')
                 airport_name = dep.get('airport')
-                if lat and lon:
-                    coords = f"{lat},{lon}"
-                    if coords not in self.results:
-                        self.results[coords] = True
-                        evt = SpiderFootEvent(
-                            "PHYSICAL_COORDINATES", coords,
-                            self.__name__, event)
-                        self.notifyListeners(evt)
                 if airport_name:
                     tz = dep.get('timezone', '')
+                    iata = dep.get('iata', '')
                     geo = f"{airport_name}"
+                    if iata:
+                        geo += f" ({iata})"
                     if tz:
-                        geo += f" ({tz})"
+                        geo += f" [{tz}]"
                     if geo not in self.results:
                         self.results[geo] = True
                         evt = SpiderFootEvent(
                             "GEOINFO", geo, self.__name__, event)
                         self.notifyListeners(evt)
 
-            # Extract geo from arrival
+            # Extract arrival airport info (no lat/lon in arrival object)
             arr = flight.get('arrival', {})
             if arr:
-                lat = arr.get('latitude')
-                lon = arr.get('longitude')
                 airport_name = arr.get('airport')
-                if lat and lon:
+                if airport_name:
+                    tz = arr.get('timezone', '')
+                    iata = arr.get('iata', '')
+                    geo = f"{airport_name}"
+                    if iata:
+                        geo += f" ({iata})"
+                    if tz:
+                        geo += f" [{tz}]"
+                    if geo not in self.results:
+                        self.results[geo] = True
+                        evt = SpiderFootEvent(
+                            "GEOINFO", geo, self.__name__, event)
+                        self.notifyListeners(evt)
+
+            # Extract live position data (latitude/longitude are in 'live' object)
+            live = flight.get('live') or {}
+            if live:
+                lat = live.get('latitude')
+                lon = live.get('longitude')
+                if lat is not None and lon is not None:
                     coords = f"{lat},{lon}"
                     if coords not in self.results:
                         self.results[coords] = True
                         evt = SpiderFootEvent(
                             "PHYSICAL_COORDINATES", coords,
                             self.__name__, event)
-                        self.notifyListeners(evt)
-                if airport_name:
-                    tz = arr.get('timezone', '')
-                    geo = f"{airport_name}"
-                    if tz:
-                        geo += f" ({tz})"
-                    if geo not in self.results:
-                        self.results[geo] = True
-                        evt = SpiderFootEvent(
-                            "GEOINFO", geo, self.__name__, event)
                         self.notifyListeners(evt)
 
             # Airline as COMPANY_NAME

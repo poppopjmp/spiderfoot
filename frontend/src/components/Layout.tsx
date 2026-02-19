@@ -264,7 +264,7 @@ export default function Layout() {
             </div>
           ) : null}
           <div className="px-3 py-2">
-            <p className="text-xs text-dark-500">SpiderFoot v5.9.0</p>
+            <p className="text-xs text-dark-500">SpiderFoot v5.9.2</p>
           </div>
         </div>
       </aside>
@@ -299,7 +299,7 @@ export default function Layout() {
               <img src="/spiderfoot-header-dark.png" alt="SpiderFoot" className="h-16 mx-auto mb-4" />
               <h2 className="text-xl font-bold text-foreground">SpiderFoot</h2>
               <p className="text-dark-400 text-sm mt-1">Open Source Intelligence Automation</p>
-              <p className="text-spider-400 font-mono text-sm mt-3">v5.9.0</p>
+              <p className="text-spider-400 font-mono text-sm mt-3">v5.9.2</p>
               <div className="mt-6 space-y-2 text-sm text-dark-400">
                 <p>An OSINT automation tool for reconnaissance.</p>
                 <p>

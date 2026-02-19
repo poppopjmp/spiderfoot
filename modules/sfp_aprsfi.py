@@ -105,7 +105,10 @@ class sfp_aprsfi(SpiderFootModernPlugin):
             qparams += f"&{k}={v}"
 
         url = f"{base}?{qparams}"
-        res = self.fetch_url(url, timeout=30)
+        headers = {
+            'User-Agent': 'SpiderFoot/5.9.2 (+https://github.com/smicallef/spiderfoot)'
+        }
+        res = self.fetch_url(url, timeout=30, headers=headers)
 
         if not res:
             self.error(f"aprs.fi: No response for {what} query")

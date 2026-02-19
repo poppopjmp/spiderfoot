@@ -97,7 +97,6 @@ def main():
         'sfp_mattermost.py',
         'sfp_netlas.py',
         'sfp_openwifimap.py',
-        'sfp_punkspider.py',
         'sfp_rocketchat.py',
         'sfp_spamhaus.py',
         'sfp_tron.py',

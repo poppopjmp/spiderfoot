@@ -101,8 +101,17 @@ export default function ModulesPage() {
     return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0]));
   }, [filteredModules]);
 
-  const totalEnabled = statusData?.enabled ?? 0;
-  const totalDisabled = statusData?.disabled ?? 0;
+  /* Derive counts from the per-module status map so they update
+   * immediately after an enable/disable toggle (the server aggregate
+   * fields may lag behind the invalidated query).                  */
+  const totalEnabled = useMemo(
+    () => modules.filter((m) => statusMap.get(m.name) !== false).length,
+    [modules, statusMap],
+  );
+  const totalDisabled = useMemo(
+    () => modules.filter((m) => statusMap.get(m.name) === false).length,
+    [modules, statusMap],
+  );
 
   return (
     <div className="space-y-6">

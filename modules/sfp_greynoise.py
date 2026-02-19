@@ -113,32 +113,31 @@ class sfp_greynoise(SpiderFootModernPlugin):
         ]
 
     def queryIP(self, qry: str, qry_type: str) -> dict | None:
-        """Query IP."""
-        gn_context_url = "https://api.greynoise.io/v2/noise/context/"
-        gn_gnql_url = "https://api.greynoise.io/v2/experimental/gnql?query="
+        """Query IP via GreyNoise API v3."""
+        gn_ip_url = "https://api.greynoise.io/v3/ip/"
+        gn_gnql_url = "https://api.greynoise.io/v3/gnql?query="
 
-        headers = {"key": self.opts["api_key"]}
+        headers = {"key": self.opts["api_key"], "accept": "application/json"}
         res = {}
         if qry_type == "ip":
             self.debug(f"Querying GreyNoise for IP: {qry}")
-            res = {}
             ip_response = self.fetch_url(
-                gn_context_url + qry,
+                gn_ip_url + qry,
                 timeout=self.opts["_fetchtimeout"],
-                useragent="greynoise-spiderfoot-v1.2.0",
+                useragent="greynoise-spiderfoot-v2.0.0",
                 headers=headers,
             )
-            if ip_response["code"] == "200":
+            if ip_response and str(ip_response.get("code", "")) == "200":
                 res = json.loads(ip_response["content"])
         else:
             self.debug(f"Querying GreyNoise for Netblock: {qry}")
             query_response = self.fetch_url(
                 gn_gnql_url + qry,
                 timeout=self.opts["_fetchtimeout"],
-                useragent="greynoise-spiderfoot-v1.1.0",
+                useragent="greynoise-spiderfoot-v2.0.0",
                 headers=headers,
             )
-            if query_response["code"] == "200":
+            if query_response and str(query_response.get("code", "")) == "200":
                 res = json.loads(query_response["content"])
 
         if not res:
@@ -207,131 +206,83 @@ class sfp_greynoise(SpiderFootModernPlugin):
         if not ret:
             return
 
-        if "data" not in ret and "seen" not in ret:
+        # v3: Normalize into a list of scan intelligence records.
+        # Single IP responses nest data under "internet_scanner_intelligence".
+        # GNQL responses return a "data" array, each item with "internet_scanner_intelligence".
+        records = []
+        if "data" in ret:
+            for item in ret.get("data", []):
+                intel = item.get("internet_scanner_intelligence", {})
+                if intel and intel.get("seen"):
+                    # Ensure top-level ip is accessible
+                    intel.setdefault("ip", item.get("ip", ""))
+                    records.append(intel)
+        elif "internet_scanner_intelligence" in ret:
+            intel = ret["internet_scanner_intelligence"]
+            if intel and intel.get("seen"):
+                intel.setdefault("ip", ret.get("ip", ""))
+                records.append(intel)
+
+        if not records:
             return
 
-        if "data" in ret and len(ret["data"]) > 0:
-            for rec in ret["data"]:
-                if rec.get("seen"):
-                    self.debug(f"Found threat info in Greynoise: {rec['ip']}")
-                    lastseen = rec.get("last_seen", "1970-01-01")
-                    lastseen_dt = datetime.strptime(lastseen, "%Y-%m-%d")
-                    lastseen_ts = int(time.mktime(lastseen_dt.timetuple()))
-                    age_limit_ts = int(time.time()) - \
-                        (86400 * self.opts["age_limit_days"])
-                    if self.opts["age_limit_days"] > 0 and lastseen_ts < age_limit_ts:
-                        self.debug(
-                            f"Record [{rec['ip']}] found but too old, skipping.")
-                        return
+        for rec in records:
+            ip_addr = rec.get("ip", eventData)
+            self.debug(f"Found threat info in Greynoise: {ip_addr}")
 
-                    # Only report meta data about the target, not affiliates
-                    if rec.get("metadata") and eventName == "IP_ADDRESS":
-                        met = rec.get("metadata")
-                        if met.get("country", "unknown") != "unknown":
-                            loc = ""
-                            if met.get("city"):
-                                loc = met.get("city") + ", "
-                            loc += met.get("country")
-                            e = SpiderFootEvent(
-                                "GEOINFO", loc, self.__name__, event)
-                            self.notifyListeners(e)
-                        if met.get("asn", "unknown") != "unknown":
-                            asn = met.get("asn").replace("AS", "")
-                            e = SpiderFootEvent(
-                                "BGP_AS_MEMBER", asn, self.__name__, event)
-                            self.notifyListeners(e)
-                        if met.get("organization", "unknown") != "unknown":
-                            e = SpiderFootEvent("COMPANY_NAME", met.get(
-                                "organization"), self.__name__, event)
-                            self.notifyListeners(e)
-                        if met.get("os", "unknown") != "unknown":
-                            e = SpiderFootEvent("OPERATING_SYSTEM", met.get(
-                                "os"), self.__name__, event)
-                            self.notifyListeners(e)
-                        e = SpiderFootEvent("RAW_RIR_DATA", str(
-                            rec), self.__name__, event)
-                        self.notifyListeners(e)
+            lastseen = rec.get("last_seen", "1970-01-01")
+            lastseen_dt = datetime.strptime(lastseen, "%Y-%m-%d")
+            lastseen_ts = int(time.mktime(lastseen_dt.timetuple()))
+            age_limit_ts = int(time.time()) - (86400 * self.opts["age_limit_days"])
+            if self.opts["age_limit_days"] > 0 and lastseen_ts < age_limit_ts:
+                self.debug(f"Record [{ip_addr}] found but too old, skipping.")
+                continue
 
-                    if rec.get("classification"):
-                        descr = (
-                            "GreyNoise - Mass-Scanning IP Detected [" +
-                            rec.get("ip") +
-                            "]\n - Classification: " +
-                            rec.get("classification")
-                        )
-                        if rec.get("tags"):
-                            descr += "\n - " + "Scans For Tags: " + \
-                                ", ".join(rec.get("tags"))
-                        if rec.get("cve"):
-                            descr += "\n - " + "Scans For CVEs: " + \
-                                ", ".join(rec.get("cve"))
-                        if rec.get("raw_data") and not (rec.get("tags") or ret.get("cve")):
-                            descr += "\n - " + "Raw data: " + \
-                                str(rec.get("raw_data"))
-                        descr += "\n<SFURL>https://viz.greynoise.io/ip/" + \
-                            rec.get("ip") + "</SFURL>"
-                        e = SpiderFootEvent(
-                            evtType, descr, self.__name__, event)
-                        self.notifyListeners(e)
-
-        if "seen" in ret:
-            if ret.get("seen"):
-                lastseen = ret.get("last_seen", "1970-01-01")
-                lastseen_dt = datetime.strptime(lastseen, "%Y-%m-%d")
-                lastseen_ts = int(time.mktime(lastseen_dt.timetuple()))
-                age_limit_ts = int(time.time()) - \
-                    (86400 * self.opts["age_limit_days"])
-                if self.opts["age_limit_days"] > 0 and lastseen_ts < age_limit_ts:
-                    self.debug("Record found but too old, skipping.")
-                    return
-
-                # Only report meta data about the target, not affiliates
-                if ret.get("metadata") and eventName == "IP_ADDRESS":
-                    met = ret.get("metadata")
-                    if met.get("country", "unknown") != "unknown":
-                        loc = ""
-                        if met.get("city"):
-                            loc = met.get("city") + ", "
-                        loc += met.get("country")
-                        e = SpiderFootEvent(
-                            "GEOINFO", loc, self.__name__, event)
-                        self.notifyListeners(e)
-                    if met.get("asn", "unknown") != "unknown":
-                        asn = met.get("asn").replace("AS", "")
-                        e = SpiderFootEvent(
-                            "BGP_AS_MEMBER", asn, self.__name__, event)
-                        self.notifyListeners(e)
-                    if met.get("organization", "unknown") != "unknown":
-                        e = SpiderFootEvent("COMPANY_NAME", met.get(
-                            "organization"), self.__name__, event)
-                        self.notifyListeners(e)
-                    if met.get("os", "unknown") != "unknown":
-                        e = SpiderFootEvent("OPERATING_SYSTEM", met.get(
-                            "os"), self.__name__, event)
-                        self.notifyListeners(e)
-                    e = SpiderFootEvent("RAW_RIR_DATA", str(
-                        ret), self.__name__, event)
+            # Only report metadata about the target, not affiliates
+            if rec.get("metadata") and eventName == "IP_ADDRESS":
+                met = rec.get("metadata")
+                if met.get("country", "unknown") != "unknown":
+                    loc = ""
+                    if met.get("city"):
+                        loc = met.get("city") + ", "
+                    loc += met.get("country")
+                    e = SpiderFootEvent("GEOINFO", loc, self.__name__, event)
                     self.notifyListeners(e)
-
-                if ret.get("classification"):
-                    descr = (
-                        "GreyNoise - Mass-Scanning IP Detected [" +
-                        eventData +
-                        "]\n - Classification: " +
-                        ret.get("classification")
-                    )
-                    if ret.get("tags"):
-                        descr += "\n - " + "Scans For Tags: " + \
-                            ", ".join(ret.get("tags"))
-                    if ret.get("cve"):
-                        descr += "\n - " + "Scans For CVEs: " + \
-                            ", ".join(ret.get("cve"))
-                    if ret.get("raw_data") and not (ret.get("tags") or ret.get("cve")):
-                        descr += "\n - " + "Raw data: " + \
-                            str(ret.get("raw_data"))
-                    descr += "\n<SFURL>https://viz.greynoise.io/ip/" + \
-                        ret.get("ip") + "</SFURL>"
-                    e = SpiderFootEvent(evtType, descr, self.__name__, event)
+                if met.get("asn", "unknown") != "unknown":
+                    asn = str(met.get("asn")).replace("AS", "")
+                    e = SpiderFootEvent("BGP_AS_MEMBER", asn, self.__name__, event)
                     self.notifyListeners(e)
+                if met.get("organization", "unknown") != "unknown":
+                    e = SpiderFootEvent(
+                        "COMPANY_NAME", met.get("organization"),
+                        self.__name__, event)
+                    self.notifyListeners(e)
+                if met.get("os", "unknown") != "unknown":
+                    e = SpiderFootEvent(
+                        "OPERATING_SYSTEM", met.get("os"),
+                        self.__name__, event)
+                    self.notifyListeners(e)
+                e = SpiderFootEvent(
+                    "RAW_RIR_DATA", str(rec), self.__name__, event)
+                self.notifyListeners(e)
+
+            if rec.get("classification"):
+                descr = (
+                    "GreyNoise - Mass-Scanning IP Detected ["
+                    + ip_addr
+                    + "]\n - Classification: "
+                    + rec.get("classification")
+                )
+                if rec.get("tags"):
+                    descr += "\n - Scans For Tags: " + ", ".join(rec.get("tags"))
+                # v3: "cve" renamed to "cves"
+                cves = rec.get("cves") or rec.get("cve")
+                if cves:
+                    descr += "\n - Scans For CVEs: " + ", ".join(cves)
+                if rec.get("raw_data") and not (rec.get("tags") or cves):
+                    descr += "\n - Raw data: " + str(rec.get("raw_data"))
+                descr += "\n<SFURL>https://viz.greynoise.io/ip/" + ip_addr + "</SFURL>"
+                e = SpiderFootEvent(evtType, descr, self.__name__, event)
+                self.notifyListeners(e)
 
 # End of sfp_greynoise class

@@ -59,14 +59,16 @@ class sfp_subdomainradar(SpiderFootModernPlugin):
         'api_key': "",
         'poll_interval': 5,
         'max_poll_time': 300,
-        'enable_port_scan': False,
+        'enumerator_group': "Fast",
+        'fetch_ports': False,
     }
 
     optdescs = {
         'api_key': "SubDomainRadar API key (Bearer token).",
         'poll_interval': "Seconds to wait between polling for task completion.",
         'max_poll_time': "Maximum seconds to wait for a task to complete before giving up.",
-        'enable_port_scan': "Enable port scanning on discovered subdomains? (uses more API points)",
+        'enumerator_group': "Enumerator group to use: 'Fast' (free tier) or 'Deep' (paid). Fast is recommended for passive enumeration.",
+        'fetch_ports': "Fetch open ports for the task after enumeration completes? (uses the /tasks/{id}/ports endpoint)",
     }
 
     results = None
@@ -150,25 +152,58 @@ class sfp_subdomainradar(SpiderFootModernPlugin):
             self.error(f"Error parsing SubDomainRadar response: {e}")
             return None
 
+    def _getEnumeratorNames(self) -> list[str] | None:
+        """Fetch enumerator names for the configured group.
+
+        GET /enumerators/groups
+        Returns a list of enumerator display_name strings.
+        """
+        data = self._apiRequest("GET", "/enumerators/groups")
+        if not data or not isinstance(data, list):
+            self.error("SubDomainRadar: could not fetch enumerator groups")
+            return None
+
+        target_group = self.opts.get('enumerator_group', 'Fast')
+        for group in data:
+            if group.get('name', '').lower() == target_group.lower():
+                enumerators = group.get('enumerators', [])
+                names = [e.get('display_name', '') for e in enumerators if e.get('display_name')]
+                if names:
+                    return names
+
+        self.error(f"SubDomainRadar: enumerator group '{target_group}' not found")
+        return None
+
     def _submitEnumeration(self, domain: str) -> str | None:
         """Submit a subdomain enumeration task.
 
         POST /enumerate
+        Body: {"domains": ["domain"], "enumerators": ["Name1", ...]}
         Returns task_id on success.
         """
+        enumerator_names = self._getEnumeratorNames()
+        if not enumerator_names:
+            return None
+
         payload = {
-            "domain": domain,
-            "port_scan": self.opts.get('enable_port_scan', False),
+            "domains": [domain],
+            "enumerators": enumerator_names,
         }
 
         data = self._apiRequest("POST", "/enumerate", json_data=payload)
         if not data:
             return None
 
-        task_id = data.get('task_id')
+        # Response: {"message": "Tasks initiated", "tasks": {"domain": "task-uuid"}}
+        tasks = data.get('tasks', {})
+        task_id = tasks.get(domain)
         if not task_id:
-            self.error(f"SubDomainRadar: no task_id in response: {data}")
-            return None
+            # Try first available task_id if domain key doesn't match exactly
+            if tasks:
+                task_id = next(iter(tasks.values()))
+            else:
+                self.error(f"SubDomainRadar: no task_id in response: {data}")
+                return None
 
         self.debug(f"SubDomainRadar: submitted enumeration task {task_id} for {domain}")
         return task_id
@@ -197,7 +232,7 @@ class sfp_subdomainradar(SpiderFootModernPlugin):
                 return data
 
             if status in ('failed', 'error'):
-                self.error(f"SubDomainRadar: task {task_id} failed: {data.get('message', 'unknown')}")
+                self.error(f"SubDomainRadar: task {task_id} failed: {data.get('error', data.get('message', 'unknown'))}")
                 return None
 
             self.debug(f"SubDomainRadar: task {task_id} status={status}, waiting {poll_interval}s")
@@ -248,15 +283,20 @@ class sfp_subdomainradar(SpiderFootModernPlugin):
             self.__name__, event)
         self.notifyListeners(evt)
 
-        # Process subdomains from the result
+        # Process subdomains from the task result
+        # API returns subdomains as a list of objects within the task response
         subdomains = result.get('subdomains', result.get('results', []))
 
         if isinstance(subdomains, dict):
-            # Handle { "subdomain": { "ips": [...], "ports": [...] } } format
+            # Handle { "subdomain": { "ips": [...] } } format
             self._processSubdomainDict(event, subdomains)
         elif isinstance(subdomains, list):
             # Handle [ { "subdomain": "x", "ips": [...] }, ... ] format
             self._processSubdomainList(event, subdomains)
+
+        # Optionally fetch open ports from /tasks/{task_id}/ports
+        if self.opts.get('fetch_ports') and not self.checkForStop() and not self.errorState:
+            self._fetchPorts(event, task_id)
 
     def _processSubdomainDict(self, event: SpiderFootEvent, subdomains: dict) -> None:
         """Process subdomains in dict format: { subdomain: {ips, ports} }."""
@@ -357,5 +397,32 @@ class sfp_subdomainradar(SpiderFootModernPlugin):
                         evt = SpiderFootEvent(
                             "TCP_PORT_OPEN", port_str, self.__name__, event)
                         self.notifyListeners(evt)
+
+    def _fetchPorts(self, event: SpiderFootEvent, task_id: str) -> None:
+        """Fetch open ports from the /tasks/{task_id}/ports endpoint.
+
+        Response: [{"host": "x", "port": 80, "protocol": "tcp", "service": "http", ...}]
+        """
+        data = self._apiRequest("GET", f"/tasks/{task_id}/ports")
+        if not data or not isinstance(data, list):
+            return
+
+        for entry in data:
+            if self.checkForStop() or self.errorState:
+                return
+
+            host = entry.get('host', '').strip().lower()
+            port = entry.get('port')
+            if not host or port is None:
+                continue
+
+            port_str = f"{host}:{port}"
+            if port_str in self.results:
+                continue
+            self.results[port_str] = True
+
+            evt = SpiderFootEvent(
+                "TCP_PORT_OPEN", port_str, self.__name__, event)
+            self.notifyListeners(evt)
 
 # End of sfp_subdomainradar class

@@ -918,11 +918,16 @@ function GeoMapTab({ scanId }: { scanId: string }) {
   const maxCount = countryList[0]?.count ?? 1;
   const totalGeoEvents = countryList.reduce((s, c) => s + c.count, 0) + coordinates.length + addresses.length;
 
-  /* SVG World Map — viewport matches world-map.svg viewBox (2000×857) */
+  /* SVG World Map — viewport matches world-map.svg viewBox (2000×857)
+   * The simplemaps SVG uses equirectangular projection cropped to
+   * ~83.65°N – 56°S (not pole-to-pole ±90°). Using the true latitude
+   * bounds ensures markers land on the correct countries.            */
   const mapWidth = 2000;
   const mapHeight = 857;
+  const LAT_TOP = 83.65;
+  const LAT_BOT = -56.0;
   const projectLon = (lon: number) => ((lon + 180) / 360) * mapWidth;
-  const projectLat = (lat: number) => ((90 - lat) / 180) * mapHeight;
+  const projectLat = (lat: number) => ((LAT_TOP - lat) / (LAT_TOP - LAT_BOT)) * mapHeight;
 
   return (
     <div className="space-y-6">

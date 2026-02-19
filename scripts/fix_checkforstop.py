@@ -24,14 +24,12 @@ TARGETS = [
     ("sfp_4chan.py", "for thread in threads[:max_threads]:", 12, "return"),
     ("sfp_subdomain_takeover.py", "for data in self.fingerprints:", 12, "return"),
     # Tier 2 — High
-    ("sfp_crxcavator.py", "for result in results:", 8, "break"),
     ("sfp_opencorporates.py", "for c in companies:", 8, "return"),
     ("sfp_gleif.py", "for lei in set(leis):", 8, "return"),
     ("sfp_hybrid_analysis.py", "for file_hash in hashes:", 8, "break"),
     ("sfp_arin.py", "for p in ref:", 24, "break"),  # first loop at deeper indent
     ("sfp_threatminer.py", "for qry in qrylist:", 8, "break"),
     ("sfp_github.py", "for item in ret['items']:", 12, "break"),  # both loops
-    ("sfp_psbdmp.py", "for n in data:", 8, "return"),
     ("sfp_onioncity.py", "for link in darknet_links:", 8, "return"),
 ]
 
