@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import api from '../lib/api';
+import { getErrorMessage } from '../lib/errors';
 import { ModalShell } from '../components/ui';
 import { useAuthStore } from '../lib/auth';
 
@@ -98,8 +99,8 @@ export default function UsersPage() {
       });
       setUsers(res.data.items || []);
       setTotal(res.data.total || 0);
-    } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Failed to load users');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to load users'));
     } finally {
       setLoading(false);
     }
@@ -390,8 +391,8 @@ function CreateUserModal({
         display_name: displayName,
       });
       onCreated();
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to create user');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to create user'));
     } finally {
       setSaving(false);
     }
@@ -516,8 +517,8 @@ function EditUserModal({
         status,
       });
       onUpdated();
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to update user');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to update user'));
     } finally {
       setSaving(false);
     }
@@ -633,8 +634,8 @@ function ChangePasswordModal({
         new_password: newPassword,
       });
       onChanged();
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to change password');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to change password'));
     } finally {
       setSaving(false);
     }
@@ -716,8 +717,8 @@ function DeleteUserModal({
     try {
       await api.delete(`/api/auth/users/${user.id}`);
       onDeleted();
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to delete user');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to delete user'));
       setDeleting(false);
     }
   };

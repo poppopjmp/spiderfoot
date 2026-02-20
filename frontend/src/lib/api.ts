@@ -123,6 +123,7 @@ export interface ScanCorrelation {
   rule_descr: string;
   rule_logic: string;
   event_count: number;
+  scan_id?: string;
 }
 
 export interface ScanLogEntry {

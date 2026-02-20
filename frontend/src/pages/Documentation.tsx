@@ -407,7 +407,7 @@ function GuidesPanel() {
                       <div className="prose prose-sm prose-invert max-w-none">
                         {section.content.split('\n\n').map((para, i) => (
                           <p key={i} className="text-sm text-dark-300 leading-relaxed mb-3 last:mb-0">
-                            {para.split(/(\*\*[^*]+\*\*|\`[^`]+\`)/).map((segment, j) => {
+                            {para.split(/(\*\*[^*]+\*\*|`[^`]+`)/).map((segment, j) => {
                               if (segment.startsWith('**') && segment.endsWith('**')) {
                                 return <strong key={j} className="text-foreground font-semibold">{segment.slice(2, -2)}</strong>;
                               }

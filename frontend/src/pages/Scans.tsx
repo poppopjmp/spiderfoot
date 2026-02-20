@@ -77,9 +77,8 @@ export default function ScansPage() {
       queryClient.invalidateQueries({ queryKey: ['scan-stats-all'] });
       setToast({ type: 'success', message: 'Scan deleted' });
     },
-    onError: (err: any) => {
-      const detail = err?.response?.data?.detail || err?.message || 'Delete failed';
-      setToast({ type: 'error', message: detail });
+    onError: (err: Error) => {
+      setToast({ type: 'error', message: err.message || 'Delete failed' });
     },
   });
   const rerunMut = useMutation({
@@ -116,7 +115,7 @@ export default function ScansPage() {
   /* Selection helpers */
   const toggleSelect = (id: string) => {
     const next = new Set(selected);
-    next.has(id) ? next.delete(id) : next.add(id);
+    if (next.has(id)) { next.delete(id); } else { next.add(id); }
     setSelected(next);
   };
   const toggleAll = () => {

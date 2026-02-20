@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import api from '../lib/api';
+import { getErrorMessage } from '../lib/errors';
 import { ModalShell } from '../components/ui';
 import { useAuthStore } from '../lib/auth';
 
@@ -112,8 +113,8 @@ export default function ApiKeysPage() {
       const url = isAdmin ? '/api/auth/api-keys' : '/api/auth/api-keys/mine';
       const res = await api.get(url);
       setKeys(res.data.items || []);
-    } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Failed to load API keys');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to load API keys'));
     } finally {
       setLoading(false);
     }
@@ -143,8 +144,8 @@ export default function ApiKeysPage() {
       await api.post(`/api/auth/api-keys/${k.id}/revoke`);
       fetchKeys();
       setRevokeKey(null);
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to revoke key');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to revoke key'));
     }
   };
 
@@ -155,8 +156,8 @@ export default function ApiKeysPage() {
       await api.delete(`/api/auth/api-keys/${k.id}`);
       fetchKeys();
       setDeleteKey(null);
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to delete key');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to delete key'));
     }
   };
 
@@ -462,8 +463,8 @@ function CreateKeyModal({
         allowed_endpoints: endpointsJson,
       });
       onCreated(res.data);
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to create API key');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to create API key'));
     } finally {
       setSaving(false);
     }

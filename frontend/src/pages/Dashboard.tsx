@@ -142,15 +142,13 @@ export default function DashboardPage() {
                 <p className="section-label mb-3">Components</p>
                 <div className="space-y-2">
                   {health?.components && Object.keys(health.components).length > 0 ? (
-                    Object.entries(health.components)
+                    (Object.entries(health.components) as [string, HealthComponent][])
                       .sort(([, a], [, b]) => {
                         // Sort: up first, then degraded, then unknown, then down
                         const order: Record<string, number> = { up: 0, degraded: 1, unknown: 2, down: 3 };
-                        const aComp = a as HealthComponent;
-                        const bComp = b as HealthComponent;
-                        return (order[aComp.status] ?? 2) - (order[bComp.status] ?? 2);
+                        return (order[a.status] ?? 2) - (order[b.status] ?? 2);
                       })
-                      .map(([name, comp]: [string, any]) => (
+                      .map(([name, comp]) => (
                       <div key={name} className="flex items-center justify-between text-xs">
                         <span className="text-dark-300 capitalize">{name.replace(/_/g, ' ')}</span>
                         <span className="flex items-center gap-2">

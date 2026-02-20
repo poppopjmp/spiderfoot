@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import api from '../lib/api';
+import { getErrorMessage } from '../lib/errors';
 
 // ── Types ────────────────────────────────────────────────
 
@@ -120,8 +121,8 @@ export default function SSOSettingsPage() {
     try {
       const res = await api.get('/api/auth/sso/providers/all');
       setProviders(res.data.items || []);
-    } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Failed to load SSO providers');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to load SSO providers'));
     } finally {
       setLoading(false);
     }
@@ -136,8 +137,8 @@ export default function SSOSettingsPage() {
     try {
       await api.patch(`/api/auth/sso/providers/${p.id}`, { enabled: !p.enabled });
       fetchProviders();
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to toggle provider');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to toggle provider'));
     }
   };
 
@@ -527,8 +528,8 @@ function ProviderFormModal({
         await api.post('/api/auth/sso/providers', body);
       }
       onSaved();
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to save provider');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to save provider'));
     } finally {
       setSaving(false);
     }
@@ -746,8 +747,8 @@ function DeleteProviderModal({
     try {
       await api.delete(`/api/auth/sso/providers/${provider.id}`);
       onDeleted();
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to delete provider');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to delete provider'));
       setDeleting(false);
     }
   };

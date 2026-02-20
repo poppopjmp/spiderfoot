@@ -6,6 +6,7 @@
  */
 import { create } from 'zustand';
 import api from './api';
+import { getErrorMessage } from './errors';
 
 // ── Types ────────────────────────────────────────────────
 
@@ -147,8 +148,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         isLoading: false,
         error: null,
       });
-    } catch (err: any) {
-      const msg = err.response?.data?.detail || 'Login failed';
+    } catch (err: unknown) {
+      const msg = getErrorMessage(err, 'Login failed');
       set({ isLoading: false, error: msg });
       throw new Error(msg);
     }
@@ -172,8 +173,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         isLoading: false,
         error: null,
       });
-    } catch (err: any) {
-      const msg = err.response?.data?.detail || 'LDAP login failed';
+    } catch (err: unknown) {
+      const msg = getErrorMessage(err, 'LDAP login failed');
       set({ isLoading: false, error: msg });
       throw new Error(msg);
     }

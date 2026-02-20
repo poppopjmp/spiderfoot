@@ -168,13 +168,13 @@ export default function NewScanPage() {
 
   const toggleModule = (name: string) => {
     const next = new Set(selectedModules);
-    next.has(name) ? next.delete(name) : next.add(name);
+    if (next.has(name)) { next.delete(name); } else { next.add(name); }
     setSelectedModules(next);
   };
 
   const toggleType = (type: string) => {
     const next = new Set(selectedTypes);
-    next.has(type) ? next.delete(type) : next.add(type);
+    if (next.has(type)) { next.delete(type); } else { next.add(type); }
     setSelectedTypes(next);
   };
 

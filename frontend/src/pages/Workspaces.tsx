@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { workspaceApi, scanApi, agentsApi, formatEpoch, type Workspace, type WorkspaceTarget, type Scan } from '../lib/api';
+import { workspaceApi, scanApi, agentsApi, formatEpoch, type Workspace, type WorkspaceTarget, type Scan, type ScanCorrelation } from '../lib/api';
 import { sanitizeHTML } from '../lib/sanitize';
 import { Briefcase, Plus, Trash2, Target, Copy, CheckCircle2, FolderOpen, Clock, Edit2, Radar, Link2, Unlink, Brain, FileText, Sparkles, Edit3, Save, Loader2, AlertTriangle, BarChart3, Shield, MapPin } from 'lucide-react';
 import { useState, useRef, useEffect, useCallback } from 'react';
@@ -675,7 +675,7 @@ export default function WorkspacesPage() {
                         {/* Correlation list */}
                         {correlations.length > 0 && (
                           <div className="space-y-2 max-h-[500px] overflow-y-auto">
-                            {correlations.map((c: any, i: number) => (
+                            {correlations.map((c: ScanCorrelation, i: number) => (
                               <Link
                                 key={c.id || i}
                                 to={`/scans/${c.scan_id}`}
