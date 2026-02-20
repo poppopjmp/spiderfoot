@@ -339,7 +339,7 @@ The `docker-compose-microservices.yml` defines 21 containers:
 
 ### Frontend (React SPA)
 
-The web interface is a modern React SPA built with TypeScript, Vite, and Tailwind CSS. It features a dark theme with cyan accents, responsive layout, and real-time scan updates via GraphQL subscriptions.
+The web interface is a modern React SPA built with TypeScript, Vite, and Tailwind CSS. It features a dark theme with cyan accents, responsive layout, and real-time scan updates via GraphQL subscriptions. All HTML injection points are sanitized with DOMPurify, and ESLint with `typescript-eslint` enforces strict type safety (zero `any` types).
 
 **Key pages and features:**
 
@@ -354,6 +354,8 @@ The web interface is a modern React SPA built with TypeScript, Vite, and Tailwin
 | Agents | AI agent status monitoring and analysis results |
 | Users / SSO | User management and SSO configuration (OIDC/SAML) |
 | API Keys | API key management for programmatic access |
+
+**Scan Detail component architecture:** The Scan Detail page is built from 10 focused tab components in `frontend/src/components/scan/`, each owning its own state, queries, and rendering. The parent `ScanDetail.tsx` is a ~130-line shell that handles routing and tab navigation. Shared utilities live in `frontend/src/lib/` (geo constants, HTML sanitization, error handling).
 
 ![Dashboard](images/dashboard.png)
 

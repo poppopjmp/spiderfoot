@@ -3,7 +3,35 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [5.9.2] — 2026-02-19 — Module Cleanup, Bug Fixes & Frontend Polish
+## [5.9.2] — 2026-02-20 — Deep Security & Quality Hardening
+
+### Security — P0 Critical
+- **JWT hardening**: Replaced hand-rolled HMAC-SHA256 JWT with PyJWT library; auto-detects insecure default secrets (`changeme`, `secret`, etc.) and generates cryptographic random secret at startup; logs CRITICAL warning for insecure configurations
+- **Auth bypass lockdown**: API key dev-mode bypass now requires explicit `SF_AUTH_DISABLED=true` environment variable (previously any misconfiguration could skip auth)
+- **CORS lockdown**: Default allowed origins changed from `*` to `http://localhost:3000,https://localhost`; logs WARNING when wildcard CORS is active
+- **XSS prevention**: Wrapped all 7 `dangerouslySetInnerHTML` usages in `ScanDetail.tsx` and `Workspaces.tsx` with DOMPurify sanitization (strict tag/attribute allow-list)
+- Removed `python-jose` dependency in favor of sole `pyjwt` JWT library
+
+### Refactored — Frontend Architecture
+- **ScanDetail.tsx split**: Decomposed 1,979-line monolith into 10 focused tab components (`SummaryTab`, `BrowseTab`, `CorrelationsTab`, `GraphTab`, `GeoMapTab`, `ReportTab`, `SettingsTab`, `LogTab`, `MiniStat`, `ExportDropdown`) + shared `geo.ts` utility; page shell reduced to ~130 lines
+- **ESLint flat config**: Added `eslint.config.js` (ESLint v9) with `typescript-eslint`, `react-hooks` plugin, and `@typescript-eslint/no-explicit-any` warning rule
+- **Eliminated all 18 explicit `any` types**: Created shared `getErrorMessage()` utility using `axios.isAxiosError()` for type-safe error extraction; replaced 15 `catch(err: any)` patterns, fixed 1 `onError: (err: any)`, fixed 2 untyped `.map()` callbacks
+- Fixed ESLint errors: unnecessary escape characters, ternary-as-statement expressions
+
+### Reliability — Module Stop Guards
+- Added `self.checkForStop()` guards to 35 critical module loops (15 critical ≥40 body lines, 20 high-priority 24-39 body lines) enabling graceful scan cancellation
+- Modules patched: `sfp_leakcheck`, `sfp_tool_tlsx`, `sfp_tool_sslyze`, `sfp_tool_testsslsh`, `sfp_keybase`, `sfp_leakix`, `sfp_greynoise`, `sfp_arbitrum`, `sfp_grep_app`, `sfp_tool_dnsx`, `sfp_builtwith`, `sfp_names`, `sfp_certspotter`, `sfp_dehashed`, `sfp_mnemonic`, `sfp_circllu`, `sfp_tool_onesixtyone`, `sfp_tool_gitleaks`, `sfp_alienvault`, `sfp_aparat`, `sfp_tool_linkfinder`, `sfp_tool_sslscan`, `sfp_apileak`, `sfp_tool_gospider`, `sfp_company`, `sfp_discord`, `sfp_wechat`, `sfp_douyin`, `sfp_rocketreach`, `sfp_xiaohongshu`, `sfp_emailcrawlr`, `sfp_tool_nikto`, `sfp_tool_dalfox`, `sfp_apple_itunes`, `sfp_hackertarget`
+
+### Cleanup — Dead Code Removal
+- Removed dead `import urllib.error` and `import urllib.request` from 30 modules (only `urllib.parse` was used)
+- Fixed `sfp_zoomeye` latent `NameError` bug: was catching `urllib.error.HTTPError/URLError` without importing `urllib` — dead except blocks removed since module uses `self.fetch_url()`
+- Removed 3,445 lines of dead test code: 120 never-implemented integration test stubs (`@unittest.skip("todo")` with dummy data), 4 broken unit test stubs (had `selfdepth=0` instead of `self, depth=0`)
+- Fixed unconditional `skipIf(True)` in `test_sfcli_enhanced.py` → proper `os.name == 'nt'` platform guard
+
+### Dependencies
+- Removed unused `werkzeug` from requirements (never imported)
+- Moved `openai` to optional comment (LLM client uses raw HTTP, never imports the package)
+- Added note that `weasyprint` is optional (PDF export only)
 
 ### Fixed — Frontend Visualization Bugs
 - **Modules page**: Enabled/Disabled stat cards now compute counts client-side from per-module status map; previously relied on server aggregate fields that could lag after toggling a module
