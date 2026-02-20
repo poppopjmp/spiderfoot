@@ -65,6 +65,8 @@ class sfp_xiaohongshu(SpiderFootModernPlugin):
             self._seen_posts = set()
 
         for username in usernames:
+            if self.checkForStop():
+                return
             try:
                 # --- MOCKED API CALL ---
                 # Simulate API/network error for a specific user

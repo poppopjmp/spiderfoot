@@ -193,6 +193,9 @@ class sfp_leakix(SpiderFootModernPlugin):
 
             if services:
                 for service in services:
+                    if self.checkForStop():
+                        return
+
                     src = event
                     ipevt = None
                     hostname = service.get('host')

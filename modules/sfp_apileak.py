@@ -96,6 +96,8 @@ class sfp_apileak(SpiderFootModernPlugin):
             self.debug(f"GitHub search returned {len(items)} results for query: {query}")
             seen = set()
             for item in items:
+                if self.checkForStop():
+                    return
                 file_url = item.get("html_url", "")
                 if not file_url or file_url in seen:
                     continue

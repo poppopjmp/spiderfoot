@@ -64,6 +64,8 @@ class sfp_douyin(SpiderFootModernPlugin):
             self._seen_videos = set()
 
         for username in usernames:
+            if self.checkForStop():
+                return
             try:
                 # --- MOCKED API CALL ---
                 # Simulate API/network error for a specific user

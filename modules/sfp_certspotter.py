@@ -195,6 +195,9 @@ class sfp_certspotter(SpiderFootModernPlugin):
             self.notifyListeners(evt)
 
             for result in data:
+                if self.checkForStop():
+                    return
+
                 cert_hosts = result.get('dns_names')
 
                 if cert_hosts:

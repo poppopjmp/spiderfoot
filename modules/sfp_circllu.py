@@ -215,6 +215,8 @@ class sfp_circllu(SpiderFootModernPlugin):
 
             # CIRCL.LU doesn't return valid JSON - it's one JSON record per line
             for line in ret.split("\n"):
+                if self.checkForStop():
+                    return
                 if len(line) < 2:
                     continue
                 try:

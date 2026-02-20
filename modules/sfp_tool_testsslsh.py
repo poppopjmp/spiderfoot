@@ -161,6 +161,9 @@ class sfp_tool_testsslsh(SpiderFootModernPlugin):
             targets.append(eventData)
 
         for target in targets:
+            if self.checkForStop():
+                return
+
             self.results[target] = True
 
             # Create a temporary output file

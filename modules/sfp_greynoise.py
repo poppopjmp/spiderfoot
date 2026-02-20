@@ -227,6 +227,9 @@ class sfp_greynoise(SpiderFootModernPlugin):
             return
 
         for rec in records:
+            if self.checkForStop():
+                return
+
             ip_addr = rec.get("ip", eventData)
             self.debug(f"Found threat info in Greynoise: {ip_addr}")
 

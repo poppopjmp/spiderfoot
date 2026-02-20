@@ -403,6 +403,8 @@ class sfp_alienvault(SpiderFootModernPlugin):
                     self.debug(
                         f"Found passive DNS results for {eventData} in AlienVault OTX")
                     for rec in passive_dns:
+                        if self.checkForStop():
+                            return
                         host = rec.get('hostname')
 
                         if not host:

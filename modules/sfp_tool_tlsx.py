@@ -155,6 +155,9 @@ class sfp_tool_tlsx(SpiderFootModernPlugin):
             if os.path.exists(output_path):
                 with open(output_path, "r") as f:
                     for line in f:
+                        if self.checkForStop():
+                            return
+
                         line = line.strip()
                         if not line:
                             continue

@@ -167,6 +167,8 @@ class sfp_tool_gitleaks(SpiderFootModernPlugin):
 
                 if isinstance(findings, list):
                     for finding in findings:
+                        if self.checkForStop():
+                            return
                         rule_id = finding.get("RuleID", "unknown")
                         description = finding.get("Description", "Secret detected")
                         file_path = finding.get("File", "")

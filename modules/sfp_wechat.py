@@ -71,6 +71,8 @@ class sfp_wechat(SpiderFootModernPlugin):
             self._seen_msgs = set()
 
         for user_id in user_ids:
+            if self.checkForStop():
+                return
             try:
                 # --- MOCKED API CALL ---
                 # Simulate API/network error for a specific user

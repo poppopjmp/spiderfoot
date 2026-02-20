@@ -144,6 +144,8 @@ class sfp_tool_gospider(SpiderFootModernPlugin):
 
             count = 0
             for line in proc.stdout.splitlines():
+                if self.checkForStop():
+                    return
                 if count >= self.opts["max_results"]:
                     break
                 line = line.strip()

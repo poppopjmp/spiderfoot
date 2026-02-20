@@ -67,6 +67,8 @@ class sfp_aparat(SpiderFootModernPlugin):
         seen_global = set()
         total_found = 0
         for username in usernames:
+            if self.checkForStop():
+                return
             url = f"https://www.aparat.com/{username}/videos"
             self.debug(f"Fetching Aparat videos for user: {username} from {url}")
             try:

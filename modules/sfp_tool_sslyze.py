@@ -147,6 +147,9 @@ class sfp_tool_sslyze(SpiderFootModernPlugin):
 
                 # Process server scan results
                 for server_result in report.get("server_scan_results", []):
+                    if self.checkForStop():
+                        return
+
                     scan_result = server_result.get("scan_result", {})
 
                     # Certificate info

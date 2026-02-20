@@ -126,6 +126,8 @@ class sfp_tool_sslscan(SpiderFootModernPlugin):
             vulns = []
 
             for line in output.splitlines():
+                if self.checkForStop():
+                    return
                 line = line.strip()
 
                 # Parse cipher suites

@@ -181,6 +181,9 @@ class sfp_keybase(SpiderFootModernPlugin):
             return
 
         for user in data:
+            if self.checkForStop():
+                return
+
             if not user:
                 continue
 

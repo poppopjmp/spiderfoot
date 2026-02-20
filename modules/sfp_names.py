@@ -129,6 +129,9 @@ class sfp_names(SpiderFootModernPlugin):
             r"([A-Z][a-z�������������]+)\s+.?.?\s?([A-Z][�������������a-zA-Z\'\-]+)")
         m = re.findall(rx, eventData)
         for r in m:
+            if self.checkForStop():
+                return
+
             # Start off each match as 0 points.
             p = 0
             notindict = False

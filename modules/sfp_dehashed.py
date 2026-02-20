@@ -199,6 +199,9 @@ class sfp_dehashed(SpiderFootModernPlugin):
                 return
 
             for row in data.get('entries'):
+                if self.checkForStop():
+                    return
+
                 email = row.get('email')
                 password = row.get('password')
                 passwordHash = row.get('hashed_password')

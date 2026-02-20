@@ -151,6 +151,8 @@ class sfp_tool_dalfox(SpiderFootModernPlugin):
                 if content:
                     # Dalfox JSON output: one JSON object per line
                     for line in content.splitlines():
+                        if self.checkForStop():
+                            return
                         line = line.strip()
                         if not line:
                             continue

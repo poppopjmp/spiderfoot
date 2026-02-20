@@ -156,6 +156,8 @@ class sfp_tool_onesixtyone(SpiderFootModernPlugin):
             targets.append(eventData)
 
         for target in targets:
+            if self.checkForStop():
+                return
             args = [
                 exe,
                 "-c",

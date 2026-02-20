@@ -105,6 +105,9 @@ class sfp_arbitrum(SpiderFootModernPlugin):
         output_format = self.opts.get("output_format", "summary")
 
         for address in addresses:
+            if self.checkForStop():
+                return
+
             url = (
                 f"https://api.arbiscan.io/api?module=account&action=txlist&address={address}"
                 f"&startblock={start_block}&endblock={end_block if end_block > 0 else 99999999}"

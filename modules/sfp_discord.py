@@ -85,6 +85,8 @@ class sfp_discord(SpiderFootModernPlugin):
             "User-Agent": "DiscordBot (https://github.com/sm/sfp_discord, 1.0)",
         }
         for channel_id in channel_ids:
+            if self.checkForStop():
+                return
             url = f"https://discord.com/api/v10/channels/{channel_id}/messages?limit={max_messages}"
             try:
                 resp = requests.get(url, headers=headers, timeout=15)

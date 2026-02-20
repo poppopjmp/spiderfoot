@@ -212,6 +212,9 @@ class sfp_mnemonic(SpiderFootModernPlugin):
             position += per_page
 
             for r in data:
+                if self.checkForStop():
+                    return
+
                 if "*" in r['query'] or "%" in r['query']:
                     continue
 

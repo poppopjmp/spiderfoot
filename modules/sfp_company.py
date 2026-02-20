@@ -131,6 +131,8 @@ class sfp_company(SpiderFootModernPlugin):
 
         myres = list()
         for chunk in chunks:
+            if self.checkForStop():
+                return
             for pat in pattern_match_re:
                 matches = re.findall(
                     pattern_prefix + "(" + pat + ")" + pattern_suffix, chunk, re.MULTILINE | re.DOTALL)

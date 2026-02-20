@@ -188,6 +188,9 @@ class sfp_leakcheck(SpiderFootModernPlugin):
             return
 
         for entry in data.get("result", []):
+            if self.checkForStop():
+                return
+
             email = entry.get("email")
             username = entry.get("username")
             phone = entry.get("phone")

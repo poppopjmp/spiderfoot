@@ -243,6 +243,9 @@ class sfp_builtwith(SpiderFootModernPlugin):
         agelimit = int(time.time() * 1000) - (86400000 * self.opts['maxage'])
 
         for r in data:
+            if self.checkForStop():
+                return
+
             if "Domain" not in r or "Identifiers" not in r:
                 self.debug("Data returned not in the format requested.")
                 continue

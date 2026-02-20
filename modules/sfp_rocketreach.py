@@ -185,6 +185,8 @@ class sfp_rocketreach(SpiderFootModernPlugin):
             return
 
         for match in ret["results"]:
+            if self.checkForStop():
+                return
             # Extract email addresses
             email = match.get("email")
             if email:

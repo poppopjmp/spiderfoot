@@ -140,6 +140,8 @@ class sfp_tool_linkfinder(SpiderFootModernPlugin):
             seen = set()
 
             for line in (proc.stdout or "").splitlines():
+                if self.checkForStop():
+                    return
                 line = line.strip()
                 if not line:
                     continue

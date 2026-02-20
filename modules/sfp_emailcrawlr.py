@@ -193,6 +193,8 @@ class sfp_emailcrawlr(SpiderFootModernPlugin):
                 return
 
             for res in emails:
+                if self.checkForStop():
+                    return
                 email = res.get('email')
                 if email:
                     mail_domain = email.lower().split('@')[1]

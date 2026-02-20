@@ -135,6 +135,8 @@ class sfp_apple_itunes(SpiderFootModernPlugin):
         found = False
 
         for result in data:
+            if self.checkForStop():
+                return
             bundleId = result.get('bundleId')
 
             if not bundleId:

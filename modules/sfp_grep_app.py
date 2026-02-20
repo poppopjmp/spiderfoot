@@ -166,6 +166,9 @@ class sfp_grep_app(SpiderFootModernPlugin):
                 return
 
             for result in data:
+                if self.checkForStop():
+                    return
+
                 if result is None:
                     continue
 
