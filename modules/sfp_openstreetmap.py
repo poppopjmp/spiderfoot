@@ -18,9 +18,7 @@ from __future__ import annotations
 import json
 import re
 import time
-import urllib.error
 import urllib.parse
-import urllib.request
 
 from spiderfoot import SpiderFootEvent
 from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin

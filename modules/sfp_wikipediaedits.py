@@ -17,9 +17,7 @@ from __future__ import annotations
 
 import datetime
 import re
-import urllib.error
 import urllib.parse
-import urllib.request
 from html.parser import HTMLParser
 
 from spiderfoot import SpiderFootEvent

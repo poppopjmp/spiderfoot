@@ -187,12 +187,7 @@ class sfp_zoomeye(SpiderFootModernPlugin):
                 self.error(f"Error processing JSON response from ZoomEye: {e}")
                 return None
                 
-        except urllib.error.HTTPError as e:
-            self.error(f"HTTP error when connecting to ZoomEye API: {e}")
-            return None
-        except urllib.error.URLError as e:
-            self.error(f"URL error when connecting to ZoomEye API: {e}")
-            return None
+
         except ConnectionError as e:
             self.error(f"Connection error when querying ZoomEye API: {e}")
             return None
