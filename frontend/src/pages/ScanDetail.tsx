@@ -5,6 +5,7 @@ import {
   scanApi, agentsApi, formatEpoch, formatDuration,
   type Scan, type ScanEvent, type ScanCorrelation, type ScanLogEntry, type EventSummaryDetail,
 } from '../lib/api';
+import { sanitizeHTML } from '../lib/sanitize';
 import {
   ArrowLeft, StopCircle, RotateCcw, Download, Share2,
   BarChart3, List, Settings, ScrollText,
@@ -1652,7 +1653,7 @@ function ReportTab({ scanId, scan }: { scanId: string; scan?: Scan }) {
 
   const exportPDF = () => {
     if (!reportContent) return;
-    const html = renderMarkdown(reportContent);
+    const html = sanitizeHTML(renderMarkdown(reportContent) ?? '');
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
     printWindow.document.write(`<!DOCTYPE html>
@@ -1760,7 +1761,7 @@ ${html}
         <div className="card p-6 lg:p-8">
           <div
             className="markdown-report max-w-none"
-            dangerouslySetInnerHTML={{ __html: renderMarkdown(reportContent) }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHTML(renderMarkdown(reportContent) ?? '') }}
           />
         </div>
       ) : (
