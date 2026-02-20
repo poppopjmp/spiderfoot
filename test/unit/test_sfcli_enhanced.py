@@ -432,7 +432,7 @@ class TestSpiderFootCliEnhanced(TestModuleBase):
             output = mock_stdout.getvalue()
             self.assertIn("cli.history set to", output)
 
-    @unittest.skipIf(True, "readline test disabled - Windows compatibility")
+    @unittest.skipIf(os.name == 'nt', "readline not available on Windows")
     def test_do_history_list_option(self):
         """Test history list command."""
         with patch('readline.get_history_length', return_value=5):
