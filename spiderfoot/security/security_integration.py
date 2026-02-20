@@ -295,7 +295,7 @@ class SecurityIntegrator:
         migration_plan['phases']['phase_1_critical']['tasks'].extend([
             {
                 'task': 'Install security dependencies',
-                'action': 'pip install cryptography PyJWT redis bleach werkzeug',
+                'action': 'pip install cryptography PyJWT redis bleach',
                 'files_affected': ['requirements.txt'],
                 'risk': 'low'
             },

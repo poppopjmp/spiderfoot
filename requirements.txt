@@ -43,14 +43,12 @@ pyjwt>=2.8.0,<3.0.0
 passlib>=1.7.4,<2.0.0
 bcrypt>=4.0.0,<5.0.0
 ldap3>=2.9.0,<3.0.0
-werkzeug>=2.3.0,<3.0.0
 slowapi>=0.1.9,<1.0.0
 email-validator>=2.0.0,<3.0.0
 bleach>=6.0.0,<7.0.0
 
 # Data & integrations
 redis>=5.0.0,<6.0.0
-openai>=1.0.0,<3.0.0
 telethon>=1.36.0,<2.0.0
 python-dateutil>=2.8.0,<3.0.0
 minio>=7.2.0,<8.0.0
@@ -67,6 +65,9 @@ protobuf>=4.25.0,<7.0.0
 celery[redis]>=5.4.0,<6.0.0
 flower>=2.0.0,<3.0.0
 
-# PDF report generation
+# PDF report generation (optional — install for PDF export)
 weasyprint>=62.0,<69.0.0
 jinja2>=3.1.0,<4.0.0
+
+# Optional integrations (not required for core functionality)
+# openai>=1.0.0,<3.0.0  # Only if using OpenAI API directly (llm_client uses raw HTTP)
