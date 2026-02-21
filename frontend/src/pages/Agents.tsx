@@ -100,23 +100,23 @@ export default function AgentsPage() {
 
   const { data: agentStatus, isLoading: agentsLoading, refetch: refetchAgents } = useQuery({
     queryKey: ['agents-status'],
-    queryFn: agentsApi.status,
+    queryFn: ({ signal }) => agentsApi.status(signal),
     refetchInterval: 30000,
   });
 
   const { data: presetsData } = useQuery({
     queryKey: ['ai-presets'],
-    queryFn: aiConfigApi.presets,
+    queryFn: ({ signal }) => aiConfigApi.presets(signal),
   });
 
   const { data: targetTypesData } = useQuery({
     queryKey: ['ai-target-types'],
-    queryFn: aiConfigApi.targetTypes,
+    queryFn: ({ signal }) => aiConfigApi.targetTypes(signal),
   });
 
   const { data: stealthData } = useQuery({
     queryKey: ['ai-stealth-levels'],
-    queryFn: aiConfigApi.stealthLevels,
+    queryFn: ({ signal }) => aiConfigApi.stealthLevels(signal),
   });
 
   const presets: Preset[] = presetsData?.presets ?? [];

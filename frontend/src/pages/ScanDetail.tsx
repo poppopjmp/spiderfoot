@@ -25,7 +25,7 @@ export default function ScanDetailPage() {
 
   const { data: scan, isLoading: scanLoading } = useQuery({
     queryKey: ['scan', scanId],
-    queryFn: () => scanApi.get(scanId!),
+    queryFn: ({ signal }) => scanApi.get(scanId!, signal),
     enabled: !!scanId,
     refetchInterval: (query) => isRunning(query.state.data) ? 5000 : 30000,
   });

@@ -10,7 +10,7 @@ function GeoMapTab({ scanId }: { scanId: string }) {
   /* Fetch all geo-related event types */
   const geoQueries = GEO_EVENT_TYPES.map((t) => ({
     queryKey: ['scan-events-geo', scanId, t],
-    queryFn: () => scanApi.events(scanId, { event_type: t }),
+    queryFn: ({ signal }: { signal?: AbortSignal }) => scanApi.events(scanId, { event_type: t }, signal),
     enabled: !!scanId,
   }));
 

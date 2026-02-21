@@ -9,7 +9,7 @@ function CorrelationsTab({ scanId }: { scanId: string }) {
 
   const { data, isLoading } = useQuery({
     queryKey: ['scan-correlations', scanId],
-    queryFn: () => scanApi.correlations(scanId),
+    queryFn: ({ signal }) => scanApi.correlations(scanId, signal),
   });
 
   const runMut = useMutation({

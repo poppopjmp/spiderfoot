@@ -69,33 +69,33 @@ export default function WorkspacesPage() {
 
   const { data: workspacesData, isLoading } = useQuery({
     queryKey: ['workspaces'],
-    queryFn: () => workspaceApi.list(),
+    queryFn: ({ signal }) => workspaceApi.list(undefined, signal),
   });
 
   const workspaces: Workspace[] = workspacesData?.items ?? [];
 
   const { data: workspaceDetail } = useQuery({
     queryKey: ['workspace', selectedWorkspace],
-    queryFn: () => workspaceApi.get(selectedWorkspace!),
+    queryFn: ({ signal }) => workspaceApi.get(selectedWorkspace!, signal),
     enabled: !!selectedWorkspace,
   });
 
   const { data: targets } = useQuery({
     queryKey: ['workspace-targets', selectedWorkspace],
-    queryFn: () => workspaceApi.targets(selectedWorkspace!),
+    queryFn: ({ signal }) => workspaceApi.targets(selectedWorkspace!, signal),
     enabled: !!selectedWorkspace,
   });
 
   const { data: summary } = useQuery({
     queryKey: ['workspace-summary', selectedWorkspace],
-    queryFn: () => workspaceApi.summary(selectedWorkspace!),
+    queryFn: ({ signal }) => workspaceApi.summary(selectedWorkspace!, signal),
     enabled: !!selectedWorkspace,
   });
 
   /* Fetch scans list to show workspace-associated scans */
   const { data: scansData } = useQuery({
     queryKey: ['scans', { page: 1, page_size: 200 }],
-    queryFn: () => scanApi.list({ page: 1, page_size: 200 }),
+    queryFn: ({ signal }) => scanApi.list({ page: 1, page_size: 200 }, signal),
   });
   const allScans: Scan[] = scansData?.items ?? [];
 

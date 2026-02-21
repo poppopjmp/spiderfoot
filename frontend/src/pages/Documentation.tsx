@@ -10,15 +10,15 @@ export default function DocumentationPage() {
 
   const { data: modulesData } = useQuery({
     queryKey: ['doc-modules'],
-    queryFn: () => dataApi.modules({ page: 1, page_size: 500 }),
+    queryFn: ({ signal }) => dataApi.modules({ page: 1, page_size: 500 }, signal),
   });
   const { data: entityData } = useQuery({
     queryKey: ['doc-entity-types'],
-    queryFn: () => dataApi.entityTypes(),
+    queryFn: ({ signal }) => dataApi.entityTypes(signal),
   });
   const { data: catData } = useQuery({
     queryKey: ['doc-module-categories'],
-    queryFn: () => dataApi.moduleCategories(),
+    queryFn: ({ signal }) => dataApi.moduleCategories(signal),
   });
 
   const modules = modulesData?.items ?? [];

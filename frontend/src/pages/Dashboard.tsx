@@ -15,20 +15,20 @@ import {
 export default function DashboardPage() {
   const { data: scanData, isLoading: scansLoading } = useQuery({
     queryKey: ['scans', { page: 1, page_size: 10, sort_by: 'created', sort_order: 'desc' }],
-    queryFn: () => scanApi.list({ page: 1, page_size: 10, sort_by: 'created', sort_order: 'desc' }),
+    queryFn: ({ signal }) => scanApi.list({ page: 1, page_size: 10, sort_by: 'created', sort_order: 'desc' }, signal),
     refetchInterval: 15_000,
   });
 
   // Separate query for accurate status counts across ALL scans
   const { data: searchData } = useQuery({
     queryKey: ['scan-stats'],
-    queryFn: () => scanApi.search({ limit: 1, offset: 0 }),
+    queryFn: ({ signal }) => scanApi.search({ limit: 1, offset: 0 }, signal),
     refetchInterval: 15_000,
   });
 
   const { data: health } = useQuery({
     queryKey: ['health-dashboard'],
-    queryFn: healthApi.dashboard,
+    queryFn: ({ signal }) => healthApi.dashboard(signal),
     retry: 1,
     refetchInterval: 30_000,
   });

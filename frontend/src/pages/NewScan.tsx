@@ -45,15 +45,15 @@ export default function NewScanPage() {
   /* Data queries */
   const { data: modulesData } = useQuery({
     queryKey: ['modules', { page: 1, page_size: 500 }],
-    queryFn: () => dataApi.modules({ page: 1, page_size: 500 }),
+    queryFn: ({ signal }) => dataApi.modules({ page: 1, page_size: 500 }, signal),
   });
   const { data: entityData } = useQuery({
     queryKey: ['entity-types'],
-    queryFn: dataApi.entityTypes,
+    queryFn: ({ signal }) => dataApi.entityTypes(signal),
   });
   const { data: profilesData } = useQuery({
     queryKey: ['scan-profiles'],
-    queryFn: () => scanApi.profiles(),
+    queryFn: ({ signal }) => scanApi.profiles(signal),
   });
 
   const profiles: ScanProfile[] = profilesData?.profiles ?? [];

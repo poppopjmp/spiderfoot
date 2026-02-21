@@ -26,11 +26,11 @@ export default function SettingsPage() {
   /* Queries */
   const { data: configData, isLoading: configLoading } = useQuery({
     queryKey: ['config'],
-    queryFn: configApi.get,
+    queryFn: ({ signal }) => configApi.get(signal),
   });
   const { data: modulesData } = useQuery({
     queryKey: ['modules', { page: 1, page_size: 500 }],
-    queryFn: () => dataApi.modules({ page: 1, page_size: 500 }),
+    queryFn: ({ signal }) => dataApi.modules({ page: 1, page_size: 500 }, signal),
   });
 
   const config = configData?.config ?? {};

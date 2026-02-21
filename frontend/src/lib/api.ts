@@ -149,113 +149,113 @@ export interface ScanLogEntry {
 }
 
 export const scanApi = {
-  list: (params?: { page?: number; page_size?: number; sort_by?: string; sort_order?: string }) =>
-    api.get<PaginatedResponse<Scan>>('/api/scans', { params }).then((r) => r.data),
+  list: (params?: { page?: number; page_size?: number; sort_by?: string; sort_order?: string }, signal?: AbortSignal) =>
+    api.get<PaginatedResponse<Scan>>('/api/scans', { params, signal }).then((r) => r.data),
 
   search: (params: {
     target?: string; status?: string; tag?: string;
     started_after?: string; started_before?: string;
     module?: string; sort_by?: string; sort_order?: string;
     limit?: number; offset?: number;
-  }) =>
+  }, signal?: AbortSignal) =>
     api.get<{ total: number; scans: Scan[]; facets: { status: Record<string, number> } }>(
-      '/api/scans/search', { params },
+      '/api/scans/search', { params, signal },
     ).then((r) => r.data),
 
-  get: (id: string) => api.get<Scan>(`/api/scans/${id}`).then((r) => r.data),
+  get: (id: string, signal?: AbortSignal) => api.get<Scan>(`/api/scans/${id}`, { signal }).then((r) => r.data),
 
-  create: (data: ScanCreateRequest) =>
-    api.post<ScanCreateResponse>('/api/scans', data).then((r) => r.data),
+  create: (data: ScanCreateRequest, signal?: AbortSignal) =>
+    api.post<ScanCreateResponse>('/api/scans', data, { signal }).then((r) => r.data),
 
-  delete: (id: string) => api.delete(`/api/scans/${id}`).then((r) => r.data),
+  delete: (id: string, signal?: AbortSignal) => api.delete(`/api/scans/${id}`, { signal }).then((r) => r.data),
 
-  deleteFull: (id: string) => api.delete(`/api/scans/${id}/full`).then((r) => r.data),
+  deleteFull: (id: string, signal?: AbortSignal) => api.delete(`/api/scans/${id}/full`, { signal }).then((r) => r.data),
 
-  stop: (id: string) =>
-    api.post<{ message: string; status: string }>(`/api/scans/${id}/stop`).then((r) => r.data),
+  stop: (id: string, signal?: AbortSignal) =>
+    api.post<{ message: string; status: string }>(`/api/scans/${id}/stop`, null, { signal }).then((r) => r.data),
 
-  rerun: (id: string) =>
-    api.post<{ new_scan_id: string; message: string }>(`/api/scans/${id}/rerun`).then((r) => r.data),
+  rerun: (id: string, signal?: AbortSignal) =>
+    api.post<{ new_scan_id: string; message: string }>(`/api/scans/${id}/rerun`, null, { signal }).then((r) => r.data),
 
-  clone: (id: string) =>
-    api.post<{ new_scan_id: string; message: string }>(`/api/scans/${id}/clone`).then((r) => r.data),
+  clone: (id: string, signal?: AbortSignal) =>
+    api.post<{ new_scan_id: string; message: string }>(`/api/scans/${id}/clone`, null, { signal }).then((r) => r.data),
 
-  summary: (id: string, by: 'type' | 'module' | 'entity' = 'type') =>
+  summary: (id: string, by: 'type' | 'module' | 'entity' = 'type', signal?: AbortSignal) =>
     api.get<{
       summary: Record<string, number>;
       details: EventSummaryDetail[];
       total_types: number;
-    }>(`/api/scans/${id}/summary`, { params: { by } }).then((r) => r.data),
+    }>(`/api/scans/${id}/summary`, { params: { by }, signal }).then((r) => r.data),
 
-  events: (id: string, params?: { event_type?: string; filter_fp?: boolean }) =>
-    api.get<{ events: ScanEvent[]; total: number }>(`/api/scans/${id}/events`, { params }).then((r) => r.data),
+  events: (id: string, params?: { event_type?: string; filter_fp?: boolean }, signal?: AbortSignal) =>
+    api.get<{ events: ScanEvent[]; total: number }>(`/api/scans/${id}/events`, { params, signal }).then((r) => r.data),
 
-  eventsUnique: (id: string, eventType?: string) =>
+  eventsUnique: (id: string, eventType?: string, signal?: AbortSignal) =>
     api.get<{ events: { data: string; type: string; count: number }[]; total: number }>(
-      `/api/scans/${id}/events/unique`, { params: { event_type: eventType || 'ALL' } },
+      `/api/scans/${id}/events/unique`, { params: { event_type: eventType || 'ALL' }, signal },
     ).then((r) => r.data),
 
-  correlations: (id: string) =>
-    api.get<{ correlations: ScanCorrelation[]; total: number }>(`/api/scans/${id}/correlations`).then((r) => r.data),
+  correlations: (id: string, signal?: AbortSignal) =>
+    api.get<{ correlations: ScanCorrelation[]; total: number }>(`/api/scans/${id}/correlations`, { signal }).then((r) => r.data),
 
-  correlationsSummary: (id: string, by: 'risk' | 'rule' = 'risk') =>
-    api.get(`/api/scans/${id}/correlations/summary`, { params: { by } }).then((r) => r.data),
+  correlationsSummary: (id: string, by: 'risk' | 'rule' = 'risk', signal?: AbortSignal) =>
+    api.get(`/api/scans/${id}/correlations/summary`, { params: { by }, signal }).then((r) => r.data),
 
-  runCorrelations: (id: string) =>
-    api.post(`/api/scans/${id}/correlations/run`).then((r) => r.data),
+  runCorrelations: (id: string, signal?: AbortSignal) =>
+    api.post(`/api/scans/${id}/correlations/run`, null, { signal }).then((r) => r.data),
 
-  logs: (id: string, params?: { limit?: number; offset?: number }) =>
-    api.get<{ logs: ScanLogEntry[]; total: number }>(`/api/scans/${id}/logs`, { params }).then((r) => r.data),
+  logs: (id: string, params?: { limit?: number; offset?: number }, signal?: AbortSignal) =>
+    api.get<{ logs: ScanLogEntry[]; total: number }>(`/api/scans/${id}/logs`, { params, signal }).then((r) => r.data),
 
-  timeline: (id: string, limit = 200) =>
-    api.get(`/api/scans/${id}/timeline`, { params: { limit } }).then((r) => r.data),
+  timeline: (id: string, limit = 200, signal?: AbortSignal) =>
+    api.get(`/api/scans/${id}/timeline`, { params: { limit }, signal }).then((r) => r.data),
 
-  options: (id: string) =>
-    api.get(`/api/scans/${id}/options`).then((r) => r.data),
+  options: (id: string, signal?: AbortSignal) =>
+    api.get(`/api/scans/${id}/options`, { signal }).then((r) => r.data),
 
-  exportEvents: (id: string, params?: { event_type?: string; filetype?: string }) =>
-    api.get(`/api/scans/${id}/events/export`, { params, responseType: 'blob' as const }),
+  exportEvents: (id: string, params?: { event_type?: string; filetype?: string }, signal?: AbortSignal) =>
+    api.get(`/api/scans/${id}/events/export`, { params, responseType: 'blob' as const, signal }),
 
-  exportLogs: (id: string) =>
-    api.get(`/api/scans/${id}/logs/export`, { responseType: 'blob' as const }),
+  exportLogs: (id: string, signal?: AbortSignal) =>
+    api.get(`/api/scans/${id}/logs/export`, { responseType: 'blob' as const, signal }),
 
-  viz: (id: string, gexf = false) =>
-    api.get(`/api/scans/${id}/viz`, { params: { gexf: gexf ? '1' : '0' } }).then((r) => r.data),
+  viz: (id: string, gexf = false, signal?: AbortSignal) =>
+    api.get(`/api/scans/${id}/viz`, { params: { gexf: gexf ? '1' : '0' }, signal }).then((r) => r.data),
 
-  compare: (scanA: string, scanB: string) =>
-    api.get('/api/scans/compare', { params: { scan_a: scanA, scan_b: scanB } }).then((r) => r.data),
+  compare: (scanA: string, scanB: string, signal?: AbortSignal) =>
+    api.get('/api/scans/compare', { params: { scan_a: scanA, scan_b: scanB }, signal }).then((r) => r.data),
 
-  setFalsePositive: (id: string, resultIds: string[], fp: boolean) =>
-    api.post(`/api/scans/${id}/results/falsepositive`, { resultids: resultIds, fp: fp ? '1' : '0' }).then((r) => r.data),
+  setFalsePositive: (id: string, resultIds: string[], fp: boolean, signal?: AbortSignal) =>
+    api.post(`/api/scans/${id}/results/falsepositive`, { resultids: resultIds, fp: fp ? '1' : '0' }, { signal }).then((r) => r.data),
 
-  tags: (id: string) =>
-    api.get<{ scan_id: string; tags: string[] }>(`/api/scans/${id}/tags`).then((r) => r.data),
+  tags: (id: string, signal?: AbortSignal) =>
+    api.get<{ scan_id: string; tags: string[] }>(`/api/scans/${id}/tags`, { signal }).then((r) => r.data),
 
-  setTags: (id: string, tags: string[]) =>
-    api.put(`/api/scans/${id}/tags`, tags).then((r) => r.data),
+  setTags: (id: string, tags: string[], signal?: AbortSignal) =>
+    api.put(`/api/scans/${id}/tags`, tags, { signal }).then((r) => r.data),
 
-  metadata: (id: string) =>
-    api.get(`/api/scans/${id}/metadata`).then((r) => r.data),
+  metadata: (id: string, signal?: AbortSignal) =>
+    api.get(`/api/scans/${id}/metadata`, { signal }).then((r) => r.data),
 
-  notes: (id: string) =>
-    api.get<{ notes: string }>(`/api/scans/${id}/notes`).then((r) => r.data),
+  notes: (id: string, signal?: AbortSignal) =>
+    api.get<{ notes: string }>(`/api/scans/${id}/notes`, { signal }).then((r) => r.data),
 
-  setNotes: (id: string, notes: string) =>
-    api.patch(`/api/scans/${id}/notes`, { notes }).then((r) => r.data),
+  setNotes: (id: string, notes: string, signal?: AbortSignal) =>
+    api.patch(`/api/scans/${id}/notes`, { notes }, { signal }).then((r) => r.data),
 
-  archive: (id: string) => api.post(`/api/scans/${id}/archive`).then((r) => r.data),
-  unarchive: (id: string) => api.post(`/api/scans/${id}/unarchive`).then((r) => r.data),
+  archive: (id: string, signal?: AbortSignal) => api.post(`/api/scans/${id}/archive`, null, { signal }).then((r) => r.data),
+  unarchive: (id: string, signal?: AbortSignal) => api.post(`/api/scans/${id}/unarchive`, null, { signal }).then((r) => r.data),
 
-  bulkStop: (ids: string[]) =>
-    api.post('/api/scans/bulk/stop', { scan_ids: ids }).then((r) => r.data),
-  bulkDelete: (ids: string[]) =>
-    api.post('/api/scans/bulk/delete', { scan_ids: ids }).then((r) => r.data),
+  bulkStop: (ids: string[], signal?: AbortSignal) =>
+    api.post('/api/scans/bulk/stop', { scan_ids: ids }, { signal }).then((r) => r.data),
+  bulkDelete: (ids: string[], signal?: AbortSignal) =>
+    api.post('/api/scans/bulk/delete', { scan_ids: ids }, { signal }).then((r) => r.data),
 
-  profiles: () =>
-    api.get<{ profiles: ScanProfile[]; total: number }>('/api/scan-profiles').then((r) => r.data),
+  profiles: (signal?: AbortSignal) =>
+    api.get<{ profiles: ScanProfile[]; total: number }>('/api/scan-profiles', { signal }).then((r) => r.data),
 
-  profile: (name: string) =>
-    api.get<ScanProfile>(`/api/scan-profiles/${name}`).then((r) => r.data),
+  profile: (name: string, signal?: AbortSignal) =>
+    api.get<ScanProfile>(`/api/scan-profiles/${name}`, { signal }).then((r) => r.data),
 };
 
 export interface ScanProfile {
@@ -290,114 +290,114 @@ export interface Module {
 }
 
 export const dataApi = {
-  modules: (params?: { page?: number; page_size?: number }) =>
-    api.get<PaginatedResponse<Module>>('/api/data/modules', { params }).then((r) => r.data),
+  modules: (params?: { page?: number; page_size?: number }, signal?: AbortSignal) =>
+    api.get<PaginatedResponse<Module>>('/api/data/modules', { params, signal }).then((r) => r.data),
 
-  module: (name: string) =>
-    api.get<{ module: Module }>(`/api/data/modules/${name}`).then((r) => r.data),
+  module: (name: string, signal?: AbortSignal) =>
+    api.get<{ module: Module }>(`/api/data/modules/${name}`, { signal }).then((r) => r.data),
 
-  moduleOptions: (name: string) =>
-    api.get(`/api/data/modules/${name}/options`).then((r) => r.data),
+  moduleOptions: (name: string, signal?: AbortSignal) =>
+    api.get(`/api/data/modules/${name}/options`, { signal }).then((r) => r.data),
 
-  moduleCategories: () =>
-    api.get<{ module_categories: string[] }>('/api/data/module-categories').then((r) => r.data),
+  moduleCategories: (signal?: AbortSignal) =>
+    api.get<{ module_categories: string[] }>('/api/data/module-categories', { signal }).then((r) => r.data),
 
-  moduleTypes: () =>
-    api.get<{ module_types: string[] }>('/api/data/module-types').then((r) => r.data),
+  moduleTypes: (signal?: AbortSignal) =>
+    api.get<{ module_types: string[] }>('/api/data/module-types', { signal }).then((r) => r.data),
 
-  entityTypes: () =>
-    api.get<{ entity_types: string[] }>('/api/data/entity-types').then((r) => r.data),
+  entityTypes: (signal?: AbortSignal) =>
+    api.get<{ entity_types: string[] }>('/api/data/entity-types', { signal }).then((r) => r.data),
 
-  riskLevels: () =>
-    api.get<{ risk_levels: string[] }>('/api/data/risk-levels').then((r) => r.data),
+  riskLevels: (signal?: AbortSignal) =>
+    api.get<{ risk_levels: string[] }>('/api/data/risk-levels', { signal }).then((r) => r.data),
 
-  sources: () =>
-    api.get('/api/data/sources').then((r) => r.data),
+  sources: (signal?: AbortSignal) =>
+    api.get('/api/data/sources', { signal }).then((r) => r.data),
 
-  modulesStatus: () =>
+  modulesStatus: (signal?: AbortSignal) =>
     api.get<{
       total: number; enabled: number; disabled: number;
       modules: { module: string; enabled: boolean }[];
-    }>('/api/data/modules/status').then((r) => r.data),
+    }>('/api/data/modules/status', { signal }).then((r) => r.data),
 
-  moduleStats: () =>
-    api.get('/api/data/modules/stats').then((r) => r.data),
+  moduleStats: (signal?: AbortSignal) =>
+    api.get('/api/data/modules/stats', { signal }).then((r) => r.data),
 
-  moduleDependencies: () =>
-    api.get('/api/data/modules/dependencies').then((r) => r.data),
+  moduleDependencies: (signal?: AbortSignal) =>
+    api.get('/api/data/modules/dependencies', { signal }).then((r) => r.data),
 
-  enableModule: (name: string) =>
-    api.post(`/api/data/modules/${name}/enable`).then((r) => r.data),
+  enableModule: (name: string, signal?: AbortSignal) =>
+    api.post(`/api/data/modules/${name}/enable`, null, { signal }).then((r) => r.data),
 
-  disableModule: (name: string) =>
-    api.post(`/api/data/modules/${name}/disable`).then((r) => r.data),
+  disableModule: (name: string, signal?: AbortSignal) =>
+    api.post(`/api/data/modules/${name}/disable`, null, { signal }).then((r) => r.data),
 
-  validateModuleConfig: (name: string, config: Record<string, unknown>) =>
-    api.post(`/api/data/modules/${name}/validate-config`, config).then((r) => r.data),
+  validateModuleConfig: (name: string, config: Record<string, unknown>, signal?: AbortSignal) =>
+    api.post(`/api/data/modules/${name}/validate-config`, config, { signal }).then((r) => r.data),
 
-  globalOptions: () =>
-    api.get('/api/data/global-options').then((r) => r.data),
+  globalOptions: (signal?: AbortSignal) =>
+    api.get('/api/data/global-options', { signal }).then((r) => r.data),
 };
 
 // ── Config API ────────────────────────────────────────────────
 export const configApi = {
-  get: () =>
-    api.get<{ summary: object; config: Record<string, unknown>; version: string }>('/api/config').then((r) => r.data),
+  get: (signal?: AbortSignal) =>
+    api.get<{ summary: object; config: Record<string, unknown>; version: string }>('/api/config', { signal }).then((r) => r.data),
 
-  update: (options: Record<string, unknown>) =>
-    api.patch('/api/config', { options }).then((r) => r.data),
+  update: (options: Record<string, unknown>, signal?: AbortSignal) =>
+    api.patch('/api/config', { options }, { signal }).then((r) => r.data),
 
-  replace: (newConfig: Record<string, unknown>) =>
-    api.put('/api/config', newConfig).then((r) => r.data),
+  replace: (newConfig: Record<string, unknown>, signal?: AbortSignal) =>
+    api.put('/api/config', newConfig, { signal }).then((r) => r.data),
 
-  reload: () => api.post('/api/config/reload').then((r) => r.data),
+  reload: (signal?: AbortSignal) => api.post('/api/config/reload', null, { signal }).then((r) => r.data),
 
-  validate: (options: Record<string, unknown>) =>
-    api.post('/api/config/validate', { options }).then((r) => r.data),
+  validate: (options: Record<string, unknown>, signal?: AbortSignal) =>
+    api.post('/api/config/validate', { options }, { signal }).then((r) => r.data),
 
-  validateAll: () =>
-    api.get('/api/config/validate').then((r) => r.data),
+  validateAll: (signal?: AbortSignal) =>
+    api.get('/api/config/validate', { signal }).then((r) => r.data),
 
-  scanDefaults: () =>
-    api.get<{ scan_defaults: object }>('/api/config/scan-defaults').then((r) => r.data),
+  scanDefaults: (signal?: AbortSignal) =>
+    api.get<{ scan_defaults: object }>('/api/config/scan-defaults', { signal }).then((r) => r.data),
 
-  updateScanDefaults: (options: Record<string, unknown>) =>
-    api.patch('/api/config/scan-defaults', { options }).then((r) => r.data),
+  updateScanDefaults: (options: Record<string, unknown>, signal?: AbortSignal) =>
+    api.patch('/api/config/scan-defaults', { options }, { signal }).then((r) => r.data),
 
-  summary: () =>
-    api.get('/api/config/summary').then((r) => r.data),
+  summary: (signal?: AbortSignal) =>
+    api.get('/api/config/summary', { signal }).then((r) => r.data),
 
-  exportConfig: () =>
-    api.get('/api/config/export').then((r) => r.data),
+  exportConfig: (signal?: AbortSignal) =>
+    api.get('/api/config/export', { signal }).then((r) => r.data),
 
-  importConfig: (config: Record<string, unknown>) =>
-    api.post('/api/config/import', config).then((r) => r.data),
+  importConfig: (config: Record<string, unknown>, signal?: AbortSignal) =>
+    api.post('/api/config/import', config, { signal }).then((r) => r.data),
 
-  history: (params?: { limit?: number; section?: string }) =>
-    api.get('/api/config/history', { params }).then((r) => r.data),
+  history: (params?: { limit?: number; section?: string }, signal?: AbortSignal) =>
+    api.get('/api/config/history', { params, signal }).then((r) => r.data),
 
-  diff: () => api.get('/api/config/diff').then((r) => r.data),
+  diff: (signal?: AbortSignal) => api.get('/api/config/diff', { signal }).then((r) => r.data),
 
-  modules: () =>
-    api.get<{ modules: Module[] }>('/api/modules').then((r) => r.data),
+  modules: (signal?: AbortSignal) =>
+    api.get<{ modules: Module[] }>('/api/modules', { signal }).then((r) => r.data),
 
-  eventTypes: () =>
-    api.get<{ event_types: unknown[] }>('/api/event-types').then((r) => r.data),
+  eventTypes: (signal?: AbortSignal) =>
+    api.get<{ event_types: unknown[] }>('/api/event-types', { signal }).then((r) => r.data),
 
-  moduleConfig: (name: string) =>
-    api.get<{ module: string; config: Record<string, unknown> }>(`/api/module-config/${name}`).then((r) => r.data),
+  moduleConfig: (name: string, signal?: AbortSignal) =>
+    api.get<{ module: string; config: Record<string, unknown> }>(`/api/module-config/${name}`, { signal }).then((r) => r.data),
 
-  updateModuleConfig: (name: string, config: Record<string, unknown>) =>
-    api.put(`/api/module-config/${name}`, config).then((r) => r.data),
+  updateModuleConfig: (name: string, config: Record<string, unknown>, signal?: AbortSignal) =>
+    api.put(`/api/module-config/${name}`, config, { signal }).then((r) => r.data),
 
-  updateModuleOptions: (name: string, options: Record<string, unknown>) =>
-    api.patch(`/api/modules/${name}/options`, { options }).then((r) => r.data),
+  updateModuleOptions: (name: string, options: Record<string, unknown>, signal?: AbortSignal) =>
+    api.patch(`/api/modules/${name}/options`, { options }, { signal }).then((r) => r.data),
 
-  credentials: () => api.get('/api/config/credentials').then((r) => r.data),
-  createCredential: (data: Record<string, unknown>) =>
-    api.post('/api/config/credentials', data).then((r) => r.data),
-  deleteCredential: (id: string) =>
-    api.delete(`/api/config/credentials/${id}`).then((r) => r.data),
+  credentials: (signal?: AbortSignal) => api.get('/api/config/credentials', { signal }).then((r) => r.data),
+  createCredential: (data: Record<string, unknown>, signal?: AbortSignal) =>
+    api.post('/api/config/credentials', data, { signal }).then((r) => r.data),
+  deleteCredential: (id: string, signal?: AbortSignal) =>
+    api.delete(`/api/config/credentials/${id}`, { signal }).then((r) => r.data),
 };
 
 // ── Workspace API ─────────────────────────────────────────────
@@ -423,50 +423,50 @@ export interface WorkspaceTarget {
 }
 
 export const workspaceApi = {
-  list: (params?: { page?: number; page_size?: number }) =>
-    api.get<PaginatedResponse<Workspace>>('/api/workspaces', { params }).then((r) => r.data),
+  list: (params?: { page?: number; page_size?: number }, signal?: AbortSignal) =>
+    api.get<PaginatedResponse<Workspace>>('/api/workspaces', { params, signal }).then((r) => r.data),
 
-  get: (id: string) =>
-    api.get<Workspace>(`/api/workspaces/${id}`).then((r) => r.data),
+  get: (id: string, signal?: AbortSignal) =>
+    api.get<Workspace>(`/api/workspaces/${id}`, { signal }).then((r) => r.data),
 
-  create: (data: { name: string; description?: string }) =>
-    api.post('/api/workspaces', data).then((r) => r.data),
+  create: (data: { name: string; description?: string }, signal?: AbortSignal) =>
+    api.post('/api/workspaces', data, { signal }).then((r) => r.data),
 
-  update: (id: string, params: { name?: string; description?: string }) =>
-    api.put(`/api/workspaces/${id}`, null, { params }).then((r) => r.data),
+  update: (id: string, params: { name?: string; description?: string }, signal?: AbortSignal) =>
+    api.put(`/api/workspaces/${id}`, null, { params, signal }).then((r) => r.data),
 
-  delete: (id: string) =>
-    api.delete(`/api/workspaces/${id}`).then((r) => r.data),
+  delete: (id: string, signal?: AbortSignal) =>
+    api.delete(`/api/workspaces/${id}`, { signal }).then((r) => r.data),
 
-  summary: (id: string) =>
-    api.get(`/api/workspaces/${id}/summary`).then((r) => r.data),
+  summary: (id: string, signal?: AbortSignal) =>
+    api.get(`/api/workspaces/${id}/summary`, { signal }).then((r) => r.data),
 
-  targets: (id: string) =>
-    api.get<PaginatedResponse<WorkspaceTarget>>(`/api/workspaces/${id}/targets`).then((r) => r.data),
+  targets: (id: string, signal?: AbortSignal) =>
+    api.get<PaginatedResponse<WorkspaceTarget>>(`/api/workspaces/${id}/targets`, { signal }).then((r) => r.data),
 
-  addTarget: (id: string, data: { target: string; target_type: string }) =>
-    api.post(`/api/workspaces/${id}/targets`, data).then((r) => r.data),
+  addTarget: (id: string, data: { target: string; target_type: string }, signal?: AbortSignal) =>
+    api.post(`/api/workspaces/${id}/targets`, data, { signal }).then((r) => r.data),
 
-  deleteTarget: (id: string, targetId: string) =>
-    api.delete(`/api/workspaces/${id}/targets/${targetId}`).then((r) => r.data),
+  deleteTarget: (id: string, targetId: string, signal?: AbortSignal) =>
+    api.delete(`/api/workspaces/${id}/targets/${targetId}`, { signal }).then((r) => r.data),
 
-  setActive: (id: string) =>
-    api.post(`/api/workspaces/${id}/set-active`).then((r) => r.data),
+  setActive: (id: string, signal?: AbortSignal) =>
+    api.post(`/api/workspaces/${id}/set-active`, null, { signal }).then((r) => r.data),
 
-  clone: (id: string) =>
-    api.post(`/api/workspaces/${id}/clone`).then((r) => r.data),
+  clone: (id: string, signal?: AbortSignal) =>
+    api.post(`/api/workspaces/${id}/clone`, null, { signal }).then((r) => r.data),
 
-  multiScan: (id: string, modules: string[]) =>
-    api.post(`/api/workspaces/${id}/multi-scan`, { modules }).then((r) => r.data),
+  multiScan: (id: string, modules: string[], signal?: AbortSignal) =>
+    api.post(`/api/workspaces/${id}/multi-scan`, { modules }, { signal }).then((r) => r.data),
 
-  linkScan: (workspaceId: string, scanId: string) =>
-    api.post(`/api/workspaces/${workspaceId}/scans/${scanId}`).then((r) => r.data),
+  linkScan: (workspaceId: string, scanId: string, signal?: AbortSignal) =>
+    api.post(`/api/workspaces/${workspaceId}/scans/${scanId}`, null, { signal }).then((r) => r.data),
 
-  unlinkScan: (workspaceId: string, scanId: string) =>
-    api.delete(`/api/workspaces/${workspaceId}/scans/${scanId}`).then((r) => r.data),
+  unlinkScan: (workspaceId: string, scanId: string, signal?: AbortSignal) =>
+    api.delete(`/api/workspaces/${workspaceId}/scans/${scanId}`, { signal }).then((r) => r.data),
 
-  scans: (id: string) =>
-    api.get<{ scans: Array<{ scan_id: string; name: string; target: string; status: string; created: number }> }>(`/api/workspaces/${id}`).then((r) => r.data?.scans ?? []),
+  scans: (id: string, signal?: AbortSignal) =>
+    api.get<{ scans: Array<{ scan_id: string; name: string; target: string; status: string; created: number }> }>(`/api/workspaces/${id}`, { signal }).then((r) => r.data?.scans ?? []),
 };
 
 // ── Health API ────────────────────────────────────────────────
@@ -483,12 +483,12 @@ export interface HealthResponse {
 }
 
 export const healthApi = {
-  check: () => api.get<HealthResponse>('/health', { validateStatus: () => true }).then((r) => r.data),
-  live: () => api.get('/health/live').then((r) => r.data),
-  ready: () => api.get('/health/ready', { validateStatus: () => true }).then((r) => r.data),
-  dashboard: () => api.get('/health/dashboard', { validateStatus: () => true }).then((r) => r.data),
-  component: (name: string) => api.get(`/health/${name}`, { validateStatus: () => true }).then((r) => r.data),
-  version: () => api.get('/version').then((r) => r.data),
+  check: (signal?: AbortSignal) => api.get<HealthResponse>('/health', { validateStatus: () => true, signal }).then((r) => r.data),
+  live: (signal?: AbortSignal) => api.get('/health/live', { signal }).then((r) => r.data),
+  ready: (signal?: AbortSignal) => api.get('/health/ready', { validateStatus: () => true, signal }).then((r) => r.data),
+  dashboard: (signal?: AbortSignal) => api.get('/health/dashboard', { validateStatus: () => true, signal }).then((r) => r.data),
+  component: (name: string, signal?: AbortSignal) => api.get(`/health/${name}`, { validateStatus: () => true, signal }).then((r) => r.data),
+  version: (signal?: AbortSignal) => api.get('/version', { signal }).then((r) => r.data),
 };
 
 // ── AI Config API ─────────────────────────────────────────
@@ -503,17 +503,17 @@ export const aiConfigApi = {
     exclude_modules?: string[];
     prefer_modules?: string[];
     scope_limit?: string;
-  }) => api.post('/api/ai-config/recommend', data).then((r) => r.data),
+  }, signal?: AbortSignal) => api.post('/api/ai-config/recommend', data, { signal }).then((r) => r.data),
 
-  getRecommendation: (id: string) =>
-    api.get(`/api/ai-config/recommend/${id}`).then((r) => r.data),
+  getRecommendation: (id: string, signal?: AbortSignal) =>
+    api.get(`/api/ai-config/recommend/${id}`, { signal }).then((r) => r.data),
 
   compare: (data: {
     target: string;
     target_type: string;
     objectives: string[];
     stealth?: string;
-  }) => api.post('/api/ai-config/compare', data).then((r) => r.data),
+  }, signal?: AbortSignal) => api.post('/api/ai-config/compare', data, { signal }).then((r) => r.data),
 
   feedback: (data: {
     recommendation_id: string;
@@ -521,37 +521,37 @@ export const aiConfigApi = {
     actual_duration_minutes?: number;
     actual_events?: number;
     notes?: string;
-  }) => api.post('/api/ai-config/feedback', data).then((r) => r.data),
+  }, signal?: AbortSignal) => api.post('/api/ai-config/feedback', data, { signal }).then((r) => r.data),
 
-  presets: () =>
-    api.get<{ presets: Array<{ id: string; name: string; description: string; estimated_time: string; module_count: string; stealth: string }> }>('/api/ai-config/presets').then((r) => r.data),
+  presets: (signal?: AbortSignal) =>
+    api.get<{ presets: Array<{ id: string; name: string; description: string; estimated_time: string; module_count: string; stealth: string }> }>('/api/ai-config/presets', { signal }).then((r) => r.data),
 
-  targetTypes: () =>
-    api.get<{ target_types: Array<{ id: string; name: string; description: string }> }>('/api/ai-config/target-types').then((r) => r.data),
+  targetTypes: (signal?: AbortSignal) =>
+    api.get<{ target_types: Array<{ id: string; name: string; description: string }> }>('/api/ai-config/target-types', { signal }).then((r) => r.data),
 
-  stealthLevels: () =>
-    api.get<{ stealth_levels: Array<{ id: string; name: string; description: string; timing: Record<string, number> }> }>('/api/ai-config/stealth-levels').then((r) => r.data),
+  stealthLevels: (signal?: AbortSignal) =>
+    api.get<{ stealth_levels: Array<{ id: string; name: string; description: string; timing: Record<string, number> }> }>('/api/ai-config/stealth-levels', { signal }).then((r) => r.data),
 
-  modules: (params?: { category?: string; passive_only?: boolean; target_type?: string }) =>
-    api.get<{ modules: Array<Record<string, unknown>>; total: number }>('/api/ai-config/modules', { params }).then((r) => r.data),
+  modules: (params?: { category?: string; passive_only?: boolean; target_type?: string }, signal?: AbortSignal) =>
+    api.get<{ modules: Array<Record<string, unknown>>; total: number }>('/api/ai-config/modules', { params, signal }).then((r) => r.data),
 };
 
 // ── Agents Service API ────────────────────────────────────
 export const agentsApi = {
-  status: () =>
+  status: (signal?: AbortSignal) =>
     api.get<{
       agents: Record<string, { agent_name: string; status: string; processed_total: number; errors_total: number; avg_processing_time_ms: number }>;
       total_agents: number;
-    }>('/api/agents/status').then((r) => r.data),
+    }>('/api/agents/status', { signal }).then((r) => r.data),
 
-  process: (data: { events: Array<Record<string, unknown>>; agent_name?: string }) =>
-    api.post('/api/agents/process', data).then((r) => r.data),
+  process: (data: { events: Array<Record<string, unknown>>; agent_name?: string }, signal?: AbortSignal) =>
+    api.post('/api/agents/process', data, { signal }).then((r) => r.data),
 
-  analyze: (data: { filename: string; content: string; content_type?: string; target?: string; scan_id?: string }) =>
-    api.post('/api/agents/analyze', data).then((r) => r.data),
+  analyze: (data: { filename: string; content: string; content_type?: string; target?: string; scan_id?: string }, signal?: AbortSignal) =>
+    api.post('/api/agents/analyze', data, { signal }).then((r) => r.data),
 
-  report: (data: { scan_id?: string; scan_ids?: string[]; target: string; scan_name?: string; findings?: Array<Record<string, unknown>>; correlations?: Array<Record<string, unknown>>; stats?: Record<string, unknown>; agent_results?: Array<Record<string, unknown>>; geo_data?: Record<string, unknown> }) =>
-    api.post('/api/agents/report', data).then((r) => r.data),
+  report: (data: { scan_id?: string; scan_ids?: string[]; target: string; scan_name?: string; findings?: Array<Record<string, unknown>>; correlations?: Array<Record<string, unknown>>; stats?: Record<string, unknown>; agent_results?: Array<Record<string, unknown>>; geo_data?: Record<string, unknown> }, signal?: AbortSignal) =>
+    api.post('/api/agents/report', data, { signal }).then((r) => r.data),
 };
 
 // ── Helpers ───────────────────────────────────────────────────

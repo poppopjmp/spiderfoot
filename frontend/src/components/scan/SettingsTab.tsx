@@ -6,7 +6,7 @@ import { TableSkeleton, Expandable } from '../ui';
 function SettingsTab({ scanId, scan }: { scanId: string; scan?: Scan }) {
   const { data: options, isLoading } = useQuery({
     queryKey: ['scan-options', scanId],
-    queryFn: () => scanApi.options(scanId),
+    queryFn: ({ signal }) => scanApi.options(scanId, signal),
   });
 
   const scanOptions = options?.options ?? options ?? {};

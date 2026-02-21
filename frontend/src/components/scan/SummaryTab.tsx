@@ -7,13 +7,13 @@ import MiniStat from './MiniStat';
 function SummaryTab({ scanId, scan }: { scanId: string; scan?: Scan }) {
   const { data: summaryData, isLoading } = useQuery({
     queryKey: ['scan-summary', scanId],
-    queryFn: () => scanApi.summary(scanId),
+    queryFn: ({ signal }) => scanApi.summary(scanId, undefined, signal),
     enabled: !!scanId,
   });
 
   const { data: corrData } = useQuery({
     queryKey: ['scan-correlations-summary', scanId],
-    queryFn: () => scanApi.correlationsSummary(scanId, 'risk'),
+    queryFn: ({ signal }) => scanApi.correlationsSummary(scanId, 'risk', signal),
     enabled: !!scanId,
   });
 

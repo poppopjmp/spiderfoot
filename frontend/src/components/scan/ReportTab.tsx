@@ -163,34 +163,34 @@ function ReportTab({ scanId, scan }: { scanId: string; scan?: Scan }) {
 
   const { data: summaryData } = useQuery({
     queryKey: ['scan-summary', scanId],
-    queryFn: () => scanApi.summary(scanId),
+    queryFn: ({ signal }) => scanApi.summary(scanId, undefined, signal),
     enabled: !!scanId,
   });
 
   const { data: corrData } = useQuery({
     queryKey: ['scan-correlations', scanId],
-    queryFn: () => scanApi.correlations(scanId),
+    queryFn: ({ signal }) => scanApi.correlations(scanId, signal),
     enabled: !!scanId,
   });
 
   const { data: geoInfoData } = useQuery({
     queryKey: ['scan-events-geo-report', scanId, 'GEOINFO'],
-    queryFn: () => scanApi.events(scanId, { event_type: 'GEOINFO' }),
+    queryFn: ({ signal }) => scanApi.events(scanId, { event_type: 'GEOINFO' }, signal),
     enabled: !!scanId,
   });
   const { data: geoCoordsData } = useQuery({
     queryKey: ['scan-events-geo-report', scanId, 'PHYSICAL_COORDINATES'],
-    queryFn: () => scanApi.events(scanId, { event_type: 'PHYSICAL_COORDINATES' }),
+    queryFn: ({ signal }) => scanApi.events(scanId, { event_type: 'PHYSICAL_COORDINATES' }, signal),
     enabled: !!scanId,
   });
   const { data: geoCountryData } = useQuery({
     queryKey: ['scan-events-geo-report', scanId, 'COUNTRY_NAME'],
-    queryFn: () => scanApi.events(scanId, { event_type: 'COUNTRY_NAME' }),
+    queryFn: ({ signal }) => scanApi.events(scanId, { event_type: 'COUNTRY_NAME' }, signal),
     enabled: !!scanId,
   });
   const { data: geoAddrData } = useQuery({
     queryKey: ['scan-events-geo-report', scanId, 'PHYSICAL_ADDRESS'],
-    queryFn: () => scanApi.events(scanId, { event_type: 'PHYSICAL_ADDRESS' }),
+    queryFn: ({ signal }) => scanApi.events(scanId, { event_type: 'PHYSICAL_ADDRESS' }, signal),
     enabled: !!scanId,
   });
 

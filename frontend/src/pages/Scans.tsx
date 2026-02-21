@@ -33,13 +33,13 @@ export default function ScansPage() {
   /* Server-side search when query is present */
   const { data: searchData, isLoading: searchLoading } = useQuery({
     queryKey: ['scans-search', search, statusFilter],
-    queryFn: () => scanApi.search({
+    queryFn: ({ signal }) => scanApi.search({
       target: search || undefined,
       status: statusFilter || undefined,
       sort_by: 'created',
       sort_order: 'desc',
       limit: 200,
-    }),
+    }, signal),
     enabled: !!(search || statusFilter),
     refetchInterval: 10_000,
   });
@@ -47,7 +47,7 @@ export default function ScansPage() {
   /* Normal paginated list when no filters */
   const { data: listData, isLoading: listLoading } = useQuery({
     queryKey: ['scans', { page, page_size: PAGE_SIZE, sort_by: 'created', sort_order: 'desc' }],
-    queryFn: () => scanApi.list({ page, page_size: PAGE_SIZE, sort_by: 'created', sort_order: 'desc' }),
+    queryFn: ({ signal }) => scanApi.list({ page, page_size: PAGE_SIZE, sort_by: 'created', sort_order: 'desc' }, signal),
     enabled: !search && !statusFilter,
     refetchInterval: 10_000,
   });
@@ -146,7 +146,7 @@ export default function ScansPage() {
   /* Status stats across all scans */
   const { data: statsData } = useQuery({
     queryKey: ['scan-stats-all'],
-    queryFn: () => scanApi.search({ limit: 1, offset: 0 }),
+    queryFn: ({ signal }) => scanApi.search({ limit: 1, offset: 0 }, signal),
     refetchInterval: 15_000,
   });
   const facets = statsData?.facets?.status ?? {};

@@ -10,7 +10,7 @@ function LogTab({ scanId }: { scanId: string }) {
 
   const { data, isLoading } = useQuery({
     queryKey: ['scan-logs', scanId],
-    queryFn: () => scanApi.logs(scanId, { limit: 1000 }),
+    queryFn: ({ signal }) => scanApi.logs(scanId, { limit: 1000 }, signal),
   });
 
   const logs: ScanLogEntry[] = data?.logs ?? [];

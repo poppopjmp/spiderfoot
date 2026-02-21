@@ -13,18 +13,18 @@ function BrowseTab({ scanId }: { scanId: string }) {
 
   const { data: summaryData } = useQuery({
     queryKey: ['scan-summary', scanId],
-    queryFn: () => scanApi.summary(scanId),
+    queryFn: ({ signal }) => scanApi.summary(scanId, undefined, signal),
   });
 
   const { data: eventsData, isLoading: eventsLoading } = useQuery({
     queryKey: ['scan-events', scanId, selectedType, false],
-    queryFn: () => scanApi.events(scanId, { event_type: selectedType ?? undefined }),
+    queryFn: ({ signal }) => scanApi.events(scanId, { event_type: selectedType ?? undefined }, signal),
     enabled: !!selectedType && !viewUnique,
   });
 
   const { data: uniqueData, isLoading: uniqueLoading } = useQuery({
     queryKey: ['scan-events-unique', scanId, selectedType],
-    queryFn: () => scanApi.eventsUnique(scanId, selectedType ?? undefined),
+    queryFn: ({ signal }) => scanApi.eventsUnique(scanId, selectedType ?? undefined, signal),
     enabled: !!selectedType && viewUnique,
   });
 

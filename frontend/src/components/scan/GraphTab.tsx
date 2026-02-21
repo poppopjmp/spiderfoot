@@ -7,7 +7,7 @@ import { EmptyState } from '../ui';
 function GraphTab({ scanId }: { scanId: string }) {
   const { data, isLoading } = useQuery({
     queryKey: ['scan-viz', scanId],
-    queryFn: () => scanApi.viz(scanId),
+    queryFn: ({ signal }) => scanApi.viz(scanId, undefined, signal),
   });
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
