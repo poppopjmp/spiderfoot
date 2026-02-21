@@ -203,6 +203,9 @@ def start_scan_background(
 # -----------------------------------------------------------------------
 
 
+MAX_MULTI_SCAN_IDS = 50  # hard cap on multi-scan batch endpoints
+
+
 @router.get("/scans/export-multi")
 async def export_scan_json_multi(
     ids: str,
@@ -210,13 +213,16 @@ async def export_scan_json_multi(
     svc: ScanService = Depends(get_scan_service),
 ) -> StreamingResponse:
     """Export event results for multiple scans as JSON."""
+    id_parts = [s.strip() for s in ids.split(",") if s.strip()]
+    if len(id_parts) > MAX_MULTI_SCAN_IDS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Too many scan IDs (max {MAX_MULTI_SCAN_IDS})",
+        )
     scaninfo: list = []
     scan_name = ""
 
-    for scan_id in ids.split(","):
-        scan_id = scan_id.strip()
-        if not scan_id:
-            continue
+    for scan_id in id_parts:
         record = svc.get_scan(scan_id)
         if record is None:
             continue
@@ -237,7 +243,7 @@ async def export_scan_json_multi(
                 "scan_target": record.target,
             })
 
-    id_list = [s.strip() for s in ids.split(",") if s.strip()]
+    id_list = id_parts
     if len(id_list) > 1 or not scan_name:
         fname = "SpiderFoot.json"
     else:
@@ -261,14 +267,18 @@ async def export_scan_viz_multi(
     if not ids:
         raise HTTPException(status_code=400, detail="No scan IDs provided")
 
+    id_parts_viz = [s.strip() for s in ids.split(",") if s.strip()]
+    if len(id_parts_viz) > MAX_MULTI_SCAN_IDS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Too many scan IDs (max {MAX_MULTI_SCAN_IDS})",
+        )
+
     data: list = []
     roots: list = []
     scan_name = ""
 
-    for scan_id in ids.split(","):
-        scan_id = scan_id.strip()
-        if not scan_id:
-            continue
+    for scan_id in id_parts_viz:
         record = svc.get_scan(scan_id)
         if record is None:
             continue
@@ -282,7 +292,7 @@ async def export_scan_viz_multi(
     if gexf == "0":
         raise HTTPException(status_code=501, detail="Graph JSON for multi-scan not implemented")
 
-    id_list = [s.strip() for s in ids.split(",") if s.strip()]
+    id_list = id_parts_viz
     fname = (
         f"{scan_name}-SpiderFoot.gexf"
         if len(id_list) == 1 and scan_name
@@ -308,10 +318,14 @@ async def rerun_scan_multi(
     dbh = svc.dbh
     new_scan_ids: list = []
 
-    for scan_id in ids.split(","):
-        scan_id = scan_id.strip()
-        if not scan_id:
-            continue
+    id_parts_rerun = [s.strip() for s in ids.split(",") if s.strip()]
+    if len(id_parts_rerun) > MAX_MULTI_SCAN_IDS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Too many scan IDs (max {MAX_MULTI_SCAN_IDS})",
+        )
+
+    for scan_id in id_parts_rerun:
         record = svc.get_scan(scan_id)
         if record is None:
             continue
