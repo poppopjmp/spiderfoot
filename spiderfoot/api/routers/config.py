@@ -16,9 +16,7 @@ from typing import Any
 
 router = APIRouter(dependencies=[Depends(get_api_key)])
 log = logging.getLogger(__name__)
-optional_auth_dep = Depends(optional_auth)
-config_body = Body(...)
-
+optional_auth_dep = Depends(optional_auth)\n
 
 # ------------------------------------------------------------------
 # Pydantic request / response models
@@ -46,6 +44,43 @@ class ValidationResponse(BaseModel):
     valid: bool
     errors: list[ValidationErrorItem] = []
     sections_checked: int = 0
+
+
+class ModuleOptionsUpdateRequest(BaseModel):
+    """Typed request for PATCH /modules/{name}/options."""
+    class Config:
+        extra = "allow"  # freeform keys are config option names
+
+
+class ScanDefaultsUpdateRequest(BaseModel):
+    """Typed request for PATCH /config/scan-defaults."""
+    class Config:
+        extra = "allow"
+
+
+class WorkspaceDefaultsUpdateRequest(BaseModel):
+    """Typed request for PATCH /config/workspace-defaults."""
+    class Config:
+        extra = "allow"
+
+
+class ApiKeyCreateRequest(BaseModel):
+    """Typed request for POST /config/api-keys."""
+    name: str = Field(..., min_length=1, max_length=128, description="Human-readable key name")
+    scopes: list[str] = Field(default_factory=list, description="Permission scopes")
+    expires_days: int | None = Field(None, ge=1, le=3650, description="Days until expiry")
+
+
+class CredentialCreateRequest(BaseModel):
+    """Typed request for POST /config/credentials."""
+    name: str = Field(..., min_length=1, max_length=128)
+    credential_type: str = Field(..., min_length=1, max_length=64)
+    value: str = Field(..., min_length=1)
+
+
+class ConfigImportRequest(BaseModel):
+    """Typed request for POST /config/import."""
+    config: dict[str, Any] = Field(..., description="Full config dict to import")
 
 
 class ConfigSummaryResponse(BaseModel):
@@ -175,7 +210,7 @@ async def get_modules(api_key: str = optional_auth_dep) -> dict[str, Any]:
 @router.patch("/modules/{module_name}/options")
 async def update_module_options(
     module_name: str,
-    options: dict = config_body,
+    options: ModuleOptionsUpdateRequest = Body(...),
     api_key: str = optional_auth_dep,
 ) -> dict[str, Any]:
     """
@@ -198,7 +233,7 @@ async def update_module_options(
         if module_name not in modules:
             raise HTTPException(status_code=404, detail="Module not found")
         try:
-            modules[module_name].update(options)
+            modules[module_name].update(options.model_dump())
             config.save_config()
             return {"success": True, "message": f"Module {module_name} options updated"}
         except KeyError as ke:
@@ -345,13 +380,13 @@ async def get_scan_defaults(api_key: str = optional_auth_dep) -> dict[str, Any]:
 
 
 @router.patch("/config/scan-defaults")
-async def update_scan_defaults(options: dict = config_body, api_key: str = optional_auth_dep) -> dict[str, Any]:
+async def update_scan_defaults(options: ScanDefaultsUpdateRequest = Body(...), api_key: str = optional_auth_dep) -> dict[str, Any]:
     """
     Update scan default options.
     """
     try:
         config = get_app_config()
-        config.set_scan_defaults(options)
+        config.set_scan_defaults(options.model_dump())
         config.save_config()
         return {"success": True, "message": "Scan defaults updated"}
     except Exception as e:
@@ -374,13 +409,13 @@ async def get_workspace_defaults(api_key: str = optional_auth_dep) -> dict[str, 
 
 
 @router.patch("/config/workspace-defaults")
-async def update_workspace_defaults(options: dict = config_body, api_key: str = optional_auth_dep) -> dict[str, Any]:
+async def update_workspace_defaults(options: WorkspaceDefaultsUpdateRequest = Body(...), api_key: str = optional_auth_dep) -> dict[str, Any]:
     """
     Update workspace default options.
     """
     try:
         config = get_app_config()
-        config.set_workspace_defaults(options)
+        config.set_workspace_defaults(options.model_dump())
         config.save_config()
         return {"success": True, "message": "Workspace defaults updated"}
     except Exception as e:
@@ -402,13 +437,13 @@ async def list_api_keys(api_key: str = optional_auth_dep) -> dict[str, Any]:
         raise HTTPException(status_code=500, detail="Failed to list API keys") from e
 
 @router.post("/config/api-keys")
-async def add_api_key(key_data: dict = config_body, api_key: str = optional_auth_dep) -> dict[str, Any]:
+async def add_api_key(key_data: ApiKeyCreateRequest, api_key: str = optional_auth_dep) -> dict[str, Any]:
     """
     Add a new API key (admin only).
     """
     try:
         config = get_app_config()
-        config.add_api_key(key_data)
+        config.add_api_key(key_data.model_dump())
         config.save_config()
         return {"success": True, "message": "API key added"}
     except Exception as e:
@@ -631,13 +666,13 @@ async def list_credentials(api_key: str = optional_auth_dep) -> dict[str, Any]:
         raise HTTPException(status_code=500, detail="Failed to list credentials") from e
 
 @router.post("/config/credentials")
-async def add_credential(cred_data: dict = config_body, api_key: str = optional_auth_dep) -> dict[str, Any]:
+async def add_credential(cred_data: CredentialCreateRequest, api_key: str = optional_auth_dep) -> dict[str, Any]:
     """
     Add a new credential.
     """
     try:
         config = get_app_config()
-        config.add_credential(cred_data)
+        config.add_credential(cred_data.model_dump())
         config.save_config()
         return {"success": True, "message": "Credential added"}
     except Exception as e:
@@ -729,13 +764,13 @@ async def get_config_summary(api_key: str = optional_auth_dep) -> dict[str, Any]
         raise HTTPException(status_code=500, detail="Failed to get config summary") from e
 
 @router.post("/config/import")
-async def import_config(new_config: dict = config_body, api_key: str = optional_auth_dep) -> dict[str, Any]:
+async def import_config(body: ConfigImportRequest, api_key: str = optional_auth_dep) -> dict[str, Any]:
     """
     Import/replace the current configuration.
     """
     try:
         config = get_app_config()
-        config.replace_config(new_config)
+        config.replace_config(body.config)
         config.save_config()
         return {"success": True, "message": "Config imported"}
     except Exception as e:
