@@ -9,7 +9,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
+from ..dependencies import get_api_key
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
@@ -17,7 +18,7 @@ from spiderfoot.sarif_export import SARIFExporter, _SARIF_RULE_MAP
 
 logger = logging.getLogger("spiderfoot.api.sarif")
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_api_key)])
 
 
 class SARIFExportRequest(BaseModel):

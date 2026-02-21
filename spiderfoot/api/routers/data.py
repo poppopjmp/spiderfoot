@@ -4,14 +4,14 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from ..dependencies import get_app_config, optional_auth
+from ..dependencies import get_app_config, optional_auth, get_api_key
 from ..pagination import PaginationParams, paginate
 from ..schemas import RiskLevelsResponse
 from spiderfoot.sflib.core import SpiderFoot
 from spiderfoot.db import SpiderFootDb
 import logging
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_api_key)])
 log = logging.getLogger(__name__)
 optional_auth_dep = Depends(optional_auth)
 

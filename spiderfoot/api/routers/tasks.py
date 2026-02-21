@@ -21,7 +21,7 @@ from typing import Any
 log = logging.getLogger("spiderfoot.api.tasks")
 
 try:
-    from fastapi import APIRouter, HTTPException, Query
+    from fastapi import APIRouter, Depends, HTTPException, Query
     from pydantic import BaseModel, Field
 
     HAS_FASTAPI = True
@@ -118,7 +118,9 @@ if not HAS_FASTAPI:
 
     router = _StubRouter()
 else:
-    router = APIRouter()
+    from ..dependencies import get_api_key
+
+    router = APIRouter(dependencies=[Depends(get_api_key)])
 
     @router.get(
         "/tasks",

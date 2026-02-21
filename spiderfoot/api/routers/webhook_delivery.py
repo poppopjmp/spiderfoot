@@ -10,14 +10,15 @@ from __future__ import annotations
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
+from ..dependencies import get_api_key
 from pydantic import BaseModel, Field
 
 from spiderfoot.webhook_delivery import WebhookDeliveryManager, RetryPolicy
 
 _log = logging.getLogger("spiderfoot.api.webhook_delivery")
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_api_key)])
 
 _manager = WebhookDeliveryManager()
 

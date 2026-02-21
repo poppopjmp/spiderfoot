@@ -8,7 +8,8 @@ from __future__ import annotations
 
 import logging
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from ..dependencies import get_api_key
 from fastapi.responses import PlainTextResponse
 
 from spiderfoot.scan_metrics import (
@@ -19,7 +20,7 @@ from spiderfoot.scan_metrics import (
 
 logger = logging.getLogger("spiderfoot.api.scan_metrics")
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_api_key)])
 
 
 @router.get("/metrics", response_class=PlainTextResponse, tags=["metrics"])

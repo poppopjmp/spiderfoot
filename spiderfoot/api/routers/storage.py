@@ -26,11 +26,11 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
-from ..dependencies import optional_auth
+from ..dependencies import optional_auth, get_api_key
 
 log = logging.getLogger("spiderfoot.api.storage")
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_api_key)])
 optional_auth_dep = Depends(optional_auth)
 
 

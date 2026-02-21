@@ -13,12 +13,12 @@ from typing import Any
 import logging
 from datetime import datetime
 
-from ..dependencies import optional_auth, get_correlation_svc
+from ..dependencies import optional_auth, get_correlation_svc, get_api_key
 from ..pagination import PaginationParams, paginate
 from spiderfoot.services.correlation_service import CorrelationService, CorrelationResult
 from pydantic import BaseModel, Field
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_api_key)])
 log = logging.getLogger(__name__)
 optional_auth_dep = Depends(optional_auth)
 

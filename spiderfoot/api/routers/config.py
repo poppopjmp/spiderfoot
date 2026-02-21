@@ -10,11 +10,11 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Body, Query
 from pydantic import BaseModel, Field
-from ..dependencies import get_app_config, get_config_repository, optional_auth
+from ..dependencies import get_app_config, get_config_repository, optional_auth, get_api_key
 import logging
 from typing import Any
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_api_key)])
 log = logging.getLogger(__name__)
 optional_auth_dep = Depends(optional_auth)
 config_body = Body(...)

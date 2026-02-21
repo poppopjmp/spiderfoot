@@ -14,12 +14,13 @@ from __future__ import annotations
 import logging
 from enum import Enum
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
+from ..dependencies import get_api_key
 from fastapi.responses import Response, StreamingResponse
 
 log = logging.getLogger("spiderfoot.api.export")
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_api_key)])
 
 
 class ExportFormatParam(str, Enum):

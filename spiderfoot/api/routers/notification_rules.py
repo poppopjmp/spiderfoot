@@ -5,13 +5,14 @@ v5.7.4
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
+from ..dependencies import get_api_key
 from pydantic import BaseModel, Field
 from typing import Any
 
 from spiderfoot.notification_rules import NotificationRulesEngine
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_api_key)])
 
 _engine = NotificationRulesEngine()
 

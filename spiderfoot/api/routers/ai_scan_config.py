@@ -10,7 +10,8 @@ from __future__ import annotations
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
+from ..dependencies import get_api_key
 from pydantic import BaseModel, Field
 
 from spiderfoot.ai_scan_config import (
@@ -22,7 +23,7 @@ from spiderfoot.ai_scan_config import (
 
 _log = logging.getLogger("spiderfoot.api.ai_scan_config")
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_api_key)])
 
 # Singleton configurator (Redis injected at startup if available)
 _configurator = AIScanConfigurator()

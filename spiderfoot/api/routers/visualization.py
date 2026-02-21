@@ -12,11 +12,11 @@ from fastapi.responses import Response, JSONResponse
 import json
 import logging
 
-from ..dependencies import get_visualization_service, optional_auth
+from ..dependencies import get_visualization_service, optional_auth, get_api_key
 from spiderfoot import SpiderFootHelpers
 from spiderfoot.reporting.visualization_service import VisualizationService, VisualizationServiceError
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_api_key)])
 log = logging.getLogger(__name__)
 optional_auth_dep = Depends(optional_auth)
 

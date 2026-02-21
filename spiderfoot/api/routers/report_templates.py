@@ -5,13 +5,14 @@ v5.7.2
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
+from ..dependencies import get_api_key
 from pydantic import BaseModel, Field
 from typing import Any
 
 from spiderfoot.report_templates import ReportTemplateManager, TemplateCategory, TemplateFormat
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_api_key)])
 
 _manager = ReportTemplateManager()
 

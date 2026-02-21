@@ -432,9 +432,9 @@ if not HAS_FASTAPI:
         pass
     router = _StubRouter()
 else:
-    from ..dependencies import get_scan_service
+    from ..dependencies import get_scan_service, get_api_key
 
-    router = APIRouter()
+    router = APIRouter(dependencies=[Depends(get_api_key)])
 
     @router.post(
         "/reports/generate",

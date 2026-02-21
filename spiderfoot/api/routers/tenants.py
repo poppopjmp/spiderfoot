@@ -8,14 +8,15 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
+from ..dependencies import get_api_key
 from pydantic import BaseModel
 
 from spiderfoot.multi_tenancy import TenantManager, TenantPlan
 
 logger = logging.getLogger("spiderfoot.api.tenants")
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_api_key)])
 
 # Singleton manager
 _manager = TenantManager()

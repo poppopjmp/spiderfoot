@@ -9,7 +9,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
+from ..dependencies import get_api_key
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
@@ -17,7 +18,7 @@ from spiderfoot.stix_export import STIXExporter, TAXIIServer
 
 logger = logging.getLogger("spiderfoot.api.stix")
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_api_key)])
 
 # Singleton TAXII server instance
 _taxii_server = TAXIIServer()
