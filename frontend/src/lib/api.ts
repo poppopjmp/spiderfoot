@@ -1,3 +1,10 @@
+/**
+ * @deprecated Prefer importing from `@/api` (src/api/index.ts) which uses the
+ * auto-generated OpenAPI TypeScript client.  This file is kept for backward
+ * compatibility.  After all consumers migrate, it will be removed.
+ *
+ * Regenerate the SDK:  npm run generate:api
+ */
 import axios from 'axios';
 
 const api = axios.create({

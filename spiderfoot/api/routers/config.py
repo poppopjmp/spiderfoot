@@ -16,7 +16,7 @@ from typing import Any
 
 router = APIRouter(dependencies=[Depends(get_api_key)])
 log = logging.getLogger(__name__)
-optional_auth_dep = Depends(optional_auth)\n
+optional_auth_dep = Depends(optional_auth)
 
 # ------------------------------------------------------------------
 # Pydantic request / response models

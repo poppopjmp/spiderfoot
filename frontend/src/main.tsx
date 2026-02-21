@@ -7,6 +7,9 @@ import ErrorBoundary from './components/ErrorBoundary';
 import App from './App';
 import './index.css';
 
+// Initialise the generated OpenAPI client (JWT interceptors, base URL, etc.)
+import './api/client';
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
