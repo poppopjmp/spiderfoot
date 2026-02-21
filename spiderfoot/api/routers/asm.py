@@ -18,7 +18,7 @@ from spiderfoot.asm import (
     AssetRisk,
     AssetStatus,
 )
-from ..dependencies import get_api_key
+from ..dependencies import get_api_key, SafeId
 
 logger = logging.getLogger("spiderfoot.api.asm")
 
@@ -91,7 +91,7 @@ async def list_assets(
 
 
 @router.get("/asm/assets/{asset_id}", tags=["asm"])
-async def get_asset(asset_id: str):
+async def get_asset(asset_id: SafeId):
     """Get a specific asset by ID."""
     asset = get_inventory().get_asset(asset_id)
     if not asset:
@@ -142,7 +142,7 @@ async def ingest_batch(request: IngestBatchRequest):
 
 
 @router.post("/asm/assets/{asset_id}/tags", tags=["asm"])
-async def add_tag(asset_id: str, request: TagRequest):
+async def add_tag(asset_id: SafeId, request: TagRequest):
     """Add a tag to an asset."""
     ok = get_inventory().add_tag(asset_id, request.key, request.value, request.source)
     if not ok:
@@ -160,7 +160,7 @@ async def link_assets(request: LinkRequest):
 
 
 @router.delete("/asm/assets/{asset_id}", tags=["asm"])
-async def delete_asset(asset_id: str):
+async def delete_asset(asset_id: SafeId):
     """Delete an asset from the inventory."""
     ok = get_inventory().delete_asset(asset_id)
     if not ok:
@@ -169,7 +169,7 @@ async def delete_asset(asset_id: str):
 
 
 @router.post("/asm/assets/{asset_id}/remove", tags=["asm"])
-async def mark_removed(asset_id: str):
+async def mark_removed(asset_id: SafeId):
     """Mark an asset as removed from the attack surface."""
     ok = get_inventory().mark_removed(asset_id)
     if not ok:

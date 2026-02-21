@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from spiderfoot.rbac_enhanced import EnhancedRBACManager, ALL_PERMISSIONS
-from ..dependencies import get_api_key
+from ..dependencies import get_api_key, SafeId
 
 logger = logging.getLogger("spiderfoot.api.rbac_enhanced")
 
@@ -84,7 +84,7 @@ async def create_role(request: CreateRoleRequest):
 
 
 @router.get("/rbac/v2/roles/{role_id}", tags=["rbac-v2"])
-async def get_role(role_id: str):
+async def get_role(role_id: SafeId):
     """Get a role with its effective permissions."""
     role = get_manager().get_role(role_id)
     if not role:
@@ -96,7 +96,7 @@ async def get_role(role_id: str):
 
 
 @router.put("/rbac/v2/roles/{role_id}", tags=["rbac-v2"])
-async def update_role(role_id: str, request: UpdateRoleRequest):
+async def update_role(role_id: SafeId, request: UpdateRoleRequest):
     """Update a custom role."""
     try:
         role = get_manager().update_role(
@@ -113,7 +113,7 @@ async def update_role(role_id: str, request: UpdateRoleRequest):
 
 
 @router.delete("/rbac/v2/roles/{role_id}", tags=["rbac-v2"])
-async def delete_role(role_id: str):
+async def delete_role(role_id: SafeId):
     """Delete a custom role."""
     try:
         ok = get_manager().delete_role(role_id)
@@ -145,7 +145,7 @@ async def assign_role(request: AssignRoleRequest):
 
 
 @router.delete("/rbac/v2/bindings/{binding_id}", tags=["rbac-v2"])
-async def revoke_binding(binding_id: str):
+async def revoke_binding(binding_id: SafeId):
     """Revoke a role binding."""
     ok = get_manager().revoke_binding(binding_id)
     if not ok:
@@ -154,7 +154,7 @@ async def revoke_binding(binding_id: str):
 
 
 @router.get("/rbac/v2/users/{user_id}/roles", tags=["rbac-v2"])
-async def user_roles(user_id: str, tenant_id: str = "default"):
+async def user_roles(user_id: SafeId, tenant_id: str = "default"):
     """Get all roles for a user in a tenant."""
     bindings = get_manager().get_user_roles(user_id, tenant_id)
     return {
@@ -164,7 +164,7 @@ async def user_roles(user_id: str, tenant_id: str = "default"):
 
 
 @router.get("/rbac/v2/users/{user_id}/permissions", tags=["rbac-v2"])
-async def user_permissions(user_id: str, tenant_id: str = "default"):
+async def user_permissions(user_id: SafeId, tenant_id: str = "default"):
     """Get all effective permissions for a user."""
     perms = get_manager().get_user_permissions(user_id, tenant_id)
     return {

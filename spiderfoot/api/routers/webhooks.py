@@ -126,7 +126,7 @@ if not HAS_FASTAPI:
 
     router = _StubRouter()
 else:
-    from ..dependencies import get_api_key
+    from ..dependencies import get_api_key, SafeId
 
     router = APIRouter(dependencies=[Depends(get_api_key)])
 
@@ -199,7 +199,7 @@ else:
         "/webhooks/{webhook_id}",
         summary="Get webhook details",
     )
-    async def get_webhook(webhook_id: str) -> dict[str, Any]:
+    async def get_webhook(webhook_id: SafeId) -> dict[str, Any]:
         """Return details for a specific webhook."""
         mgr = get_notification_manager()
         cfg = mgr.get_webhook(webhook_id)
@@ -211,7 +211,7 @@ else:
         "/webhooks/{webhook_id}",
         summary="Remove a webhook",
     )
-    async def delete_webhook(webhook_id: str) -> dict[str, Any]:
+    async def delete_webhook(webhook_id: SafeId) -> dict[str, Any]:
         """Remove a registered webhook."""
         mgr = get_notification_manager()
         if not mgr.remove_webhook(webhook_id):
@@ -223,7 +223,7 @@ else:
         summary="Send test event",
         description="Dispatch a test event to verify webhook connectivity.",
     )
-    async def test_webhook(webhook_id: str) -> dict[str, Any]:
+    async def test_webhook(webhook_id: SafeId) -> dict[str, Any]:
         """Send a test event to verify webhook connectivity."""
         mgr = get_notification_manager()
         record = mgr.test_webhook(webhook_id)
@@ -235,7 +235,7 @@ else:
         "/webhooks/{webhook_id}",
         summary="Update webhook",
     )
-    async def update_webhook(webhook_id: str, body: WebhookUpdateRequest) -> dict[str, Any]:
+    async def update_webhook(webhook_id: SafeId, body: WebhookUpdateRequest) -> dict[str, Any]:
         """Update configuration fields for a webhook."""
         mgr = get_notification_manager()
         updates = {k: v for k, v in body.model_dump().items() if v is not None}
@@ -319,7 +319,7 @@ else:
         summary="Update webhook event filter",
         description="Replace the event type filter for a webhook.",
     )
-    async def update_event_filter(webhook_id: str, body: EventFilterUpdateRequest) -> dict[str, Any]:
+    async def update_event_filter(webhook_id: SafeId, body: EventFilterUpdateRequest) -> dict[str, Any]:
         """Replace the event type filter for a webhook."""
         mgr = get_notification_manager()
         cfg = mgr.get_webhook(webhook_id)

@@ -26,7 +26,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
-from ..dependencies import get_api_key
+from ..dependencies import get_api_key, SafeId
 
 log = logging.getLogger("spiderfoot.api.schedules")
 
@@ -113,10 +113,15 @@ def _schedule_index_key() -> str:
 
 
 def _store_schedule(data: dict[str, Any]) -> None:
-    """Store a schedule in Redis."""
+    """Store a schedule in Redis (persistent — no TTL).
+
+    Schedules are user-created configuration, not ephemeral cache, so
+    they must not silently expire.  The previous ``ex=86400*365`` caused
+    schedules to vanish after one year.
+    """
     r = _get_redis()
     schedule_id = data["id"]
-    r.set(_schedule_key(schedule_id), json.dumps(data), ex=86400 * 365)
+    r.set(_schedule_key(schedule_id), json.dumps(data))
     r.sadd(_schedule_index_key(), schedule_id)
 
 
@@ -208,7 +213,7 @@ async def create_schedule(
 
 @router.get("/{schedule_id}", response_model=ScheduleResponse)
 async def get_schedule(
-    schedule_id: str,
+    schedule_id: SafeId,
     api_key: str = api_key_dep,
 ) -> ScheduleResponse:
     """Get schedule details."""
@@ -221,7 +226,7 @@ async def get_schedule(
 @router.put("/{schedule_id}", response_model=ScheduleResponse)
 @router.patch("/{schedule_id}", response_model=ScheduleResponse)
 async def update_schedule(
-    schedule_id: str,
+    schedule_id: SafeId,
     request: ScheduleUpdateRequest,
     api_key: str = api_key_dep,
 ) -> ScheduleResponse:
@@ -244,7 +249,7 @@ async def update_schedule(
 
 @router.delete("/{schedule_id}", status_code=204)
 async def delete_schedule(
-    schedule_id: str,
+    schedule_id: SafeId,
     api_key: str = api_key_dep,
 ) -> None:
     """Delete a schedule."""
@@ -257,7 +262,7 @@ async def delete_schedule(
 
 @router.post("/{schedule_id}/trigger", response_model=dict)
 async def trigger_schedule(
-    schedule_id: str,
+    schedule_id: SafeId,
     api_key: str = api_key_dep,
 ) -> dict[str, Any]:
     """Manually trigger a scheduled scan immediately."""

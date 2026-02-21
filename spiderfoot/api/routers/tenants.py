@@ -9,7 +9,7 @@ import logging
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from ..dependencies import get_api_key
+from ..dependencies import get_api_key, SafeId
 from pydantic import BaseModel
 
 from spiderfoot.multi_tenancy import TenantManager, TenantPlan
@@ -80,7 +80,7 @@ async def create_tenant(request: TenantCreateRequest):
 
 
 @router.get("/tenants/{tenant_id}", tags=["tenants"])
-async def get_tenant(tenant_id: str):
+async def get_tenant(tenant_id: SafeId):
     """Get a specific tenant."""
     tenant = get_manager().get_tenant(tenant_id)
     if not tenant:
@@ -89,7 +89,7 @@ async def get_tenant(tenant_id: str):
 
 
 @router.put("/tenants/{tenant_id}", tags=["tenants"])
-async def update_tenant(tenant_id: str, request: TenantUpdateRequest):
+async def update_tenant(tenant_id: SafeId, request: TenantUpdateRequest):
     """Update a tenant."""
     plan = TenantPlan(request.plan) if request.plan else None
     tenant = get_manager().update_tenant(
@@ -106,7 +106,7 @@ async def update_tenant(tenant_id: str, request: TenantUpdateRequest):
 
 
 @router.delete("/tenants/{tenant_id}", tags=["tenants"])
-async def delete_tenant(tenant_id: str):
+async def delete_tenant(tenant_id: SafeId):
     """Delete a tenant."""
     try:
         ok = get_manager().delete_tenant(tenant_id)
@@ -119,7 +119,7 @@ async def delete_tenant(tenant_id: str):
 
 
 @router.get("/tenants/{tenant_id}/usage", tags=["tenants"])
-async def tenant_usage(tenant_id: str):
+async def tenant_usage(tenant_id: SafeId):
     """Get resource usage for a tenant."""
     usage = get_manager().get_usage(tenant_id)
     if not usage:

@@ -15,7 +15,7 @@ import logging
 from enum import Enum
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from ..dependencies import get_api_key, safe_filename
+from ..dependencies import get_api_key, safe_filename, SafeId
 from fastapi.responses import Response, StreamingResponse
 
 log = logging.getLogger("spiderfoot.api.export")
@@ -82,7 +82,7 @@ def _get_dbh():
     },
 )
 async def export_scan(
-    scan_id: str,
+    scan_id: SafeId,
     format: ExportFormatParam = Query(
         ExportFormatParam.json,
         description="Output format: json, csv, stix, sarif",
@@ -143,7 +143,7 @@ async def export_scan(
     summary="Export scan as STIX 2.1 bundle",
     description="Download scan results as a STIX 2.1 JSON bundle for threat intelligence sharing.",
 )
-async def export_scan_stix(scan_id: str) -> Response:
+async def export_scan_stix(scan_id: SafeId) -> Response:
     """Convenience endpoint for STIX export."""
     return await export_scan(scan_id, format=ExportFormatParam.stix)
 
@@ -154,7 +154,7 @@ async def export_scan_stix(scan_id: str) -> Response:
     summary="Export scan as SARIF report",
     description="Download scan results as a SARIF 2.1.0 report for security tooling integration.",
 )
-async def export_scan_sarif(scan_id: str) -> Response:
+async def export_scan_sarif(scan_id: SafeId) -> Response:
     """Convenience endpoint for SARIF export."""
     return await export_scan(scan_id, format=ExportFormatParam.sarif)
 
@@ -174,7 +174,7 @@ async def export_scan_sarif(scan_id: str) -> Response:
     },
 )
 async def export_scan_stream(
-    scan_id: str,
+    scan_id: SafeId,
     event_type: str | None = Query(None, description="Filter by event type"),
     chunk_size: int = Query(500, ge=100, le=5000, description="Events per chunk"),
 ) -> StreamingResponse:

@@ -6,7 +6,7 @@ v5.7.3
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from ..dependencies import get_api_key
+from ..dependencies import get_api_key, SafeId
 from pydantic import BaseModel, Field
 from typing import Any
 
@@ -88,7 +88,7 @@ async def tag_tree():
 
 
 @router.get("/tags/{tag_id}", tags=["tags-groups"])
-async def get_tag(tag_id: str):
+async def get_tag(tag_id: SafeId):
     t = _manager.get_tag(tag_id)
     if not t:
         raise HTTPException(404, "Tag not found")
@@ -96,7 +96,7 @@ async def get_tag(tag_id: str):
 
 
 @router.patch("/tags/{tag_id}", tags=["tags-groups"])
-async def update_tag(tag_id: str, body: TagUpdate):
+async def update_tag(tag_id: SafeId, body: TagUpdate):
     updates = {k: v for k, v in body.model_dump().items() if v is not None}
     t = _manager.update_tag(tag_id, updates)
     if not t:
@@ -105,7 +105,7 @@ async def update_tag(tag_id: str, body: TagUpdate):
 
 
 @router.delete("/tags/{tag_id}", tags=["tags-groups"])
-async def delete_tag(tag_id: str):
+async def delete_tag(tag_id: SafeId):
     if not _manager.delete_tag(tag_id):
         raise HTTPException(404, "Tag not found")
     return {"deleted": tag_id}
@@ -128,7 +128,7 @@ async def create_group(body: GroupCreate):
 
 
 @router.get("/groups/{group_id}", tags=["tags-groups"])
-async def get_group(group_id: str):
+async def get_group(group_id: SafeId):
     g = _manager.get_group(group_id)
     if not g:
         raise HTTPException(404, "Group not found")
@@ -136,7 +136,7 @@ async def get_group(group_id: str):
 
 
 @router.patch("/groups/{group_id}", tags=["tags-groups"])
-async def update_group(group_id: str, body: GroupUpdate):
+async def update_group(group_id: SafeId, body: GroupUpdate):
     updates = {k: v for k, v in body.model_dump().items() if v is not None}
     g = _manager.update_group(group_id, updates)
     if not g:
@@ -145,21 +145,21 @@ async def update_group(group_id: str, body: GroupUpdate):
 
 
 @router.delete("/groups/{group_id}", tags=["tags-groups"])
-async def delete_group(group_id: str):
+async def delete_group(group_id: SafeId):
     if not _manager.delete_group(group_id):
         raise HTTPException(404, "Group not found")
     return {"deleted": group_id}
 
 
 @router.post("/groups/{group_id}/members", tags=["tags-groups"])
-async def add_member(group_id: str, body: MemberRequest):
+async def add_member(group_id: SafeId, body: MemberRequest):
     if not _manager.add_member(group_id, body.member):
         raise HTTPException(404, "Group not found")
     return {"added": body.member, "group_id": group_id}
 
 
 @router.delete("/groups/{group_id}/members/{member}", tags=["tags-groups"])
-async def remove_member(group_id: str, member: str):
+async def remove_member(group_id: SafeId, member: SafeId):
     if not _manager.remove_member(group_id, member):
         raise HTTPException(404, "Group or member not found")
     return {"removed": member}
@@ -185,14 +185,14 @@ async def unassign_tag(body: AssignRequest):
 
 
 @router.get("/tags/for/{resource_type}/{resource_id}", tags=["tags-groups"])
-async def get_tags_for_resource(resource_type: str, resource_id: str):
+async def get_tags_for_resource(resource_type: str, resource_id: SafeId):
     tags = _manager.get_tags_for_resource(resource_type, resource_id)
     return {"tags": [t.to_dict() for t in tags]}
 
 
 @router.get("/tags/{tag_id}/resources", tags=["tags-groups"])
 async def get_resources_by_tag(
-    tag_id: str,
+    tag_id: SafeId,
     resource_type: str | None = Query(None),
 ):
     resources = _manager.get_resources_by_tag(tag_id, resource_type)
@@ -204,7 +204,7 @@ async def get_resources_by_tag(
 # -------------------------------------------------------------------
 
 @router.post("/tags/auto-tag", tags=["tags-groups"])
-async def auto_tag_event(event_type: str, resource_id: str):
+async def auto_tag_event(event_type: str, resource_id: SafeId):
     applied = _manager.auto_tag_event(event_type, resource_id)
     return {"applied": [a.to_dict() for a in applied]}
 

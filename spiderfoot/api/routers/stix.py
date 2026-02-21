@@ -10,7 +10,7 @@ import logging
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from ..dependencies import get_api_key
+from ..dependencies import get_api_key, SafeId
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
@@ -134,7 +134,7 @@ async def taxii_list_collections():
 
 
 @router.get("/taxii2/collections/{collection_id}/", tags=["taxii"])
-async def taxii_get_collection(collection_id: str):
+async def taxii_get_collection(collection_id: SafeId):
     """Get a specific TAXII collection."""
     col = _taxii_server.get_collection(collection_id)
     if col is None:
@@ -144,7 +144,7 @@ async def taxii_get_collection(collection_id: str):
 
 @router.get("/taxii2/collections/{collection_id}/objects/", tags=["taxii"])
 async def taxii_get_objects(
-    collection_id: str,
+    collection_id: SafeId,
     added_after: str | None = Query(None, description="Filter by creation time"),
     match_type: str | None = Query(None, alias="match[type]", description="Filter by STIX type"),
     limit: int = Query(100, ge=1, le=1000, description="Maximum objects to return"),
@@ -163,7 +163,7 @@ async def taxii_get_objects(
 
 
 @router.get("/taxii2/collections/{collection_id}/objects/{object_id}/", tags=["taxii"])
-async def taxii_get_object(collection_id: str, object_id: str):
+async def taxii_get_object(collection_id: SafeId, object_id: SafeId):
     """Get a specific STIX object by ID from a collection."""
     obj = _taxii_server.get_object_by_id(collection_id, object_id)
     if obj is None:

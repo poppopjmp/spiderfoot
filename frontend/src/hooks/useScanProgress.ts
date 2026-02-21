@@ -4,6 +4,9 @@
  * Connects to /api/scans/{id}/progress/stream and yields
  * per-module progress snapshots including overall percentage
  * and module-level breakdowns.
+ *
+ * Uses fetch() + ReadableStream instead of native EventSource so
+ * auth credentials are sent via headers (not leaked in the URL).
  */
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { getAuthHeaders } from '../lib/api';
@@ -36,6 +39,50 @@ interface UseScanProgressOpts {
   onComplete?: () => void;
 }
 
+/* ------------------------------------------------------------------ */
+/* SSE line parser — processes `event:` / `data:` / blank-line frames */
+/* ------------------------------------------------------------------ */
+
+interface SSEFrame {
+  event: string;
+  data: string;
+}
+
+function parseSSEChunk(
+  buffer: string,
+  onFrame: (frame: SSEFrame) => void,
+): string {
+  const lines = buffer.split('\n');
+  let currentEvent = 'message';
+  let currentData = '';
+  let incomplete = '';
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // Last element may be an incomplete line (no trailing \n)
+    if (i === lines.length - 1 && !buffer.endsWith('\n')) {
+      incomplete = line;
+      break;
+    }
+
+    if (line === '' || line === '\r') {
+      // Blank line = dispatch frame
+      if (currentData) {
+        onFrame({ event: currentEvent, data: currentData.trimEnd() });
+      }
+      currentEvent = 'message';
+      currentData = '';
+    } else if (line.startsWith('event:')) {
+      currentEvent = line.slice(6).trim();
+    } else if (line.startsWith('data:')) {
+      currentData += (currentData ? '\n' : '') + line.slice(5).trimStart();
+    }
+    // Ignore `id:`, `retry:`, comments (`:`)
+  }
+  return incomplete;
+}
+
 export function useScanProgress(
   scanId: string | undefined,
   opts: UseScanProgressOpts = {},
@@ -44,14 +91,14 @@ export function useScanProgress(
   const [progress, setProgress] = useState<ScanProgressSnapshot | null>(null);
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const eventSourceRef = useRef<EventSource | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
   const onCompleteRef = useRef(onComplete);
   onCompleteRef.current = onComplete;
 
   const disconnect = useCallback(() => {
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close();
-      eventSourceRef.current = null;
+    if (abortRef.current) {
+      abortRef.current.abort();
+      abortRef.current = null;
     }
     setConnected(false);
   }, []);
@@ -62,30 +109,15 @@ export function useScanProgress(
       return;
     }
 
-    // Build SSE URL with auth
-    const headers = getAuthHeaders();
-    const params = new URLSearchParams({ interval: String(interval) });
+    const controller = new AbortController();
+    abortRef.current = controller;
 
-    // EventSource doesn't support custom headers; pass token as query param
-    const token = headers['Authorization']?.replace('Bearer ', '');
-    if (token) params.set('token', token);
-    const apiKey = headers['X-API-Key'];
-    if (apiKey) params.set('api_key', apiKey);
+    const url = `/api/scans/${encodeURIComponent(scanId)}/progress/stream?interval=${interval}`;
 
-    const url = `/api/scans/${scanId}/progress/stream?${params}`;
-
-    try {
-      const es = new EventSource(url);
-      eventSourceRef.current = es;
-
-      es.onopen = () => {
-        setConnected(true);
-        setError(null);
-      };
-
-      es.addEventListener('progress', (event) => {
+    const handleFrame = (frame: SSEFrame) => {
+      if (frame.event === 'progress') {
         try {
-          const data = JSON.parse(event.data);
+          const data = JSON.parse(frame.data);
           const snapshot: ScanProgressSnapshot = {
             scan_id: data.scan_id ?? scanId,
             status: data.status ?? 'RUNNING',
@@ -106,26 +138,53 @@ export function useScanProgress(
         } catch {
           // Ignore malformed progress events
         }
-      });
-
-      es.addEventListener('complete', () => {
-        setProgress((prev) => prev ? { ...prev, status: 'FINISHED', overall_percent: 100 } : null);
+      } else if (frame.event === 'complete') {
+        setProgress((prev) =>
+          prev ? { ...prev, status: 'FINISHED', overall_percent: 100 } : null,
+        );
         onCompleteRef.current?.();
         disconnect();
-      });
+      }
+      // heartbeat events — no action needed
+    };
 
-      es.addEventListener('heartbeat', () => {
-        // Keep connection alive — no action needed
-      });
+    (async () => {
+      try {
+        const res = await fetch(url, {
+          headers: {
+            Accept: 'text/event-stream',
+            ...getAuthHeaders(),
+          },
+          signal: controller.signal,
+        });
 
-      es.onerror = () => {
-        // EventSource auto-reconnects; track transient errors
-        setError('Connection lost — reconnecting...');
+        if (!res.ok || !res.body) {
+          setError(`Stream error: ${res.status}`);
+          setConnected(false);
+          return;
+        }
+
+        setConnected(true);
+        setError(null);
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let sseBuffer = '';
+
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          sseBuffer = parseSSEChunk(
+            sseBuffer + decoder.decode(value, { stream: true }),
+            handleFrame,
+          );
+        }
+      } catch (err: unknown) {
+        if (err instanceof DOMException && err.name === 'AbortError') return;
+        setError('Connection lost');
         setConnected(false);
-      };
-    } catch {
-      setError('Failed to connect to progress stream');
-    }
+      }
+    })();
 
     return disconnect;
   }, [scanId, enabled, interval, disconnect]);

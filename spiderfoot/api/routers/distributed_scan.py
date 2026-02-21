@@ -17,7 +17,7 @@ from spiderfoot.distributed_scan import (
     BalancingStrategy,
     WorkerStatus,
 )
-from ..dependencies import get_api_key
+from ..dependencies import get_api_key, SafeId
 
 router = APIRouter(dependencies=[Depends(get_api_key)])
 
@@ -79,7 +79,7 @@ async def list_workers(
 
 
 @router.get("/distributed/workers/{worker_id}", tags=["distributed-scan"])
-async def get_worker(worker_id: str):
+async def get_worker(worker_id: SafeId):
     """Get a specific worker's details."""
     node = _manager.get_worker(worker_id)
     if not node:
@@ -88,7 +88,7 @@ async def get_worker(worker_id: str):
 
 
 @router.post("/distributed/workers/{worker_id}/heartbeat", tags=["distributed-scan"])
-async def worker_heartbeat(worker_id: str, body: HeartbeatRequest):
+async def worker_heartbeat(worker_id: SafeId, body: HeartbeatRequest):
     """Send a heartbeat from a worker."""
     if not _manager.heartbeat(worker_id, load=body.current_load):
         raise HTTPException(404, f"Worker '{worker_id}' not found")
@@ -96,7 +96,7 @@ async def worker_heartbeat(worker_id: str, body: HeartbeatRequest):
 
 
 @router.post("/distributed/workers/{worker_id}/drain", tags=["distributed-scan"])
-async def drain_worker(worker_id: str):
+async def drain_worker(worker_id: SafeId):
     """Put a worker in draining mode (no new work)."""
     if not _manager.drain_worker(worker_id):
         raise HTTPException(404, f"Worker '{worker_id}' not found")
@@ -104,7 +104,7 @@ async def drain_worker(worker_id: str):
 
 
 @router.delete("/distributed/workers/{worker_id}", tags=["distributed-scan"])
-async def deregister_worker(worker_id: str):
+async def deregister_worker(worker_id: SafeId):
     """Remove a worker from the pool."""
     if not _manager.deregister_worker(worker_id):
         raise HTTPException(404, f"Worker '{worker_id}' not found")
@@ -142,7 +142,7 @@ async def list_distributed_scans(
 
 
 @router.get("/distributed/scans/{scan_id}", tags=["distributed-scan"])
-async def get_distributed_scan(scan_id: str):
+async def get_distributed_scan(scan_id: SafeId):
     """Get details of a distributed scan."""
     dscan = _manager.get_scan(scan_id)
     if not dscan:
@@ -151,7 +151,7 @@ async def get_distributed_scan(scan_id: str):
 
 
 @router.get("/distributed/scans/{scan_id}/progress", tags=["distributed-scan"])
-async def scan_progress(scan_id: str):
+async def scan_progress(scan_id: SafeId):
     """Get aggregated progress for a distributed scan."""
     progress = _manager.get_scan_progress(scan_id)
     if not progress:
@@ -164,7 +164,7 @@ async def scan_progress(scan_id: str):
 # -------------------------------------------------------------------
 
 @router.patch("/distributed/chunks/{chunk_id}", tags=["distributed-scan"])
-async def update_chunk(chunk_id: str, body: ChunkUpdate):
+async def update_chunk(chunk_id: SafeId, body: ChunkUpdate):
     """Update progress/status for a scan chunk."""
     chunk = _manager.update_chunk_progress(
         chunk_id=chunk_id,

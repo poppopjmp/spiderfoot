@@ -9,7 +9,7 @@ v5.6.9
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from ..dependencies import get_api_key
+from ..dependencies import get_api_key, SafeId
 from pydantic import BaseModel, Field
 from typing import Any
 
@@ -164,7 +164,7 @@ async def comparison_history(
 
 
 @router.get("/scan-comparison/{comparison_id}", tags=["scan-comparison"])
-async def get_comparison(comparison_id: str):
+async def get_comparison(comparison_id: SafeId):
     """Get a specific comparison result by ID."""
     result = _comparator.get_comparison(comparison_id)
     if not result:
