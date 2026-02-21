@@ -369,7 +369,7 @@ def _generate_report_background(
     except Exception as e:
         update_stored_report(report_id, {
             "status": "failed",
-            "message": f"Generation failed: {str(e)}",
+            "message": "Generation failed",
         })
         log.error("Report %s generation failed: %s", report_id, e, exc_info=True)
 
@@ -783,7 +783,7 @@ else:
                 "scan_id": request.scan_id,
                 "status": "failed",
                 "report_type": "pdf",
-                "message": str(e),
+                "message": "PDF generation failed",
                 "created_at": time.time(),
             })
 

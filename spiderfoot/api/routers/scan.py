@@ -413,7 +413,7 @@ async def bulk_stop_scans(
                     log.debug("on_stopped hook failed for scan %s: %s", scan_id, e)
         except Exception as e:
             log.error("Bulk stop failed for %s: %s", scan_id, e)
-            results["errors"].append({"scan_id": scan_id, "error": str(e)})
+            results["errors"].append({"scan_id": scan_id, "error": "Operation failed"})
     return {
         **results,
         "summary": {
@@ -448,7 +448,7 @@ async def bulk_delete_scans(
                     log.debug("on_deleted hook failed for scan %s: %s", scan_id, e)
         except Exception as e:
             log.error("Bulk delete failed for %s: %s", scan_id, e)
-            results["errors"].append({"scan_id": scan_id, "error": str(e)})
+            results["errors"].append({"scan_id": scan_id, "error": "Operation failed"})
     return {
         **results,
         "summary": {
@@ -482,7 +482,7 @@ async def bulk_archive_scans(
                     log.debug("on_archived hook failed for scan %s: %s", scan_id, e)
         except Exception as e:
             log.error("Bulk archive failed for %s: %s", scan_id, e)
-            results["errors"].append({"scan_id": scan_id, "error": str(e)})
+            results["errors"].append({"scan_id": scan_id, "error": "Operation failed"})
     return {
         **results,
         "summary": {

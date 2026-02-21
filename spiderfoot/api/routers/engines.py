@@ -288,12 +288,14 @@ async def validate_engine(
             module_count=len(engine.get_enabled_modules()),
         )
     except ScanEngineError as e:
+        log.warning("Engine validation failed: %s", e)
         return EngineValidateResponse(
             valid=False,
-            errors=[str(e)],
+            errors=["Validation error"],
         )
     except Exception as e:
+        log.warning("Engine validation unexpected error: %s", e)
         return EngineValidateResponse(
             valid=False,
-            errors=[f"Unexpected error: {str(e)}"],
+            errors=["Unexpected validation error"],
         )
