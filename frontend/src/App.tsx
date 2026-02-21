@@ -48,6 +48,21 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+/**
+ * Permission-aware route guard.  Redirects to "/" when the current user
+ * lacks the required permission.  Falls through silently when auth is
+ * not enforced (authRequired === false) so development isn't impacted.
+ */
+function RequirePermission({ permission, children }: { permission: string; children: React.ReactNode }) {
+  const { hasPermission, authRequired } = useAuthStore();
+
+  if (authRequired && !hasPermission(permission)) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
+}
+
 export default function App() {
   const { fetchAuthStatus, fetchCurrentUser, setTokensFromUrl, accessToken } = useAuthStore();
 
@@ -95,13 +110,13 @@ export default function App() {
         <Route path="agents" element={<Suspense fallback={<LazyFallback />}><AgentsPage /></Suspense>} />
 
         {/* User Management (admin only) */}
-        <Route path="users" element={<Suspense fallback={<LazyFallback />}><UsersPage /></Suspense>} />
+        <Route path="users" element={<RequirePermission permission="user:read"><Suspense fallback={<LazyFallback />}><UsersPage /></Suspense></RequirePermission>} />
 
         {/* SSO Settings (admin only) */}
-        <Route path="sso-settings" element={<Suspense fallback={<LazyFallback />}><SSOSettingsPage /></Suspense>} />
+        <Route path="sso-settings" element={<RequirePermission permission="system:admin"><Suspense fallback={<LazyFallback />}><SSOSettingsPage /></Suspense></RequirePermission>} />
 
-        {/* API Keys */}
-        <Route path="api-keys" element={<Suspense fallback={<LazyFallback />}><ApiKeysPage /></Suspense>} />
+        {/* API Keys (admin only) */}
+        <Route path="api-keys" element={<RequirePermission permission="system:admin"><Suspense fallback={<LazyFallback />}><ApiKeysPage /></Suspense></RequirePermission>} />
 
         {/* CherryPy URL redirects for backward compatibility */}
         <Route path="newscan" element={<Navigate to="/scans/new" replace />} />
