@@ -436,7 +436,7 @@ class SpiderFootDb:
         self.managers['correlation'] = CorrelationManager(self)
         # self.managers['utils'] = DbUtils(self)  # Removed: DbUtils class no longer exists, use get_placeholder instead
 
-    def execute(self, sql: str, params=None):
+    def execute(self, sql: str, params: Any = None) -> Any:
         """Execute a raw SQL query with proper placeholder handling.
 
         This is a low-level method for direct SQL execution (e.g., API key management).
@@ -597,8 +597,8 @@ class SpiderFootDb:
     # --- SCAN RESULT / EVENT FUNCTIONS ---
     def scanResultEvent(
         self, instanceId: str, eventType: str = 'ALL',
-        srcModule: str = None, data: list = None,
-        sourceId: list = None, correlationId: str = None,
+        srcModule: str | None = None, data: list | None = None,
+        sourceId: list | None = None, correlationId: str | None = None,
         filterFp: bool = False,
     ) -> list:
         """Retrieve scan result events, optionally filtered by type or module."""

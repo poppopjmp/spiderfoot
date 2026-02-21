@@ -107,7 +107,7 @@ def safeSSLSocket(host: str, port: int, timeout: int) -> 'ssl.SSLSocket':
     sock.do_handshake()
     return sock
 
-def parseCert(rawcert: str, fqdn: str = None, expiringdays: int = 30) -> dict:
+def parseCert(rawcert: str, fqdn: str | None = None, expiringdays: int = 30) -> dict:
     """Parse a PEM certificate and return its metadata."""
     if not rawcert:
         return {}
@@ -196,11 +196,11 @@ def useProxyForUrl(
     return True
 
 def fetchUrl(
-    url: str, cookies: str = None, timeout: int = 30,
-    useragent: str = "SpiderFoot", headers: dict = None,
-    noLog: bool = False, postData: str = None,
+    url: str, cookies: str | None = None, timeout: int = 30,
+    useragent: str = "SpiderFoot", headers: dict | None = None,
+    noLog: bool = False, postData: str | None = None,
     disableContentEncoding: bool = False,
-    sizeLimit: int = None, headOnly: bool = False,
+    sizeLimit: int | None = None, headOnly: bool = False,
     verify: bool = True,
 ) -> dict:
     """Fetch content from a URL and return response details."""

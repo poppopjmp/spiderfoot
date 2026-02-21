@@ -21,6 +21,8 @@ import hashlib
 import random
 import time
 
+__all__ = ["SpiderFootEvent"]
+
 
 class SpiderFootEvent:
     """SpiderFootEvent object representing identified data and associated meta

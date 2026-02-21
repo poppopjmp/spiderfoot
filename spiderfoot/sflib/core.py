@@ -220,7 +220,7 @@ class SpiderFoot:
     def safeSSLSocket(self, host: str, port: int, timeout: int) -> 'ssl.SSLSocket':
         """Create a safe SSL socket connection to a host and port."""
         return safeSSLSocket(host, port, timeout)
-    def parseCert(self, rawcert: str, fqdn: str = None, expiringdays: int = 30) -> dict:
+    def parseCert(self, rawcert: str, fqdn: str | None = None, expiringdays: int = 30) -> dict:
         """Parse an SSL certificate and return its details."""
         return parseCert(rawcert, fqdn, expiringdays)
     def getSession(self) -> 'requests.sessions.Session':
@@ -236,11 +236,11 @@ class SpiderFoot:
             isValidLocalOrLoopbackIp=self.isValidLocalOrLoopbackIp,
         )
     def fetchUrl(
-        self, url: str, cookies: str = None, timeout: int = 30,
-        useragent: str = "SpiderFoot", headers: dict = None,
-        noLog: bool = False, postData: str = None,
+        self, url: str, cookies: str | None = None, timeout: int = 30,
+        useragent: str = "SpiderFoot", headers: dict | None = None,
+        noLog: bool = False, postData: str | None = None,
         disableContentEncoding: bool = False,
-        sizeLimit: int = None, headOnly: bool = False,
+        sizeLimit: int | None = None, headOnly: bool = False,
         verify: bool = True,
     ) -> dict:
         """Fetch the contents of a URL and return the response."""
@@ -332,7 +332,7 @@ class SpiderFoot:
             count = 0
         return baseurl.split('/')[count].lower()
 
-    def googleIterate(self, searchString: str, opts: dict = None) -> dict:
+    def googleIterate(self, searchString: str, opts: dict | None = None) -> dict:
         """Request search results from the Google API.
 
         Will return a dict:
@@ -400,7 +400,7 @@ class SpiderFoot:
             "webSearchUrl": f"https://www.google.com/search?q={search_string}&{params}"
         }
 
-    def bingIterate(self, searchString: str, opts: dict = None) -> dict:
+    def bingIterate(self, searchString: str, opts: dict | None = None) -> dict:
         """Request search results from the Bing API.
 
         Will return a dict:

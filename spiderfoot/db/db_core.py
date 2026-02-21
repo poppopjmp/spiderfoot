@@ -22,6 +22,7 @@ from spiderfoot.db.db_utils import (
     get_placeholder, get_upsert_clause, get_type_mapping, get_bool_value,
     get_schema_version_queries, get_index_if_not_exists, check_connection, is_transient_error, normalize_db_type
 )
+from typing import Any
 
 log = logging.getLogger(__name__)
 

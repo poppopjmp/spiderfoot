@@ -33,10 +33,10 @@ class ScanManager:
         self.dbhLock = dbhLock
         self.db_type = db_type
 
-    def _log_db_error(self, msg, exc):
+    def _log_db_error(self, msg: str, exc: BaseException) -> None:
         log.error("[DB] %s: %s", msg, exc)
 
-    def _is_transient_error(self, exc):
+    def _is_transient_error(self, exc: BaseException) -> bool:
         return is_transient_error(exc)
 
     def scanInstanceCreate(self, instanceId: str, scanName: str, scanTarget: str) -> None:
@@ -66,7 +66,7 @@ class ScanManager:
                         continue
                     raise OSError("Unable to create scan instance in database") from e
 
-    def scanInstanceSet(self, instanceId: str, started: str = None, ended: str = None, status: str = None) -> None:
+    def scanInstanceSet(self, instanceId: str, started: str | None = None, ended: str | None = None, status: str | None = None) -> None:
         """Update fields on an existing scan instance."""
         if not isinstance(instanceId, str):
             raise TypeError(f"instanceId is {type(instanceId)}; expected str()")

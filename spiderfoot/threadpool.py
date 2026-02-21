@@ -16,6 +16,8 @@ from typing import Callable
 from collections.abc import Iterable
 from types import TracebackType
 
+__all__ = ["SpiderFootThreadPool"]
+
 
 class SpiderFootThreadPool:
     """Each thread in the pool is spawned only once, and reused for best
