@@ -245,23 +245,42 @@ class _MockGenerator:
     """Generates mock responses for testing."""
 
     @staticmethod
-    def generate(messages: list[dict[str, str]], model: str) -> LLMResponse:
-        """Generate a mock LLM response for testing."""
+    def generate(
+        messages: list[dict[str, str]],
+        model: str,
+        response_format: dict[str, Any] | None = None,
+    ) -> LLMResponse:
+        """Generate a mock LLM response for testing.
+
+        If *response_format* requests ``json_schema`` mode, returns a
+        minimal JSON object that satisfies the schema's required fields.
+        """
         user_msg = ""
         for m in reversed(messages):
             if m.get("role") == "user":
                 user_msg = m.get("content", "")
                 break
 
-        content = (
-            f"## Analysis Report\n\n"
-            f"Based on the provided OSINT data, here are the key findings:\n\n"
-            f"1. **Risk Assessment**: Multiple indicators suggest elevated risk.\n"
-            f"2. **Threat Indicators**: Several malicious entities detected.\n"
-            f"3. **Recommendations**: Immediate remediation recommended.\n\n"
-            f"*This is a mock response generated for testing purposes.*\n"
-            f"*Input length: {len(user_msg)} characters*"
-        )
+        if response_format and response_format.get("type") in (
+            "json_schema", "json_object"
+        ):
+            import json as _json
+            # Try to produce a conformant mock from the schema
+            schema_spec = response_format.get("json_schema", {})
+            schema = schema_spec.get("schema", {})
+            content = _json.dumps(
+                _MockGenerator._mock_from_schema(schema)
+            )
+        else:
+            content = (
+                f"## Analysis Report\n\n"
+                f"Based on the provided OSINT data, here are the key findings:\n\n"
+                f"1. **Risk Assessment**: Multiple indicators suggest elevated risk.\n"
+                f"2. **Threat Indicators**: Several malicious entities detected.\n"
+                f"3. **Recommendations**: Immediate remediation recommended.\n\n"
+                f"*This is a mock response generated for testing purposes.*\n"
+                f"*Input length: {len(user_msg)} characters*"
+            )
 
         return LLMResponse(
             content=content,
@@ -274,6 +293,40 @@ class _MockGenerator:
             finish_reason="stop",
             success=True,
         )
+
+    @staticmethod
+    def _mock_from_schema(schema: dict[str, Any]) -> Any:
+        """Produce a minimal mock object from a JSON Schema."""
+        schema_type = schema.get("type", "object")
+        if schema_type == "object":
+            props = schema.get("properties", {})
+            required = set(schema.get("required", []))
+            obj: dict[str, Any] = {}
+            for key, prop in props.items():
+                if key in required or len(obj) < 3:
+                    obj[key] = _MockGenerator._mock_from_schema(prop)
+            return obj
+        elif schema_type == "array":
+            items = schema.get("items", {})
+            return [_MockGenerator._mock_from_schema(items)]
+        elif schema_type == "string":
+            enum_vals = schema.get("enum")
+            if enum_vals:
+                return enum_vals[0]
+            return schema.get("default", "mock_value")
+        elif schema_type == "integer":
+            return schema.get("default", 50)
+        elif schema_type == "number":
+            return schema.get("default", 0.5)
+        elif schema_type == "boolean":
+            return schema.get("default", True)
+        elif "anyOf" in schema:
+            # Union type — pick the first non-null variant
+            for variant in schema["anyOf"]:
+                if variant.get("type") != "null":
+                    return _MockGenerator._mock_from_schema(variant)
+            return None
+        return None
 
 
 # ---------------------------------------------------------------------------
@@ -346,7 +399,11 @@ class LLMClient:
             LLMResponse with the model's reply.
         """
         if self.config.provider == LLMProvider.MOCK:
-            return _MockGenerator.generate(messages, self.config.model)
+            return _MockGenerator.generate(
+                messages,
+                self.config.model,
+                response_format=kwargs.get("response_format"),
+            )
 
         return self._call_with_retry(messages, **kwargs)
 
@@ -373,6 +430,105 @@ class LLMClient:
             return
 
         yield from self._stream_request(messages, **kwargs)
+
+    def chat_structured(
+        self,
+        messages: list[dict[str, str]],
+        response_model: type,
+        *,
+        strict: bool = True,
+        **kwargs: Any,
+    ) -> Any:
+        """Send a chat request and parse the response into a Pydantic model.
+
+        Uses the OpenAI ``response_format`` parameter (``json_schema`` mode)
+        to force the model to return schema-conformant JSON, then validates
+        and deserializes via the supplied Pydantic model.
+
+        Args:
+            messages: Chat messages in OpenAI format.
+            response_model: A Pydantic ``BaseModel`` subclass.
+            strict: If True, use ``json_schema`` mode (requires OpenAI / compatible).
+                    If False, use ``json_object`` mode and parse best-effort.
+            **kwargs: Override config parameters.
+
+        Returns:
+            An instance of *response_model* populated from the LLM response.
+
+        Raises:
+            LLMError: If the LLM call fails.
+            pydantic.ValidationError: If the response doesn't match the schema.
+        """
+        import json as _json
+        from pydantic import BaseModel
+
+        if not (isinstance(response_model, type) and issubclass(response_model, BaseModel)):
+            raise TypeError(
+                f"response_model must be a Pydantic BaseModel subclass, "
+                f"got {type(response_model)}"
+            )
+
+        # Build the response_format payload
+        if strict:
+            json_schema = response_model.model_json_schema()
+            # Clean up schema for OpenAI compatibility
+            # (remove $defs at top level → inline if simple)
+            schema_name = response_model.__name__
+            response_format = {
+                "type": "json_schema",
+                "json_schema": {
+                    "name": schema_name,
+                    "schema": json_schema,
+                    "strict": True,
+                },
+            }
+        else:
+            response_format = {"type": "json_object"}
+
+        # Inject a system hint so the model knows to output JSON
+        augmented = list(messages)
+        has_system = any(m.get("role") == "system" for m in augmented)
+        json_hint = (
+            f"\n\nRespond ONLY with valid JSON conforming to the "
+            f"`{response_model.__name__}` schema. No markdown fences."
+        )
+        if has_system:
+            for m in augmented:
+                if m["role"] == "system":
+                    m = dict(m)
+                    m["content"] = m["content"] + json_hint
+                    augmented[augmented.index(m)] = m
+                    break
+        else:
+            augmented.insert(0, {
+                "role": "system",
+                "content": (
+                    "You are a structured data extraction assistant."
+                    + json_hint
+                ),
+            })
+
+        llm_resp = self.chat_messages(
+            augmented,
+            response_format=response_format,
+            **kwargs,
+        )
+
+        if not llm_resp.success:
+            raise LLMError(
+                f"LLM call failed: {llm_resp.error}",
+            )
+
+        # Parse JSON from the response content
+        content = llm_resp.content.strip()
+        # Strip markdown fences if the model added them despite the instruction
+        if content.startswith("```"):
+            lines = content.split("\n")
+            lines = [l for l in lines if not l.strip().startswith("```")]
+            content = "\n".join(lines)
+
+        parsed = _json.loads(content)
+        return response_model.model_validate(parsed)
 
     # -------------------------------------------------------------------
     # Statistics
@@ -409,7 +565,12 @@ class LLMClient:
         stream: bool = False,
         **kwargs: Any,
     ) -> dict[str, Any]:
-        """Build the API request body."""
+        """Build the API request body.
+
+        Supports ``response_format`` for structured outputs:
+        - ``{"type": "json_object"}`` — JSON mode (model returns arbitrary JSON)
+        - ``{"type": "json_schema", "json_schema": {...}}`` — schema-constrained
+        """
         body: dict[str, Any] = {
             "model": kwargs.get("model", self.config.model),
             "messages": messages,
@@ -425,6 +586,11 @@ class LLMClient:
             body["presence_penalty"] = self.config.presence_penalty
         if self.config.stop:
             body["stop"] = self.config.stop
+
+        # Structured output / JSON mode
+        response_format = kwargs.get("response_format")
+        if response_format is not None:
+            body["response_format"] = response_format
 
         return body
 

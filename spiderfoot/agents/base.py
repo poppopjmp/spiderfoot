@@ -201,6 +201,7 @@ class BaseAgent(ABC):
         model: Optional[str] = None,
         temperature: float = 0.3,
         max_tokens: int = 2048,
+        response_format: Optional[Dict[str, Any]] = None,
     ) -> str:
         """
         Call LLM via LiteLLM proxy (OpenAI-compatible API).
@@ -210,6 +211,8 @@ class BaseAgent(ABC):
             model: Override model name (defaults to config)
             temperature: Sampling temperature
             max_tokens: Maximum response tokens
+            response_format: Optional structured output format spec
+                             (e.g. {"type": "json_schema", "json_schema": {...}})
 
         Returns:
             LLM response text
@@ -222,12 +225,14 @@ class BaseAgent(ABC):
             "Content-Type": "application/json",
             "Authorization": f"Bearer {self.config.llm_api_key}",
         }
-        payload = {
+        payload: Dict[str, Any] = {
             "model": model,
             "messages": messages,
             "temperature": temperature,
             "max_tokens": max_tokens,
         }
+        if response_format is not None:
+            payload["response_format"] = response_format
 
         async with aiohttp.ClientSession() as session:
             async with session.post(
@@ -236,3 +241,87 @@ class BaseAgent(ABC):
                 resp.raise_for_status()
                 data = await resp.json()
                 return data["choices"][0]["message"]["content"]
+
+    async def call_llm_structured(
+        self,
+        messages: List[Dict[str, str]],
+        response_model: type,
+        *,
+        strict: bool = True,
+        model: Optional[str] = None,
+        temperature: float = 0.1,
+        max_tokens: int = 4096,
+    ) -> Any:
+        """Call LLM and parse the response into a Pydantic model.
+
+        Uses ``response_format`` (json_schema mode) to force conformant
+        JSON, then validates via the provided Pydantic model class.
+
+        Args:
+            messages: Chat messages in OpenAI format
+            response_model: A Pydantic BaseModel subclass
+            strict: Use json_schema mode (True) or json_object mode (False)
+            model: Override model name
+            temperature: Sampling temperature (lower = more deterministic)
+            max_tokens: Maximum response tokens
+
+        Returns:
+            An instance of *response_model*.
+
+        Raises:
+            pydantic.ValidationError: If the LLM output doesn't match.
+        """
+        import json as _json
+        from pydantic import BaseModel
+
+        if not (isinstance(response_model, type) and issubclass(response_model, BaseModel)):
+            raise TypeError(
+                f"response_model must be a Pydantic BaseModel subclass, "
+                f"got {type(response_model)}"
+            )
+
+        if strict:
+            json_schema = response_model.model_json_schema()
+            response_format: Optional[Dict[str, Any]] = {
+                "type": "json_schema",
+                "json_schema": {
+                    "name": response_model.__name__,
+                    "schema": json_schema,
+                    "strict": True,
+                },
+            }
+        else:
+            response_format = {"type": "json_object"}
+
+        # Add JSON hint to system message
+        json_hint = (
+            f"\n\nRespond ONLY with valid JSON conforming to the "
+            f"`{response_model.__name__}` schema. No markdown fences."
+        )
+        augmented = list(messages)
+        if augmented and augmented[0].get("role") == "system":
+            augmented[0] = dict(augmented[0])
+            augmented[0]["content"] += json_hint
+        else:
+            augmented.insert(0, {
+                "role": "system",
+                "content": "You are a structured data extraction assistant." + json_hint,
+            })
+
+        content = await self.call_llm(
+            augmented,
+            model=model,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            response_format=response_format,
+        )
+
+        # Strip markdown fences if present
+        content = content.strip()
+        if content.startswith("```"):
+            lines = content.split("\n")
+            lines = [l for l in lines if not l.strip().startswith("```")]
+            content = "\n".join(lines)
+
+        parsed = _json.loads(content)
+        return response_model.model_validate(parsed)
