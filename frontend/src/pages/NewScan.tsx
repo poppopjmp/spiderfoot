@@ -7,7 +7,7 @@ import {
 } from '../lib/api';
 import {
   Radar, Lock, Unlock, Zap,
-  ShieldCheck, FileText, Loader2, X, Layers,
+  ShieldCheck, FileText, Loader2, Layers,
 } from 'lucide-react';
 import { PageHeader, Tabs, SearchInput, Toast, type ToastType } from '../components/ui';
 

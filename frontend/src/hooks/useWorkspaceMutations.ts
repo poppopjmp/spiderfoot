@@ -98,6 +98,7 @@ export function useWorkspaceMutations(
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['workspace-summary', selectedWorkspace] });
       queryClient.invalidateQueries({ queryKey: ['scans'] });
+      queryClient.invalidateQueries({ queryKey: ['workspace-scans', selectedWorkspace] });
       callbacks?.onMultiScanSuccess?.();
       showToast({ type: 'success', message: 'Workspace scan launched! Scans will appear below once started.' });
     },

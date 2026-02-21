@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { DropdownMenu, DropdownItem, EmptyState } from '../ui';
 import { sanitizeHTML } from '../../lib/sanitize';
-import { renderMarkdownToHTML, inlineFormat } from '../MarkdownRenderer';
+import { renderMarkdownToHTML } from '../MarkdownRenderer';
 import { COUNTRY_NAME_TO_CODE } from '../../lib/geo';
 
 /* ── Helpers ──────────────────────────────────────────────── */

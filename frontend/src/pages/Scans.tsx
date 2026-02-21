@@ -69,17 +69,17 @@ export default function ScansPage() {
 
   /* Mutations */
   const stopMut = useMutation({
-    mutationFn: scanApi.stop,
+    mutationFn: (id: string) => scanApi.stop(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['scans'] });
       setToast({ type: 'success', message: 'Scan stopped' });
     },
-    onError: (err: Error) => {
+    onError: () => {
       setToast({ type: 'error', message: 'Failed to stop scan' });
     },
   });
   const deleteMut = useMutation({
-    mutationFn: scanApi.delete,
+    mutationFn: (id: string) => scanApi.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['scans'] });
       queryClient.invalidateQueries({ queryKey: ['scan-stats-all'] });
@@ -90,22 +90,22 @@ export default function ScansPage() {
     },
   });
   const rerunMut = useMutation({
-    mutationFn: scanApi.rerun,
+    mutationFn: (id: string) => scanApi.rerun(id),
     onSuccess: (r) => {
       queryClient.invalidateQueries({ queryKey: ['scans'] });
       setToast({ type: 'success', message: `Rerun started: ${r?.new_scan_id?.slice(0, 8)}` });
     },
-    onError: (err: Error) => {
+    onError: () => {
       setToast({ type: 'error', message: 'Failed to rerun scan' });
     },
   });
   const cloneMut = useMutation({
-    mutationFn: scanApi.clone,
+    mutationFn: (id: string) => scanApi.clone(id),
     onSuccess: (r) => {
       queryClient.invalidateQueries({ queryKey: ['scans'] });
       setToast({ type: 'success', message: `Cloned: ${r?.new_scan_id?.slice(0, 8)}` });
     },
-    onError: (err: Error) => {
+    onError: () => {
       setToast({ type: 'error', message: 'Failed to clone scan' });
     },
   });
@@ -116,7 +116,7 @@ export default function ScansPage() {
       setSelected(new Set());
       setToast({ type: 'success', message: 'Bulk stop complete' });
     },
-    onError: (err: Error) => {
+    onError: () => {
       setToast({ type: 'error', message: 'Bulk stop failed' });
     },
   });
@@ -127,7 +127,7 @@ export default function ScansPage() {
       setSelected(new Set());
       setToast({ type: 'success', message: 'Bulk delete complete' });
     },
-    onError: (err: Error) => {
+    onError: () => {
       setToast({ type: 'error', message: 'Bulk delete failed' });
     },
   });

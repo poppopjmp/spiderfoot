@@ -95,8 +95,9 @@ export default function WorkspacesPage() {
 
   /* Fetch scans list to show workspace-associated scans */
   const { data: scansData } = useQuery({
-    queryKey: ['scans', { page: 1, page_size: 200 }],
+    queryKey: ['workspace-scans', selectedWorkspace, { page: 1, page_size: 200 }],
     queryFn: ({ signal }) => scanApi.list({ page: 1, page_size: 200 }, signal),
+    enabled: !!selectedWorkspace,
   });
   const allScans: Scan[] = scansData?.items ?? [];
 

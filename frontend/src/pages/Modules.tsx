@@ -52,7 +52,7 @@ export default function ModulesPage() {
       queryClient.invalidateQueries({ queryKey: ['modules-status'] });
       setToast({ type: 'success', message: 'Module enabled' });
     },
-    onError: (err: Error) => {
+    onError: () => {
       setToast({ type: 'error', message: 'Failed to enable module' });
     },
   });
@@ -62,7 +62,7 @@ export default function ModulesPage() {
       queryClient.invalidateQueries({ queryKey: ['modules-status'] });
       setToast({ type: 'success', message: 'Module disabled' });
     },
-    onError: (err: Error) => {
+    onError: () => {
       setToast({ type: 'error', message: 'Failed to disable module' });
     },
   });
