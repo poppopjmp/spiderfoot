@@ -118,7 +118,8 @@ async def export_scan(
     try:
         content = svc.export_scan(scan_id, fmt, dbh=dbh)
     except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
+        log.warning("Export failed for scan %s: %s", scan_id, exc)
+        raise HTTPException(status_code=400, detail="Export failed")
     except Exception as exc:
         log.error("Export failed for scan %s: %s", scan_id, exc)
         raise HTTPException(status_code=500, detail="Export failed")

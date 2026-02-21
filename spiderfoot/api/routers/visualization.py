@@ -71,7 +71,7 @@ async def get_multi_scan_graph_data(
     except Exception as e:
         log.error("Failed to generate multi-scan graph: %s", e)
         raise HTTPException(
-            status_code=500, detail=f"Failed to generate graph: {e}"
+            status_code=500, detail="Failed to generate graph"
         )
 
 
@@ -108,11 +108,12 @@ async def get_scan_graph_data(
         )
 
     except VisualizationServiceError as exc:
-        raise HTTPException(status_code=404, detail=str(exc))
+        log.warning("Scan not found: %s", exc)
+        raise HTTPException(status_code=404, detail="Scan not found")
     except Exception as e:
         log.error("Failed to generate graph for scan %s: %s", scan_id, e)
         raise HTTPException(
-            status_code=500, detail=f"Failed to generate graph: {e}"
+            status_code=500, detail="Failed to generate graph"
         )
 
 
@@ -128,11 +129,12 @@ async def get_scan_summary_data(
         return svc.get_summary_data(scan_id, group_by=group_by)
 
     except VisualizationServiceError as exc:
-        raise HTTPException(status_code=404, detail=str(exc))
+        log.warning("Scan not found: %s", exc)
+        raise HTTPException(status_code=404, detail="Scan not found")
     except Exception as e:
         log.error("Failed to get summary data for scan %s: %s", scan_id, e)
         raise HTTPException(
-            status_code=500, detail=f"Failed to get summary data: {e}"
+            status_code=500, detail="Failed to get summary data"
         )
 
 
@@ -151,11 +153,12 @@ async def get_scan_timeline_data(
         )
 
     except VisualizationServiceError as exc:
-        raise HTTPException(status_code=404, detail=str(exc))
+        log.warning("Scan not found: %s", exc)
+        raise HTTPException(status_code=404, detail="Scan not found")
     except Exception as e:
         log.error("Failed to get timeline data for scan %s: %s", scan_id, e)
         raise HTTPException(
-            status_code=500, detail=f"Failed to get timeline data: {e}"
+            status_code=500, detail="Failed to get timeline data"
         )
 
 
@@ -174,9 +177,10 @@ async def get_scan_heatmap_data(
         )
 
     except VisualizationServiceError as exc:
-        raise HTTPException(status_code=404, detail=str(exc))
+        log.warning("Scan not found: %s", exc)
+        raise HTTPException(status_code=404, detail="Scan not found")
     except Exception as e:
         log.error("Failed to get heatmap data for scan %s: %s", scan_id, e)
         raise HTTPException(
-            status_code=500, detail=f"Failed to get heatmap data: {e}"
+            status_code=500, detail="Failed to get heatmap data"
         )

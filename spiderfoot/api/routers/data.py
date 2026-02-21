@@ -54,7 +54,7 @@ async def list_entity_types(api_key: str = optional_auth_dep) -> dict:
         return {"entity_types": sorted(set(str(t) for t in types)) if types else []}
     except Exception as e:
         log.exception("Failed to list entity types")
-        raise HTTPException(status_code=500, detail=f"Failed to list entity types: {e}") from e
+        raise HTTPException(status_code=500, detail="Failed to list entity types") from e
 
 
 @router.get("/data/modules")
@@ -90,7 +90,7 @@ async def list_modules(
         return paginate(module_list, params)
     except Exception as e:
         log.exception("Failed to list modules")
-        raise HTTPException(status_code=500, detail=f"Failed to list modules: {e}") from e
+        raise HTTPException(status_code=500, detail="Failed to list modules") from e
 
 
 @router.get("/data/sources")

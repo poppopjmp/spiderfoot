@@ -114,7 +114,8 @@ async def create_key(
             description=request.description,
         )
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        log.warning("Invalid API key operation: %s", e)
+        raise HTTPException(status_code=400, detail="Invalid API key operation")
 
     return KeyCreateResponse(
         key_id=key_id,
@@ -157,7 +158,8 @@ async def update_key(
             description=request.description,
         )
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        log.warning("Invalid API key operation: %s", e)
+        raise HTTPException(status_code=400, detail="Invalid API key operation")
 
     if not record:
         raise HTTPException(status_code=404, detail="API key not found")

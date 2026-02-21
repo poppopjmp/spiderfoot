@@ -78,7 +78,8 @@ async def create_role(request: CreateRoleRequest):
             tenant_id=request.tenant_id,
         )
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.warning("RBAC operation failed: %s", e)
+        raise HTTPException(status_code=400, detail="Invalid RBAC operation")
     return role.to_dict()
 
 
@@ -104,7 +105,8 @@ async def update_role(role_id: str, request: UpdateRoleRequest):
             description=request.description,
         )
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.warning("RBAC operation failed: %s", e)
+        raise HTTPException(status_code=400, detail="Invalid RBAC operation")
     if not role:
         raise HTTPException(status_code=404, detail="Role not found")
     return role.to_dict()
@@ -116,7 +118,8 @@ async def delete_role(role_id: str):
     try:
         ok = get_manager().delete_role(role_id)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.warning("RBAC operation failed: %s", e)
+        raise HTTPException(status_code=400, detail="Invalid RBAC operation")
     if not ok:
         raise HTTPException(status_code=404, detail="Role not found")
     return {"status": "deleted"}
@@ -136,7 +139,8 @@ async def assign_role(request: AssignRoleRequest):
             expires_at=request.expires_at,
         )
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.warning("RBAC operation failed: %s", e)
+        raise HTTPException(status_code=400, detail="Invalid RBAC operation")
     return binding.to_dict()
 
 

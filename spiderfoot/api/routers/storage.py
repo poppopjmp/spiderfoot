@@ -111,9 +111,10 @@ def _get_storage():
         from spiderfoot.storage.minio_manager import get_storage_manager
         return get_storage_manager()
     except Exception as e:
+        log.exception("MinIO storage not available")
         raise HTTPException(
             status_code=503,
-            detail=f"MinIO storage not available: {e}",
+            detail="MinIO storage not available",
         )
 
 
@@ -123,9 +124,10 @@ def _get_qdrant_backup():
         from spiderfoot.storage.qdrant_backup import QdrantBackupManager
         return QdrantBackupManager()
     except Exception as e:
+        log.exception("Qdrant backup manager not available")
         raise HTTPException(
             status_code=503,
-            detail=f"Qdrant backup manager not available: {e}",
+            detail="Qdrant backup manager not available",
         )
 
 
@@ -152,7 +154,8 @@ async def ensure_buckets():
             message=f"Created {len(created)} buckets" if created else "All buckets already exist",
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        log.exception("Storage operation failed")
+        raise HTTPException(status_code=500, detail="Storage operation failed")
 
 
 # ---------------------------------------------------------------------------
@@ -180,7 +183,8 @@ async def presign_report(
         url = mgr.presign_report(scan_id, report_id, extension=extension, expires=expires)
         return {"url": url, "expires_in": str(expires)}
     except Exception as e:
-        raise HTTPException(status_code=404, detail=f"Report not found: {e}")
+        log.warning("Report not found: %s", e)
+        raise HTTPException(status_code=404, detail="Report not found")
 
 
 @router.delete("/reports/{scan_id}/{report_id}", dependencies=[optional_auth_dep])
@@ -195,7 +199,8 @@ async def delete_report(
         mgr.delete_report(scan_id, report_id, extension=extension)
         return {"status": "deleted", "scan_id": scan_id, "report_id": report_id}
     except Exception as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        log.warning("Snapshot not found: %s", e)
+        raise HTTPException(status_code=404, detail="Snapshot not found")
 
 
 @router.delete("/scans/{scan_id}", dependencies=[optional_auth_dep])
@@ -249,7 +254,8 @@ async def snapshot_collection(collection: str) -> SnapshotResult:
         result = backup.snapshot_collection(collection)
         return SnapshotResult(**result)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        log.exception("Storage operation failed")
+        raise HTTPException(status_code=500, detail="Storage operation failed")
 
 
 @router.post("/snapshots/all", dependencies=[optional_auth_dep])

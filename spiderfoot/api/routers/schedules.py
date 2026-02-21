@@ -296,7 +296,8 @@ async def trigger_schedule(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to trigger scan: {e}")
+        log.exception("Failed to trigger scan")
+        raise HTTPException(status_code=500, detail="Failed to trigger scan")
 
 
 # ---------------------------------------------------------------------------

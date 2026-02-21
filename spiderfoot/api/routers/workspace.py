@@ -312,7 +312,8 @@ async def link_scan_to_workspace(workspace_id: str, scan_id: str, api_key: str =
             return {"message": "Scan already linked to workspace"}
         return {"message": "Scan linked to workspace successfully"}
     except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e)) from e
+        log.warning("Workspace not found: %s", e)
+        raise HTTPException(status_code=404, detail="Workspace not found") from e
     except Exception as e:
         log.error("Failed to link scan %s to workspace %s: %s", scan_id, workspace_id, e)
         raise HTTPException(status_code=500, detail="Failed to link scan to workspace") from e

@@ -181,7 +181,8 @@ async def get_engine(
     try:
         engine = loader.load(engine_name)
     except ScanEngineError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        log.warning("Engine not found: %s", e)
+        raise HTTPException(status_code=404, detail="Engine not found")
 
     data = engine.to_dict()
     data["enabled_modules"] = engine.get_enabled_modules()
@@ -209,7 +210,8 @@ async def create_engine(
         engine = loader.load_from_dict(request.model_dump())
         loader.save(engine)
     except ScanEngineError as e:
-        raise HTTPException(status_code=422, detail=str(e))
+        log.warning("Invalid engine configuration: %s", e)
+        raise HTTPException(status_code=422, detail="Invalid engine configuration")
 
     data = engine.to_dict()
     data["enabled_modules"] = engine.get_enabled_modules()
@@ -229,7 +231,8 @@ async def update_engine(
         engine = loader.load_from_dict(request.model_dump())
         loader.save(engine, name=engine_name)
     except ScanEngineError as e:
-        raise HTTPException(status_code=422, detail=str(e))
+        log.warning("Invalid engine configuration: %s", e)
+        raise HTTPException(status_code=422, detail="Invalid engine configuration")
 
     data = engine.to_dict()
     data["enabled_modules"] = engine.get_enabled_modules()

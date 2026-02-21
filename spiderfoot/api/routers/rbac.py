@@ -98,7 +98,8 @@ async def get_role(
     try:
         role = parse_role(role_name)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        log.warning("Role assignment failed: %s", e)
+        raise HTTPException(status_code=400, detail="Invalid role assignment")
     perms = get_permissions(role)
     return RoleInfo(
         name=role.value,

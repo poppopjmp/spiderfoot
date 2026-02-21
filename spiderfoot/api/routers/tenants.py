@@ -72,7 +72,8 @@ async def create_tenant(request: TenantCreateRequest):
             custom_quotas=request.custom_quotas,
         )
     except ValueError as e:
-        raise HTTPException(status_code=409, detail=str(e))
+        logger.warning("Tenant already exists: %s", e)
+        raise HTTPException(status_code=409, detail="Tenant already exists")
 
     logger.info("Created tenant: %s", tenant.tenant_id)
     return tenant.to_dict()
@@ -110,7 +111,8 @@ async def delete_tenant(tenant_id: str):
     try:
         ok = get_manager().delete_tenant(tenant_id)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.warning("Invalid tenant operation: %s", e)
+        raise HTTPException(status_code=400, detail="Invalid tenant operation")
     if not ok:
         raise HTTPException(status_code=404, detail="Tenant not found")
     return {"status": "deleted"}

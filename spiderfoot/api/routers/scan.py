@@ -751,7 +751,8 @@ async def create_scan(
                 sf_config = engine.to_sf_config(sf_config)
                 log.info("Using scan engine '%s' for scan %s", scan_request.engine, scan_id)
             except Exception as e:
-                raise HTTPException(status_code=422, detail=f"Invalid engine: {e}")
+                log.warning("Invalid engine configuration: %s", e)
+                raise HTTPException(status_code=422, detail="Invalid engine configuration")
         elif scan_request.profile:
             # Load modules from a scan profile (e.g. "tools-only", "quick-recon")
             try:
@@ -772,7 +773,8 @@ async def create_scan(
             except HTTPException:
                 raise
             except Exception as e:
-                raise HTTPException(status_code=422, detail=f"Invalid profile: {e}")
+                log.warning("Invalid scan profile: %s", e)
+                raise HTTPException(status_code=422, detail="Invalid scan profile")
         else:
             all_modules = sf.modulesProducing(["*"])
             modules = scan_request.modules if scan_request.modules else all_modules
@@ -1164,7 +1166,8 @@ async def stop_scan(
                 log.debug("on_aborted hook failed for scan %s: %s", scan_id, e)
         return ScanStopResponse(message="Scan stopped successfully", status=new_status)
     except ScanServiceError as e:
-        raise HTTPException(status_code=409, detail=str(e)) from e
+        log.warning("Scan operation conflict: %s", e)
+        raise HTTPException(status_code=409, detail="Scan operation conflict") from e
 
 
 @router.post("/scans/{scan_id}/retry")
@@ -2000,7 +2003,8 @@ async def set_results_false_positive(
     try:
         return svc.set_false_positive(scan_id, resultids, fp)
     except ScanServiceError as e:
-        raise HTTPException(status_code=404, detail=str(e)) from e
+        log.warning("Scan data not found: %s", e)
+        raise HTTPException(status_code=404, detail="Scan data not found") from e
 
 
 @router.post("/scans/{scan_id}/clear", response_model=MessageResponse)
