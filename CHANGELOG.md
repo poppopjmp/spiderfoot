@@ -33,6 +33,16 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Export SafeID validation**: Added `validateSafeID` call in CLI export command
 
 ### Changed
+- **Architecture: microservice-only** (Batches 34–36): Removed monolith entry points (`sf.py`, `sfcli.py`, `sfwebui.py`, `sf_orchestrator.py`) and the entire Python CLI package (`spiderfoot/cli/`, 30 files). SpiderFoot is now strictly: Python API (FastAPI), Node.js Frontend (React), Go CLI (Cobra), PostgreSQL
+- **PostgreSQL-only database layer**: Removed all SQLite support — merged dual schema into single PostgreSQL `createSchemaQueries`, removed `createPostgreSQLSchemaQueries`, eliminated all `import sqlite3` statements, changed every `(sqlite3.Error, psycopg2.Error)` catch to `psycopg2.Error`, removed `SQLiteBackend` class from `report_storage.py` (~165 lines), made `build_config_from_env()` raise `EnvironmentError` instead of SQLite fallback
+- **Renamed SQLite-named symbols**: `SpiderFootSqliteLogHandler` → `SpiderFootDbLogHandler`, `enable_sqlite` → `enable_db_handler`, `_store_sqlite` → `_store_default`, `_bulk_store_sqlite` → `_bulk_store_default`
+- **`db_migrate.py`**: Replaced `SqliteAdapter` with `PostgresAdapter`, removed `SQLITE` from `DbDialect` enum
+- **`auth/service.py`**: PostgreSQL-only with `RuntimeError` on missing DSN
+- **Dockerfile**: API-only (port 8001), removed monolith/webui entry points
+- **Go CLI User-Agent**: Dynamic `SpiderFoot-CLI/<version>` header via `client.Version` propagated from `root.go`
+- **Go CLI input validation**: Added `validateSafeID` to schedule update, delete, and trigger commands
+- **GrpcDataService import**: Wrapped in `try/except ImportError` for graceful degradation when gRPC stubs not generated
+- **Debian packaging**: Removed stale `sf.py`, `sfcli.py`, `sfwebui.py` references from `packaging/debian/install`
 - **Version bump to 6.0.0**: VERSION, package.json, CLI root.go/client.go, Layout.tsx, README badge
 - **STIX API path corrected**: `/scans/` → `/api/scans/` prefix
 - **Health CLI path corrected**: `/api/health` → `/health` (root-mounted router)
@@ -53,6 +63,15 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Workspace scans cache isolation**: Separated `['workspace-scans', workspaceId]` query key from global scans list
 - **TypeScript strict compliance**: Zero errors on `tsc --noEmit` — fixed mutation type mismatches, unused imports/parameters across all source and test files
 - **Accessibility**: ARIA labels on scan tabs, forms, filters, checkboxes, GeoMap SVG, skip-to-content link
+
+### Removed (Batches 34–36 — Microservice Cleanup)
+- **Monolith entry points**: `sf.py`, `sf_orchestrator.py`, `sfcli.py` — all replaced by `sfapi.py` + Go CLI
+- **Python CLI package**: Entire `spiderfoot/cli/` directory (30 files, ~3,500 lines) — replaced by Go CLI
+- **SQLite support**: All SQLite connection paths, schema definitions, adapters, and `import sqlite3` removed from production code
+- **`SQLiteBackend`**: Removed from `report_storage.py` (~165 lines) — PostgreSQL and in-memory backends remain
+- **gRPC proto-generated stubs**: `spiderfoot_pb2.py` and `spiderfoot_pb2_grpc.py` removed from repo (regenerate with `scripts/generate_proto.py`)
+- **Legacy test files**: `test_spiderfootdb.py`, `test_spiderfootdb_enhanced.py`, `test_spiderfootdb_extended.py`, `test_report_storage.py` (SQLite-dependent)
+- **Obsolete test infrastructure**: `test_harness.py`, `benchmark.py` — monolith-era utilities
 
 ### Fixed
 - **GraphQL subscription DB leak**: Connection created once before polling loop instead of per-iteration
