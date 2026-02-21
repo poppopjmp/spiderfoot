@@ -821,8 +821,8 @@ async def oauth2_callback(
             status_code=302,
         )
     except Exception as e:
-        log.error("OAuth2 callback error: %s", e)
-        return RedirectResponse(url=f"/login?error={str(e)}", status_code=302)
+        log.exception("OAuth2 callback error for provider %s", provider_id)
+        return RedirectResponse(url="/login?error=SSO+authentication+failed", status_code=302)
 
 
 @router.post("/sso/saml/acs/{provider_id}")
@@ -880,9 +880,9 @@ async def saml_acs(provider_id: str, request: Request):
             status_code=302,
         )
     except Exception as e:
-        log.error("SAML ACS error: %s", e)
+        log.exception("SAML ACS error for provider %s", provider_id)
         from fastapi.responses import RedirectResponse as _Redir
-        return _Redir(url=f"/login?error={str(e)}", status_code=302)
+        return _Redir(url="/login?error=SSO+authentication+failed", status_code=302)
 
 
 @router.get("/sso/saml/login/{provider_id}")
