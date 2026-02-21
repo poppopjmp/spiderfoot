@@ -5,6 +5,18 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [5.9.2] — 2026-02-20 — Deep Security & Quality Hardening
 
+### Security — Final Hardening Pass (Batch 8)
+- **Auth route info leak closure**: Sanitized `detail=str(e)` in token refresh (catch-all `Exception`) and LDAP login (`ImportError` could expose filesystem paths); generic messages returned, full details logged server-side
+- **Gateway error sanitization**: Removed internal exception message from `GatewayError` in api_gateway.py; prevents service internals from reaching clients
+- **Docker hardening expansion**: Added `no-new-privileges`, `read_only`, and `tmpfs` to 10 additional services (redis, frontend/nginx, qdrant, vector, tika, agents, celery-beat, flower, litellm, pg-backup) — now 13/23 services hardened
+
+### Improved — Code Quality (Batch 8)
+- **Workspaces.tsx deduplication**: Replaced 115-line inline `renderSimpleMd` with shared `MarkdownRenderer` component; removed unused `sanitizeHTML` and `inlineFormat` imports
+
+### Added — Testing & CI (Batch 8)
+- **92 component/page tests**: UI components (47 tests: StatusBadge, Toast, Tabs, ConfirmDialog, ModalShell, Expandable, EmptyState, PageHeader, ProgressBar), ErrorBoundary (8 tests), MarkdownRenderer component (16 tests), Login page (21 tests with mocked auth/API)
+- **Frontend CI job**: Added to `.github/workflows/ci.yml` — Node 20, TypeScript type-check, ESLint, Vitest (131 tests), coverage reporting. Integration tests now gate on both backend and frontend
+
 ### Security — P1 Auth Gaps Closed (Batch 7)
 - **WebSocket authentication**: Added `_verify_ws_token()` that validates `?token=<jwt_or_api_key>` query parameters; unauthenticated connections are rejected with code 4003 before `websocket_manager.connect()` (BaseHTTPMiddleware does not intercept WS)
 - **Scan progress endpoint auth**: Added `Depends(optional_auth)` to all 6 scan_progress REST/SSE endpoints; sanitized 5 error messages that leaked scan IDs
