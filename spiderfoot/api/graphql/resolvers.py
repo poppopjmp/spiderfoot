@@ -815,36 +815,40 @@ class Subscription:
         Automatically completes when the scan is finished.
         """
         last_status = None
-        while True:
-            try:
-                dbh = _get_db()
-                row = dbh.scanInstanceGet(scan_id)
-                if not row:
+        dbh = _get_db()
+        try:
+            while True:
+                try:
+                    row = dbh.scanInstanceGet(scan_id)
+                    if not row:
+                        return
+
+                    r = _normalize_scan_row(row)
+                    if not r:
+                        return
+
+                    current = _scan_row_to_type(r, scan_id)
+
+                    # Yield on every poll (client sees latest state)
+                    if current.status != last_status:
+                        last_status = current.status
+                        yield current
+
+                    # Terminal states — stop streaming
+                    if current.status in (
+                        "FINISHED", "ABORTED", "ERROR-FAILED",
+                        "CANCELLED", "FAILED",
+                    ):
+                        return
+
+                except Exception as e:
+                    _log.error("GraphQL scanProgress error: %s", e, exc_info=True)
                     return
 
-                r = _normalize_scan_row(row)
-                if not r:
-                    return
-
-                current = _scan_row_to_type(r, scan_id)
-
-                # Yield on every poll (client sees latest state)
-                if current.status != last_status:
-                    last_status = current.status
-                    yield current
-
-                # Terminal states — stop streaming
-                if current.status in (
-                    "FINISHED", "ABORTED", "ERROR-FAILED",
-                    "CANCELLED", "FAILED",
-                ):
-                    return
-
-            except Exception as e:
-                _log.error("GraphQL scanProgress error: %s", e, exc_info=True)
-                return
-
-            await asyncio.sleep(interval)
+                await asyncio.sleep(interval)
+        finally:
+            if hasattr(dbh, 'close'):
+                dbh.close()
 
     @strawberry.subscription(description="Live event stream for a running scan")
     async def scan_events_live(
@@ -857,30 +861,34 @@ class Subscription:
         Polls for new events and yields only those not previously seen.
         """
         seen_hashes: set[str] = set()
-        while True:
-            try:
-                dbh = _get_db()
-                raw = dbh.scanResultEvent(scan_id, 'ALL') or []
-                for r in raw:
-                    ev = _event_row_to_type(r, scan_id)
-                    if ev.event_hash not in seen_hashes:
-                        seen_hashes.add(ev.event_hash)
-                        yield ev
+        dbh = _get_db()
+        try:
+            while True:
+                try:
+                    raw = dbh.scanResultEvent(scan_id, 'ALL') or []
+                    for r in raw:
+                        ev = _event_row_to_type(r, scan_id)
+                        if ev.event_hash not in seen_hashes:
+                            seen_hashes.add(ev.event_hash)
+                            yield ev
 
-                # Check if scan is done
-                scan_row = dbh.scanInstanceGet(scan_id)
-                if scan_row:
-                    sr = _normalize_scan_row(scan_row)
-                    status = str(sr[5]) if sr and len(sr) > 5 else ""
-                    if status in ("FINISHED", "ABORTED", "ERROR-FAILED",
-                                  "CANCELLED", "FAILED"):
-                        return
+                    # Check if scan is done
+                    scan_row = dbh.scanInstanceGet(scan_id)
+                    if scan_row:
+                        sr = _normalize_scan_row(scan_row)
+                        status = str(sr[5]) if sr and len(sr) > 5 else ""
+                        if status in ("FINISHED", "ABORTED", "ERROR-FAILED",
+                                      "CANCELLED", "FAILED"):
+                            return
 
-            except Exception as e:
-                _log.error("GraphQL scanEventsLive error: %s", e, exc_info=True)
-                return
+                except Exception as e:
+                    _log.error("GraphQL scanEventsLive error: %s", e, exc_info=True)
+                    return
 
-            await asyncio.sleep(interval)
+                await asyncio.sleep(interval)
+        finally:
+            if hasattr(dbh, 'close'):
+                dbh.close()
 
 
 # ── Query Complexity Extension ──────────────────────────────────────
