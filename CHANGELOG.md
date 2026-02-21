@@ -5,6 +5,19 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [5.9.2] — 2026-02-20 — Deep Security & Quality Hardening
 
+### Security — P1 Critical & High (Batch 5)
+- **Path traversal in MinIO / Qdrant storage**: Added `_validate_safe_name()` in minio_manager.py (rejects `..`, `/`, `\`, non-alphanumeric-dot-hyphen); validated bucket names (must start with `sf-`, S3-compliant) and collection/name params in the storage router
+- **SQL identifier injection in db_utils.py**: Added `_quote_ident()` helper that double-quotes SQL identifiers and rejects embedded quotes; applied to all `DROP TABLE` statements and parameterized the `information_schema.columns` WHERE clause
+- **55 error detail leaks sanitized**: Replaced all `detail=str(e)` and `detail=f"...{e}"` patterns across 14 router files (data, rbac, rbac_enhanced, schedules, storage, tenants, workspace, visualization, scan, rag_correlation, keys, engines, export, correlations) with static generic messages; added server-side `log.warning`/`log.exception`
+
+### Fixed — Reliability & Safety (Batch 5)
+- **`_report_store` thread-safety**: Added `threading.Lock` to the in-memory fallback report dict in reports.py; all reads, writes, deletes, and clears wrapped in `with _report_lock:`
+- **Unbounded multi-scan batch endpoints**: Added `MAX_MULTI_SCAN_IDS = 50` cap to `export-multi`, `viz-multi`, and `rerun-multi`; returns 400 when exceeded
+- **Config untyped dict bodies**: Replaced 6 raw `dict = Body(...)` params with Pydantic models: `ApiKeyCreateRequest` (name/scopes/expires with bounds), `CredentialCreateRequest`, `ConfigImportRequest`, plus `extra="allow"` models for freeform option endpoints
+
+### Improved — Accessibility (Batch 5)
+- **About modal → ModalShell**: Replaced ad-hoc About dialog in Layout.tsx with the existing `ModalShell` component, gaining `role="dialog"`, `aria-modal`, `aria-labelledby`, focus trap, and Escape key handling; removed unused X icon import
+
 ### Security — P1 Critical & High (Batch 4)
 - **XSS in PDF export**: `scan.name`, `scan.target` and `scanId` were interpolated raw into `document.write()` in ReportTab PDF export; added `escapeHTML()` helper and wrapped all dynamic values
 - **Concurrent token refresh race**: Multiple 401s triggered independent `/api/auth/refresh` calls, invalidating single-use rotation tokens and logging users out; added shared `refreshPromise` deduplication
