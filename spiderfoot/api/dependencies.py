@@ -9,7 +9,8 @@ working without changes.
 """
 from __future__ import annotations
 
-from fastapi import Depends, HTTPException, status
+from typing import Annotated
+from fastapi import Depends, HTTPException, Path, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from spiderfoot.db import SpiderFootDb
 from spiderfoot.sflib.core import SpiderFoot
@@ -20,6 +21,15 @@ import logging
 from typing import Any, Generator
 
 security = HTTPBearer(auto_error=False)
+
+# ---------------------------------------------------------------------------
+# Reusable path-parameter types (defense-in-depth input validation)
+# ---------------------------------------------------------------------------
+_ID_PATTERN = r"^[a-zA-Z0-9_\-]{1,64}$"
+_NAME_PATTERN = r"^[a-zA-Z0-9_\-. ]{1,128}$"
+
+SafeId = Annotated[str, Path(pattern=_ID_PATTERN, description="URL-safe identifier")]
+SafeName = Annotated[str, Path(pattern=_NAME_PATTERN, description="URL-safe name")]
 
 
 class Config:

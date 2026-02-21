@@ -440,7 +440,7 @@ if not HAS_FASTAPI:
         pass
     router = _StubRouter()
 else:
-    from ..dependencies import get_scan_service, get_api_key, safe_filename
+    from ..dependencies import get_scan_service, get_api_key, safe_filename, SafeId
 
     router = APIRouter(dependencies=[Depends(get_api_key)])
 
@@ -507,7 +507,7 @@ else:
         summary="Get generated report",
         description="Retrieve a generated report by ID. Check status to see if generation is complete.",
     )
-    async def get_report(report_id: str) -> ReportResponse:
+    async def get_report(report_id: SafeId) -> ReportResponse:
         """Retrieve a generated report by its ID."""
         stored = get_stored_report(report_id)
         if stored is None:
@@ -532,7 +532,7 @@ else:
         response_model=ReportStatusResponse,
         summary="Check report generation status",
     )
-    async def get_report_status(report_id: str) -> ReportStatusResponse:
+    async def get_report_status(report_id: SafeId) -> ReportStatusResponse:
         """Check the generation status of a report."""
         stored = get_stored_report(report_id)
         if stored is None:
@@ -576,7 +576,7 @@ else:
         description="Export a completed report as Markdown, HTML, JSON, plain text, or CSV.",
     )
     async def export_report(
-        report_id: str,
+        report_id: SafeId,
         fmt: ReportFormatEnum = Query(
             ReportFormatEnum.MARKDOWN, alias="format",
             description="Output format"
@@ -685,7 +685,7 @@ else:
         summary="Delete a report",
         status_code=204,
     )
-    async def delete_report(report_id: str) -> None:
+    async def delete_report(report_id: SafeId) -> None:
         """Delete a report by its ID."""
         if not delete_stored_report(report_id):
             raise HTTPException(status_code=404, detail="Report not found")

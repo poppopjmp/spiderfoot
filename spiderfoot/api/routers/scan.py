@@ -25,7 +25,7 @@ from spiderfoot.scan_service.scanner import startSpiderFootScanner
 from spiderfoot.scan.scan_service_facade import ScanService, ScanServiceError
 from spiderfoot.sflib.core import SpiderFoot
 
-from ..dependencies import get_app_config, get_api_key, optional_auth, get_scan_service, safe_filename
+from ..dependencies import get_app_config, get_api_key, optional_auth, get_scan_service, safe_filename, SafeId
 from ..pagination import PaginationParams, paginate
 from ..schemas import (
     ScanCreateResponse,
@@ -829,7 +829,7 @@ async def create_scan(
 
 @router.get("/scans/{scan_id}")
 async def get_scan(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
 ) -> dict:
@@ -852,7 +852,7 @@ async def get_scan(
 
 @router.get("/scans/{scan_id}/events")
 async def get_scan_events(
-    scan_id: str,
+    scan_id: SafeId,
     event_type: str = Query(None, description="Filter by event type"),
     filter_fp: bool = Query(False, description="Filter false positives"),
     api_key: str = optional_auth_dep,
@@ -882,7 +882,7 @@ async def get_scan_events(
 
 @router.get("/scans/{scan_id}/summary")
 async def get_scan_summary(
-    scan_id: str,
+    scan_id: SafeId,
     by: str = Query("type", description="Group by: type, module, entity"),
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
@@ -909,7 +909,7 @@ async def get_scan_summary(
 
 @router.get("/scans/{scan_id}/logs")
 async def get_scan_logs(
-    scan_id: str,
+    scan_id: SafeId,
     limit: int = Query(None, description="Max log entries"),
     offset: int = Query(0, description="Offset (fromRowId)"),
     api_key: str = optional_auth_dep,
@@ -935,7 +935,7 @@ async def get_scan_logs(
 
 @router.get("/scans/{scan_id}/history")
 async def get_scan_history(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
 ) -> dict:
@@ -957,7 +957,7 @@ async def get_scan_history(
 
 @router.get("/scans/{scan_id}/events/unique")
 async def get_scan_events_unique(
-    scan_id: str,
+    scan_id: SafeId,
     event_type: str = Query("ALL", description="Filter by event type"),
     filterfp: bool = Query(False, description="Filter false positives"),
     api_key: str = optional_auth_dep,
@@ -981,7 +981,7 @@ async def get_scan_events_unique(
 
 @router.get("/scans/{scan_id}/correlations")
 async def get_scan_correlations(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
 ) -> dict:
@@ -1012,7 +1012,7 @@ async def get_scan_correlations(
 
 @router.get("/scans/{scan_id}/correlations/summary")
 async def get_scan_correlation_summary(
-    scan_id: str,
+    scan_id: SafeId,
     by: str = Query("risk", description="Group by: rule or risk"),
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
@@ -1049,7 +1049,7 @@ async def get_scan_correlation_summary(
 
 @router.post("/scans/{scan_id}/correlations/run")
 async def run_scan_correlations(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
 ) -> dict:
@@ -1116,7 +1116,7 @@ async def run_scan_correlations(
 
 @router.delete("/scans/{scan_id}", response_model=ScanDeleteResponse)
 async def delete_scan(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
 ) -> ScanDeleteResponse:
@@ -1135,7 +1135,7 @@ async def delete_scan(
 
 @router.delete("/scans/{scan_id}/full", response_model=MessageResponse)
 async def delete_scan_full(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
 ) -> MessageResponse:
@@ -1149,7 +1149,7 @@ async def delete_scan_full(
 
 @router.post("/scans/{scan_id}/stop", response_model=ScanStopResponse)
 async def stop_scan(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
 ) -> ScanStopResponse:
@@ -1172,7 +1172,7 @@ async def stop_scan(
 
 @router.post("/scans/{scan_id}/retry")
 async def retry_scan(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
 ) -> dict:
@@ -1258,7 +1258,7 @@ async def retry_scan(
 
 @router.get("/scans/{scan_id}/events/export")
 async def export_scan_event_results(
-    scan_id: str,
+    scan_id: SafeId,
     event_type: str = None,
     filetype: str = "csv",
     dialect: str = "excel",
@@ -1350,7 +1350,7 @@ async def export_scan_event_results(
 
 @router.get("/scans/{scan_id}/search/export")
 async def export_scan_search_results(
-    scan_id: str,
+    scan_id: SafeId,
     event_type: str = None,
     value: str = None,
     filetype: str = "csv",
@@ -1411,7 +1411,7 @@ async def export_scan_search_results(
 
 @router.get("/scans/{scan_id}/viz")
 async def export_scan_viz(
-    scan_id: str,
+    scan_id: SafeId,
     gexf: str = "0",
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
@@ -1505,7 +1505,7 @@ async def export_scan_viz(
 
 @router.get("/scans/{scan_id}/logs/export")
 async def export_scan_logs(
-    scan_id: str,
+    scan_id: SafeId,
     dialect: str = "excel",
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
@@ -1538,7 +1538,7 @@ async def export_scan_logs(
 
 @router.get("/scans/{scan_id}/timeline")
 async def get_scan_timeline(
-    scan_id: str,
+    scan_id: SafeId,
     limit: int = Query(200, ge=1, le=5000, description="Max timeline entries"),
     event_type: str | None = Query(None, description="Filter by event type"),
     api_key: str = optional_auth_dep,
@@ -1616,7 +1616,7 @@ async def get_scan_timeline(
 
 @router.get("/scans/{scan_id}/dedup")
 async def detect_duplicate_events(
-    scan_id: str,
+    scan_id: SafeId,
     threshold: int = Query(2, ge=2, le=100, description="Min occurrences to flag as duplicate"),
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
@@ -1687,7 +1687,7 @@ async def detect_duplicate_events(
 
 @router.get("/scans/{scan_id}/correlations/export")
 async def export_scan_correlations(
-    scan_id: str,
+    scan_id: SafeId,
     filetype: str = "csv",
     dialect: str = "excel",
     api_key: str = optional_auth_dep,
@@ -1756,7 +1756,7 @@ async def export_scan_correlations(
 
 @router.get("/scans/{scan_id}/options")
 async def get_scan_options(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
 ) -> dict:
@@ -1768,7 +1768,7 @@ async def get_scan_options(
 
 @router.post("/scans/{scan_id}/rerun", response_model=ScanRerunResponse)
 async def rerun_scan(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
 ) -> ScanRerunResponse:
@@ -1847,7 +1847,7 @@ async def rerun_scan(
 
 @router.post("/scans/{scan_id}/clone", response_model=ScanCloneResponse)
 async def clone_scan(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
 ) -> ScanCloneResponse:
@@ -1898,7 +1898,7 @@ _ANNOTATIONS_KEY = "_annotations"
 
 @router.get("/scans/{scan_id}/annotations")
 async def list_event_annotations(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
 ) -> dict:
@@ -1922,7 +1922,7 @@ async def list_event_annotations(
 
 @router.put("/scans/{scan_id}/annotations/{result_id}")
 async def set_event_annotation(
-    scan_id: str,
+    scan_id: SafeId,
     result_id: str,
     note: str = Body(..., embed=True, max_length=2000),
     api_key: str = api_key_dep,
@@ -1960,7 +1960,7 @@ async def set_event_annotation(
 
 @router.delete("/scans/{scan_id}/annotations/{result_id}")
 async def delete_event_annotation(
-    scan_id: str,
+    scan_id: SafeId,
     result_id: str,
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
@@ -1990,7 +1990,7 @@ async def delete_event_annotation(
 
 @router.post("/scans/{scan_id}/results/falsepositive")
 async def set_results_false_positive(
-    scan_id: str,
+    scan_id: SafeId,
     resultids: list[str] = Body(...),
     fp: str = Body(...),
     api_key: str = api_key_dep,
@@ -2009,7 +2009,7 @@ async def set_results_false_positive(
 
 @router.post("/scans/{scan_id}/clear", response_model=MessageResponse)
 async def clear_scan(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
 ) -> MessageResponse:
@@ -2032,7 +2032,7 @@ async def clear_scan(
 
 @router.get("/scans/{scan_id}/metadata", response_model=ScanMetadataResponse)
 async def get_scan_metadata(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
 ) -> ScanMetadataResponse:
@@ -2045,7 +2045,7 @@ async def get_scan_metadata(
 
 @router.patch("/scans/{scan_id}/metadata")
 async def update_scan_metadata(
-    scan_id: str,
+    scan_id: SafeId,
     metadata: dict = Body(...),
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
@@ -2062,7 +2062,7 @@ async def update_scan_metadata(
 
 @router.get("/scans/{scan_id}/notes", response_model=ScanNotesResponse)
 async def get_scan_notes(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
 ) -> ScanNotesResponse:
@@ -2075,7 +2075,7 @@ async def get_scan_notes(
 
 @router.patch("/scans/{scan_id}/notes")
 async def update_scan_notes(
-    scan_id: str,
+    scan_id: SafeId,
     notes: str = Body(...),
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
@@ -2090,7 +2090,7 @@ async def update_scan_notes(
 
 @router.post("/scans/{scan_id}/archive", response_model=MessageResponse)
 async def archive_scan(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
 ) -> MessageResponse:
@@ -2109,7 +2109,7 @@ async def archive_scan(
 
 @router.post("/scans/{scan_id}/unarchive", response_model=MessageResponse)
 async def unarchive_scan(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
 ) -> MessageResponse:
@@ -2135,7 +2135,7 @@ _TAGS_KEY = "_tags"
 
 @router.get("/scans/{scan_id}/tags", response_model=ScanTagsResponse)
 async def get_scan_tags(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
 ) -> ScanTagsResponse:
@@ -2150,7 +2150,7 @@ async def get_scan_tags(
 
 @router.put("/scans/{scan_id}/tags", response_model=ScanTagsResponse)
 async def set_scan_tags(
-    scan_id: str,
+    scan_id: SafeId,
     tags: list[str] = Body(..., description="Complete list of tags to set"),
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
@@ -2171,7 +2171,7 @@ async def set_scan_tags(
 
 @router.post("/scans/{scan_id}/tags", response_model=ScanTagsResponse)
 async def add_scan_tags(
-    scan_id: str,
+    scan_id: SafeId,
     tags: list[str] = Body(..., description="Tags to add"),
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
@@ -2197,7 +2197,7 @@ async def add_scan_tags(
 
 @router.delete("/scans/{scan_id}/tags", response_model=ScanTagsResponse)
 async def remove_scan_tags(
-    scan_id: str,
+    scan_id: SafeId,
     tags: list[str] = Body(..., description="Tags to remove"),
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
