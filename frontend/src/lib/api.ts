@@ -15,6 +15,10 @@ api.interceptors.request.use((config) => {
 });
 
 // Response interceptor — handle 401 with token refresh
+// Use a shared promise to deduplicate concurrent refresh attempts:
+// the first 401 triggers a refresh; subsequent 401s await the same promise.
+let refreshPromise: Promise<string> | null = null;
+
 api.interceptors.response.use(
   (r) => r,
   async (error) => {
@@ -29,16 +33,26 @@ api.interceptors.response.use(
       const refreshToken = localStorage.getItem('sf_refresh_token');
       if (refreshToken) {
         try {
-          const res = await api.post('/api/auth/refresh', { refresh_token: refreshToken });
-          const newToken = res.data.access_token;
-          localStorage.setItem('sf_access_token', newToken);
-          localStorage.setItem('sf_api_key', newToken);
+          // If a refresh is already in-flight, wait for it instead of issuing another
+          if (!refreshPromise) {
+            refreshPromise = api
+              .post('/api/auth/refresh', { refresh_token: refreshToken })
+              .then((res) => {
+                const newToken: string = res.data.access_token;
+                localStorage.setItem('sf_access_token', newToken);
+                localStorage.setItem('sf_api_key', newToken);
+                return newToken;
+              });
+          }
+          const newToken = await refreshPromise;
           originalRequest.headers.Authorization = `Bearer ${newToken}`;
           return api(originalRequest);
         } catch {
           localStorage.removeItem('sf_access_token');
           localStorage.removeItem('sf_refresh_token');
           localStorage.removeItem('sf_api_key');
+        } finally {
+          refreshPromise = null;
         }
       }
     }
