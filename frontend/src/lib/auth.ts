@@ -102,16 +102,25 @@ const ROLE_PERMISSIONS: Record<string, Set<string>> = {
 // ── Token helpers ────────────────────────────────────────
 
 function saveTokens(access: string, refresh: string) {
-  localStorage.setItem('sf_access_token', access);
-  localStorage.setItem('sf_refresh_token', refresh);
-  // Also set legacy key for backward compat
-  localStorage.setItem('sf_api_key', access);
+  try {
+    localStorage.setItem('sf_access_token', access);
+    localStorage.setItem('sf_refresh_token', refresh);
+    // Also set legacy key for backward compat
+    localStorage.setItem('sf_api_key', access);
+  } catch {
+    // QuotaExceeded — tokens are tiny so this is very unlikely
+    console.warn('[auth] Failed to save tokens to localStorage');
+  }
 }
 
 function clearTokens() {
-  localStorage.removeItem('sf_access_token');
-  localStorage.removeItem('sf_refresh_token');
-  localStorage.removeItem('sf_api_key');
+  try {
+    localStorage.removeItem('sf_access_token');
+    localStorage.removeItem('sf_refresh_token');
+    localStorage.removeItem('sf_api_key');
+  } catch {
+    // Ignore storage errors on clear
+  }
 }
 
 function loadTokens(): { access: string | null; refresh: string | null } {

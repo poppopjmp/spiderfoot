@@ -39,8 +39,10 @@ api.interceptors.response.use(
               .post('/api/auth/refresh', { refresh_token: refreshToken })
               .then((res) => {
                 const newToken: string = res.data.access_token;
-                localStorage.setItem('sf_access_token', newToken);
-                localStorage.setItem('sf_api_key', newToken);
+                try {
+                  localStorage.setItem('sf_access_token', newToken);
+                  localStorage.setItem('sf_api_key', newToken);
+                } catch { /* QuotaExceeded — token is in-memory via closure */ }
                 return newToken;
               });
           }
@@ -48,9 +50,11 @@ api.interceptors.response.use(
           originalRequest.headers.Authorization = `Bearer ${newToken}`;
           return api(originalRequest);
         } catch {
-          localStorage.removeItem('sf_access_token');
-          localStorage.removeItem('sf_refresh_token');
-          localStorage.removeItem('sf_api_key');
+          try {
+            localStorage.removeItem('sf_access_token');
+            localStorage.removeItem('sf_refresh_token');
+            localStorage.removeItem('sf_api_key');
+          } catch { /* ignore storage errors on clear */ }
         } finally {
           refreshPromise = null;
         }
