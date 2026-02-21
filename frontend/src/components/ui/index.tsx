@@ -158,6 +158,7 @@ export function CopyButton({ text, className }: { text: string; className?: stri
     <button
       onClick={copy}
       className={clsx('btn-icon transition-all', className)}
+      aria-label={copied ? 'Copied!' : 'Copy'}
       title={copied ? 'Copied!' : 'Copy'}
     >
       {copied ? (

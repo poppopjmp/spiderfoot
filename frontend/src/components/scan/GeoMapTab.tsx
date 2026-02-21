@@ -124,7 +124,7 @@ function GeoMapTab({ scanId }: { scanId: string }) {
           <div className="card">
             <h3 className="text-sm font-semibold text-foreground mb-4">Geographic Distribution</h3>
             <div className="w-full overflow-x-auto">
-              <svg viewBox={`0 0 ${mapWidth} ${mapHeight}`} className="w-full min-w-[600px] rounded-lg overflow-hidden">
+              <svg viewBox={`0 0 ${mapWidth} ${mapHeight}`} role="img" aria-label="Geographic distribution of scan results" className="w-full min-w-[600px] rounded-lg overflow-hidden">
                 <image href={WORLD_MAP_IMAGE} x={0} y={0} width={mapWidth} height={mapHeight} preserveAspectRatio="xMidYMid slice" opacity={0.55} />
 
                 {/* Subtle grid overlay */}

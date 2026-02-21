@@ -299,7 +299,7 @@ export default function Layout() {
       <main className="flex-1 overflow-auto">
         {/* Mobile header */}
         <div className="lg:hidden flex items-center gap-3 px-4 py-3 border-b border-dark-700 bg-dark-900">
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-dark-300 hover:text-foreground">
+          <button onClick={() => setSidebarOpen(!sidebarOpen)} aria-label="Toggle navigation menu" className="text-dark-300 hover:text-foreground">
             <Menu className="h-5 w-5" />
           </button>
           <img src="/spiderfoot-icon.png" alt="SpiderFoot" className="h-5 w-5" />

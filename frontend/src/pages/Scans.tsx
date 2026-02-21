@@ -182,6 +182,7 @@ export default function ScansPage() {
             className="flex-1 max-w-md"
           />
           <select
+            aria-label="Filter by scan status"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
             className="input-field w-auto min-w-[140px] text-sm"
@@ -234,6 +235,7 @@ export default function ScansPage() {
                   <th className="table-header w-10">
                     <input
                       type="checkbox"
+                      aria-label="Select all scans"
                       checked={selected.size === filteredScans.length && filteredScans.length > 0}
                       onChange={toggleAll}
                       className="rounded border-dark-600 bg-dark-700 text-spider-500 focus:ring-spider-500/30"
@@ -258,6 +260,7 @@ export default function ScansPage() {
                     <td className="table-cell">
                       <input
                         type="checkbox"
+                        aria-label={`Select scan ${scan.name || scan.target}`}
                         checked={selected.has(scan.scan_id)}
                         onChange={() => toggleSelect(scan.scan_id)}
                         className="rounded border-dark-600 bg-dark-700 text-spider-500 focus:ring-spider-500/30"

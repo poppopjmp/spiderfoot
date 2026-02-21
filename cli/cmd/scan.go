@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -14,6 +15,15 @@ import (
 )
 
 // --- Scan types ---
+
+var safeIDRe = regexp.MustCompile(`^[a-zA-Z0-9_\-]{1,64}$`)
+
+func validateSafeID(id, label string) error {
+	if !safeIDRe.MatchString(id) {
+		return fmt.Errorf("invalid %s: must be 1-64 alphanumeric/dash/underscore characters", label)
+	}
+	return nil
+}
 
 type scanSummary struct {
 	ScanID    string  `json:"scan_id"`
@@ -92,6 +102,9 @@ var scanGetCmd = &cobra.Command{
 	Short: "Get scan details",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if err := validateSafeID(args[0], "scan ID"); err != nil {
+			return err
+		}
 		c := client.New()
 		var s scanDetail
 		if err := c.Get(fmt.Sprintf("/api/scans/%s", args[0]), &s); err != nil {
@@ -173,6 +186,9 @@ var scanStopCmd = &cobra.Command{
 	Short: "Stop a running scan",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if err := validateSafeID(args[0], "scan ID"); err != nil {
+			return err
+		}
 		c := client.New()
 		if err := c.Post(fmt.Sprintf("/api/scans/%s/stop", args[0]), nil, nil); err != nil {
 			return err
@@ -187,6 +203,9 @@ var scanDeleteCmd = &cobra.Command{
 	Short: "Delete a scan and its results",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if err := validateSafeID(args[0], "scan ID"); err != nil {
+			return err
+		}
 		c := client.New()
 		if err := c.Delete(fmt.Sprintf("/api/scans/%s", args[0]), nil); err != nil {
 			return err
