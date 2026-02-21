@@ -147,6 +147,8 @@ export function CopyButton({ text, className }: { text: string; className?: stri
     navigator.clipboard.writeText(text).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    }).catch(() => {
+      /* Clipboard API may be blocked (non-HTTPS, iframes, denied permission) */
     });
   }, [text]);
 

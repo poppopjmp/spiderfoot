@@ -557,7 +557,7 @@ function KeyCreatedModal({ apiKey, onClose }: { apiKey: ApiKeyRecord; onClose: (
 
   const copyKey = () => {
     if (apiKey.key) {
-      navigator.clipboard.writeText(apiKey.key);
+      navigator.clipboard.writeText(apiKey.key).catch(() => {});
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }

@@ -204,8 +204,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         refresh_token: refreshToken,
       });
       const { access_token } = res.data;
-      localStorage.setItem('sf_access_token', access_token);
-      localStorage.setItem('sf_api_key', access_token);
+      saveTokens(access_token, refreshToken);
       set({ accessToken: access_token, isAuthenticated: true });
       return true;
     } catch {

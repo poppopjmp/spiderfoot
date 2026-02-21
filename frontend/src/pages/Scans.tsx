@@ -321,7 +321,7 @@ export default function ScansPage() {
                           trigger={<button className="btn-icon text-dark-400 hover:text-dark-200"><MoreVertical className="h-4 w-4" /></button>}
                         >
                           <DropdownItem icon={ClipboardCopy} onClick={() => {
-                            navigator.clipboard.writeText(scan.scan_id);
+                            navigator.clipboard.writeText(scan.scan_id).catch(() => {});
                             setToast({ type: 'info', message: 'Scan ID copied' });
                           }}>Copy ID</DropdownItem>
                           <DropdownItem icon={CopyIcon} onClick={() => cloneMut.mutate(scan.scan_id)}>Clone</DropdownItem>
