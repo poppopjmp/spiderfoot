@@ -226,7 +226,8 @@ async def ldap_login(body: LDAPLoginRequest, request: Request):
     except ValueError as e:
         raise HTTPException(status_code=401, detail=str(e))
     except ImportError as e:
-        raise HTTPException(status_code=501, detail=str(e))
+        log.error("LDAP module not available: %s", e)
+        raise HTTPException(status_code=501, detail="LDAP authentication is not available")
 
 
 @router.post("/refresh")
@@ -235,8 +236,11 @@ async def refresh_token(body: RefreshRequest):
     svc = _get_auth_svc()
     try:
         return svc.refresh_access_token(body.refresh_token)
-    except Exception as e:
+    except ValueError as e:
         raise HTTPException(status_code=401, detail=str(e))
+    except Exception as e:
+        log.exception("Token refresh failed")
+        raise HTTPException(status_code=401, detail="Token refresh failed")
 
 
 @router.post("/logout")

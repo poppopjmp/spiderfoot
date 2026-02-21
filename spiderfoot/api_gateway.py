@@ -272,7 +272,8 @@ class APIGateway:
         except Exception as e:
             cb.record_failure()
             self._record_metric(service, method, "error")
-            raise GatewayError(f"{service}.{method} failed: {e}") from e
+            log.exception("Gateway routing failed for %s.%s", service, method)
+            raise GatewayError(f"{service}.{method} failed") from e
 
     def _route_local(self, service: str, method: str,
                      payload: dict) -> dict:
