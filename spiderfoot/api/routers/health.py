@@ -65,7 +65,8 @@ def _check_vector() -> dict[str, Any]:
     except ImportError:
         return {"status": "unknown", "message": "VectorBootstrap not available"}
     except Exception as e:
-        return {"status": "down", "message": str(e)}
+        log.warning("Health check failed: %s", e)
+        return {"status": "down", "message": "Service check failed"}
 
 
 def _check_report_storage() -> dict[str, Any]:
@@ -83,7 +84,8 @@ def _check_report_storage() -> dict[str, Any]:
     except ImportError:
         return {"status": "unknown", "message": "ReportStore not available"}
     except Exception as e:
-        return {"status": "down", "message": str(e)}
+        log.warning("Health check failed: %s", e)
+        return {"status": "down", "message": "Service check failed"}
 
 
 def _check_app_config() -> dict[str, Any]:
@@ -95,13 +97,14 @@ def _check_app_config() -> dict[str, Any]:
         if errors:
             return {
                 "status": "degraded",
-                "errors": [str(e) for e in errors[:5]],
+                "errors": [f"validation error {i+1}" for i, e in enumerate(errors[:5])],
             }
         return {"status": "up"}
     except ImportError:
         return {"status": "unknown", "message": "AppConfig not available"}
     except Exception as e:
-        return {"status": "down", "message": str(e)}
+        log.warning("Health check failed: %s", e)
+        return {"status": "down", "message": "Service check failed"}
 
 
 def _check_scan_hooks() -> dict[str, Any]:
@@ -119,7 +122,8 @@ def _check_scan_hooks() -> dict[str, Any]:
     except ImportError:
         return {"status": "unknown", "message": "scan_hooks module not available"}
     except Exception as e:
-        return {"status": "down", "message": str(e)}
+        log.warning("Health check failed: %s", e)
+        return {"status": "down", "message": "Service check failed"}
 
 
 def _check_module_timeout() -> dict[str, Any]:
@@ -138,7 +142,8 @@ def _check_module_timeout() -> dict[str, Any]:
     except ImportError:
         return {"status": "unknown", "message": "module_timeout module not available"}
     except Exception as e:
-        return {"status": "down", "message": str(e)}
+        log.warning("Health check failed: %s", e)
+        return {"status": "down", "message": "Service check failed"}
 
 
 # -----------------------------------------------------------------------
@@ -154,7 +159,8 @@ def _get_metrics_text() -> str:
     except ImportError:
         return "# spiderfoot_metrics_unavailable 1\n"
     except Exception as e:
-        return f"# spiderfoot_metrics_error{{error=\"{e}\"}} 1\n"
+        log.warning("Health check failed: %s", e)
+        return f"# spiderfoot_metrics_error 1\n"
 
 
 # -----------------------------------------------------------------------
@@ -170,7 +176,8 @@ def _check_minio() -> dict[str, Any]:
     except ImportError:
         return {"status": "unknown", "message": "MinIO storage module not available"}
     except Exception as e:
-        return {"status": "down", "message": str(e)}
+        log.warning("Health check failed: %s", e)
+        return {"status": "down", "message": "Service check failed"}
 
 
 def _check_redis() -> dict[str, Any]:
@@ -189,7 +196,8 @@ def _check_redis() -> dict[str, Any]:
     except ImportError:
         return {"status": "unknown", "message": "redis package not installed"}
     except Exception as e:
-        return {"status": "down", "message": str(e)}
+        log.warning("Health check failed: %s", e)
+        return {"status": "down", "message": "Service check failed"}
 
 
 def _check_celery() -> dict[str, Any]:
@@ -212,7 +220,8 @@ def _check_celery() -> dict[str, Any]:
     except ImportError:
         return {"status": "unknown", "message": "redis package not installed"}
     except Exception as e:
-        return {"status": "down", "message": str(e)}
+        log.warning("Health check failed: %s", e)
+        return {"status": "down", "message": "Service check failed"}
 
 
 def _check_postgresql() -> dict[str, Any]:
@@ -239,7 +248,8 @@ def _check_postgresql() -> dict[str, Any]:
     except ImportError:
         return {"status": "unknown", "message": "psycopg2 not installed"}
     except Exception as e:
-        return {"status": "down", "message": str(e)}
+        log.warning("Health check failed: %s", e)
+        return {"status": "down", "message": "Service check failed"}
 
 
 # -----------------------------------------------------------------------
@@ -280,7 +290,8 @@ def run_all_checks() -> dict[str, Any]:
         try:
             result = check_fn()
         except Exception as e:
-            result = {"status": "down", "message": str(e)}
+            log.warning("Health check failed: %s", e)
+            result = {"status": "down", "message": "Service check failed"}
         elapsed = (time.monotonic() - t0) * 1000
         result["latency_ms"] = round(elapsed, 2)
         components[name] = result
@@ -311,7 +322,8 @@ def run_single_check(name: str) -> dict[str, Any] | None:
     try:
         result = check_fn()
     except Exception as e:
-        result = {"status": "down", "message": str(e)}
+        log.warning("Health check failed: %s", e)
+        result = {"status": "down", "message": "Service check failed"}
     result["latency_ms"] = round((time.monotonic() - t0) * 1000, 2)
     return result
 
