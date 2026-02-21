@@ -15,7 +15,7 @@ import logging
 from enum import Enum
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from ..dependencies import get_api_key
+from ..dependencies import get_api_key, safe_filename
 from fastapi.responses import Response, StreamingResponse
 
 log = logging.getLogger("spiderfoot.api.export")
@@ -125,7 +125,7 @@ async def export_scan(
 
     content_type = _CONTENT_TYPES.get(format.value, "application/octet-stream")
     ext = _FILE_EXTENSIONS.get(format.value, "txt")
-    filename = f"spiderfoot-{scan_id}.{ext}"
+    filename = safe_filename(f"spiderfoot-{scan_id}") + f".{ext}"
 
     return Response(
         content=content,
@@ -250,7 +250,7 @@ async def export_scan_stream(
         _event_generator(),
         media_type="application/x-ndjson",
         headers={
-            "Content-Disposition": f'attachment; filename="spiderfoot-{scan_id}.jsonl"',
+            "Content-Disposition": f'attachment; filename="{safe_filename(f"spiderfoot-{scan_id}")}.jsonl"',
             "X-Content-Type-Options": "nosniff",
         },
     )

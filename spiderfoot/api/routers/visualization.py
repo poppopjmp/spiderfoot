@@ -12,7 +12,7 @@ from fastapi.responses import Response, JSONResponse
 import json
 import logging
 
-from ..dependencies import get_visualization_service, optional_auth, get_api_key
+from ..dependencies import get_visualization_service, optional_auth, get_api_key, safe_filename
 from spiderfoot import SpiderFootHelpers
 from spiderfoot.reporting.visualization_service import VisualizationService, VisualizationServiceError
 
@@ -55,7 +55,7 @@ async def get_multi_scan_graph_data(
                 content=graph_data,
                 media_type="application/xml",
                 headers={
-                    "Content-Disposition": "attachment; filename=multi_scan_graph.gexf"
+                    "Content-Disposition": f"attachment; filename={safe_filename('multi_scan_graph.gexf')}"
                 },
             )
 
@@ -96,7 +96,7 @@ async def get_scan_graph_data(
                 content=graph_data,
                 media_type="application/xml",
                 headers={
-                    "Content-Disposition": f"attachment; filename=scan_{scan_id}_graph.gexf"
+                    "Content-Disposition": f"attachment; filename={safe_filename(f'scan_{scan_id}_graph.gexf')}"
                 },
             )
 

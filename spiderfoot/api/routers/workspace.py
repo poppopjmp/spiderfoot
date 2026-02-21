@@ -8,7 +8,7 @@ import json
 from io import BytesIO
 from spiderfoot.workspace import SpiderFootWorkspace
 from spiderfoot import SpiderFootHelpers
-from ..dependencies import get_app_config, get_api_key, optional_auth
+from ..dependencies import get_app_config, get_api_key, optional_auth, safe_filename
 from ..models import WorkspaceRequest, TargetRequest, MultiScanRequest
 from ..pagination import PaginationParams, paginate
 from ..schemas import (
@@ -453,7 +453,7 @@ async def export_workspace(workspace_id: str, api_key: str = api_key_dep) -> Str
             file_bytes,
             media_type="application/json",
             headers={
-                "Content-Disposition": f"attachment; filename=workspace-{ws.workspace_id}.json",
+                "Content-Disposition": f"attachment; filename={safe_filename(f'workspace-{ws.workspace_id}.json')}",
                 "Pragma": "no-cache"
             }
         )

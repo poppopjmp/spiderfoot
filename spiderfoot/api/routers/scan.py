@@ -25,7 +25,7 @@ from spiderfoot.scan_service.scanner import startSpiderFootScanner
 from spiderfoot.scan.scan_service_facade import ScanService, ScanServiceError
 from spiderfoot.sflib.core import SpiderFoot
 
-from ..dependencies import get_app_config, get_api_key, optional_auth, get_scan_service
+from ..dependencies import get_app_config, get_api_key, optional_auth, get_scan_service, safe_filename
 from ..pagination import PaginationParams, paginate
 from ..schemas import (
     ScanCreateResponse,
@@ -246,7 +246,7 @@ async def export_scan_json_multi(
     return StreamingResponse(
         iter([json.dumps(scaninfo, ensure_ascii=False)]),
         media_type="application/json; charset=utf-8",
-        headers={"Content-Disposition": f"attachment; filename={fname}", "Pragma": "no-cache"},
+        headers={"Content-Disposition": f"attachment; filename={safe_filename(fname)}", "Pragma": "no-cache"},
     )
 
 
@@ -292,7 +292,7 @@ async def export_scan_viz_multi(
     return Response(
         gexf_data,
         media_type="application/gexf",
-        headers={"Content-Disposition": f"attachment; filename={fname}", "Pragma": "no-cache"},
+        headers={"Content-Disposition": f"attachment; filename={safe_filename(fname)}", "Pragma": "no-cache"},
     )
 
 
@@ -1278,7 +1278,7 @@ async def export_scan_event_results(
                 iter([f.read()]),
                 media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 headers={
-                    "Content-Disposition": f"attachment; filename=SpiderFoot-{scan_id}-eventresults.xlsx",
+                    "Content-Disposition": f"attachment; filename={safe_filename(f'SpiderFoot-{scan_id}-eventresults.xlsx')}",
                     "Pragma": "no-cache",
                 },
             )
@@ -1294,7 +1294,7 @@ async def export_scan_event_results(
             iter([fileobj.getvalue()]),
             media_type="text/csv",
             headers={
-                "Content-Disposition": f"attachment; filename=SpiderFoot-{scan_id}-eventresults.csv",
+                "Content-Disposition": f"attachment; filename={safe_filename(f'SpiderFoot-{scan_id}-eventresults.csv')}",
                 "Pragma": "no-cache",
             },
         )
@@ -1319,7 +1319,7 @@ async def export_scan_event_results(
             content=payload,
             media_type="application/json",
             headers={
-                "Content-Disposition": f"attachment; filename=SpiderFoot-{scan_id}-eventresults.json",
+                "Content-Disposition": f"attachment; filename={safe_filename(f'SpiderFoot-{scan_id}-eventresults.json')}",
                 "Pragma": "no-cache",
             },
         )
@@ -1368,7 +1368,7 @@ async def export_scan_search_results(
                 iter([f.read()]),
                 media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 headers={
-                    "Content-Disposition": f"attachment; filename=SpiderFoot-{scan_id}-searchresults.xlsx",
+                    "Content-Disposition": f"attachment; filename={safe_filename(f'SpiderFoot-{scan_id}-searchresults.xlsx')}",
                     "Pragma": "no-cache",
                 },
             )
@@ -1384,7 +1384,7 @@ async def export_scan_search_results(
             iter([fileobj.getvalue()]),
             media_type="text/csv",
             headers={
-                "Content-Disposition": f"attachment; filename=SpiderFoot-{scan_id}-searchresults.csv",
+                "Content-Disposition": f"attachment; filename={safe_filename(f'SpiderFoot-{scan_id}-searchresults.csv')}",
                 "Pragma": "no-cache",
             },
         )
@@ -1482,7 +1482,7 @@ async def export_scan_viz(
     return Response(
         gexf_data,
         media_type="application/gexf",
-        headers={"Content-Disposition": f"attachment; filename={fname}", "Pragma": "no-cache"},
+        headers={"Content-Disposition": f"attachment; filename={safe_filename(fname)}", "Pragma": "no-cache"},
     )
 
 
@@ -1513,7 +1513,7 @@ async def export_scan_logs(
         iter([fileobj.getvalue()]),
         media_type="text/csv",
         headers={
-            "Content-Disposition": f"attachment; filename=SpiderFoot-{scan_id}.log.csv",
+            "Content-Disposition": f"attachment; filename={safe_filename(f'SpiderFoot-{scan_id}.log.csv')}",
             "Pragma": "no-cache",
         },
     )
@@ -1705,7 +1705,7 @@ async def export_scan_correlations(
             iter([content]),
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             headers={
-                "Content-Disposition": f"attachment; filename=SpiderFoot-{scan_id}-correlations.xlsx",
+                "Content-Disposition": f"attachment; filename={safe_filename(f'SpiderFoot-{scan_id}-correlations.xlsx')}",
                 "Pragma": "no-cache",
             },
         )
@@ -1724,7 +1724,7 @@ async def export_scan_correlations(
             iter([fileobj.getvalue()]),
             media_type="text/csv",
             headers={
-                "Content-Disposition": f"attachment; filename=SpiderFoot-{scan_id}-correlations.csv",
+                "Content-Disposition": f"attachment; filename={safe_filename(f'SpiderFoot-{scan_id}-correlations.csv')}",
                 "Pragma": "no-cache",
             },
         )

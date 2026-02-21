@@ -432,7 +432,7 @@ if not HAS_FASTAPI:
         pass
     router = _StubRouter()
 else:
-    from ..dependencies import get_scan_service, get_api_key
+    from ..dependencies import get_scan_service, get_api_key, safe_filename
 
     router = APIRouter(dependencies=[Depends(get_api_key)])
 
@@ -641,7 +641,7 @@ else:
             iter([content]),
             media_type=media_type,
             headers={
-                "Content-Disposition": f'attachment; filename="{filename}"',
+                "Content-Disposition": f'attachment; filename="{safe_filename(filename)}"',
                 "Pragma": "no-cache",
             },
         )

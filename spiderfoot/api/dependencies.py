@@ -474,3 +474,24 @@ def get_visualization_service() -> Generator:
         yield svc
     finally:
         svc.close()
+
+
+import re as _re
+
+def safe_filename(name: str) -> str:
+    """Sanitize a string for safe use in Content-Disposition headers.
+
+    Strips characters that could inject headers or break the filename:
+    - Removes CR/LF (header injection)
+    - Removes quotes and backslashes (RFC 6266 escaping issues)
+    - Replaces path separators and non-ASCII with underscores
+    - Limits length to 200 characters
+    """
+    # Strip dangerous characters
+    name = _re.sub(r'[\r\n"\\/:*?<>|]', '_', name)
+    # Replace non-ASCII
+    name = name.encode('ascii', 'replace').decode('ascii').replace('?', '_')
+    # Collapse multiple underscores
+    name = _re.sub(r'_+', '_', name).strip('_')
+    return name[:200] or 'download'
+
