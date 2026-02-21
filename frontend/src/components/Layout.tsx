@@ -8,7 +8,6 @@ import {
   Server,
   ExternalLink,
   ChevronDown,
-  X,
   Briefcase,
   Bot,
   BookOpen,
@@ -25,6 +24,7 @@ import {
   Cpu,
 } from 'lucide-react';
 import { clsx } from 'clsx';
+import { ModalShell } from './ui';
 import { useAuthStore } from '../lib/auth';
 import { useTheme, type Theme } from '../lib/theme';
 
@@ -286,36 +286,26 @@ export default function Layout() {
 
       {/* About Modal */}
       {showAbout && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowAbout(false)} />
-          <div className="relative bg-dark-800 border border-dark-700 rounded-2xl p-8 max-w-md w-full shadow-2xl animate-fade-in-up">
-            <button
-              onClick={() => setShowAbout(false)}
-              className="absolute top-4 right-4 text-dark-500 hover:text-dark-300"
-            >
-              <X className="h-5 w-5" />
-            </button>
-            <div className="text-center">
-              <img src="/spiderfoot-header-dark.png" alt="SpiderFoot" className="h-16 mx-auto mb-4" />
-              <h2 className="text-xl font-bold text-foreground">SpiderFoot</h2>
-              <p className="text-dark-400 text-sm mt-1">Open Source Intelligence Automation</p>
-              <p className="text-spider-400 font-mono text-sm mt-3">v5.9.2</p>
-              <div className="mt-6 space-y-2 text-sm text-dark-400">
-                <p>An OSINT automation tool for reconnaissance.</p>
-                <p>
-                  <a
-                    href="https://github.com/poppopjmp/spiderfoot"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-spider-400 hover:text-spider-300 underline decoration-spider-600/50 underline-offset-2"
-                  >
-                    View on GitHub
-                  </a>
-                </p>
-              </div>
+        <ModalShell title="About SpiderFoot" onClose={() => setShowAbout(false)}>
+          <div className="text-center">
+            <img src="/spiderfoot-header-dark.png" alt="SpiderFoot" className="h-16 mx-auto mb-4" />
+            <p className="text-dark-400 text-sm mt-1">Open Source Intelligence Automation</p>
+            <p className="text-spider-400 font-mono text-sm mt-3">v5.9.2</p>
+            <div className="mt-6 space-y-2 text-sm text-dark-400">
+              <p>An OSINT automation tool for reconnaissance.</p>
+              <p>
+                <a
+                  href="https://github.com/poppopjmp/spiderfoot"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-spider-400 hover:text-spider-300 underline decoration-spider-600/50 underline-offset-2"
+                >
+                  View on GitHub
+                </a>
+              </p>
             </div>
           </div>
-        </div>
+        </ModalShell>
       )}
     </div>
   );
