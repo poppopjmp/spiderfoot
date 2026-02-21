@@ -11,7 +11,7 @@ Endpoints:
 
 from __future__ import annotations
 
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
 from ..dependencies import get_app_config
 import json
 import time
@@ -27,6 +27,45 @@ from spiderfoot.scan.scan_state_map import (
 
 router = APIRouter()
 log = logging.getLogger("spiderfoot.api.websocket")
+
+
+async def _verify_ws_token(websocket: WebSocket) -> bool:
+    """Verify the WebSocket connection token from query parameters.
+
+    Accepts ``?token=<jwt_or_api_key>`` since browsers cannot set custom
+    headers in the WebSocket constructor.  Returns *True* if auth is
+    disabled or the token is valid; *False* otherwise.
+    """
+    try:
+        config = get_app_config()
+        cfg = config.get_config() if config else {}
+    except Exception:
+        cfg = {}
+
+    # If no API key is configured, auth is effectively disabled
+    api_key = cfg.get("__webaddr_apikey", "")
+    if not api_key:
+        return True
+
+    token = websocket.query_params.get("token", "")
+    if not token:
+        return False
+
+    # Check direct API-key match
+    if token == api_key:
+        return True
+
+    # Check JWT / sf_ API key via auth service
+    try:
+        from spiderfoot.auth.service import get_auth_service
+        auth_svc = get_auth_service()
+        if token.startswith("sf_"):
+            auth_svc.api_key_to_user_context(token)
+        else:
+            auth_svc.token_to_user_context(token)
+        return True
+    except Exception:
+        return False
 
 
 class WebSocketManager:
@@ -278,9 +317,18 @@ async def _polling_mode(websocket: WebSocket, scan_id: str) -> None:
 async def websocket_scan_stream(websocket: WebSocket, scan_id: str) -> None:
     """Stream scan events over WebSocket.
 
+    Requires a valid token via ``?token=<jwt_or_api_key>`` query param
+    when authentication is enabled.
+
     Uses EventRelay push mode if the relay has an EventBus wired.
     Falls back to database polling otherwise.
     """
+    # ── Auth gate ─────────────────────────────────────────────────────
+    if not await _verify_ws_token(websocket):
+        await websocket.close(code=4003, reason="Authentication required")
+        log.warning("Rejected unauthenticated WebSocket for scan %s", scan_id)
+        return
+
     await websocket_manager.connect(websocket, scan_id)
 
     try:

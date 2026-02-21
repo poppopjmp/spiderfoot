@@ -26,7 +26,7 @@ from typing import Any, AsyncGenerator
 log = logging.getLogger("spiderfoot.api.scan_progress")
 
 try:
-    from fastapi import APIRouter, HTTPException, Request
+    from fastapi import APIRouter, Depends, HTTPException, Request
     from fastapi.responses import StreamingResponse
 
     HAS_FASTAPI = True
@@ -158,6 +158,10 @@ if not HAS_FASTAPI:
 
     router = _StubRouter()
 else:
+    from ..dependencies import optional_auth
+
+    _auth_dep = Depends(optional_auth)
+
     router = APIRouter()
 
     @router.get(
@@ -168,14 +172,13 @@ else:
             "overall percentage, ETA, throughput, and module counts."
         ),
     )
-    async def get_progress(scan_id: str) -> dict:
+    async def get_progress(scan_id: str, _auth: str | None = _auth_dep) -> dict:
         """Return the current progress snapshot for a scan."""
         tracker = get_tracker(scan_id)
         if tracker is None:
             raise HTTPException(
                 status_code=404,
-                detail=f"No active tracker for scan '{scan_id}'. "
-                "The scan may have completed or not been started with tracking.",
+                detail="No active tracker for this scan.",
             )
         snapshot = tracker.get_snapshot()
         data = snapshot.to_dict()
@@ -193,13 +196,13 @@ else:
             "including status, events, and elapsed time."
         ),
     )
-    async def get_module_progress(scan_id: str) -> dict:
+    async def get_module_progress(scan_id: str, _auth: str | None = _auth_dep) -> dict:
         """Return per-module progress breakdown for a scan."""
         tracker = get_tracker(scan_id)
         if tracker is None:
             raise HTTPException(
                 status_code=404,
-                detail=f"No active tracker for scan '{scan_id}'.",
+                detail="No active tracker for this scan.",
             )
         modules = tracker.get_all_module_progress()
         return {
@@ -244,13 +247,13 @@ else:
             "Returns the list of recorded progress snapshots for a scan."
         ),
     )
-    async def get_progress_history(scan_id: str) -> dict:
+    async def get_progress_history(scan_id: str, _auth: str | None = _auth_dep) -> dict:
         """Return historical progress snapshots for a scan."""
         tracker = get_tracker(scan_id)
         if tracker is None:
             raise HTTPException(
                 status_code=404,
-                detail=f"No active tracker for scan '{scan_id}'.",
+                detail="No active tracker for this scan.",
             )
         history = tracker.get_history()
         return {
@@ -272,13 +275,14 @@ else:
         scan_id: str,
         request: Request,
         interval: float = _DEFAULT_SSE_INTERVAL,
+        _auth: str | None = _auth_dep,
     ) -> StreamingResponse:
         """Stream scan progress updates via Server-Sent Events."""
         tracker = get_tracker(scan_id)
         if tracker is None:
             raise HTTPException(
                 status_code=404,
-                detail=f"No active tracker for scan '{scan_id}'.",
+                detail="No active tracker for this scan.",
             )
 
         # Clamp interval to reasonable range
@@ -311,7 +315,7 @@ else:
             "Typically called automatically when a scan starts."
         ),
     )
-    async def create_tracker(scan_id: str, modules: list[str] | None = None) -> dict:
+    async def create_tracker(scan_id: str, modules: list[str] | None = None, _auth: str | None = _auth_dep) -> dict:
         """Create and start a new progress tracker for a scan."""
         if not HAS_TRACKER:
             raise HTTPException(
@@ -323,7 +327,7 @@ else:
         if existing is not None:
             raise HTTPException(
                 status_code=409,
-                detail=f"Tracker already exists for scan '{scan_id}'.",
+                detail="Tracker already exists for this scan.",
             )
 
         tracker = ScanProgressTracker(scan_id=scan_id)
@@ -343,7 +347,7 @@ else:
         summary="List actively tracked scans",
         description="Returns IDs of all scans with active progress trackers.",
     )
-    async def list_active_trackers() -> dict:
+    async def list_active_trackers(_auth: str | None = _auth_dep) -> dict:
         """List all scans with active progress trackers."""
         scan_ids = list_tracked_scans()
         summaries = []
