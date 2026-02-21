@@ -37,12 +37,18 @@ export default function ScanDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['scan', scanId] });
       setToast({ type: 'success', message: 'Scan stopped' });
     },
+    onError: (err: Error) => {
+      setToast({ type: 'error', message: 'Failed to stop scan' });
+    },
   });
   const rerunMut = useMutation({
     mutationFn: () => scanApi.rerun(scanId!),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['scans'] });
       setToast({ type: 'success', message: 'Rerun started' });
+    },
+    onError: (err: Error) => {
+      setToast({ type: 'error', message: 'Failed to rerun scan' });
     },
   });
 

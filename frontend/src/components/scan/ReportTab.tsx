@@ -269,6 +269,9 @@ export default function ReportTab({ scanId, scan }: { scanId: string; scan?: Sca
       setReportContent(md);
       localStorage.setItem(storageKey, md);
     },
+    onError: (err: Error) => {
+      console.error('Failed to generate report:', err);
+    },
   });
 
   const generateClientReport = useCallback(() => {

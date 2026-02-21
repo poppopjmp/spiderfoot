@@ -39,6 +39,9 @@ export default function BrowseTab({ scanId }: { scanId: string }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['scan-events', scanId] });
     },
+    onError: (err: Error) => {
+      console.error('Failed to update false positive status:', err);
+    },
   });
 
   const filteredEvents = useMemo(() => {

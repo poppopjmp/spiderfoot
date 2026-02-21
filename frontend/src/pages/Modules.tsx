@@ -50,12 +50,18 @@ export default function ModulesPage() {
       queryClient.invalidateQueries({ queryKey: ['modules-status'] });
       setToast({ type: 'success', message: 'Module enabled' });
     },
+    onError: (err: Error) => {
+      setToast({ type: 'error', message: 'Failed to enable module' });
+    },
   });
   const disableMut = useMutation({
     mutationFn: dataApi.disableModule,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['modules-status'] });
       setToast({ type: 'success', message: 'Module disabled' });
+    },
+    onError: (err: Error) => {
+      setToast({ type: 'error', message: 'Failed to disable module' });
     },
   });
 

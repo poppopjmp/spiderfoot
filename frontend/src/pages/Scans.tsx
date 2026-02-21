@@ -69,6 +69,9 @@ export default function ScansPage() {
       queryClient.invalidateQueries({ queryKey: ['scans'] });
       setToast({ type: 'success', message: 'Scan stopped' });
     },
+    onError: (err: Error) => {
+      setToast({ type: 'error', message: 'Failed to stop scan' });
+    },
   });
   const deleteMut = useMutation({
     mutationFn: scanApi.delete,
@@ -87,12 +90,18 @@ export default function ScansPage() {
       queryClient.invalidateQueries({ queryKey: ['scans'] });
       setToast({ type: 'success', message: `Rerun started: ${r?.new_scan_id?.slice(0, 8)}` });
     },
+    onError: (err: Error) => {
+      setToast({ type: 'error', message: 'Failed to rerun scan' });
+    },
   });
   const cloneMut = useMutation({
     mutationFn: scanApi.clone,
     onSuccess: (r) => {
       queryClient.invalidateQueries({ queryKey: ['scans'] });
       setToast({ type: 'success', message: `Cloned: ${r?.new_scan_id?.slice(0, 8)}` });
+    },
+    onError: (err: Error) => {
+      setToast({ type: 'error', message: 'Failed to clone scan' });
     },
   });
   const bulkStopMut = useMutation({
@@ -102,6 +111,9 @@ export default function ScansPage() {
       setSelected(new Set());
       setToast({ type: 'success', message: 'Bulk stop complete' });
     },
+    onError: (err: Error) => {
+      setToast({ type: 'error', message: 'Bulk stop failed' });
+    },
   });
   const bulkDeleteMut = useMutation({
     mutationFn: (ids: string[]) => scanApi.bulkDelete(ids),
@@ -109,6 +121,9 @@ export default function ScansPage() {
       queryClient.invalidateQueries({ queryKey: ['scans'] });
       setSelected(new Set());
       setToast({ type: 'success', message: 'Bulk delete complete' });
+    },
+    onError: (err: Error) => {
+      setToast({ type: 'error', message: 'Bulk delete failed' });
     },
   });
 

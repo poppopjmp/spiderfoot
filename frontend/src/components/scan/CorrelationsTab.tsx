@@ -14,6 +14,9 @@ export default function CorrelationsTab({ scanId }: { scanId: string }) {
   const runMut = useMutation({
     mutationFn: () => scanApi.runCorrelations(scanId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['scan-correlations', scanId] }),
+    onError: (err: Error) => {
+      console.error('Failed to run correlations:', err);
+    },
   });
 
   const correlations: ScanCorrelation[] = data?.correlations ?? [];

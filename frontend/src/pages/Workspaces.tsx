@@ -147,6 +147,9 @@ export default function WorkspacesPage() {
       setShowEdit(false);
       setToast({ type: 'success', message: 'Workspace updated' });
     },
+    onError: (err: Error) => {
+      setToast({ type: 'error', message: 'Failed to update workspace' });
+    },
   });
 
   const addTargetMutation = useMutation({
@@ -881,6 +884,9 @@ function WorkspaceReportCard({ workspaceId, workspace, summary, scanIds }: {
       const md = reportData?.report ?? reportData?.content ?? reportData?.markdown ?? JSON.stringify(data, null, 2);
       setReportContent(md);
       localStorage.setItem(storageKey, md);
+    },
+    onError: (err: Error) => {
+      console.error('Failed to generate workspace report:', err);
     },
   });
 
