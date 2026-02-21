@@ -6,7 +6,7 @@ Welcome to the advanced section of the SpiderFoot documentation. This guide cove
 
 ## Docker Deployment
 
-SpiderFoot can be deployed using Docker for ease of setup, isolation, and scalability. See the [Docker Deployment Guide](../docs/docker_deployment.md) for step-by-step instructions on building, configuring, and running SpiderFoot in containers, including tips for persistent storage and networking.
+SpiderFoot can be deployed using Docker for ease of setup, isolation, and scalability. See the [Docker Deployment Guide](docker_deployment.md) for step-by-step instructions on building, configuring, and running SpiderFoot in containers, including tips for persistent storage and networking.
 
 ## Performance Optimization
 
@@ -16,7 +16,7 @@ To get the best performance from SpiderFoot, consider:
 - Using SSD storage for faster data access.
 - Tuning scan settings (e.g., limiting modules, adjusting timeouts) for your use case.
 - Running SpiderFoot in headless mode or via CLI for automation.
-- Refer to the [Performance Optimization Guide](../docs/advanced/performance_optimization.md) for detailed tips.
+- Refer to the [Async Plugin Guide](async_plugin_guide.md) for using native async I/O to improve module performance.
 
 ## Security Considerations
 

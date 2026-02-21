@@ -5,6 +5,15 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [6.0.0] — 2026-02-21
 
+### Added (Batches 40–45)
+- **Docker Compose modularization** (Batch 40): Split monolithic `docker-compose.yml` into domain-specific include files using the Compose `include` directive for cleaner service management
+- **OpenAPI TypeScript SDK** (Batch 41): Automated SDK generation pipeline via `@hey-api/openapi-ts v0.92.4` — produces fetch-based client with full type safety, JWT interceptor, and clean operation names from post-processed OpenAPI spec
+- **JSONL streaming export** (Batch 42): Newline-delimited JSON export endpoint (`/api/scans/{id}/export/jsonl`) for large scan results; pipeline-friendly format for downstream tooling
+- **SSE live event stream** (Batch 42): Server-Sent Events endpoint (`/events/stream`) for real-time scan event delivery to frontends and integrations
+- **Native async I/O engine** (Batch 43): `SpiderFootAsyncPlugin` base class with native `aiohttp` HTTP client and `aiodns` DNS resolver — opt-in async path for scanner modules without affecting sync modules
+- **AI structured outputs** (Batch 44): 12 Pydantic models in `spiderfoot/ai/schemas.py` for typed LLM responses; `chat_structured()` method using OpenAI `response_format: json_schema` mode with automatic validation
+- **PEP 561 strict typing** (Batch 45): `py.typed` marker for downstream type checking; `mypy` configuration in `setup.cfg`; strict type annotations across DB layer, core models, and network utilities
+
 ### Added
 - **Go CLI**: Full-featured cross-platform CLI (`spiderfoot-cli`) built with Cobra/Viper — scan management, module listing, STIX/JSON/CSV export, schedule CRUD, health check, config management
 - **Command Palette**: Global `Ctrl+K` quick-navigate with fuzzy search over pages and recent scans, ARIA-compliant `combobox` pattern

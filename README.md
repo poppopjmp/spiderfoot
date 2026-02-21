@@ -173,12 +173,15 @@ docker compose -f docker-compose.yml --profile full up --build -d
 | `https://localhost/minio/` | MinIO Console |
 | `https://localhost/traefik/` | Traefik Dashboard |
 
-### Option 2 — Standalone (Monolith)
+### Option 2 — Development (without Docker)
 
 ```bash
 pip install -r requirements.txt
-python3 sf.py -l 127.0.0.1:5001
+# Start PostgreSQL and Redis separately, then:
+uvicorn sfapi:app --host 127.0.0.1 --port 8001
 ```
+
+> **Note**: Monolith mode (`sf.py`) was removed in v6.0.0. SpiderFoot now requires the microservices stack (Docker Compose or Kubernetes).
 
 ---
 
@@ -212,9 +215,8 @@ docker compose -f docker-compose.yml --profile full --profile sso up -d
 
 | Mode | Command | Description |
 |------|---------|-------------|
-| **Monolith** | `python3 sf.py -l 0.0.0.0:5001` | Single process, PostgreSQL, minimal dependencies |
 | **Docker Core** | `docker compose -f docker-compose.yml up -d` | 5 core services (PostgreSQL, Redis, API, Worker, Frontend) |
-| **Docker Full** | `docker compose -f docker-compose.yml --profile full up -d` | 21+ services with observability, AI, and storage |
+| **Docker Full** | `docker compose -f docker-compose.yml --profile full up -d` | 23+ services with observability, AI, and storage |
 | **Kubernetes** | `helm install sf helm/` | Horizontal scaling with Helm chart |
 
 ---

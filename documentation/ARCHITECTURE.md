@@ -2,13 +2,17 @@
 
 ## Overview
 
-SpiderFoot v5.9.2 implements a modular microservices architecture that can run
-in two modes:
+SpiderFoot v6.0.0 implements a microservices-only architecture:
 
-- **Monolith mode**: All services run in a single process (default, backward-compatible)
-- **Microservices mode**: 21 containers behind a Traefik v3 reverse proxy with full observability, AI agents, Celery task processing, and React SPA frontend
+- **23 containers** behind a Traefik v3 reverse proxy with full observability, AI agents, Celery task processing, and React SPA frontend
+- **Native async I/O** via aiohttp + aiodns for high-throughput scanner modules
+- **AI structured outputs** via Pydantic schemas and OpenAI json_schema mode
+- **TypeScript SDK** auto-generated from the OpenAPI spec via @hey-api/openapi-ts
+- **PEP 561 strict typing** with mypy enforcement across the Python codebase
 
-## Service Topology (v5.9.2)
+> **Note**: Monolith mode was removed in v6.0.0 (Batches 34–36). SpiderFoot now requires Docker Compose or Kubernetes.
+
+## Service Topology (v6.0.0)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -258,7 +262,7 @@ Unified request routing:
 
 - Circuit breaker per downstream service
 - Token-bucket rate limiting per client
-- Monolith/microservices dual mode
+- Microservices-only mode (monolith removed in v6.0.0)
 - FastAPI router integration
 - System status aggregation
 
@@ -808,6 +812,18 @@ migration instructions.
 | 5.88.0 | Response compression middleware (gzip) |
 | 5.88.1 | Final documentation update — Cycle 100 |
 
+### Batches 40–45 (v6.0.0)
+
+| Version | Feature |
+|---------|---------|
+| 6.0.0-b40 | Docker Compose modularization via `include` directive |
+| 6.0.0-b41 | OpenAPI TypeScript SDK generation (`@hey-api/openapi-ts`) |
+| 6.0.0-b42 | JSONL streaming export + SSE live event stream |
+| 6.0.0-b43 | Native async I/O engine (aiohttp + aiodns) |
+| 6.0.0-b44 | AI structured outputs (Pydantic schemas + json_schema mode) |
+| 6.0.0-b45 | PEP 561 strict typing + mypy configuration |
+| 6.0.0-b46 | Documentation overhaul |
+
 ### Additional Services (v5.10.1 – v5.21.0)
 
 #### Auth Middleware (`spiderfoot/security/auth.py`)
@@ -1090,4 +1106,62 @@ dict. Sections: Core, Network, Database, Web, API, Cache, EventBus,
 Vector, Worker, Redis, Elasticsearch. Features: `from_dict()` /
 `to_dict()` round-trip, `apply_env_overrides()` for SF_* variables,
 20+ validation rules, and merge semantics for layered overrides.
+
+---
+
+## New Subsystems (v6.0.0 — Batches 40–45)
+
+### Native Async I/O Engine (`spiderfoot/sflib/async_network.py`)
+
+High-performance HTTP/DNS client layer built on aiohttp + aiodns:
+
+- **Session pool**: `aiohttp.ClientSession` instances cached per `(module_name, event_loop)` tuple — avoids recreating connections across calls
+- **`async_fetch_url()`**: Returns dict matching the sync `fetchUrl()` shape (`code`, `status`, `content`, `headers`, `realurl`)
+- **DNS resolver**: `aiodns.DNSResolver` for A/AAAA/PTR lookups with `getaddrinfo()` fallback
+- **Wildcard detection**: `async_check_dns_wildcard()` for brute-force flood mitigation
+- **Plugin integration**: `SpiderFootAsyncPlugin` subclasses call `async_fetch_url()` / `async_resolve_host()` directly — no `run_in_executor` wrapping
+
+See [Async Plugin Guide](async_plugin_guide.md) for module development.
+
+### AI Structured Outputs (`spiderfoot/ai/schemas.py`)
+
+Pydantic-validated structured output pipeline for LLM responses:
+
+- **12 response models**: `ScanReportOutput`, `ExecutiveSummaryOutput`, `RiskAssessmentOutput`, `ThreatAssessmentOutput`, `CorrelationOutput`, `FindingValidationOutput`, `TextSummaryOutput`, plus nested types (`Finding`, `ThreatIndicator`, `Recommendation`, `Attribution`)
+- **`chat_structured()`** in `LLMClient`: Builds OpenAI `response_format: json_schema` payload from `model.model_json_schema()`, injects format hint into system message, validates response via `model_validate()`
+- **`call_llm_structured()`** in `AgentBase`: Same pipeline available to AI agents
+- **Mock support**: `_MockGenerator._mock_from_schema()` produces schema-conformant test data
+
+See [AI Structured Outputs Guide](ai_structured_outputs.md) for usage.
+
+### OpenAPI TypeScript SDK (`frontend/src/api/generated/`)
+
+Auto-generated, type-safe API client for the React frontend:
+
+- **Generator**: `@hey-api/openapi-ts v0.92.4` with native fetch client (not Axios)
+- **Post-processing**: `dump_openapi.py` normalizes `operationId` values for clean SDK method names
+- **JWT interceptor**: `client.interceptors.request.use()` attaches `Authorization: Bearer <token>` to every request
+- **Regeneration**: `npm run generate:api` re-generates from the live `/api/openapi.json`
+
+See [TypeScript SDK Guide](typescript_sdk.md) for the generation workflow.
+
+### JSONL Streaming Export (`spiderfoot/api/routers/export.py`)
+
+Pipeline-friendly scan result export:
+
+- **Endpoint**: `GET /api/scans/{id}/export/jsonl` — streams newline-delimited JSON
+- **SSE stream**: `GET /events/stream` — Server-Sent Events for real-time scan event delivery
+- **Event enrichment**: `SpiderFootEvent.asDict()` produces full serializable event dicts
+- **Use cases**: `jq` pipelines, Elasticsearch bulk ingest, SIEM integration, real-time dashboards
+
+See [Streaming Export Guide](streaming_export.md) for integration examples.
+
+### PEP 561 Strict Typing
+
+Static type safety enforcement across the Python codebase:
+
+- **`py.typed`** marker in `spiderfoot/` — enables downstream type checking for packages that import SpiderFoot
+- **mypy config** in `setup.cfg`: `python_version=3.11`, `check_untyped_defs=true`, `no_implicit_optional=true`
+- **Coverage**: DB layer (14 return types + 17 params fixed), core models (`__all__` exports), network utilities (implicit Optional → explicit union types)
+- **Convention**: Use `X | None` (PEP 604) instead of `Optional[X]` for all new code
 
