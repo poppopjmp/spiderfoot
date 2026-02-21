@@ -127,7 +127,7 @@ class Query:
                 return None
             return _scan_row_to_type(r, scan_id)
         except Exception as e:
-            _log.error("GraphQL scan() error: %s", e)
+            _log.error("GraphQL scan() error: %s", e, exc_info=True)
             return None
 
     @strawberry.field(description="List all scans with optional pagination")
@@ -170,7 +170,7 @@ class Query:
                 page_size=page_size,
             )
         except Exception as e:
-            _log.error("GraphQL scans() error: %s", e)
+            _log.error("GraphQL scans() error: %s", e, exc_info=True)
             return PaginatedScans(scans=[], total=0, page=page, page_size=page_size)
 
     @strawberry.field(description="Get events for a scan with optional filtering")
@@ -218,7 +218,7 @@ class Query:
                 total_pages=(total + page_size - 1) // page_size if page_size else 0,
             )
         except Exception as e:
-            _log.error("GraphQL scan_events() error: %s", e)
+            _log.error("GraphQL scan_events() error: %s", e, exc_info=True)
             return PaginatedEvents(
                 events=[], total=0, page=page,
                 page_size=page_size, total_pages=0,
@@ -244,7 +244,7 @@ class Query:
                 for et, c in sorted(counts.items(), key=lambda x: -x[1])
             ]
         except Exception as e:
-            _log.error("GraphQL event_summary() error: %s", e)
+            _log.error("GraphQL event_summary() error: %s", e, exc_info=True)
             return []
 
     @strawberry.field(description="Correlations for a scan")
@@ -266,7 +266,7 @@ class Query:
                 ))
             return results
         except Exception as e:
-            _log.error("GraphQL scan_correlations() error: %s", e)
+            _log.error("GraphQL scan_correlations() error: %s", e, exc_info=True)
             return []
 
     @strawberry.field(description="Scan execution logs")
@@ -293,7 +293,7 @@ class Query:
                 results.append(entry)
             return results
         except Exception as e:
-            _log.error("GraphQL scan_logs() error: %s", e)
+            _log.error("GraphQL scan_logs() error: %s", e, exc_info=True)
             return []
 
     @strawberry.field(description="Complete scan statistics for dashboard visualization")
@@ -388,7 +388,7 @@ class Query:
             )
 
         except Exception as e:
-            _log.error("GraphQL scan_statistics() error: %s", e)
+            _log.error("GraphQL scan_statistics() error: %s", e, exc_info=True)
             return None
 
     @strawberry.field(description="Event relationship graph for visualization")
@@ -446,7 +446,7 @@ class Query:
             )
 
         except Exception as e:
-            _log.error("GraphQL scan_graph() error: %s", e)
+            _log.error("GraphQL scan_graph() error: %s", e, exc_info=True)
             return None
 
     @strawberry.field(description="List all available event types")
@@ -464,7 +464,7 @@ class Query:
                 for k, v in types.items()
             ]
         except Exception as e:
-            _log.error("GraphQL event_types() error: %s", e)
+            _log.error("GraphQL event_types() error: %s", e, exc_info=True)
             return []
 
     @strawberry.field(description="List workspaces")
@@ -486,7 +486,7 @@ class Query:
                 ))
             return results
         except Exception as e:
-            _log.error("GraphQL workspaces() error: %s", e)
+            _log.error("GraphQL workspaces() error: %s", e, exc_info=True)
             return []
 
     @strawberry.field(description="Cross-scan event search")
@@ -537,7 +537,7 @@ class Query:
             return all_events
 
         except Exception as e:
-            _log.error("GraphQL search_events() error: %s", e)
+            _log.error("GraphQL search_events() error: %s", e, exc_info=True)
             return []
 
     # ── Vector / Semantic Search ────────────────────────────────────
@@ -604,7 +604,7 @@ class Query:
             )
 
         except Exception as e:
-            _log.error("GraphQL semantic_search() error: %s", e)
+            _log.error("GraphQL semantic_search() error: %s", e, exc_info=True)
             return VectorSearchResult(
                 hits=[], total_found=0, query_time_ms=0,
                 collection=collection or "osint_events",
@@ -629,7 +629,7 @@ class Query:
                     ))
             return result
         except Exception as e:
-            _log.error("GraphQL vector_collections() error: %s", e)
+            _log.error("GraphQL vector_collections() error: %s", e, exc_info=True)
             return []
 
 
@@ -671,7 +671,7 @@ class Mutation:
             )
 
         except Exception as e:
-            _log.error("GraphQL startScan() error: %s", e)
+            _log.error("GraphQL startScan() error: %s", e, exc_info=True)
             return ScanCreateResult(
                 success=False,
                 message=f"Failed to start scan: {e}",
@@ -693,7 +693,7 @@ class Mutation:
                 message=f"Scan {scan_id} stopped",
             )
         except Exception as e:
-            _log.error("GraphQL stopScan() error: %s", e)
+            _log.error("GraphQL stopScan() error: %s", e, exc_info=True)
             return MutationResult(success=False, message=str(e))
 
     @strawberry.mutation(description="Delete a scan and all its data")
@@ -722,7 +722,7 @@ class Mutation:
                 message=f"Scan {scan_id} deleted",
             )
         except Exception as e:
-            _log.error("GraphQL deleteScan() error: %s", e)
+            _log.error("GraphQL deleteScan() error: %s", e, exc_info=True)
             return MutationResult(success=False, message=str(e))
 
     @strawberry.mutation(description="Mark scan results as false positive (or unmark)")
@@ -752,7 +752,7 @@ class Mutation:
                 updated=updated,
             )
         except Exception as e:
-            _log.error("GraphQL setFalsePositive() error: %s", e)
+            _log.error("GraphQL setFalsePositive() error: %s", e, exc_info=True)
             return FalsePositiveResult(success=False, message=str(e))
 
     @strawberry.mutation(description="Rerun a completed scan with same configuration")
@@ -792,7 +792,7 @@ class Mutation:
                 scan=scan,
             )
         except Exception as e:
-            _log.error("GraphQL rerunScan() error: %s", e)
+            _log.error("GraphQL rerunScan() error: %s", e, exc_info=True)
             return ScanCreateResult(success=False, message=str(e))
 
 
@@ -841,7 +841,7 @@ class Subscription:
                     return
 
             except Exception as e:
-                _log.error("GraphQL scanProgress error: %s", e)
+                _log.error("GraphQL scanProgress error: %s", e, exc_info=True)
                 return
 
             await asyncio.sleep(interval)
@@ -877,7 +877,7 @@ class Subscription:
                         return
 
             except Exception as e:
-                _log.error("GraphQL scanEventsLive error: %s", e)
+                _log.error("GraphQL scanEventsLive error: %s", e, exc_info=True)
                 return
 
             await asyncio.sleep(interval)
