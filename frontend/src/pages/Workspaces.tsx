@@ -20,6 +20,7 @@ const TARGET_TYPES = [
   { label: 'Username', value: 'USERNAME' },
   { label: 'Human Name', value: 'HUMAN_NAME' },
   { label: 'Bitcoin Address', value: 'BITCOIN_ADDRESS' },
+  { label: 'Ethereum Address', value: 'ETHEREUM_ADDRESS' },
   { label: 'ASN', value: 'BGP_AS_OWNER' },
 ];
 
@@ -27,7 +28,7 @@ function detectTargetType(target: string): string {
   const t = target.trim();
   if (!t) return '';
   if (/^(1|3|bc1)[a-zA-HJ-NP-Z0-9]{25,62}$/.test(t)) return 'BITCOIN_ADDRESS';
-  if (/^(0x)?[0-9a-fA-F]{40}$/.test(t)) return 'BITCOIN_ADDRESS';
+  if (/^0x[0-9a-fA-F]{40}$/.test(t)) return 'ETHEREUM_ADDRESS';
   if (/^(\d{1,3}\.){3}\d{1,3}(\/\d+)?$/.test(t)) {
     return t.includes('/') ? 'NETBLOCK_OWNER' : 'IP_ADDRESS';
   }

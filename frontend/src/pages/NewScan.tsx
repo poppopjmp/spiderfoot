@@ -6,7 +6,7 @@ import {
 } from '../lib/api';
 import {
   Radar, Lock, Unlock, Zap,
-  ShieldCheck, FileText, Loader2, Upload, X, Layers,
+  ShieldCheck, FileText, Loader2, X, Layers,
 } from 'lucide-react';
 import { PageHeader, Tabs, SearchInput, Toast, type ToastType } from '../components/ui';
 
@@ -41,7 +41,6 @@ export default function NewScanPage() {
   const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set());
   const [moduleSearch, setModuleSearch] = useState('');
   const [toast, setToast] = useState<{ type: ToastType; message: string } | null>(null);
-  const [files, setFiles] = useState<File[]>([]);
 
   /* Data queries */
   const { data: modulesData } = useQuery({
@@ -222,46 +221,6 @@ export default function NewScanPage() {
             value={scanName}
             onChange={(e) => setScanName(e.target.value)}
           />
-        </div>
-
-        {/* Document Upload — matches CherryPy "Attach Documents" */}
-        <div className="mt-4">
-          <label className="section-label mb-2 block">Attach Documents (optional)</label>
-          <p className="text-xs text-dark-500 mb-2">Upload PDF, DOCX, XLSX, TXT and 1000+ other formats for IOC extraction via Apache Tika.</p>
-          <div
-            className="border-2 border-dashed border-dark-600 rounded-lg p-6 text-center hover:border-dark-500 transition-colors cursor-pointer"
-            onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
-            onDrop={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              const dropped = Array.from(e.dataTransfer.files);
-              setFiles((prev) => [...prev, ...dropped]);
-            }}
-            onClick={() => {
-              const input = document.createElement('input');
-              input.type = 'file';
-              input.multiple = true;
-              input.onchange = () => {
-                if (input.files) setFiles((prev) => [...prev, ...Array.from(input.files!)]);
-              };
-              input.click();
-            }}
-          >
-            <Upload className="h-6 w-6 text-dark-500 mx-auto mb-2" />
-            <p className="text-sm text-dark-400">Drag & drop files here, or click to browse</p>
-          </div>
-          {files.length > 0 && (
-            <div className="mt-2 space-y-1">
-              {files.map((f, i) => (
-                <div key={`${f.name}-${i}`} className="flex items-center justify-between px-3 py-1.5 bg-dark-700/50 rounded text-sm">
-                  <span className="text-dark-300 truncate">{f.name} <span className="text-dark-500">({(f.size / 1024).toFixed(1)} KB)</span></span>
-                  <button onClick={(e) => { e.stopPropagation(); setFiles((prev) => prev.filter((_, j) => j !== i)); }} className="text-dark-500 hover:text-red-400">
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
       </div>
 
