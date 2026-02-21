@@ -248,7 +248,10 @@ export default function ApiKeysPage() {
               ) : (
                 filtered.map((k) => {
                   const statusStyle = STATUS_STYLES[k.status] || STATUS_STYLES.active;
-                  const modules = k.allowed_modules ? JSON.parse(k.allowed_modules) : [];
+                  let modules: string[] = [];
+                  if (k.allowed_modules) {
+                    try { modules = JSON.parse(k.allowed_modules); } catch { /* malformed */ }
+                  }
                   const isExpired = k.expires_at > 0 && k.expires_at < Date.now() / 1000;
 
                   return (
