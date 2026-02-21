@@ -183,6 +183,11 @@ services:
     image: redis:7-alpine
     container_name: sf-redis
     restart: unless-stopped
+    security_opt:
+      - "no-new-privileges:true"
+    read_only: true
+    tmpfs:
+      - /tmp
     networks:
       - sf-backend
     command: >
@@ -348,6 +353,13 @@ services:
     image: ghcr.io/poppopjmp/spiderfoot-frontend:latest
     container_name: sf-frontend-ui
     restart: unless-stopped
+    security_opt:
+      - "no-new-privileges:true"
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/cache/nginx
+      - /var/run
     networks:
       - sf-frontend
     ports:
@@ -473,6 +485,11 @@ services:
     image: qdrant/qdrant:v1.12.4
     container_name: sf-qdrant
     restart: unless-stopped
+    security_opt:
+      - "no-new-privileges:true"
+    read_only: true
+    tmpfs:
+      - /tmp
     networks:
       - sf-backend
     volumes:
@@ -519,6 +536,11 @@ services:
     image: timberio/vector:0.53.0-alpine
     container_name: sf-vector
     restart: unless-stopped
+    security_opt:
+      - "no-new-privileges:true"
+    read_only: true
+    tmpfs:
+      - /tmp
     networks:
       - sf-backend
     volumes:
@@ -716,6 +738,11 @@ services:
     image: apache/tika:3.1.0.0-full
     container_name: sf-tika
     restart: unless-stopped
+    security_opt:
+      - "no-new-privileges:true"
+    read_only: true
+    tmpfs:
+      - /tmp
     networks:
       - sf-backend
     environment:
@@ -753,6 +780,11 @@ services:
     image: ghcr.io/poppopjmp/spiderfoot-base:latest
     container_name: sf-agents
     restart: unless-stopped
+    security_opt:
+      - "no-new-privileges:true"
+    read_only: true
+    tmpfs:
+      - /tmp
     networks:
       - sf-frontend
       - sf-backend
@@ -1031,6 +1063,11 @@ services:
     image: ghcr.io/poppopjmp/spiderfoot-base:latest
     container_name: sf-celery-beat
     restart: unless-stopped
+    security_opt:
+      - "no-new-privileges:true"
+    read_only: true
+    tmpfs:
+      - /tmp
     networks:
       - sf-backend
     environment:
@@ -1071,6 +1108,11 @@ services:
     image: ghcr.io/poppopjmp/spiderfoot-base:latest
     container_name: sf-flower
     restart: unless-stopped
+    security_opt:
+      - "no-new-privileges:true"
+    read_only: true
+    tmpfs:
+      - /tmp
     networks:
       - sf-frontend
       - sf-backend
@@ -1133,6 +1175,11 @@ services:
     image: ghcr.io/berriai/litellm:main-latest
     container_name: sf-litellm
     restart: unless-stopped
+    security_opt:
+      - "no-new-privileges:true"
+    read_only: true
+    tmpfs:
+      - /tmp
     networks:
       - sf-frontend
       - sf-backend
@@ -1227,6 +1274,11 @@ services:
     image: postgres:15-alpine
     container_name: sf-pg-backup
     restart: unless-stopped
+    security_opt:
+      - "no-new-privileges:true"
+    read_only: true
+    tmpfs:
+      - /tmp
     networks:
       - sf-backend
     environment:
