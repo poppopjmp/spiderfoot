@@ -5,6 +5,21 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [5.9.2] — 2026-02-20 — Deep Security & Quality Hardening
 
+### Security — P1 Critical & High (Batch 4)
+- **XSS in PDF export**: `scan.name`, `scan.target` and `scanId` were interpolated raw into `document.write()` in ReportTab PDF export; added `escapeHTML()` helper and wrapped all dynamic values
+- **Concurrent token refresh race**: Multiple 401s triggered independent `/api/auth/refresh` calls, invalidating single-use rotation tokens and logging users out; added shared `refreshPromise` deduplication
+- **Route-level RBAC**: Added `RequirePermission` component; `/users` requires `user:read`, `/sso-settings` and `/api-keys` require `system:admin`; falls through when auth is disabled (dev mode)
+- **Hardcoded credentials removed**: Removed `changeme123` MinIO fallbacks from 5 Python files; removed `changeme` PostgreSQL DSN from maintenance.py; MinIOConfig now logs CRITICAL on insecure defaults; stripped credential hints from Layout.tsx service links
+- **SSRF webhook URL validation**: Added `_validate_webhook_url()` — requires http(s) scheme, blocks private/loopback/link-local/reserved IPs and known dangerous hostnames; applied to all webhook Pydantic models
+
+### Fixed — Reliability (Batch 4)
+- **GraphQL subscription DB leak**: `scan_progress` and `scan_events_live` called `_get_db()` inside polling loops, leaking ~30 connections/min per subscriber; DB handle now created once before the loop and closed in `finally`
+- **scan-profiles missing auth**: `list_scan_profiles()` and `get_scan_profile()` were the only unprotected endpoints on the scan router; added `api_key_dep`
+- **Error detail leaks**: Replaced 4 `detail=str(e)` / `detail=f"...{e}"` patterns in scan.py and export.py with generic messages; added `exc_info=True` server-side logging
+- **Clipboard unhandled rejections**: Added `.catch()` to `navigator.clipboard.writeText()` in CopyButton, Scans Copy ID, and ApiKeys Copy Key
+- **Background polling waste**: Set `refetchIntervalInBackground: false` as QueryClient default — polling pauses when tab is hidden
+- **Token refresh bypasses saveTokens**: `refreshAccessToken()` now uses centralized `saveTokens()` instead of raw `localStorage.setItem`
+
 ### Security — P0 Critical (Batch 3)
 - **SQL injection in db_event.py**: Replaced string-interpolated `IN` clauses in `scanElementSourcesDirect` and `scanElementChildrenDirect` with parameterized placeholders; added early-return on empty input
 - **Jinja2 SSTI sandbox**: Replaced `jinja2.Environment` with `jinja2.sandbox.SandboxedEnvironment` in report_templates.py; replaced dangerous `str.format()` fallback with `string.Template.safe_substitute()`
