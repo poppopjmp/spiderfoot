@@ -4,6 +4,7 @@ import { sanitizeHTML } from '../lib/sanitize';
 import { Briefcase, Plus, Trash2, Target, Copy, CheckCircle2, FolderOpen, Clock, Edit2, Radar, Link2, Unlink, Brain, FileText, Sparkles, Edit3, Save, Loader2, AlertTriangle, BarChart3, Shield, MapPin } from 'lucide-react';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { StatusBadge, Toast, Tabs, ConfirmDialog, ModalShell, type ToastType } from '../components/ui';
+import { safeSetItem } from '../lib/safeStorage';
 import { Link } from 'react-router-dom';
 
 type WorkspaceTab = 'overview' | 'targets' | 'scans' | 'correlations' | 'geomap' | 'report';
@@ -884,7 +885,7 @@ function WorkspaceReportCard({ workspaceId, workspace, summary, scanIds }: {
       const reportData = data?.data ?? data;
       const md = reportData?.report ?? reportData?.content ?? reportData?.markdown ?? JSON.stringify(data, null, 2);
       setReportContent(md);
-      localStorage.setItem(storageKey, md);
+      safeSetItem(storageKey, md);
     },
     onError: (err: Error) => {
       console.error('Failed to generate workspace report:', err);
@@ -925,7 +926,7 @@ function WorkspaceReportCard({ workspaceId, workspace, summary, scanIds }: {
     ];
     const md = lines.join('\n');
     setReportContent(md);
-    localStorage.setItem(storageKey, md);
+    safeSetItem(storageKey, md);
   }, [workspace, workspaceId, summary, storageKey]);
 
   const startEditing = () => {
@@ -936,7 +937,7 @@ function WorkspaceReportCard({ workspaceId, workspace, summary, scanIds }: {
 
   const saveEdit = () => {
     setReportContent(editContent);
-    localStorage.setItem(storageKey, editContent);
+    safeSetItem(storageKey, editContent);
     setIsEditing(false);
   };
 

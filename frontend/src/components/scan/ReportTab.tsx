@@ -1,5 +1,6 @@
 import { memo, useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { safeSetItem } from '../../lib/safeStorage';
 import {
   scanApi, agentsApi, formatDuration,
   type Scan, type ScanEvent, type ScanCorrelation, type EventSummaryDetail,
@@ -274,7 +275,7 @@ function ReportTab({ scanId, scan }: { scanId: string; scan?: Scan }) {
     onSuccess: (data) => {
       const md = extractReportMarkdown(data, scan?.target ?? '');
       setReportContent(md);
-      localStorage.setItem(storageKey, md);
+      safeSetItem(storageKey, md);
     },
     onError: (err: Error) => {
       console.error('Failed to generate report:', err);
@@ -357,7 +358,7 @@ function ReportTab({ scanId, scan }: { scanId: string; scan?: Scan }) {
 
     const md = lines.join('\n');
     setReportContent(md);
-    localStorage.setItem(storageKey, md);
+    safeSetItem(storageKey, md);
   }, [summaryData, corrData, scan, scanId, storageKey, geoPayload]);
 
   const startEditing = () => {
@@ -368,7 +369,7 @@ function ReportTab({ scanId, scan }: { scanId: string; scan?: Scan }) {
 
   const saveEdit = () => {
     setReportContent(editContent);
-    localStorage.setItem(storageKey, editContent);
+    safeSetItem(storageKey, editContent);
     setIsEditing(false);
   };
 
