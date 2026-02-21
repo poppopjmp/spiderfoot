@@ -5,7 +5,8 @@
  * LDAP, and SAML. Includes group→role mapping configuration.
  * Only accessible to users with config:write permission.
  */
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Shield,
   Plus,
@@ -104,9 +105,7 @@ const KEYCLOAK_DEFAULTS = {
 // ── Component ────────────────────────────────────────────
 
 export default function SSOSettingsPage() {
-  const [providers, setProviders] = useState<SSOProviderRecord[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
 
   // Modals
@@ -116,32 +115,22 @@ export default function SSOSettingsPage() {
 
   // ── Data fetching ──────────────────────────────────────
 
-  const fetchProviders = useCallback(async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const res = await api.get('/api/auth/sso/providers/all');
-      setProviders(res.data.items || []);
-    } catch (err: unknown) {
-      setError(getErrorMessage(err, 'Failed to load SSO providers'));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchProviders();
-  }, [fetchProviders]);
+  const { data: providers = [], isLoading: loading, error: queryError } = useQuery<SSOProviderRecord[]>({
+    queryKey: ['sso-providers'],
+    queryFn: ({ signal }) => api.get('/api/auth/sso/providers/all', { signal }).then(r => r.data.items || []),
+  });
 
   // Toggle enabled state
-  const toggleProvider = async (p: SSOProviderRecord) => {
-    try {
-      await api.patch(`/api/auth/sso/providers/${p.id}`, { enabled: !p.enabled });
-      fetchProviders();
-    } catch (err: unknown) {
-      setError(getErrorMessage(err, 'Failed to toggle provider'));
-    }
-  };
+  const toggleMutation = useMutation({
+    mutationFn: (p: SSOProviderRecord) => api.patch(`/api/auth/sso/providers/${p.id}`, { enabled: !p.enabled }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['sso-providers'] }),
+  });
+
+  const error = queryError
+    ? getErrorMessage(queryError, 'Failed to load SSO providers')
+    : toggleMutation.error
+      ? getErrorMessage(toggleMutation.error, 'Failed to toggle provider')
+      : '';
 
   // ── Filter ─────────────────────────────────────────────
 
@@ -289,7 +278,7 @@ export default function SSOSettingsPage() {
                 </div>
                 <div className="flex items-center gap-1">
                   <button
-                    onClick={() => toggleProvider(p)}
+                    onClick={() => toggleMutation.mutate(p)}
                     className="p-1.5 text-dark-500 hover:text-spider-400 hover:bg-dark-700 rounded-lg transition-colors"
                     title={p.enabled ? 'Disable' : 'Enable'}
                   >
@@ -320,21 +309,21 @@ export default function SSOSettingsPage() {
       {showCreate && (
         <ProviderFormModal
           onClose={() => setShowCreate(false)}
-          onSaved={() => { setShowCreate(false); fetchProviders(); }}
+          onSaved={() => { setShowCreate(false); queryClient.invalidateQueries({ queryKey: ['sso-providers'] }); }}
         />
       )}
       {editProvider && (
         <ProviderFormModal
           provider={editProvider}
           onClose={() => setEditProvider(null)}
-          onSaved={() => { setEditProvider(null); fetchProviders(); }}
+          onSaved={() => { setEditProvider(null); queryClient.invalidateQueries({ queryKey: ['sso-providers'] }); }}
         />
       )}
       {deleteProvider && (
         <DeleteProviderModal
           provider={deleteProvider}
           onClose={() => setDeleteProvider(null)}
-          onDeleted={() => { setDeleteProvider(null); fetchProviders(); }}
+          onDeleted={() => { setDeleteProvider(null); queryClient.invalidateQueries({ queryKey: ['sso-providers'] }); }}
         />
       )}
     </div>
@@ -411,8 +400,18 @@ function ProviderFormModal({
   const [spEntityId, setSpEntityId] = useState(provider?.sp_entity_id || '');
   const [spAcsUrl, setSpAcsUrl] = useState(provider?.sp_acs_url || '');
 
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+
+  const saveMutation = useMutation({
+    mutationFn: (body: Record<string, unknown>) => {
+      if (isEdit) {
+        return api.patch(`/api/auth/sso/providers/${provider!.id}`, body).then(r => r.data);
+      }
+      return api.post('/api/auth/sso/providers', body).then(r => r.data);
+    },
+    onSuccess: () => onSaved(),
+    onError: (err: unknown) => setError(getErrorMessage(err, 'Failed to save provider')),
+  });
 
   // Parse existing group_role_map from attribute_mapping
   useEffect(() => {
@@ -438,9 +437,8 @@ function ProviderFormModal({
     setAdminGroup(KEYCLOAK_DEFAULTS.admin_group);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setSaving(true);
     setError('');
 
     // Build attribute_mapping JSON with group_role_map
@@ -455,7 +453,6 @@ function ProviderFormModal({
       }
     } catch {
       setError('Group→Role mapping must be valid JSON (e.g. {"admins": "admin", "analysts": "analyst"})');
-      setSaving(false);
       return;
     }
 
@@ -500,18 +497,7 @@ function ProviderFormModal({
       });
     }
 
-    try {
-      if (isEdit) {
-        await api.patch(`/api/auth/sso/providers/${provider!.id}`, body);
-      } else {
-        await api.post('/api/auth/sso/providers', body);
-      }
-      onSaved();
-    } catch (err: unknown) {
-      setError(getErrorMessage(err, 'Failed to save provider'));
-    } finally {
-      setSaving(false);
-    }
+    saveMutation.mutate(body);
   };
 
   return (
@@ -693,8 +679,8 @@ function ProviderFormModal({
             <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-dark-400 hover:text-dark-200 transition-colors">
               Cancel
             </button>
-            <button type="submit" disabled={saving} className="px-4 py-2 bg-spider-600 hover:bg-spider-500 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors">
-              {saving ? 'Saving...' : isEdit ? 'Save Changes' : 'Create Provider'}
+            <button type="submit" disabled={saveMutation.isPending} className="px-4 py-2 bg-spider-600 hover:bg-spider-500 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors">
+              {saveMutation.isPending ? 'Saving...' : isEdit ? 'Save Changes' : 'Create Provider'}
             </button>
           </div>
         </div>
@@ -717,20 +703,14 @@ function DeleteProviderModal({
   onClose: () => void;
   onDeleted: () => void;
 }) {
-  const [deleting, setDeleting] = useState(false);
-  const [error, setError] = useState('');
+  const deleteMutation = useMutation({
+    mutationFn: () => api.delete(`/api/auth/sso/providers/${provider.id}`),
+    onSuccess: () => onDeleted(),
+  });
 
-  const handleDelete = async () => {
-    setDeleting(true);
-    setError('');
-    try {
-      await api.delete(`/api/auth/sso/providers/${provider.id}`);
-      onDeleted();
-    } catch (err: unknown) {
-      setError(getErrorMessage(err, 'Failed to delete provider'));
-      setDeleting(false);
-    }
-  };
+  const error = deleteMutation.error
+    ? getErrorMessage(deleteMutation.error, 'Failed to delete provider')
+    : '';
 
   return (
     <ModalShell title="Delete SSO Provider" onClose={onClose}>
@@ -750,8 +730,8 @@ function DeleteProviderModal({
           <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-dark-400 hover:text-dark-200 transition-colors">
             Cancel
           </button>
-          <button onClick={handleDelete} disabled={deleting} className="px-4 py-2 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors">
-            {deleting ? 'Deleting...' : 'Delete Provider'}
+          <button onClick={() => deleteMutation.mutate()} disabled={deleteMutation.isPending} className="px-4 py-2 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors">
+            {deleteMutation.isPending ? 'Deleting...' : 'Delete Provider'}
           </button>
         </div>
       </div>
