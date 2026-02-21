@@ -50,8 +50,7 @@ docker build \
 echo "[2/5] Building API image..."
 docker build \
     -f docker/Dockerfile.api \
-    --build-arg "REGISTRY=${REGISTRY}" \
-    --build-arg "TAG=$TAG" \
+    --build-arg "BASE_IMAGE=${REGISTRY}spiderfoot-base:$TAG" \
     -t "${REGISTRY}spiderfoot-api:latest" \
     -t "${REGISTRY}spiderfoot-api:$TAG" \
     .
@@ -60,8 +59,7 @@ docker build \
 echo "[3/5] Building scanner image..."
 docker build \
     -f docker/Dockerfile.scanner \
-    --build-arg "REGISTRY=${REGISTRY}" \
-    --build-arg "TAG=$TAG" \
+    --build-arg "BASE_IMAGE=${REGISTRY}spiderfoot-base:$TAG" \
     -t "${REGISTRY}spiderfoot-scanner:latest" \
     -t "${REGISTRY}spiderfoot-scanner:$TAG" \
     .
@@ -70,8 +68,7 @@ docker build \
 echo "[4/5] Building active-scanner image..."
 docker build \
     -f docker/Dockerfile.active-scanner \
-    --build-arg "REGISTRY=${REGISTRY}" \
-    --build-arg "TAG=$TAG" \
+    --build-arg "BASE_IMAGE=${REGISTRY}spiderfoot-base:$TAG" \
     -t "${REGISTRY}spiderfoot-active-scanner:latest" \
     -t "${REGISTRY}spiderfoot-active-scanner:$TAG" \
     .

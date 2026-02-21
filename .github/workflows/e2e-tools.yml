@@ -4,12 +4,16 @@ on:
   push:
     branches: [main, dev-*]
     paths:
+      - 'docker/Dockerfile.active-scanner'
+      - 'docker/Dockerfile.base'
       - 'Dockerfile.active-worker'
       - 'modules/sfp_tool_*.py'
       - '.github/workflows/e2e-tools.yml'
   pull_request:
     branches: [main]
     paths:
+      - 'docker/Dockerfile.active-scanner'
+      - 'docker/Dockerfile.base'
       - 'Dockerfile.active-worker'
       - 'modules/sfp_tool_*.py'
       - '.github/workflows/e2e-tools.yml'
@@ -22,9 +26,9 @@ env:
   PYTHON_VERSION: "3.11"
 
 jobs:
-  # ─── Job 1: Build the active-worker image ──────────────────────────────────
-  build-active-worker:
-    name: Build Active Worker Image
+  # ─── Job 1: Build the active-scanner image ─────────────────────────────────
+  build-active-scanner:
+    name: Build Active Scanner Image
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -32,55 +36,55 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build base image (spiderfoot-micro)
+      - name: Build base image
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: Dockerfile
+          file: docker/Dockerfile.base
           push: false
           load: true
-          tags: spiderfoot-micro:latest
+          tags: spiderfoot-base:latest
           cache-from: type=gha,scope=base
           cache-to: type=gha,scope=base,mode=max
 
-      - name: Build active-worker image
+      - name: Build active-scanner image
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: Dockerfile.active-worker
+          file: docker/Dockerfile.active-scanner
           push: false
           load: true
           tags: spiderfoot-active:latest
-          build-args: BASE_IMAGE=spiderfoot-micro:latest
-          cache-from: type=gha,scope=active-worker
-          cache-to: type=gha,scope=active-worker,mode=max
+          build-args: BASE_IMAGE=spiderfoot-base:latest
+          cache-from: type=gha,scope=active-scanner
+          cache-to: type=gha,scope=active-scanner,mode=max
 
-      - name: Save active-worker image
-        run: docker save spiderfoot-active:latest | gzip > /tmp/active-worker.tar.gz
+      - name: Save active-scanner image
+        run: docker save spiderfoot-active:latest | gzip > /tmp/active-scanner.tar.gz
 
       - name: Upload image artifact
         uses: actions/upload-artifact@v4
         with:
-          name: active-worker-image
-          path: /tmp/active-worker.tar.gz
+          name: active-scanner-image
+          path: /tmp/active-scanner.tar.gz
           retention-days: 1
 
   # ─── Job 2: Verify all tool binaries are present and runnable ──────────────
   verify-tools:
     name: Verify Tool Binaries
     runs-on: ubuntu-latest
-    needs: build-active-worker
+    needs: build-active-scanner
     steps:
       - uses: actions/checkout@v4
 
       - name: Download image artifact
         uses: actions/download-artifact@v4
         with:
-          name: active-worker-image
+          name: active-scanner-image
           path: /tmp
 
       - name: Load image
-        run: docker load < /tmp/active-worker.tar.gz
+        run: docker load < /tmp/active-scanner.tar.gz
 
       - name: Verify Go tools
         run: |
@@ -146,18 +150,18 @@ jobs:
   verify-modules:
     name: Verify Module Loading
     runs-on: ubuntu-latest
-    needs: build-active-worker
+    needs: build-active-scanner
     steps:
       - uses: actions/checkout@v4
 
       - name: Download image artifact
         uses: actions/download-artifact@v4
         with:
-          name: active-worker-image
+          name: active-scanner-image
           path: /tmp
 
       - name: Load image
-        run: docker load < /tmp/active-worker.tar.gz
+        run: docker load < /tmp/active-scanner.tar.gz
 
       - name: Verify all sfp_tool modules import
         run: |
@@ -212,11 +216,11 @@ jobs:
       - name: Download image artifact
         uses: actions/download-artifact@v4
         with:
-          name: active-worker-image
+          name: active-scanner-image
           path: /tmp
 
       - name: Load image
-        run: docker load < /tmp/active-worker.tar.gz
+        run: docker load < /tmp/active-scanner.tar.gz
 
       - name: Test httpx against example.com
         run: |

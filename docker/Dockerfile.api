@@ -7,9 +7,8 @@
 #   docker build -f docker/Dockerfile.base -t spiderfoot-base:latest .
 #   docker build -f docker/Dockerfile.api  -t spiderfoot-api:latest .
 # =============================================================================
-ARG REGISTRY=
-ARG TAG=latest
-FROM ${REGISTRY}spiderfoot-base:${TAG}
+ARG BASE_IMAGE=spiderfoot-base:latest
+FROM ${BASE_IMAGE}
 
 LABEL org.opencontainers.image.title="SpiderFoot API" \
       org.opencontainers.image.description="SpiderFoot REST API (FastAPI/Uvicorn)"

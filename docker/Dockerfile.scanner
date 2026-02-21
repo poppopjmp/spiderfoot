@@ -8,9 +8,8 @@
 #   docker build -f docker/Dockerfile.base    -t spiderfoot-base:latest .
 #   docker build -f docker/Dockerfile.scanner -t spiderfoot-scanner:latest .
 # =============================================================================
-ARG REGISTRY=
-ARG TAG=latest
-FROM ${REGISTRY}spiderfoot-base:${TAG}
+ARG BASE_IMAGE=spiderfoot-base:latest
+FROM ${BASE_IMAGE}
 
 LABEL org.opencontainers.image.title="SpiderFoot Scanner" \
       org.opencontainers.image.description="Celery worker for passive tasks (reports, exports, agents, monitoring)"

@@ -12,15 +12,11 @@
 # same recon tools as docker/Dockerfile.active-scanner.
 # =============================================================================
 
-# Re-export from the canonical Dockerfile
-ARG REGISTRY=
-ARG TAG=latest
-FROM ${REGISTRY}spiderfoot-base:${TAG} AS base
-
-# Pull in the full active-scanner build
-FROM base
-COPY --from=base / /
-
 # NOTE: This file exists only for backwards compatibility with CI/CD
 # pipelines that reference Dockerfile.active-worker by name.
 # For new deployments, use docker/Dockerfile.active-scanner directly.
+#
+# This wrapper simply re-exports the base image.  For actual active scanning
+# tools, the CI should use docker/Dockerfile.active-scanner instead.
+ARG BASE_IMAGE=spiderfoot-base:latest
+FROM ${BASE_IMAGE}
