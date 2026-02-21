@@ -205,7 +205,8 @@ class NotificationService:
             headers=headers,
             method="POST",
         )
-        urllib.request.urlopen(req, timeout=10)
+        with urllib.request.urlopen(req, timeout=10):
+            pass  # response body not needed
         log.info("Webhook notification sent: %s", title)
 
     def _send_slack(
@@ -248,7 +249,8 @@ class NotificationService:
             headers={"Content-Type": "application/json"},
             method="POST",
         )
-        urllib.request.urlopen(req, timeout=10)
+        with urllib.request.urlopen(req, timeout=10):
+            pass  # response body not needed
         log.info("Slack notification sent: %s", title)
 
     def _send_discord(
@@ -289,7 +291,8 @@ class NotificationService:
             headers={"Content-Type": "application/json"},
             method="POST",
         )
-        urllib.request.urlopen(req, timeout=10)
+        with urllib.request.urlopen(req, timeout=10):
+            pass  # response body not needed
         log.info("Discord notification sent: %s", title)
 
     def _send_email(
