@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
 from spiderfoot.asm import (
@@ -18,10 +18,11 @@ from spiderfoot.asm import (
     AssetRisk,
     AssetStatus,
 )
+from ..dependencies import get_api_key
 
 logger = logging.getLogger("spiderfoot.api.asm")
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_api_key)])
 
 # Singleton inventory
 _inventory = AssetInventory()

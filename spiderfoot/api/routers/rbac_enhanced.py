@@ -9,14 +9,15 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from spiderfoot.rbac_enhanced import EnhancedRBACManager, ALL_PERMISSIONS
+from ..dependencies import get_api_key
 
 logger = logging.getLogger("spiderfoot.api.rbac_enhanced")
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_api_key)])
 
 _manager = EnhancedRBACManager()
 

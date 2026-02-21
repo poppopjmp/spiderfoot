@@ -8,7 +8,7 @@ v5.7.0
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from typing import Any
 
@@ -17,8 +17,9 @@ from spiderfoot.distributed_scan import (
     BalancingStrategy,
     WorkerStatus,
 )
+from ..dependencies import get_api_key
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_api_key)])
 
 _manager = DistributedScanManager()
 
