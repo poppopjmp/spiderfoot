@@ -772,7 +772,8 @@ class SpiderFootCli(cmd.Cmd):
                 self.onecmd(line)
 
 
-if __name__ == "__main__":
+def main():
+    """Entry point for SpiderFoot CLI — called by console_scripts or __main__."""
     p = argparse.ArgumentParser(
         description='SpiderFoot: Open Source Intelligence Automation.')
     p.add_argument("-d", "--debug", help="Enable debug output.",
@@ -858,7 +859,8 @@ if __name__ == "__main__":
     s.config = config
 
     # Debug: print registered commands
-    print("[DEBUG] Registered commands:", list(s.registry.all_commands()))
+    if args.debug:
+        print("[DEBUG] Registered commands:", list(s.registry.all_commands()))
 
     # Banner and version output
     if not args.q:
@@ -900,3 +902,7 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("\n")
         sys.exit(0)
+
+
+if __name__ == "__main__":
+    main()

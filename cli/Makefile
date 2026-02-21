@@ -2,7 +2,7 @@
 # Requires Go 1.22+
 
 APP_NAME  := sf
-VERSION   := 5.9.2
+VERSION   := $(shell cat ../VERSION 2>/dev/null || echo 6.0.0-rc.1)
 BUILD_DIR := build
 GOFLAGS   := -trimpath
 LDFLAGS   := -s -w -X github.com/spiderfoot/spiderfoot-cli/cmd.version=$(VERSION)
