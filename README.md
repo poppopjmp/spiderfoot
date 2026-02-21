@@ -23,6 +23,8 @@ SpiderFoot is an open-source intelligence (OSINT) automation platform. It integr
 - [Quick Start](#quick-start)
 - [Deployment Modes](#deployment-modes)
 - [Services](#services)
+- [Security Hardening](#security-hardening)
+- [CLI (Go)](#cli-go)
 - [Monitoring & Observability](#monitoring--observability)
 - [Active Scan Worker](#active-scan-worker)
 - [Scan Profiles](#scan-profiles)
@@ -39,6 +41,7 @@ SpiderFoot is an open-source intelligence (OSINT) automation platform. It integr
 - [Modules](#modules)
 - [Correlation Engine](#correlation-engine)
 - [Web UI](#web-ui)
+- [Frontend Testing](#frontend-testing)
 - [Use Cases](#use-cases)
 - [Development](#development)
 - [Community](#community)
@@ -277,6 +280,81 @@ The Docker Compose deployment uses two networks (`sf-frontend`, `sf-backend`) an
 | `sf-data` | General application artefacts |
 | `sf-loki-data` | Loki chunk/index storage |
 | `sf-loki-ruler` | Loki ruler data |
+
+---
+
+## Security Hardening
+
+SpiderFoot v5.9.2 includes a comprehensive security hardening initiative (80+ commits, 9.0+ hardening score):
+
+### Authentication & Authorization
+
+- **JWT authentication** on all 38+ API routers with `Depends(require_auth)`
+- **WebSocket & SSE** auth validation — token verified before upgrade
+- **CSP / X-Frame-Options / X-Content-Type-Options** headers via FastAPI middleware
+- **SSO callback URL** origin validation (block open-redirect)
+- **CORS** restricted to explicit allowed origins
+
+### Input Validation & Injection Prevention
+
+- **DOMPurify** sanitization on every API response rendered in the UI
+- **SQL parameterization** audit across all database queries
+- **Jinja2 SandboxedEnvironment** replacing native `Template`
+- **SafeId** validation for all user-supplied identifiers (UUID format)
+- **API error responses** scrubbed of internal stack traces and system paths
+
+### Docker Hardening
+
+- 13/23 services hardened with `security_opt: [no-new-privileges:true]`
+- `read_only: true` + `tmpfs` mounts for ephemeral writes
+- `cap_drop: [ALL]` with minimal `cap_add` where required
+- Docker Socket Proxy limits (`POST=0`, `NETWORKS=0`, `VOLUMES=0`)
+
+### Frontend Security
+
+- **AbortSignal** on all 84+ API methods (cancel on unmount)
+- **XSS-safe MarkdownRenderer** with DOMPurify + `marked`
+- **Code splitting** — 10/12 pages lazy-loaded (reduced initial bundle)
+- **Content Security Policy** enforced at Nginx and API level
+
+---
+
+## CLI (Go)
+
+SpiderFoot ships with a **cross-platform Go CLI** (`cli/`) that compiles to a single static binary for Linux, macOS, and Windows. Built with [Cobra](https://github.com/spf13/cobra) and [Viper](https://github.com/spf13/viper).
+
+```bash
+cd cli && go build -o sf .
+
+# Health check
+sf health --server http://localhost:8001
+
+# Scan management
+sf scan list
+sf scan start --target example.com --name "Recon"
+sf scan get <scan-id>
+sf scan stop <scan-id>
+
+# Export
+sf export json <scan-id>
+sf export stix <scan-id>
+
+# Schedules
+sf schedule list
+sf schedule create --name "Daily" --target example.com --cron "0 0 * * *"
+
+# Modules
+sf modules --filter passive -o json
+```
+
+Cross-compile for all platforms:
+
+```bash
+cd cli && make all
+# Produces: build/sf-linux-amd64, sf-darwin-arm64, sf-windows-amd64.exe, ...
+```
+
+Configuration via flags, `SF_*` environment variables, or `~/.spiderfoot.yaml`. See [cli/README.md](cli/README.md) for full documentation.
 
 ---
 
@@ -820,6 +898,43 @@ Monitor and manage the 6 AI-powered analysis agents. View agent status, processe
 <img src="documentation/images/agents.png" alt="Agents" width="800" />
 </p>
 
+### Emotional Design Features
+
+The UI applies **emotional design principles** for a richer developer experience:
+
+- **Tooltip** — accessible, portal-based, viewport-clamped tooltips with `aria-describedby`
+- **Real-time Progress** — SSE-powered scan progress bar with per-module breakdown
+- **Celebration Banner** — animated success state when a scan completes
+- **Notification Center** — bell icon with unread badge, notification panel (Zustand store, max 50 items)
+- **Command Palette** — `Ctrl+K` / `⌘K` fuzzy search across pages and recent scans with keyboard navigation
+- **Schedules Page** — full CRUD for recurring scan schedules (create, edit, toggle, delete, manual trigger)
+- **STIX 2.1 Export** — one-click export of scan data as a STIX bundle
+
+---
+
+## Frontend Testing
+
+The React frontend includes **247 tests** across 13 test files, powered by Vitest 3 and Testing Library:
+
+| Suite | Tests | Coverage |
+|-------|-------|----------|
+| UI Components | 47 | Button, Badge, StatusBadge, ProgressBar, CardSkeleton, EmptyState, ConfirmDialog, Toast, Tabs, ModalShell, PageHeader, RiskPills |
+| API Layer | 45 | All endpoint methods, error handling, auth headers, AbortSignal |
+| Auth | 36 | Login, logout, token refresh, SSO flows, role guards |
+| Login Page | 21 | Form validation, submission, SSO redirects, error states |
+| Layout | 18 | Navigation items, sidebar, responsive, NotificationCenter, CommandPalette |
+| Markdown Renderer | 16 + 14 | DOMPurify sanitization, XSS prevention, rendering |
+| Emotional Design | 13 | Tooltip lifecycle, notification store CRUD, cap enforcement |
+| Sanitize | 7 | DOMPurify integration, script stripping, attribute cleaning |
+| ErrorBoundary | 8 | Crash recovery, fallback UI, error logging |
+| Schedules | 4 | Page rendering, empty state, data display, create modal |
+| Safe Storage | 4 | localStorage quota handling |
+
+```bash
+cd frontend && npx vitest run    # Run all tests
+cd frontend && npx vitest --ui   # Interactive UI mode
+```
+
 ---
 
 ## Use Cases
@@ -850,27 +965,14 @@ IP addresses · domains · subdomains · hostnames · CIDR subnets · ASNs · em
 
 ```
 spiderfoot/
-├── api/                  # FastAPI application
+├── api/                  # FastAPI application (38+ routers)
 │   ├── graphql/          # Strawberry GraphQL (queries, mutations, subscriptions)
 │   ├── routers/          # REST endpoint routers
 │   ├── schemas.py        # Pydantic v2 contracts
 │   └── versioning.py     # /api/v1/ prefix
 ├── agents/               # AI analysis agents (6 LLM-powered)
-│   ├── base.py           # BaseAgent ABC + framework
-│   ├── service.py        # FastAPI agent service (:8100)
-│   ├── finding_validator.py
-│   ├── credential_analyzer.py
-│   ├── text_summarizer.py
-│   ├── report_generator.py
-│   ├── document_analyzer.py
-│   └── threat_intel.py
 ├── enrichment/           # Document enrichment pipeline
-│   ├── converter.py      # Multi-format document conversion
-│   ├── extractor.py      # Entity/IOC regex extraction
-│   ├── pipeline.py       # Convert → extract → store orchestrator
-│   └── service.py        # FastAPI enrichment service (:8200)
 ├── user_input/           # User-defined input ingestion
-│   └── service.py        # FastAPI user input service (:8300)
 ├── config/               # App configuration
 ├── db/                   # Database layer (repositories, migrations)
 ├── events/               # Event types, relay, dedup
@@ -879,18 +981,28 @@ spiderfoot/
 ├── services/             # External integrations (embedding, cache, DNS)
 ├── observability/        # Logging, metrics, health, tracing
 ├── reporting/            # Report generation and export
-├── data_service/         # HTTP/gRPC DataService clients
-├── webui/                # CherryPy web UI
-├── qdrant_client.py      # Qdrant vector store client
+├── cli/commands/         # Python CLI commands (25 commands)
 └── vector_correlation.py # Vector correlation engine
+cli/                      # Go CLI (cross-platform, Cobra-based)
+├── cmd/                  # Commands: scan, modules, export, schedule, health, config
+├── internal/client/      # HTTP client with auth, TLS
+├── internal/output/      # Table, JSON, CSV formatters
+├── Makefile              # Cross-compilation (6 targets)
+└── go.mod                # Go module definition
+frontend/                 # React SPA (TypeScript + Vite + Tailwind)
+├── src/components/       # UI components (20+ primitives, Layout, NotificationCenter, CommandPalette)
+├── src/pages/            # 14 pages (Dashboard, Scans, ScanDetail, Schedules, ...)
+├── src/hooks/            # Custom hooks (useScanProgress SSE)
+├── src/lib/              # API client, auth, notifications store
+├── src/__tests__/        # 247 tests — Vitest + Testing Library
+└── vite.config.ts        # Build config
 infra/                    # Infrastructure configs
 ├── grafana/              # Dashboards + datasource provisioning
 ├── loki/                 # Loki local config (MinIO S3 backend)
 ├── litellm/              # LiteLLM model config
 └── prometheus/           # Scrape targets config
-frontend/                 # React SPA (TypeScript + Vite + Tailwind)
 modules/                  # 283 OSINT modules
-correlations/             # 52 YAML correlation rules
+correlations/             # 94 YAML correlation rules
 documentation/            # Comprehensive docs
 scripts/                  # Utility and maintenance scripts
 docker/                   # Docker build files + nginx config
@@ -900,8 +1012,15 @@ helm/                     # Kubernetes Helm chart
 ### Running Tests
 
 ```bash
+# Backend tests
 pip install -r requirements.txt
 pytest --tb=short -q
+
+# Frontend tests (247 tests, 13 files)
+cd frontend && npx vitest run
+
+# Go CLI tests
+cd cli && go test ./...
 ```
 
 ### Version Management
@@ -928,4 +1047,4 @@ SpiderFoot is licensed under the [MIT License](LICENSE).
 
 ---
 
-*Actively developed since 2012 — 300+ modules, 36 external recon tools, 94 correlation rules, 21-service Docker deployment with AI agents, vector search, and full observability.*
+*Actively developed since 2012 — 300+ modules, 38+ API routers, 94 correlation rules, 21-service Docker deployment, Go CLI, 247 frontend tests, comprehensive security hardening (9.0+ score), AI agents, vector search, and full observability.*
