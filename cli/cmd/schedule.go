@@ -11,15 +11,20 @@ import (
 )
 
 type schedule struct {
-	ID             string  `json:"id"`
-	Name           string  `json:"name"`
-	Target         string  `json:"target"`
-	ScanType       string  `json:"scan_type"`
-	CronExpression string  `json:"cron_expression"`
-	Enabled        bool    `json:"enabled"`
-	LastRun        float64 `json:"last_run"`
-	NextRun        float64 `json:"next_run"`
-	CreatedAt      float64 `json:"created_at"`
+	ID            string   `json:"id"`
+	Name          string   `json:"name"`
+	Target        string   `json:"target"`
+	Engine        *string  `json:"engine"`
+	Modules       []string `json:"modules"`
+	IntervalHours float64  `json:"interval_hours"`
+	Enabled       bool     `json:"enabled"`
+	Description   string   `json:"description"`
+	Tags          []string `json:"tags"`
+	RunsCompleted int      `json:"runs_completed"`
+	MaxRuns       int      `json:"max_runs"`
+	LastRunAt     *float64 `json:"last_run_at"`
+	NextRunAt     *float64 `json:"next_run_at"`
+	CreatedAt     float64  `json:"created_at"`
 }
 
 type schedulesResp struct {
@@ -27,11 +32,11 @@ type schedulesResp struct {
 }
 
 type scheduleCreateReq struct {
-	Name           string `json:"name"`
-	Target         string `json:"target"`
-	ScanType       string `json:"scan_type"`
-	CronExpression string `json:"cron_expression"`
-	Enabled        bool   `json:"enabled"`
+	Name          string  `json:"name"`
+	Target        string  `json:"target"`
+	IntervalHours float64 `json:"interval_hours"`
+	Enabled       bool    `json:"enabled"`
+	Description   string  `json:"description,omitempty"`
 }
 
 var scheduleCmd = &cobra.Command{
@@ -54,21 +59,37 @@ var scheduleListCmd = &cobra.Command{
 		case output.JSON:
 			output.PrintJSON(resp.Schedules)
 		case output.CSV:
-			header := []string{"ID", "Name", "Target", "Cron", "Enabled", "Next Run"}
+			header := []string{"ID", "Name", "Target", "Interval", "Enabled", "Runs", "Next Run"}
 			rows := make([][]string, 0, len(resp.Schedules))
 			for _, s := range resp.Schedules {
-				rows = append(rows, []string{s.ID, s.Name, s.Target, s.CronExpression, fmt.Sprintf("%v", s.Enabled), formatEpoch(s.NextRun)})
+				nextRun := float64(0)
+				if s.NextRunAt != nil {
+					nextRun = *s.NextRunAt
+				}
+				rows = append(rows, []string{s.ID, s.Name, s.Target, fmt.Sprintf("%.1fh", s.IntervalHours), fmt.Sprintf("%v", s.Enabled), fmt.Sprintf("%d", s.RunsCompleted), formatEpoch(nextRun)})
 			}
 			output.PrintCSV(header, rows)
 		default:
-			header := []string{"ID", "Name", "Target", "Cron", "Enabled", "Next Run"}
+			header := []string{"ID", "Name", "Target", "Interval", "Enabled", "Runs", "Next Run"}
 			rows := make([][]string, 0, len(resp.Schedules))
 			for _, s := range resp.Schedules {
 				enabled := "✓"
 				if !s.Enabled {
 					enabled = "✗"
 				}
-				rows = append(rows, []string{truncID(s.ID), s.Name, s.Target, s.CronExpression, enabled, formatEpoch(s.NextRun)})
+				interval := fmt.Sprintf("%.0fh", s.IntervalHours)
+				if s.IntervalHours >= 24 {
+					interval = fmt.Sprintf("%.0fd", s.IntervalHours/24)
+				}
+				nextRun := float64(0)
+				if s.NextRunAt != nil {
+					nextRun = *s.NextRunAt
+				}
+				runs := fmt.Sprintf("%d", s.RunsCompleted)
+				if s.MaxRuns > 0 {
+					runs = fmt.Sprintf("%d/%d", s.RunsCompleted, s.MaxRuns)
+				}
+				rows = append(rows, []string{truncID(s.ID), s.Name, s.Target, interval, enabled, runs, formatEpoch(nextRun)})
 			}
 			output.PrintTable(header, rows)
 		}
@@ -82,21 +103,24 @@ var scheduleCreateCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		name, _ := cmd.Flags().GetString("name")
 		target, _ := cmd.Flags().GetString("target")
-		scanType, _ := cmd.Flags().GetString("type")
-		cron, _ := cmd.Flags().GetString("cron")
+		interval, _ := cmd.Flags().GetFloat64("interval")
+		description, _ := cmd.Flags().GetString("description")
 
-		if name == "" || target == "" || cron == "" {
-			return fmt.Errorf("--name, --target, and --cron are required")
+		if name == "" || target == "" || interval <= 0 {
+			return fmt.Errorf("--name, --target, and --interval (>0) are required")
 		}
 
 		body := scheduleCreateReq{
-			Name:           name,
-			Target:         target,
-			ScanType:       scanType,
-			CronExpression: cron,
-			Enabled:        true,
+			Name:          name,
+			Target:        target,
+			IntervalHours: interval,
+			Enabled:       true,
+			Description:   description,
 		}
-		payload, _ := json.Marshal(body)
+		payload, err := json.Marshal(body)
+		if err != nil {
+			return fmt.Errorf("failed to marshal request: %w", err)
+		}
 
 		c := client.New()
 		var resp map[string]interface{}
@@ -146,8 +170,8 @@ var scheduleTriggerCmd = &cobra.Command{
 func init() {
 	scheduleCreateCmd.Flags().StringP("name", "n", "", "Schedule name (required)")
 	scheduleCreateCmd.Flags().StringP("target", "t", "", "Scan target (required)")
-	scheduleCreateCmd.Flags().String("type", "all", "Scan type")
-	scheduleCreateCmd.Flags().String("cron", "", "Cron expression (required), e.g. '0 0 * * *'")
+	scheduleCreateCmd.Flags().Float64("interval", 24, "Interval in hours between runs (required)")
+	scheduleCreateCmd.Flags().StringP("description", "d", "", "Schedule description")
 
 	scheduleCmd.AddCommand(scheduleListCmd)
 	scheduleCmd.AddCommand(scheduleCreateCmd)

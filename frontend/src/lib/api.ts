@@ -682,9 +682,6 @@ export const scheduleApi = {
 /* ── STIX Export API ───────────────────────────────────────── */
 
 export const stixApi = {
-  exportBundle: (scanId: string, eventTypes?: string[], signal?: AbortSignal) =>
-    api.post('/api/stix/export', {
-      scan_id: scanId,
-      event_types: eventTypes ?? [],
-    }, { signal }).then((r) => r.data),
+  exportBundle: (scanId: string, _eventTypes?: string[], signal?: AbortSignal) =>
+    api.get(`/scans/${scanId}/export/stix`, { signal }).then((r) => r.data),
 };

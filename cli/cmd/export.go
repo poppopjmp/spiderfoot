@@ -71,13 +71,6 @@ func doExport(scanID, format, ext string) error {
 	return nil
 }
 
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
 func init() {
 	exportCmd.PersistentFlags().StringP("file", "f", "", "Output filename (auto-generated if omitted)")
 

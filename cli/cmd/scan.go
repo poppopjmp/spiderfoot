@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/spiderfoot/spiderfoot-cli/internal/client"
 	"github.com/spiderfoot/spiderfoot-cli/internal/output"
@@ -142,7 +143,10 @@ var scanStartCmd = &cobra.Command{
 			body.Modules = strings.Split(modules, ",")
 		}
 
-		payload, _ := json.Marshal(body)
+		payload, err := json.Marshal(body)
+		if err != nil {
+			return fmt.Errorf("marshaling request: %w", err)
+		}
 		c := client.New()
 		var resp map[string]interface{}
 		if err := c.Post("/api/scans", bytes.NewReader(payload), &resp); err != nil {
@@ -197,11 +201,11 @@ var scanDeleteCmd = &cobra.Command{
 func colorStatus(s string) string {
 	switch strings.ToUpper(s) {
 	case "RUNNING", "STARTED":
-		return "\033[33m" + s + "\033[0m" // yellow
+		return color.YellowString(s)
 	case "FINISHED", "COMPLETED":
-		return "\033[32m" + s + "\033[0m" // green
+		return color.GreenString(s)
 	case "FAILED", "ERROR", "ABORTED":
-		return "\033[31m" + s + "\033[0m" // red
+		return color.RedString(s)
 	default:
 		return s
 	}

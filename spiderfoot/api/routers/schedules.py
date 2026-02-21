@@ -54,6 +54,20 @@ class ScheduleCreateRequest(BaseModel):
     max_runs: int = Field(0, ge=0, description="Max runs (0 = unlimited)")
 
 
+class ScheduleUpdateRequest(BaseModel):
+    """Request body for updating a schedule — all fields optional."""
+    name: str | None = Field(None, min_length=1, max_length=200, description="Schedule name")
+    target: str | None = Field(None, description="Scan target")
+    engine: str | None = Field(None, description="Scan engine profile name")
+    modules: list[str] | None = Field(None, description="Module list (overrides engine)")
+    interval_hours: float | None = Field(None, ge=0.25, le=8760, description="Run every N hours")
+    enabled: bool | None = Field(None, description="Whether the schedule is active")
+    description: str | None = Field(None)
+    tags: list[str] | None = Field(None)
+    notify_on_change: bool | None = Field(None, description="Send notification when changes detected")
+    max_runs: int | None = Field(None, ge=0, description="Max runs (0 = unlimited)")
+
+
 class ScheduleResponse(BaseModel):
     """Schedule detail response."""
     id: str
@@ -205,34 +219,23 @@ async def get_schedule(
 
 
 @router.put("/{schedule_id}", response_model=ScheduleResponse)
+@router.patch("/{schedule_id}", response_model=ScheduleResponse)
 async def update_schedule(
     schedule_id: str,
-    request: ScheduleCreateRequest,
+    request: ScheduleUpdateRequest,
     api_key: str = api_key_dep,
 ) -> ScheduleResponse:
-    """Update an existing schedule."""
+    """Update an existing schedule (partial update — only supplied fields change)."""
     existing = _get_schedule(schedule_id)
     if not existing:
         raise HTTPException(status_code=404, detail="Schedule not found")
 
-    now = time.time()
-    schedule_data = {
-        "id": schedule_id,
-        "name": request.name,
-        "target": request.target,
-        "engine": request.engine,
-        "modules": request.modules,
-        "interval_hours": request.interval_hours,
-        "enabled": request.enabled,
-        "description": request.description,
-        "tags": request.tags,
-        "notify_on_change": request.notify_on_change,
-        "max_runs": request.max_runs,
-        "runs_completed": existing.get("runs_completed", 0),
-        "last_run_at": existing.get("last_run_at"),
-        "next_run_at": now + (request.interval_hours * 3600),
-        "created_at": existing.get("created_at", now),
-    }
+    updates = request.model_dump(exclude_unset=True)
+    schedule_data = {**existing, **updates}
+
+    # Recalculate next_run_at if interval changed
+    if "interval_hours" in updates:
+        schedule_data["next_run_at"] = time.time() + (schedule_data["interval_hours"] * 3600)
 
     _store_schedule(schedule_data)
     log.info("Updated scan schedule '%s'", schedule_id)

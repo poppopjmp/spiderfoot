@@ -83,12 +83,14 @@ describe('Tooltip', () => {
     );
 
     const btn = screen.getByText('Target');
-    expect(btn.getAttribute('aria-describedby')).toBeNull();
+    // aria-describedby is on the wrapper span, not the child element
+    const wrapper = btn.parentElement!;
+    expect(wrapper.getAttribute('aria-describedby')).toBeNull();
 
-    fireEvent.mouseEnter(btn);
+    fireEvent.mouseEnter(wrapper);
     await act(async () => { vi.advanceTimersByTime(10); });
 
-    expect(btn.getAttribute('aria-describedby')).toBeTruthy();
+    expect(wrapper.getAttribute('aria-describedby')).toBeTruthy();
     vi.useRealTimers();
   });
 });

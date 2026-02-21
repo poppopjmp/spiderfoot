@@ -73,6 +73,7 @@ export function NotificationBell() {
   return (
     <button
       onClick={toggle}
+      data-notification-bell
       className="relative p-2 text-dark-400 hover:text-dark-200 hover:bg-dark-800 rounded-lg transition-colors"
       aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}
     >
@@ -90,11 +91,13 @@ export function NotificationPanel() {
   const { notifications, isOpen, setOpen, markAllRead, clear, unreadCount } = useNotificationStore();
   const panelRef = useRef<HTMLDivElement>(null);
 
-  // Close on outside click
+  // Close on outside click (exclude the bell button to prevent flicker)
   useEffect(() => {
     if (!isOpen) return;
     function handleClick(e: MouseEvent) {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+      const target = e.target as HTMLElement;
+      if (target.closest('[data-notification-bell]')) return;
+      if (panelRef.current && !panelRef.current.contains(target)) {
         setOpen(false);
       }
     }

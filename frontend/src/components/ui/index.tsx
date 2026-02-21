@@ -177,7 +177,7 @@ export function CopyButton({ text, className }: { text: string; className?: stri
 export function Tooltip({
   children, content, side = 'top', className, delayMs = 200,
 }: {
-  children: React.ReactElement;
+  children: React.ReactNode;
   content: React.ReactNode;
   side?: 'top' | 'bottom' | 'left' | 'right';
   className?: string;
@@ -243,14 +243,17 @@ export function Tooltip({
 
   return (
     <>
-      {React.cloneElement(children, {
-        ref: triggerRef,
-        onMouseEnter: show,
-        onMouseLeave: hide,
-        onFocus: show,
-        onBlur: hide,
-        'aria-describedby': visible ? tooltipId : undefined,
-      })}
+      <span
+        ref={triggerRef as React.RefObject<HTMLSpanElement>}
+        onMouseEnter={show}
+        onMouseLeave={hide}
+        onFocus={show}
+        onBlur={hide}
+        aria-describedby={visible ? tooltipId : undefined}
+        style={{ display: 'inline-flex' }}
+      >
+        {children}
+      </span>
       {visible && createPortal(
         <div
           ref={tooltipRef}
@@ -350,11 +353,13 @@ export function Toast({
 }) {
   const cfg = toastConfig[type];
   const Icon = cfg.icon;
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
-    const t = setTimeout(onClose, 5000);
+    const t = setTimeout(() => onCloseRef.current(), 5000);
     return () => clearTimeout(t);
-  }, [onClose]);
+  }, []);
 
   return (
     <div className={clsx(
@@ -378,13 +383,36 @@ export function ConfirmDialog({
   open: boolean; title: string; message: string; confirmLabel?: string; danger?: boolean;
   onConfirm: () => void; onCancel: () => void;
 }) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  // Focus trap + Escape key
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        onCancel();
+      }
+    };
+    document.addEventListener('keydown', handler);
+    // Focus first button when dialog opens
+    const timer = setTimeout(() => {
+      const btn = dialogRef.current?.querySelector<HTMLButtonElement>('button');
+      btn?.focus();
+    }, 50);
+    return () => {
+      document.removeEventListener('keydown', handler);
+      clearTimeout(timer);
+    };
+  }, [open, onCancel]);
+
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onCancel} />
-      <div className="relative bg-dark-800 border border-dark-700 rounded-2xl p-6 max-w-md w-full shadow-2xl animate-fade-in-up">
-        <h3 className="text-lg font-semibold text-foreground mb-2">{title}</h3>
+      <div ref={dialogRef} className="relative bg-dark-800 border border-dark-700 rounded-2xl p-6 max-w-md w-full shadow-2xl animate-fade-in-up">
+        <h3 id="confirm-title" className="text-lg font-semibold text-foreground mb-2">{title}</h3>
         <p className="text-sm text-dark-300 mb-6">{message}</p>
         <div className="flex justify-end gap-3">
           <button className="btn-secondary" onClick={onCancel}>Cancel</button>

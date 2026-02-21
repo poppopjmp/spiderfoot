@@ -9,10 +9,9 @@ import (
 	"github.com/spf13/viper"
 )
 
-const (
-	version     = "5.9.2"
-	defaultAddr = "http://127.0.0.1:8001"
-)
+var version = "5.9.2"
+
+const defaultAddr = "http://127.0.0.1:8001"
 
 var cfgFile string
 
