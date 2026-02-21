@@ -5,6 +5,16 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [5.9.2] — 2026-02-20 — Deep Security & Quality Hardening
 
+### Security — Defense-in-Depth (Batch 6)
+- **Error detail leak sweep (25 more instances)**: Sanitized 5 GraphQL resolver `message=str(e)`, 13 health endpoint `str(e)` (leaking DSNs/URLs), and 7 scan bulk-op / reports / engines `str(e)` with generic messages; all server-side logging preserved
+- **Path parameter validation**: Added `SafeId` (`^[a-zA-Z0-9_\\-]{1,64}$`) and `SafeName` type aliases to dependencies.py; applied to 59 route handlers across scan.py (38), workspace.py (17), and reports.py (4) — FastAPI returns 422 for non-matching input
+- **Content-Security-Policy header**: Added `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; frame-ancestors 'none'` to `SecurityHeaders.DEFAULT_HEADERS`
+- **HSTS opt-in**: Added `get_headers()` classmethod that includes `Strict-Transport-Security: max-age=63072000; includeSubDomains` when `SF_HSTS_ENABLED` env var is set
+- **Docker container hardening**: Added `no-new-privileges:true`, `read_only: true`, and tmpfs mounts to api, celery-worker, and celery-worker-active containers
+
+### Fixed — Frontend Reliability (Batch 6)
+- **localStorage QuotaExceededError**: Added `safeStorage.ts` with `safeSetItem()` — truncates values to 100 KB, catches quota errors with LRU eviction of report cache keys; applied to 6 report-caching writes in Workspaces.tsx and ReportTab.tsx
+
 ### Security — P1 Critical & High (Batch 5)
 - **Path traversal in MinIO / Qdrant storage**: Added `_validate_safe_name()` in minio_manager.py (rejects `..`, `/`, `\`, non-alphanumeric-dot-hyphen); validated bucket names (must start with `sf-`, S3-compliant) and collection/name params in the storage router
 - **SQL identifier injection in db_utils.py**: Added `_quote_ident()` helper that double-quotes SQL identifiers and rejects embedded quotes; applied to all `DROP TABLE` statements and parameterized the `information_schema.columns` WHERE clause
