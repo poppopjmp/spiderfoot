@@ -534,8 +534,8 @@ class CorrelationService:
         try:
             from spiderfoot import SpiderFootDb
             opts = {
-                "__database": os.environ.get("SF_DATABASE", "spiderfoot.db"),
-                "__dbtype": os.environ.get("SF_DBTYPE", "sqlite"),
+                "__database": os.environ.get("SF_POSTGRES_DSN", os.environ.get("SF_DATABASE", "")),
+                "__dbtype": "postgresql",
             }
             return SpiderFootDb(opts)
         except Exception as e:

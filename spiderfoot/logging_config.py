@@ -1,7 +1,7 @@
 """
 Unified logging configuration for SpiderFoot.
 
-Consolidates the three coexisting logging systems (SQLite handler,
+Consolidates the three coexisting logging systems (database handler,
 structured JSON formatter, and Vector.dev sink) into a single
 canonical configuration entry point.
 
@@ -17,7 +17,7 @@ The canonical logging pipeline is:
         │
         ├──► FileHandler (debug.log, errors.log)
         │
-        └──► [DEPRECATED] SpiderFootSqliteLogHandler
+        └──► [DEPRECATED] SpiderFootDbLogHandler
                  (disabled by default, opt-in only)
 
 Usage::
@@ -74,7 +74,7 @@ def configure_logging(
     force_json: bool | None = None,
     force_text: bool = False,
     log_dir: str | None = None,
-    enable_sqlite: bool = False,
+    enable_db_handler: bool = False,
     enable_vector: bool = False,
 ) -> logging.Logger:
     """Configure the canonical SpiderFoot logging pipeline.
@@ -98,7 +98,7 @@ def configure_logging(
         force_text: Force plain-text console output (overrides JSON).
         log_dir: Directory for file-based logs.  Falls back to
             ``config['_log_dir']`` or ``logs/``.
-        enable_sqlite: **DEPRECATED** — opt-in to the legacy SQLite
+        enable_db_handler: **DEPRECATED** — opt-in to the legacy database
             log handler.  Will be removed in a future version.
         enable_vector: Forward logs to Vector.dev via the VectorLogHandler.
 
@@ -170,15 +170,15 @@ def configure_logging(
     if vector_enabled:
         _add_vector_handler(root, config)
 
-    # ── DEPRECATED: SQLite handler ───────────────────────────────────
-    if enable_sqlite:
+    # ── DEPRECATED: database log handler ──────────────────────────────
+    if enable_db_handler:
         warnings.warn(
-            "SQLite log handler is deprecated and will be removed in v6.0. "
+            "database log handler is deprecated. "
             "Use structured JSON logging with Vector.dev instead.",
             DeprecationWarning,
             stacklevel=2,
         )
-        _add_sqlite_handler(root, config, level)
+        _add_db_handler(root, config, level)
 
     _CONFIGURED = True
 
@@ -188,7 +188,7 @@ def configure_logging(
             "log_format": "json" if use_json else "text",
             "log_level": logging.getLevelName(level),
             "vector_enabled": vector_enabled,
-            "sqlite_enabled": enable_sqlite,
+            "db_handler_enabled": enable_db_handler,
         },
     )
 
@@ -292,15 +292,15 @@ def _add_vector_handler(logger: logging.Logger, config: dict) -> None:
         logger.warning(f"Failed to initialize Vector.dev handler: {e}")
 
 
-def _add_sqlite_handler(
+def _add_db_handler(
     logger: logging.Logger, config: dict, level: int
 ) -> None:
-    """Add the deprecated SQLite log handler."""
+    """Add the deprecated database log handler."""
     try:
-        from spiderfoot.observability.logger import SpiderFootSqliteLogHandler
+        from spiderfoot.observability.logger import SpiderFootDbLogHandler
 
-        sqlite_handler = SpiderFootSqliteLogHandler(config)
-        sqlite_handler.setLevel(level)
-        logger.addHandler(sqlite_handler)
+        db_handler = SpiderFootDbLogHandler(config)
+        db_handler.setLevel(level)
+        logger.addHandler(db_handler)
     except Exception as e:
-        logger.warning(f"Failed to initialize SQLite handler: {e}")
+        logger.warning(f"Failed to initialize database log handler: {e}")

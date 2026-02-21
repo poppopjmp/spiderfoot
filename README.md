@@ -212,7 +212,7 @@ docker compose -f docker-compose-microservices.yml --profile full --profile sso 
 
 | Mode | Command | Description |
 |------|---------|-------------|
-| **Monolith** | `python3 sf.py -l 0.0.0.0:5001` | Single process, SQLite, zero dependencies |
+| **Monolith** | `python3 sf.py -l 0.0.0.0:5001` | Single process, PostgreSQL, minimal dependencies |
 | **Docker Core** | `docker compose -f docker-compose-microservices.yml up -d` | 5 core services (PostgreSQL, Redis, API, Worker, Frontend) |
 | **Docker Full** | `docker compose -f docker-compose-microservices.yml --profile full up -d` | 21+ services with observability, AI, and storage |
 | **Kubernetes** | `helm install sf helm/` | Horizontal scaling with Helm chart |
@@ -710,7 +710,7 @@ All services are configured via environment variables (see `docker/env.example`)
 | Variable | Purpose | Default |
 |----------|---------|---------|
 | `SF_DEPLOYMENT_MODE` | `monolith` or `microservices` | `monolith` |
-| `SF_DATABASE_URL` | PostgreSQL connection string | SQLite |
+| `SF_DATABASE_URL` | PostgreSQL connection string | Required |
 | `SF_REDIS_URL` | Redis URL for EventBus/Cache | None |
 | `SF_EVENTBUS_BACKEND` | `memory`, `redis`, or `nats` | `memory` |
 | `SF_VECTOR_ENDPOINT` | Vector.dev HTTP endpoint | None |

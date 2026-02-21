@@ -1,7 +1,7 @@
 """Database migration framework — version-controlled schema evolution.
 
 Provides a lightweight, dependency-free migration system for SpiderFoot's
-SQLite and PostgreSQL databases.  Features:
+PostgreSQL database.  Features:
 
 * **Sequential migrations** — numbered Python migration files with
   ``upgrade()`` and ``downgrade()`` functions.
@@ -49,7 +49,6 @@ class MigrationStatus(Enum):
 
 class DbDialect(Enum):
     """Enumeration of supported database dialects."""
-    SQLITE = "sqlite"
     POSTGRESQL = "postgresql"
 
 
@@ -182,25 +181,35 @@ class InMemoryDbAdapter:
         return list(self._log)
 
 
-class SqliteAdapter:
-    """SQLite database adapter."""
+class PostgresAdapter:
+    """PostgreSQL database adapter."""
 
-    def __init__(self, db_path: str) -> None:
-        """Initialize the SqliteAdapter with a database path."""
-        import sqlite3
-        self._conn = sqlite3.connect(db_path)
+    def __init__(self, dsn: str) -> None:
+        """Initialize the PostgresAdapter with a DSN."""
+        import psycopg2
+        self._conn = psycopg2.connect(dsn)
 
     def execute(self, sql: str, params: tuple | None = None) -> None:
-        """Execute an SQL statement on the SQLite connection."""
-        self._conn.execute(sql, params or ())
+        """Execute an SQL statement on the PostgreSQL connection."""
+        cur = self._conn.cursor()
+        cur.execute(sql, params or ())
+        cur.close()
 
     def fetchall(self, sql: str, params: tuple | None = None) -> list[tuple]:
         """Fetch all rows from an SQL query."""
-        return self._conn.execute(sql, params or ()).fetchall()
+        cur = self._conn.cursor()
+        cur.execute(sql, params or ())
+        rows = cur.fetchall()
+        cur.close()
+        return rows
 
     def fetchone(self, sql: str, params: tuple | None = None) -> tuple | None:
         """Fetch a single row from an SQL query."""
-        return self._conn.execute(sql, params or ()).fetchone()
+        cur = self._conn.cursor()
+        cur.execute(sql, params or ())
+        row = cur.fetchone()
+        cur.close()
+        return row
 
     def commit(self) -> None:
         """Commit the current transaction."""
@@ -240,7 +249,7 @@ class MigrationManager:
     Usage::
 
         mgr = MigrationManager(
-            db=SqliteAdapter("spiderfoot.db"),
+            db=PostgresAdapter("postgresql://user:pass@localhost/spiderfoot"),
             migrations_dir="migrations/",
         )
         plan = mgr.plan_upgrade()
@@ -252,7 +261,7 @@ class MigrationManager:
         self,
         db: DbAdapter,
         migrations_dir: str = "migrations",
-        dialect: DbDialect = DbDialect.SQLITE,
+        dialect: DbDialect = DbDialect.POSTGRESQL,
     ) -> None:
         """Initialize the MigrationManager."""
         self._db = db

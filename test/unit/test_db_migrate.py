@@ -15,7 +15,7 @@ from spiderfoot.db_migrate import (
     MigrationPlan,
     MigrationRecord,
     MigrationStatus,
-    SqliteAdapter,
+    PostgresAdapter,
 )
 
 
@@ -54,7 +54,7 @@ class TestMigrationPlan(unittest.TestCase):
         self.assertTrue(d["dry_run"])
 
 
-class TestMigrationManagerWithSqlite(unittest.TestCase):
+class TestMigrationManagerWithPostgres(unittest.TestCase):
     def setUp(self):
         self.tmpdir = tempfile.mkdtemp()
         self.db_path = os.path.join(self.tmpdir, "test.db")
@@ -81,7 +81,7 @@ def downgrade(db, dialect):
     pass
 """)
 
-        self.db = SqliteAdapter(self.db_path)
+        self.db = PostgresAdapter(self.db_path)
         self.mgr = MigrationManager(
             db=self.db,
             migrations_dir=self.migrations_dir,

@@ -197,7 +197,7 @@ def run_scan(
         log_queue = mp.Queue()
 
         # Start the log listener that drains the queue into the DB
-        # (SpiderFootSqliteLogHandler writes batches to tbl_scan_log)
+        # (writes batches to tbl_scan_log)
         from spiderfoot.observability.logger import logListenerSetup
         log_listener = logListenerSetup(log_queue, global_opts)
 

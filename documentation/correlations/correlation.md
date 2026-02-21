@@ -117,7 +117,7 @@ SpiderFoot's correlation engine allows you to define rules in YAML to analyze an
 
 ### Backend-Aware Storage
 
-- Correlation results and configuration are stored using backend-agnostic SQL, ensuring compatibility with both SQLite and PostgreSQL.
+- Correlation results and configuration are stored in PostgreSQL.
 
 ---
 
@@ -134,9 +134,9 @@ SpiderFoot's correlation engine is designed for reliability, extensibility, and 
 
 ### Database Integration
 
-- Correlation results, rule metadata, and configuration are stored in the main SpiderFoot database using backend-agnostic SQL.
-- All upsert/replace operations use helpers to ensure correct behavior for both SQLite and PostgreSQL.
-- Schema creation and migrations are idempotent and backend-aware. Unique constraints and composite keys are enforced where required.
+- Correlation results, rule metadata, and configuration are stored in the main SpiderFoot PostgreSQL database.
+- All upsert/replace operations use PostgreSQL-native helpers for correct behavior.
+- Schema creation and migrations are idempotent. Unique constraints and composite keys are enforced where required.
 - The correlation engine is robust to schema changes and will automatically migrate or update tables as needed.
 
 ### Querying and Using Correlation Results
@@ -154,8 +154,8 @@ SpiderFoot's correlation engine is designed for reliability, extensibility, and 
 
 ### Backend Differences and Best Practices
 
-- All correlation engine storage and queries are backend-agnostic. Placeholders, upserts, and type mapping are handled automatically.
-- For SQLite, foreign key enforcement is enabled automatically. For PostgreSQL, connection pooling is recommended for high concurrency.
+- All correlation engine storage and queries use PostgreSQL. Placeholders, upserts, and type mapping are handled natively.
+- Connection pooling is recommended for high concurrency.
 - Always back up your database before adding or modifying correlation rules in production.
 
 ### Troubleshooting

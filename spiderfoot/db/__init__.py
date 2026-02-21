@@ -13,7 +13,7 @@
 Exposes :class:`SpiderFootDb`, the high-level facade that delegates to
 specialised sub-modules (``db_core``, ``db_scan``, ``db_event``,
 ``db_config``, ``db_correlation``).  Handles connection lifecycle,
-schema migrations, and retry logic for SQLite operations.
+schema migrations, and retry logic for PostgreSQL operations.
 """
 
 from __future__ import annotations
@@ -23,7 +23,6 @@ __all__ = ["SpiderFootDb", "get_schema_queries"]
 from pathlib import Path
 import logging
 import re
-import sqlite3
 import threading
 import psycopg2
 import psycopg2.extras
@@ -42,82 +41,7 @@ def get_schema_queries(db_type: str) -> list[str]:
     """
     Return a list of schema creation queries appropriate for the backend.
     """
-    if db_type == 'sqlite':
-        return [
-            "CREATE TABLE IF NOT EXISTS tbl_schema_version (\n    version INTEGER NOT NULL,\n    applied_at INTEGER NOT NULL\n)",
-            "PRAGMA journal_mode=WAL",
-            "CREATE TABLE IF NOT EXISTS tbl_event_types ( \
-                event       VARCHAR NOT NULL PRIMARY KEY, \
-                event_descr VARCHAR NOT NULL, \
-                event_raw   INT NOT NULL DEFAULT 0, \
-                event_type  VARCHAR NOT NULL \
-            )",
-            "CREATE TABLE IF NOT EXISTS tbl_config ( \
-                scope   VARCHAR NOT NULL, \
-                opt     VARCHAR NOT NULL, \
-                val     VARCHAR NOT NULL, \
-                PRIMARY KEY (scope, opt) \
-            )",
-            "CREATE TABLE IF NOT EXISTS tbl_scan_instance ( \
-                guid        VARCHAR NOT NULL PRIMARY KEY, \
-                name        VARCHAR NOT NULL, \
-                seed_target VARCHAR NOT NULL, \
-                created     INT DEFAULT 0, \
-                started     INT DEFAULT 0, \
-                ended       INT DEFAULT 0, \
-                status      VARCHAR NOT NULL \
-            )",
-            "CREATE TABLE IF NOT EXISTS tbl_scan_log ( \
-                scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
-                generated           INT NOT NULL, \
-                component           VARCHAR, \
-                type                VARCHAR NOT NULL, \
-                message             VARCHAR \
-            )",
-            "CREATE TABLE IF NOT EXISTS tbl_scan_config ( \
-                scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
-                component           VARCHAR NOT NULL, \
-                opt                 VARCHAR NOT NULL, \
-                val                 VARCHAR NOT NULL, \
-                UNIQUE (scan_instance_id, component, opt) \
-            )",
-            "CREATE TABLE IF NOT EXISTS tbl_scan_results ( \
-                scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
-                hash                VARCHAR NOT NULL, \
-                type                VARCHAR NOT NULL REFERENCES tbl_event_types(event), \
-                generated           INT NOT NULL, \
-                confidence          INT NOT NULL DEFAULT 100, \
-                visibility          INT NOT NULL DEFAULT 100, \
-                risk                INT NOT NULL DEFAULT 0, \
-                module              VARCHAR NOT NULL, \
-                data                TEXT, \
-                false_positive      INT NOT NULL DEFAULT 0, \
-                source_event_hash  VARCHAR DEFAULT 'ROOT' \
-            )",
-            "CREATE TABLE IF NOT EXISTS tbl_scan_correlation_results ( \
-                id                  VARCHAR NOT NULL PRIMARY KEY, \
-                scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
-                title               VARCHAR NOT NULL, \
-                rule_risk           VARCHAR NOT NULL, \
-                rule_id             VARCHAR NOT NULL, \
-                rule_name           VARCHAR NOT NULL, \
-                rule_descr          VARCHAR NOT NULL, \
-                rule_logic          VARCHAR NOT NULL \
-            )",
-            "CREATE TABLE IF NOT EXISTS tbl_scan_correlation_results_events ( \
-                correlation_id      VARCHAR NOT NULL REFERENCES tbl_scan_correlation_results(id), \
-                event_hash          VARCHAR NOT NULL \
-            )",
-            "CREATE INDEX IF NOT EXISTS idx_scan_results_id ON tbl_scan_results (scan_instance_id)",
-            "CREATE INDEX IF NOT EXISTS idx_scan_results_type ON tbl_scan_results (scan_instance_id, type)",
-            "CREATE INDEX IF NOT EXISTS idx_scan_results_hash ON tbl_scan_results (scan_instance_id, hash)",
-            "CREATE INDEX IF NOT EXISTS idx_scan_results_module ON tbl_scan_results(scan_instance_id, module)",
-            "CREATE INDEX IF NOT EXISTS idx_scan_results_srchash ON tbl_scan_results (scan_instance_id, source_event_hash)",
-            "CREATE INDEX IF NOT EXISTS idx_scan_logs ON tbl_scan_log (scan_instance_id)",
-            "CREATE INDEX IF NOT EXISTS idx_scan_correlation ON tbl_scan_correlation_results (scan_instance_id, id)",
-            "CREATE INDEX IF NOT EXISTS idx_scan_correlation_events ON tbl_scan_correlation_results_events (correlation_id)"
-        ]
-    elif db_type == 'postgresql':
+    if db_type == 'postgresql':
         return [
             "CREATE TABLE IF NOT EXISTS tbl_schema_version (\n    version INTEGER NOT NULL,\n    applied_at BIGINT NOT NULL\n)",
             "CREATE TABLE IF NOT EXISTS tbl_event_types ( \
@@ -418,7 +342,7 @@ class SpiderFootDb:
                 )
             dbhost, dbport, dbname, dbuser, dbpass = args[:5]
             opts = {
-                '__dbtype': 'sqlite',  # or 'postgresql' if you want to support both
+                '__dbtype': 'postgresql',
                 '__database': dbname,
                 '__dbhost': dbhost,
                 '__dbport': dbport,
@@ -449,7 +373,7 @@ class SpiderFootDb:
     def build_config_from_env() -> dict:
         """Build a database config dict from environment variables.
 
-        Prefers PostgreSQL (SF_POSTGRES_DSN) over SQLite.
+        Uses PostgreSQL (SF_POSTGRES_DSN).
 
         Returns:
             dict: Configuration suitable for SpiderFootDb(opts).
@@ -461,11 +385,9 @@ class SpiderFootDb:
                 '__database': pg_dsn,
                 '__dbtype': 'postgresql',
             }
-        from spiderfoot import SpiderFootHelpers
-        return {
-            '__database': f"{SpiderFootHelpers.dataPath()}/spiderfoot.db",
-            '__dbtype': 'sqlite',
-        }
+        raise EnvironmentError(
+            "SF_POSTGRES_DSN environment variable is required for PostgreSQL connection"
+        )
 
     def _populate_event_types(self) -> None:
         """Upsert the canonical SpiderFoot event types into tbl_event_types.
@@ -737,21 +659,12 @@ class SpiderFootDb:
         """
         Generate schema DDL queries for the specified backend.
         Args:
-            db_type (str): 'sqlite' or 'postgresql'
+            db_type (str): 'postgresql'
         Returns:
             list: List of DDL queries for schema creation.
         """
-        # SQLite and PostgreSQL type mapping
-        if db_type == 'sqlite':
-            int_type = 'INT'
-            bigint_type = 'INT'
-            text_type = 'TEXT'
-            varchar_type = 'VARCHAR'
-            pk_autoinc = 'INTEGER PRIMARY KEY AUTOINCREMENT'
-            pragma = ["PRAGMA journal_mode=WAL"]
-            if_not_exists = ''
-            index_if_not_exists = ''
-        elif db_type == 'postgresql':
+        # PostgreSQL type mapping
+        if db_type == 'postgresql':
             int_type = 'INT'
             bigint_type = 'BIGINT'
             text_type = 'TEXT'
@@ -849,9 +762,7 @@ class SpiderFootDb:
                     self.dbh.execute(query)
                 except Exception as e:
                     # Ignore index/table exists errors, raise others
-                    if self.db_type == 'sqlite' and 'already exists' in str(e):
-                        continue
-                    if self.db_type == 'postgresql' and 'already exists' in str(e):
+                    if 'already exists' in str(e):
                         continue
                     raise
             self.conn.commit()

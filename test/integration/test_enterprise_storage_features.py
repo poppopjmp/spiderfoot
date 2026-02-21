@@ -221,17 +221,17 @@ class TestEnterpriseStorageFeatures(TestModuleBase):
         # Test batch processing efficiency
         start_time = time.time()
         
-        # SQLite performance test
-        sqlite_module = sfp__stor_db()
-        sqlite_module.setup(self.sf, {'_store': True})
-        sqlite_module.getScanId = MagicMock(return_value=self.test_scan_id)
+        # Database performance test
+        db_module = sfp__stor_db()
+        db_module.setup(self.sf, {'_store': True})
+        db_module.getScanId = MagicMock(return_value=self.test_scan_id)
         
         # Process many events
         for i in range(1000):
             event = self.create_test_event("IP_ADDRESS", f"192.168.{i//256}.{i%256}")
-            sqlite_module.handleEvent(event)
+            db_module.handleEvent(event)
         
-        sqlite_time = time.time() - start_time
+        db_time = time.time() - start_time
         
         # Elasticsearch bulk performance test
         with patch('modules.sfp__stor_elasticsearch.Elasticsearch') as mock_es_class:
@@ -262,7 +262,7 @@ class TestEnterpriseStorageFeatures(TestModuleBase):
             # Bulk operations should be more efficient
             self.assertLess(mock_es.bulk.call_count, 15)  # Should batch efficiently
         
-        print(f"✓ SQLite processing time: {sqlite_time:.3f}s")
+        print(f"✓ Database processing time: {db_time:.3f}s")
         print(f"✓ Elasticsearch bulk processing: {es_time:.3f}s")
         print("✓ Performance optimization validated")
 
@@ -288,12 +288,12 @@ class TestEnterpriseStorageFeatures(TestModuleBase):
             # Should enter error state gracefully
             self.assertTrue(pg_module.errorState)
             
-            # Test fallback to SQLite
+            # Test fallback to default storage
             pg_module.getScanId = MagicMock(return_value=self.test_scan_id)
             test_event = self.create_test_event()
             pg_module.handleEvent(test_event)
             
-            # Should fall back to SQLite storage
+            # Should fall back to default storage
             self.assertEqual(self.mock_dbh.scanEventStore.call_count, 0)
         
         # Test Elasticsearch error scenarios
@@ -319,7 +319,7 @@ class TestEnterpriseStorageFeatures(TestModuleBase):
         self.assertTrue(invalid_pg_module.errorState)
         
         print("✓ PostgreSQL connection failure handling")
-        print("✓ PostgreSQL fallback to SQLite")
+        print("✓ PostgreSQL fallback to default storage")
         print("✓ Elasticsearch connection failure handling") 
         print("✓ Configuration validation")
 
@@ -328,17 +328,17 @@ class TestEnterpriseStorageFeatures(TestModuleBase):
         print("\n=== Testing Data Integrity and Validation ===")
         
         # Test data size limits
-        sqlite_module = sfp__stor_db()
-        sqlite_module.setup(self.sf, {
+        db_module = sfp__stor_db()
+        db_module.setup(self.sf, {
             '_store': True,
             'maxstorage': 100  # Small limit
         })
-        sqlite_module.getScanId = MagicMock(return_value=self.test_scan_id)
+        db_module.getScanId = MagicMock(return_value=self.test_scan_id)
         
         # Test with oversized data
         large_data = "x" * 1000  # 1000 characters
         large_event = self.create_test_event("LARGE_DATA", large_data)
-        sqlite_module.handleEvent(large_event)
+        db_module.handleEvent(large_event)
         
         # Should call with size limit
         call_args = self.mock_dbh.scanEventStore.call_args
@@ -350,7 +350,7 @@ class TestEnterpriseStorageFeatures(TestModuleBase):
         
         # Should handle without crashing
         try:
-            sqlite_module.handleEvent(special_event)
+            db_module.handleEvent(special_event)
         except Exception as e:
             self.fail(f"Should handle special characters: {e}")
         
@@ -359,7 +359,7 @@ class TestEnterpriseStorageFeatures(TestModuleBase):
         unicode_event = self.create_test_event("UNICODE_DATA", unicode_data)
         
         try:
-            sqlite_module.handleEvent(unicode_event)
+            db_module.handleEvent(unicode_event)
         except Exception as e:
             self.fail(f"Should handle Unicode: {e}")
         
@@ -480,9 +480,9 @@ class TestEnterpriseStorageFeatures(TestModuleBase):
         print("\n=== Testing Multi-Storage Coordination ===")
         
         # Set up multiple storage modules
-        sqlite_module = sfp__stor_db()
-        sqlite_module.setup(self.sf, {'_store': True, 'db_type': 'sqlite'})
-        sqlite_module.getScanId = MagicMock(return_value=self.test_scan_id)
+        db_module = sfp__stor_db()
+        db_module.setup(self.sf, {'_store': True, 'db_type': 'postgresql'})
+        db_module.getScanId = MagicMock(return_value=self.test_scan_id)
         
         with patch('modules.sfp__stor_elasticsearch.Elasticsearch') as mock_es_class, \
              patch('elasticsearch.helpers.bulk') as mock_bulk:
@@ -513,7 +513,7 @@ class TestEnterpriseStorageFeatures(TestModuleBase):
                 test_events.append(event)
                 
                 # Store in all backends
-                sqlite_module.handleEvent(event)
+                db_module.handleEvent(event)
                 es_module.handleEvent(event)
                 with patch('sys.stdout'):
                     stdout_module.handleEvent(event)

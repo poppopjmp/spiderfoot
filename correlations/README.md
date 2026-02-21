@@ -89,7 +89,7 @@ We can see above that a port was found to be open by the `sfp_portscan_tcp` modu
 **NOTE:** Rules will only succeed if relevant data exists in your scan results in the first place. In other words, correlation rules analyze scan data, they don't collect data from targets.
 
 ### How it works
-In short, SpiderFoot translates the YAML rules into a combination queries against the backend database of scan results and Python logic to filter and group the results, creating "correlation results" in the SpiderFoot database. These results can be viewed in the SpiderFot web interface or from the SpiderFoot CLI. You can also query them directly out of the SQLite database if you like (they are in the `tbl_scan_correlation_results` table, and the `tbl_scan_correlation_results_events` table maps the events (data elements) to the correlation result).
+In short, SpiderFoot translates the YAML rules into a combination queries against the backend database of scan results and Python logic to filter and group the results, creating "correlation results" in the SpiderFoot database. These results can be viewed in the SpiderFot web interface or from the SpiderFoot CLI. You can also query them directly out of the PostgreSQL database if you like (they are in the `tbl_scan_correlation_results` table, and the `tbl_scan_correlation_results_events` table maps the events (data elements) to the correlation result).
 
 ### The rules
 

@@ -618,7 +618,7 @@ def _default_opts() -> dict:
         "_socks6dns": True,
         "_torctlport": 9051,
         "_modulesenabled": [],
-        "__database": "sqlite:///test.db",
+        "__database": "postgresql://localhost/spiderfoot_test",
         "__webaddr": "127.0.0.1",
         "__webport": 5001,
         "__docroot": "",

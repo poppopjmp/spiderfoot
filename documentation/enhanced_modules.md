@@ -181,8 +181,7 @@ All new modules follow SpiderFoot's event-driven architecture:
 
 Enhanced modules integrate with SpiderFoot's database layer:
 
-- **SQLite Support**: All modules work with existing SQLite backend
-- **PostgreSQL Support**: Enhanced performance with PostgreSQL
+- **PostgreSQL Support**: All modules use the PostgreSQL backend
 - **Audit Logging**: Security-focused modules include audit capabilities
 - **Data Retention**: Configurable data lifecycle management
 

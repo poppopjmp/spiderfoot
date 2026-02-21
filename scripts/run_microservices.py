@@ -86,7 +86,7 @@ def start_api(host: str, port: int, log_level: str) -> subprocess.Popen:
         "SF_API_PORT": str(port),
         "SF_API_WORKERS": "1",
         "SF_LOG_LEVEL": log_level,
-        # Use local SQLite database by default (no Postgres needed)
+        # Use local PostgreSQL database by default
         "SF_DEPLOYMENT_MODE": "microservice",
         "SF_SERVICE_ROLE": "api",
     })

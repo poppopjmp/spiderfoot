@@ -99,5 +99,5 @@ DEFAULT_VLLM_BASE_URL: Final[str] = "http://localhost:8000/v1"
 DEFAULT_DOH_URL: Final[str] = "https://cloudflare-dns.com/dns-query"
 """Default DNS-over-HTTPS resolver URL."""
 
-DEFAULT_DATABASE_NAME: Final[str] = "spiderfoot.db"
-"""Default SQLite database filename."""
+DEFAULT_DATABASE_NAME: Final[str] = "spiderfoot"
+"""Default PostgreSQL database name."""

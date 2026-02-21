@@ -1,6 +1,6 @@
 """Logging infrastructure for SpiderFoot.
 
-Provides :class:`SpiderFootLog` (SQLite-backed log handler),
+Provides :class:`SpiderFootDbLogHandler` (database-backed log handler),
 :class:`SpiderFootLogHandler` (queue-based async handler), and
 log-rotation via :class:`TimedRotatingFileHandler`.  Designed so that
 every scan's log entries are queryable from the database.
@@ -23,15 +23,15 @@ from spiderfoot import SpiderFootDb, SpiderFootHelpers
 from spiderfoot.logging_config import LOG_FORMAT_DEBUG, LOG_FORMAT_TEXT
 
 
-class SpiderFootSqliteLogHandler(logging.Handler):
-    """Handler for logging to SQLite database.
+class SpiderFootDbLogHandler(logging.Handler):
+    """Handler for logging to database.
 
-    This ensure all sqlite logging is done from a single process and a
+    This ensures all DB logging is done from a single process and a
     single database handle.
     """
 
     def __init__(self, opts: dict) -> None:
-        """Initialize the SQLite log handler.
+        """Initialize the database log handler.
 
         Args:
             opts (dict): Configuration options
@@ -45,7 +45,7 @@ class SpiderFootSqliteLogHandler(logging.Handler):
             self.batch_size = 5
         self.shutdown_hook = False
         self.log_file = os.path.join(
-            SpiderFootHelpers.logPath(), "spiderfoot.sqlite.log")
+            SpiderFootHelpers.logPath(), "spiderfoot.db.log")
         self.backup_count = 30
         self.rotate_logs()
         self.log_queue = Queue()
@@ -127,7 +127,7 @@ class SpiderFootSqliteLogHandler(logging.Handler):
             self.dbh = None
 
     def rotate_logs(self) -> None:
-        """Rotate and archive SQLite logs."""
+        """Rotate and archive log files."""
         if os.path.exists(self.log_file):
             if os.path.getsize(self.log_file) > 10 * 1024 * 1024:  # 10 MB
                 for i in range(self.backup_count - 1, 0, -1):
@@ -238,10 +238,10 @@ def logListenerSetup(loggingQueue: Any, opts: dict = None) -> 'logging.handlers.
         handlers = []
 
     if doLogging and opts is not None:
-        sqlite_handler = SpiderFootSqliteLogHandler(opts)
-        sqlite_handler.setLevel(logLevel)
-        sqlite_handler.setFormatter(log_format)
-        handlers.append(sqlite_handler)
+        db_handler = SpiderFootDbLogHandler(opts)
+        db_handler.setLevel(logLevel)
+        db_handler.setFormatter(log_format)
+        handlers.append(db_handler)
     spiderFootLogListener = QueueListener(loggingQueue, *handlers)
     spiderFootLogListener.start()
     atexit.register(stop_listener, spiderFootLogListener)

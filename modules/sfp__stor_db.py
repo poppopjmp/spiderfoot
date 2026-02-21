@@ -6,7 +6,7 @@ from __future__ import annotations
 # -------------------------------------------------------------------------------
 # Name:         sfp_stor_db
 # Purpose:      SpiderFoot plug-in for storing events to the configured database
-#               backend (SQLite or PostgreSQL).
+#               backend (PostgreSQL).
 #
 # Author:      Steve Micallef <steve@binarypool.com>
 #
@@ -31,7 +31,7 @@ class sfp__stor_db(SpiderFootModernPlugin):
     backend.
 
     This class is responsible for storing scan results into the back-end
-    SpiderFoot database (SQLite or PostgreSQL).
+    SpiderFoot database (PostgreSQL).
     """
 
     meta = {
@@ -45,7 +45,7 @@ class sfp__stor_db(SpiderFootModernPlugin):
         # max bytes for any piece of info stored (0 = unlimited)
         'maxstorage': 1024,
         '_store': True,
-        'db_type': 'sqlite',  # sqlite or postgresql
+        'db_type': 'postgresql',  # postgresql
         'postgresql_host': 'localhost',
         'postgresql_port': 5432,
         'postgresql_database': 'spiderfoot',
@@ -66,7 +66,7 @@ class sfp__stor_db(SpiderFootModernPlugin):
         'collect_metrics': False
     }    # Option descriptions
     optdescs = {        'maxstorage': "Maximum bytes to store for any piece of information retrieved (0 = unlimited.)",
-        'db_type': "Database type to use (sqlite or postgresql)",
+        'db_type': "Database type to use (postgresql)",
         'postgresql_host': "PostgreSQL host if using postgresql as db_type",
         'postgresql_port': "PostgreSQL port if using postgresql as db_type",
         'postgresql_database': "PostgreSQL database name if using postgresql as db_type",
@@ -125,8 +125,8 @@ class sfp__stor_db(SpiderFootModernPlugin):
         Returns:
             bool: True if config is valid, False otherwise
         """
-        if self.opts['db_type'] not in ['sqlite', 'postgresql']:
-            self.error(f"Invalid db_type: {self.opts['db_type']}. Must be 'sqlite' or 'postgresql'")
+        if self.opts['db_type'] not in ['postgresql']:
+            self.error(f"Invalid db_type: {self.opts['db_type']}. Must be 'postgresql'")
             return False
             
         if self.opts['db_type'] == 'postgresql':
@@ -212,19 +212,19 @@ class sfp__stor_db(SpiderFootModernPlugin):
                 
             if not self.errorState and self.pg_conn:
                 self._store_postgresql(sfEvent)
-            else:            self._store_sqlite(sfEvent)
+            else:            self._store_default(sfEvent)
         else:
-            self._store_sqlite(sfEvent)
+            self._store_default(sfEvent)
 
-    def _store_sqlite(self, sfEvent):
-        """Store the event in the SQLite database.
+    def _store_default(self, sfEvent):
+        """Store the event in the default database.
         
         Args:
             sfEvent: SpiderFoot event
         """
         # CRITICAL FIX: Check database handle before using
         if not self.__sfdb__:
-            self.error("Database handle not available for SQLite storage")
+            self.error("Database handle not available for default storage")
             return
 
         max_retries = 3
@@ -246,7 +246,7 @@ class sfp__stor_db(SpiderFootModernPlugin):
                     _time.sleep(0.1 * (attempt + 1))
                     continue
                 import traceback
-                self.error(f"_store_sqlite failed for event type={sfEvent.eventType} "
+                self.error(f"_store_default failed for event type={sfEvent.eventType} "
                            f"module={sfEvent.module} hash={sfEvent.hash} "
                            f"generated={sfEvent.generated} data_len={len(sfEvent.data) if sfEvent.data else 0}: "
                            f"{type(e).__name__}: {e}")
@@ -299,9 +299,9 @@ class sfp__stor_db(SpiderFootModernPlugin):
                     self.pg_conn.rollback()
                 except (OSError, psycopg2.Error):
                     pass
-            # Fall back to SQLite storage
-            self.debug("Falling back to SQLite storage")
-            self._store_sqlite(sfEvent)
+            # Fall back to default storage
+            self.debug("Falling back to default storage")
+            self._store_default(sfEvent)
 
     def __del__(self):
         """Clean up database connections."""

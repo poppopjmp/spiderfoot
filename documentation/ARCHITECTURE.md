@@ -119,7 +119,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 │                     Core Services                                  │
 │  ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐      │
 │  │HttpService │ │ DnsService │ │CacheService│ │DataService │      │
-│  │(pooled HTTP│ │(DNS+cache) │ │(Mem/File/  │ │(SQLite/PG/ │      │
+│  │(pooled HTTP│ │(DNS+cache) │ │(Mem/File/  │ │(PostgreSQL/│      │
 │  │ +proxy)    │ │            │ │  Redis)    │ │  gRPC)     │      │
 │  └────────────┘ └────────────┘ └────────────┘ └────────────┘      │
 ├───────────────────────────────────────────────────────────────────┤
@@ -171,7 +171,7 @@ Topics follow a dot-notation pattern: `scan.started`, `scan.completed`,
 
 Database abstraction layer supporting:
 
-- **Local**: Direct SQLite/PostgreSQL via `SpiderFootDb`
+- **Local**: Direct PostgreSQL via `SpiderFootDb`
 - **HTTP**: Remote REST API for microservices mode
 - **gRPC**: High-performance binary protocol
 
@@ -715,7 +715,7 @@ migration instructions.
 | 5.22.5 | Report generator pipeline orchestrator |
 | 5.22.6 | Multi-format report renderer (PDF/HTML/MD/JSON) |
 | 5.22.7 | Report REST API |
-| 5.22.8 | Report storage engine (SQLite + LRU) |
+| 5.22.8 | Report storage engine (PostgreSQL + LRU) |
 | 5.22.9 | Module Registry (discovery, dependency, categories) |
 | 5.23.0 | EventBus Hardening (DLQ, circuit breaker, retry) |
 | 5.23.1 | Wire ReportStore into API layer |
@@ -849,7 +849,7 @@ minimal module set and topological load order.
 #### Database Migration (`spiderfoot/db_migrate.py`)
 Version-controlled schema evolution with numbered migration files,
 upgrade/downgrade functions, dry-run mode, and checksum validation.
-Supports SQLite and PostgreSQL dialects.
+Supports PostgreSQL dialect.
 
 ### Module Loading & Dependency Resolution (v5.25.0)
 

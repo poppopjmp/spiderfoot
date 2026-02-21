@@ -242,7 +242,7 @@ class TestInitializeServices(unittest.TestCase):
     def test_initialize_registers_all_factories(self):
         sf_config = {
             "__database": ":memory:",
-            "__dbtype": "sqlite",
+            "__dbtype": "postgresql",
         }
         registry = initialize_services(sf_config)
         

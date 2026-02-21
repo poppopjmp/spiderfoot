@@ -69,7 +69,7 @@ class Config:
             self.log.info("Using PostgreSQL backend from SF_POSTGRES_DSN")
         else:
             _db_path = f"{SpiderFootHelpers.dataPath()}/spiderfoot.db"
-            _db_type = 'sqlite'
+            _db_type = 'postgresql'
 
         default_config: dict[str, Any] = {
             '__modules__': {},

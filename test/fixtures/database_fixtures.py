@@ -4,7 +4,7 @@ from __future__ import annotations
 import pytest
 import tempfile
 import os
-import sqlite3
+import psycopg2
 from unittest.mock import Mock, MagicMock, patch
 from spiderfoot import SpiderFootDb
 from spiderfoot.events.event import SpiderFootEvent
@@ -38,14 +38,14 @@ def mock_db_config():
     """Mock database configuration."""
     return {
         '__database': ':memory:',
-        '__dbtype': 'sqlite',
+        '__dbtype': 'postgresql',
     }
 
 
 @pytest.fixture
 def in_memory_db():
-    """Create an in-memory SQLite database for testing."""
-    conn = sqlite3.connect(':memory:')
+    """Create an in-memory PostgreSQL database for testing."""
+    conn = psycopg2.connect(':memory:')
     yield conn
     conn.close()
 
@@ -183,11 +183,11 @@ def sample_scan_log():
 def database_error_scenarios():
     """Common database error scenarios for testing."""
     return {
-        'connection_error': sqlite3.OperationalError("database is locked"),
-        'syntax_error': sqlite3.OperationalError("near 'FROM': syntax error"),
-        'integrity_error': sqlite3.IntegrityError("UNIQUE constraint failed"),
-        'data_error': sqlite3.DataError("Invalid data type"),
-        'database_error': sqlite3.DatabaseError("Database corrupted")
+        'connection_error': psycopg2.OperationalError("database is locked"),
+        'syntax_error': psycopg2.OperationalError("near 'FROM': syntax error"),
+        'integrity_error': psycopg2.IntegrityError("UNIQUE constraint failed"),
+        'data_error': psycopg2.DataError("Invalid data type"),
+        'database_error': psycopg2.DatabaseError("Database corrupted")
     }
 
 
@@ -204,22 +204,22 @@ class MockSpiderFootDb:
         
     def scanInstanceCreate(self, scanId, scanName, scanTarget):
         if self.connection_error:
-            raise sqlite3.OperationalError("Connection failed")
+            raise psycopg2.OperationalError("Connection failed")
         return True
         
     def scanEventStore(self, scanId, sfEvent):
         if self.connection_error:
-            raise sqlite3.OperationalError("Connection failed")
+            raise psycopg2.OperationalError("Connection failed")
         return True
         
     def scanResultEvent(self, instanceId, eventType=None, filterFp=None):
         if self.connection_error:
-            raise sqlite3.OperationalError("Connection failed")
+            raise psycopg2.OperationalError("Connection failed")
         return []
         
     def scanInstanceGet(self, instanceId):
         if self.connection_error:
-            raise sqlite3.OperationalError("Connection failed")
+            raise psycopg2.OperationalError("Connection failed")
         return None
 
 

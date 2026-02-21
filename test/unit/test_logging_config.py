@@ -166,12 +166,12 @@ class TestConfigureLogging:
         # Should still work, just without file handlers
         assert logger.name == "spiderfoot"
 
-    def test_sqlite_deprecated_warning(self):
+    def test_db_handler_deprecated_warning(self):
         from spiderfoot.logging_config import configure_logging
-        with pytest.warns(DeprecationWarning, match="SQLite log handler is deprecated"):
+        with pytest.warns(DeprecationWarning, match="database log handler is deprecated"):
             configure_logging(
                 force_text=True,
-                enable_sqlite=True,
+                enable_db_handler=True,
                 log_dir=tempfile.mkdtemp()
             )
 

@@ -8,7 +8,6 @@ internals without exposing raw SQL, locking, or connection details.
 from __future__ import annotations
 
 import logging
-import sqlite3
 import types
 from abc import ABC, abstractmethod
 from typing import Any
@@ -70,7 +69,7 @@ class AbstractRepository(ABC):
         if self._dbh is not None:
             try:
                 self._dbh.close()
-            except (sqlite3.Error, OSError):
+            except OSError:
                 pass
             self._dbh = None
 

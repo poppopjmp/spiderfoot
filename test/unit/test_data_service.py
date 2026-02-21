@@ -204,7 +204,7 @@ class TestFactory(unittest.TestCase):
         sf_config = {
             "_dataservice_backend": "local",
             "__database": "test.db",
-            "__dbtype": "sqlite",
+            "__dbtype": "postgresql",
         }
         ds = create_data_service_from_config(sf_config)
         self.assertIsInstance(ds, LocalDataService)

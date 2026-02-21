@@ -2,7 +2,7 @@
 
 Provides an in-memory event store with querying, indexing, retention
 policies and serialization support. Designed for future backend swapping
-(SQLite, Redis, etc.) without API changes.
+(PostgreSQL, Redis, etc.) without API changes.
 """
 
 from __future__ import annotations

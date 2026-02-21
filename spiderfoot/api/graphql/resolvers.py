@@ -52,7 +52,7 @@ def _normalize_scan_row(row):
     
     scanInstanceGet returns either:
       - A DictRow (which is a list subclass) for PostgreSQL
-      - A list of rows for SQLite
+      - A list of rows from the database
       - A tuple for ApiClient
     We detect DictRow by checking for .keys() method.
     """

@@ -45,7 +45,6 @@ from .report_storage import (
     MemoryBackend,
     PostgreSQLBackend,
     ReportStore,
-    SQLiteBackend,
     StoreConfig,
     StorageBackend,
 )
@@ -86,7 +85,6 @@ __all__ = [
     "MemoryBackend",
     "PostgreSQLBackend",
     "ReportStore",
-    "SQLiteBackend",
     "StoreConfig",
     "StorageBackend",
     # PDF renderer

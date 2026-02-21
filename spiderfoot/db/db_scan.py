@@ -14,7 +14,6 @@ Scan instance management (create, update, delete, list, get) for SpiderFootDb.
 
 from __future__ import annotations
 
-import sqlite3
 import psycopg2
 import logging
 import time
@@ -56,7 +55,7 @@ class ScanManager:
                     self.dbh.execute(qry, (instanceId, scanName, scanTarget, time.time() * 1000, 'CREATED'))
                     self.conn.commit()
                     return
-                except (sqlite3.Error, psycopg2.Error) as e:
+                except psycopg2.Error as e:
                     self._log_db_error("Unable to create scan instance in database", e)
                     try:
                         self.conn.rollback()
@@ -95,7 +94,7 @@ class ScanManager:
                     self.dbh.execute(qry, qvars)
                     self.conn.commit()
                     return
-                except (sqlite3.Error, psycopg2.Error) as e:
+                except psycopg2.Error as e:
                     self._log_db_error("Unable to set information for the scan instance.", e)
                     try:
                         self.conn.rollback()
@@ -127,7 +126,7 @@ class ScanManager:
                 try:
                     self.dbh.execute(qry, qvars)
                     return self.dbh.fetchall()
-                except (sqlite3.Error, psycopg2.Error) as e:
+                except psycopg2.Error as e:
                     self._log_db_error("SQL error encountered when retrieving scan instance", e)
                     try:
                         self.conn.rollback()
@@ -146,7 +145,7 @@ class ScanManager:
                 try:
                     self.dbh.execute(qry)
                     return self.dbh.fetchall()
-                except (sqlite3.Error, psycopg2.Error) as e:
+                except psycopg2.Error as e:
                     self._log_db_error("SQL error encountered when fetching scan list", e)
                     try:
                         self.conn.rollback()
@@ -198,7 +197,7 @@ class ScanManager:
                     self.dbh.execute(qry_instance, qvars)
                     self.conn.commit()
                     return True
-                except (sqlite3.Error, psycopg2.Error) as e:
+                except psycopg2.Error as e:
                     self._log_db_error("SQL error encountered when deleting scan", e)
                     try:
                         self.conn.rollback()

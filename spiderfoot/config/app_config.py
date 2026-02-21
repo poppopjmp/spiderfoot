@@ -129,7 +129,7 @@ class NetworkConfig:
 @dataclass
 class DatabaseConfig:
     """Database paths and connection settings."""
-    db_path: str = ""          # SQLite path (set at runtime)
+    db_path: str = ""          # Database connection path (set at runtime)
     pg_host: str = ""
     pg_port: int = 5432
     pg_db: str = "spiderfoot"

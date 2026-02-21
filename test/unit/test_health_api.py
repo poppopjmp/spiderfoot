@@ -234,7 +234,7 @@ class TestReportStorageCheck:
     def test_storage_up(self):
         mock_store = MagicMock()
         mock_store.count.return_value = 5
-        mock_store.config.backend.value = "sqlite"
+        mock_store.config.backend.value = "postgresql"
 
         with patch(
             "spiderfoot.report_storage.ReportStore",

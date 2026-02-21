@@ -28,13 +28,13 @@ class SpiderFootWorkspace:
             workspace_id: Existing workspace ID to load
             name: Name for new workspace
             scan_db: Optional DB handle for scan operations (e.g. ApiClient in proxy mode).
-                     If not provided, falls back to self.db (direct SQLite).
+                     If not provided, falls back to self.db (direct PostgreSQL).
         """
         self.config = config
         self.db = SpiderFootDb(config, init=True)
         # scan_db is used for scan-related queries (scanInstanceGet, etc.)
         # In API proxy mode (webui), this should be the ApiClient so scan
-        # data is fetched from the FastAPI backend rather than the local SQLite.
+        # data is fetched from the FastAPI backend rather than the local database.
         self._scan_db = scan_db
         self.log = logging.getLogger(f"spiderfoot.workspace")
 
@@ -88,22 +88,15 @@ class SpiderFootWorkspace:
 
     @staticmethod
     def _add_missing_columns(db) -> None:
-        """Add missing columns to workspace table (works with both SQLite and PostgreSQL)."""
-        db_type = getattr(db, 'db_type', 'sqlite')
-        if db_type == 'postgresql':
-            # PostgreSQL: query information_schema
-            db.dbh.execute("""
-                SELECT column_name FROM information_schema.columns
-                WHERE table_name = 'tbl_workspaces'
-            """)
-        else:
-            # SQLite: use PRAGMA
-            db.dbh.execute("PRAGMA table_info(tbl_workspaces)")
+        """Add missing columns to workspace table (PostgreSQL)."""
+        db_type = getattr(db, 'db_type', 'postgresql')
+        # PostgreSQL: query information_schema
+        db.dbh.execute("""
+            SELECT column_name FROM information_schema.columns
+            WHERE table_name = 'tbl_workspaces'
+        """)
         raw_cols = db.dbh.fetchall()
-        if db_type == 'postgresql':
-            columns = [col[0] for col in raw_cols]
-        else:
-            columns = [col[1] for col in raw_cols]
+        columns = [col[0] for col in raw_cols]
 
         if 'correlations' not in columns:
             db.dbh.execute("ALTER TABLE tbl_workspaces ADD COLUMN correlations TEXT")
@@ -115,7 +108,7 @@ class SpiderFootWorkspace:
         """DB handle for scan-related queries.
 
         Returns the injected scan_db (ApiClient in proxy mode) if available,
-        otherwise falls back to self.db (direct SQLite).
+        otherwise falls back to self.db (direct PostgreSQL).
         """
         return self._scan_db if self._scan_db is not None else self.db
 
@@ -164,7 +157,7 @@ class SpiderFootWorkspace:
     def _create_workspace(self) -> None:
         """Create workspace in database."""
         try:
-            ph = get_placeholder(getattr(self.db, 'db_type', 'sqlite'))
+            ph = get_placeholder(getattr(self.db, 'db_type', 'postgresql'))
             workspace_data = {
                 'workspace_id': self.workspace_id,
                 'name': self.name,
@@ -206,7 +199,7 @@ class SpiderFootWorkspace:
     def load_workspace(self) -> None:
         """Load workspace from database."""
         try:
-            ph = get_placeholder(getattr(self.db, 'db_type', 'sqlite'))
+            ph = get_placeholder(getattr(self.db, 'db_type', 'postgresql'))
             query = f"SELECT * FROM tbl_workspaces WHERE workspace_id = {ph}"
 
             with self.db.dbhLock:
@@ -237,7 +230,7 @@ class SpiderFootWorkspace:
         """Save workspace changes to database."""
         try:
             self.modified_time = time.time()
-            ph = get_placeholder(getattr(self.db, 'db_type', 'sqlite'))
+            ph = get_placeholder(getattr(self.db, 'db_type', 'postgresql'))
 
             query = f"""
                 UPDATE tbl_workspaces
@@ -470,7 +463,7 @@ class SpiderFootWorkspace:
     def delete_workspace(self) -> None:
         """Delete workspace from database."""
         try:
-            ph = get_placeholder(getattr(self.db, 'db_type', 'sqlite'))
+            ph = get_placeholder(getattr(self.db, 'db_type', 'postgresql'))
             query = f"DELETE FROM tbl_workspaces WHERE workspace_id = {ph}"
             with self.db.dbhLock:
                 self.db.dbh.execute(query, [self.workspace_id])
@@ -1045,7 +1038,7 @@ class SpiderFootWorkspace:
 
         # Try to query the correlation results table
         try:
-            ph = get_placeholder(getattr(self.db, 'db_type', 'sqlite'))
+            ph = get_placeholder(getattr(self.db, 'db_type', 'postgresql'))
             placeholders = ','.join([ph for _ in scan_ids])
             query = f"""
                 SELECT cr.id, cr.scan_instance_id, cr.rule_id, cr.title,

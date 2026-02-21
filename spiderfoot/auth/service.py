@@ -60,7 +60,7 @@ class AuthService:
     def __init__(self, config: AuthConfig | None = None) -> None:
         self.config = config or AuthConfig()
         self._db_conn = None
-        self._db_type = "sqlite"
+        self._db_type = "postgresql"
         self._initialized = False
 
     # ------------------------------------------------------------------
@@ -73,23 +73,19 @@ class AuthService:
             return self._db_conn
 
         pg_dsn = os.environ.get("SF_POSTGRES_DSN", "")
-        if pg_dsn:
-            import psycopg2
-            self._db_conn = psycopg2.connect(pg_dsn)
-            self._db_conn.autocommit = False
-            self._db_type = "postgresql"
-        else:
-            import sqlite3
-            from spiderfoot.helpers import SpiderFootHelpers
-            db_path = f"{SpiderFootHelpers.dataPath()}/spiderfoot.db"
-            self._db_conn = sqlite3.connect(db_path)
-            self._db_type = "sqlite"
+        if not pg_dsn:
+            raise RuntimeError("SF_POSTGRES_DSN environment variable is required")
+
+        import psycopg2
+        self._db_conn = psycopg2.connect(pg_dsn)
+        self._db_conn.autocommit = False
+        self._db_type = "postgresql"
 
         return self._db_conn
 
     def _ph(self, idx: int = 1) -> str:
-        """Return placeholder for the dialect (%s for PG, ? for SQLite)."""
-        return "%s" if self._db_type == "postgresql" else "?"
+        """Return the PostgreSQL parameter placeholder."""
+        return "%s"
 
     def _phs(self, count: int) -> str:
         """Return comma-separated placeholders."""
@@ -119,8 +115,7 @@ class AuthService:
 
     def _get_schema(self) -> list[str]:
         """Return CREATE TABLE statements for auth tables."""
-        if self._db_type == "postgresql":
-            return [
+        return [
                 """CREATE TABLE IF NOT EXISTS tbl_users (
                     id VARCHAR(64) NOT NULL PRIMARY KEY,
                     username VARCHAR(255) NOT NULL UNIQUE,
@@ -204,96 +199,6 @@ class AuthService:
                 "CREATE INDEX IF NOT EXISTS idx_sessions_user ON tbl_sessions (user_id)",
                 "CREATE INDEX IF NOT EXISTS idx_sessions_token ON tbl_sessions (token_hash)",
                 "CREATE INDEX IF NOT EXISTS idx_sessions_active ON tbl_sessions (is_active, expires_at)",
-                "CREATE INDEX IF NOT EXISTS idx_users_email ON tbl_users (email)",
-                "CREATE INDEX IF NOT EXISTS idx_users_sso ON tbl_users (sso_provider_id, sso_subject)",
-                "CREATE INDEX IF NOT EXISTS idx_api_keys_user ON tbl_api_keys (user_id)",
-                "CREATE INDEX IF NOT EXISTS idx_api_keys_prefix ON tbl_api_keys (key_prefix)",
-            ]
-        else:
-            # SQLite variant
-            return [
-                """CREATE TABLE IF NOT EXISTS tbl_users (
-                    id VARCHAR NOT NULL PRIMARY KEY,
-                    username VARCHAR NOT NULL UNIQUE,
-                    email VARCHAR NOT NULL,
-                    password_hash VARCHAR NOT NULL DEFAULT '',
-                    role VARCHAR NOT NULL DEFAULT 'viewer',
-                    display_name VARCHAR NOT NULL DEFAULT '',
-                    auth_method VARCHAR NOT NULL DEFAULT 'local',
-                    status VARCHAR NOT NULL DEFAULT 'active',
-                    created_at REAL NOT NULL DEFAULT 0,
-                    updated_at REAL NOT NULL DEFAULT 0,
-                    last_login REAL NOT NULL DEFAULT 0,
-                    failed_logins INT NOT NULL DEFAULT 0,
-                    locked_until REAL NOT NULL DEFAULT 0,
-                    sso_provider_id VARCHAR NOT NULL DEFAULT '',
-                    sso_subject VARCHAR NOT NULL DEFAULT '',
-                    metadata_json TEXT NOT NULL DEFAULT '{}'
-                )""",
-                """CREATE TABLE IF NOT EXISTS tbl_sessions (
-                    id VARCHAR NOT NULL PRIMARY KEY,
-                    user_id VARCHAR NOT NULL REFERENCES tbl_users(id),
-                    token_hash VARCHAR NOT NULL,
-                    created_at REAL NOT NULL DEFAULT 0,
-                    expires_at REAL NOT NULL DEFAULT 0,
-                    ip_address VARCHAR NOT NULL DEFAULT '',
-                    user_agent TEXT NOT NULL DEFAULT '',
-                    auth_method VARCHAR NOT NULL DEFAULT 'local',
-                    is_active INT NOT NULL DEFAULT 1
-                )""",
-                """CREATE TABLE IF NOT EXISTS tbl_sso_providers (
-                    id VARCHAR NOT NULL PRIMARY KEY,
-                    name VARCHAR NOT NULL,
-                    protocol VARCHAR NOT NULL,
-                    enabled INT NOT NULL DEFAULT 1,
-                    client_id VARCHAR NOT NULL DEFAULT '',
-                    client_secret TEXT NOT NULL DEFAULT '',
-                    authorization_url TEXT NOT NULL DEFAULT '',
-                    token_url TEXT NOT NULL DEFAULT '',
-                    userinfo_url TEXT NOT NULL DEFAULT '',
-                    jwks_uri TEXT NOT NULL DEFAULT '',
-                    scopes VARCHAR NOT NULL DEFAULT 'openid email profile',
-                    idp_entity_id TEXT NOT NULL DEFAULT '',
-                    idp_sso_url TEXT NOT NULL DEFAULT '',
-                    idp_slo_url TEXT NOT NULL DEFAULT '',
-                    idp_certificate TEXT NOT NULL DEFAULT '',
-                    sp_entity_id TEXT NOT NULL DEFAULT '',
-                    sp_acs_url TEXT NOT NULL DEFAULT '',
-                    ldap_url TEXT NOT NULL DEFAULT '',
-                    ldap_bind_dn TEXT NOT NULL DEFAULT '',
-                    ldap_bind_password TEXT NOT NULL DEFAULT '',
-                    ldap_base_dn TEXT NOT NULL DEFAULT '',
-                    ldap_user_filter VARCHAR NOT NULL DEFAULT '(uid={username})',
-                    ldap_group_filter VARCHAR NOT NULL DEFAULT '(member={dn})',
-                    ldap_tls INT NOT NULL DEFAULT 1,
-                    default_role VARCHAR NOT NULL DEFAULT 'viewer',
-                    allowed_domains TEXT NOT NULL DEFAULT '',
-                    auto_create_users INT NOT NULL DEFAULT 1,
-                    attribute_mapping TEXT NOT NULL DEFAULT '{}',
-                    group_attribute VARCHAR NOT NULL DEFAULT 'groups',
-                    admin_group VARCHAR NOT NULL DEFAULT '',
-                    created_at REAL NOT NULL DEFAULT 0,
-                    updated_at REAL NOT NULL DEFAULT 0
-                )""",
-                """CREATE TABLE IF NOT EXISTS tbl_api_keys (
-                    id VARCHAR NOT NULL PRIMARY KEY,
-                    user_id VARCHAR NOT NULL REFERENCES tbl_users(id),
-                    name VARCHAR NOT NULL,
-                    key_prefix VARCHAR NOT NULL,
-                    key_hash VARCHAR NOT NULL,
-                    role VARCHAR NOT NULL DEFAULT 'viewer',
-                    status VARCHAR NOT NULL DEFAULT 'active',
-                    expires_at REAL NOT NULL DEFAULT 0,
-                    allowed_modules TEXT NOT NULL DEFAULT '',
-                    allowed_endpoints TEXT NOT NULL DEFAULT '',
-                    rate_limit INT NOT NULL DEFAULT 0,
-                    last_used REAL NOT NULL DEFAULT 0,
-                    created_at REAL NOT NULL DEFAULT 0,
-                    updated_at REAL NOT NULL DEFAULT 0,
-                    metadata_json TEXT NOT NULL DEFAULT '{}'
-                )""",
-                "CREATE INDEX IF NOT EXISTS idx_sessions_user ON tbl_sessions (user_id)",
-                "CREATE INDEX IF NOT EXISTS idx_sessions_token ON tbl_sessions (token_hash)",
                 "CREATE INDEX IF NOT EXISTS idx_users_email ON tbl_users (email)",
                 "CREATE INDEX IF NOT EXISTS idx_users_sso ON tbl_users (sso_provider_id, sso_subject)",
                 "CREATE INDEX IF NOT EXISTS idx_api_keys_user ON tbl_api_keys (user_id)",

@@ -710,7 +710,7 @@ class sfp__stor_db_advanced(SpiderFootModernPlugin):
             if self.load_balancer:
                 self._bulk_store_with_load_balancing(events_to_process)
             else:
-                self._bulk_store_sqlite(events_to_process)
+                self._bulk_store_default(events_to_process)
                 
         except Exception as e:
             self.error(f"Error processing event buffer: {e}")
@@ -721,21 +721,21 @@ class sfp__stor_db_advanced(SpiderFootModernPlugin):
     def _bulk_store_with_load_balancing(self, events: list[Any]):
         """Store events using load-balanced connections."""
         if not HAS_PSYCOPG2:
-            self.error("PostgreSQL bulk storage requires psycopg2 but it's not installed. Falling back to SQLite.")
-            self._bulk_store_sqlite(events)
+            self.error("PostgreSQL bulk storage requires psycopg2 but it's not installed. Falling back to default storage.")
+            self._bulk_store_default(events)
             return
             
         if not self.load_balancer or not self.load_balancer.pools:
-            self.error("No healthy database connections available. Falling back to SQLite.")
-            self._bulk_store_sqlite(events)
+            self.error("No healthy database connections available. Falling back to default storage.")
+            self._bulk_store_default(events)
             return
             
         pool_id, conn = None, None
         try:
             pool_id, conn = self.load_balancer.get_optimal_connection('bulk_insert')
         except Exception as e:
-            self.error(f"Failed to get database connection: {e}. Falling back to SQLite.")
-            self._bulk_store_sqlite(events)
+            self.error(f"Failed to get database connection: {e}. Falling back to default storage.")
+            self._bulk_store_default(events)
             return
         
         try:
@@ -793,11 +793,11 @@ class sfp__stor_db_advanced(SpiderFootModernPlugin):
                     pass
             if pool_id and conn:
                 self.load_balancer.return_connection(pool_id, conn, False)
-            # Fall back to SQLite
-            self._bulk_store_sqlite(events)
+            # Fall back to default storage
+            self._bulk_store_default(events)
 
-    def _bulk_store_sqlite(self, events: list[Any]):
-        """Bulk store events in SQLite."""
+    def _bulk_store_default(self, events: list[Any]):
+        """Bulk store events using default database.""
         for event in events:
             if self.opts['maxstorage'] != 0 and len(event.data) > self.opts['maxstorage']:
                 self.__sfdb__.scanEventStore(

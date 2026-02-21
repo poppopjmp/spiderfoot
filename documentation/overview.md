@@ -95,7 +95,7 @@ SpiderFoot consists of the following main components:
 - **Security Middleware:** Enterprise-grade security layer providing CSRF protection, input validation, rate limiting, session management, API security, and comprehensive logging.
 - **Modules:** Each module is responsible for gathering a specific type of data or integrating with a particular source. Modules can be enabled, disabled, or configured individually.
 - **Web UI:** Provides a user-friendly interface for configuring scans, viewing results, managing workspaces, and visualizing relationships between entities.
-- **Database:** PostgreSQL (microservices) or SQLite (monolith) with automated PG backup sidecar.
+- **Database:** PostgreSQL with automated backup sidecar.
 - **Performance Optimization:** Intelligent caching system with TTL support, adaptive rate limiting, and resource monitoring.
 - **Advanced Analytics:** Sophisticated data correlation including cross-platform identity resolution, temporal pattern analysis, geospatial clustering, and behavioral analytics.
 - **Log Pipeline:** Vector.dev for structured log aggregation, transformation, and routing.

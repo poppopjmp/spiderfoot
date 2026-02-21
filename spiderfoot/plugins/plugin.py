@@ -458,7 +458,7 @@ class SpiderFootPlugin:
             return True
 
         # If threading is enabled, check the _stopScanning attribute instead.
-        # This is to prevent each thread needing its own sqlite db handle.
+        # This is to prevent each thread needing its own database handle.
         if self.outgoingEventQueue is not None and self.incomingEventQueue is not None:
             return self._stopScanning
 

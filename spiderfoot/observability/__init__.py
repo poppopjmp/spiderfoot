@@ -38,7 +38,7 @@ from .health import (
 from .logger import (
     logListenerSetup,
     logWorkerSetup,
-    SpiderFootSqliteLogHandler,
+    SpiderFootDbLogHandler,
     stop_listener,
 )
 
@@ -80,7 +80,7 @@ __all__ = [
     # Logger
     "logListenerSetup",
     "logWorkerSetup",
-    "SpiderFootSqliteLogHandler",
+    "SpiderFootDbLogHandler",
     "stop_listener",
     # Metrics
     "Counter",

@@ -89,7 +89,7 @@ def create_data_service_from_config(sf_config: dict[str, Any]) -> DataService:
         _dataservice_api_key: Auth key for remote backends
         _dataservice_timeout: Request timeout (seconds)
         __database: Database path/URL (for local backend)
-        __dbtype: Database type 'sqlite' or 'postgresql'
+        __dbtype: Database type 'postgresql'
 
     Args:
         sf_config: SpiderFoot configuration dict
@@ -112,7 +112,7 @@ def create_data_service_from_config(sf_config: dict[str, Any]) -> DataService:
         timeout=float(sf_config.get("_dataservice_timeout", "30")),
         db_config={
             "__database": sf_config.get("__database", DEFAULT_DATABASE_NAME),
-            "__dbtype": sf_config.get("__dbtype", "sqlite"),
+            "__dbtype": sf_config.get("__dbtype", "postgresql"),
         },
     )
 
@@ -148,7 +148,7 @@ def create_data_service_from_env() -> DataService:
         timeout=float(os.environ.get("SF_DATASERVICE_TIMEOUT", "30")),
         db_config={
             "__database": os.environ.get("SF_DATABASE", DEFAULT_DATABASE_NAME),
-            "__dbtype": os.environ.get("SF_DBTYPE", "sqlite"),
+            "__dbtype": os.environ.get("SF_DBTYPE", "postgresql"),
         },
     )
 

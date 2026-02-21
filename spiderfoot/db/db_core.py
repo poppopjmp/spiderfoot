@@ -15,9 +15,7 @@ from __future__ import annotations
 
 import logging
 import threading
-import sqlite3
 import psycopg2
-from pathlib import Path
 import time
 from ..config.constants import DB_RETRY_BACKOFF_BASE
 from spiderfoot.db.db_utils import (
@@ -36,80 +34,8 @@ class DbCore:
     instance owns its own connection and lock.  Former class-level
     shared state was removed in RC190 (Cycle 28).
     """
-    # Add schema and event details as class attributes for use in schema creation
+    # PostgreSQL schema queries (sole database backend)
     createSchemaQueries = [
-        "PRAGMA journal_mode=WAL",
-        "CREATE TABLE IF NOT EXISTS tbl_event_types ( \
-            event       VARCHAR NOT NULL PRIMARY KEY, \
-            event_descr VARCHAR NOT NULL, \
-            event_raw   INT NOT NULL DEFAULT 0, \
-            event_type  VARCHAR NOT NULL \
-        )",
-        "CREATE TABLE IF NOT EXISTS tbl_config ( \
-            scope   VARCHAR NOT NULL, \
-            opt     VARCHAR NOT NULL, \
-            val     VARCHAR NOT NULL, \
-            PRIMARY KEY (scope, opt) \
-        )",
-        "CREATE TABLE IF NOT EXISTS tbl_scan_instance ( \
-            guid        VARCHAR NOT NULL PRIMARY KEY, \
-            name        VARCHAR NOT NULL, \
-            seed_target VARCHAR NOT NULL, \
-            created     INT DEFAULT 0, \
-            started     INT DEFAULT 0, \
-            ended       INT DEFAULT 0, \
-            status      VARCHAR NOT NULL \
-        )",
-        "CREATE TABLE IF NOT EXISTS tbl_scan_log ( \
-            scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
-            generated           INT NOT NULL, \
-            component           VARCHAR, \
-            type                VARCHAR NOT NULL, \
-            message             VARCHAR \
-        )",
-        "CREATE TABLE IF NOT EXISTS tbl_scan_config ( \
-            scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
-            component           VARCHAR NOT NULL, \
-            opt                 VARCHAR NOT NULL, \
-            val                 VARCHAR NOT NULL \
-        )",
-        "CREATE TABLE IF NOT EXISTS tbl_scan_results ( \
-            scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
-            hash                VARCHAR NOT NULL, \
-            type                VARCHAR NOT NULL REFERENCES tbl_event_types(event), \
-            generated           INT NOT NULL, \
-            confidence          INT NOT NULL DEFAULT 100, \
-            visibility          INT NOT NULL DEFAULT 100, \
-            risk                INT NOT NULL DEFAULT 0, \
-            module              VARCHAR NOT NULL, \
-            data                VARCHAR, \
-            false_positive      INT NOT NULL DEFAULT 0, \
-            source_event_hash  VARCHAR DEFAULT 'ROOT' \
-        )",
-        "CREATE TABLE IF NOT EXISTS tbl_scan_correlation_results ( \
-            id                  VARCHAR NOT NULL PRIMARY KEY, \
-            scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
-            title               VARCHAR NOT NULL, \
-            rule_risk           VARCHAR NOT NULL, \
-            rule_id             VARCHAR NOT NULL, \
-            rule_name           VARCHAR NOT NULL, \
-            rule_descr          VARCHAR NOT NULL, \
-            rule_logic          VARCHAR NOT NULL \
-        )",
-        "CREATE TABLE IF NOT EXISTS tbl_scan_correlation_results_events ( \
-            correlation_id      VARCHAR NOT NULL REFERENCES tbl_scan_correlation_results(id), \
-            event_hash          VARCHAR NOT NULL REFERENCES tbl_scan_results(hash) \
-        )",
-        "CREATE INDEX IF NOT EXISTS idx_scan_results_id ON tbl_scan_results (scan_instance_id)",
-        "CREATE INDEX IF NOT EXISTS idx_scan_results_type ON tbl_scan_results (scan_instance_id, type)",
-        "CREATE INDEX IF NOT EXISTS idx_scan_results_hash ON tbl_scan_results (scan_instance_id, hash)",
-        "CREATE INDEX IF NOT EXISTS idx_scan_results_module ON tbl_scan_results(scan_instance_id, module)",
-        "CREATE INDEX IF NOT EXISTS idx_scan_results_srchash ON tbl_scan_results (scan_instance_id, source_event_hash)",
-        "CREATE INDEX IF NOT EXISTS idx_scan_logs ON tbl_scan_log (scan_instance_id)",
-        "CREATE INDEX IF NOT EXISTS idx_scan_correlation ON tbl_scan_correlation_results (scan_instance_id, id)",
-        "CREATE INDEX IF NOT EXISTS idx_scan_correlation_events ON tbl_scan_correlation_results_events (correlation_id)"
-    ]
-    createPostgreSQLSchemaQueries = [
         "CREATE TABLE IF NOT EXISTS tbl_event_types ( \
             event       VARCHAR NOT NULL PRIMARY KEY, \
             event_descr VARCHAR NOT NULL, \
@@ -693,22 +619,14 @@ class DbCore:
         ("command_alert", "Command alert", 510, "text"),
         ("control_alert", "Control alert", 511, "text")
     ]
-    schema_version_table_sqlite = """
-        CREATE TABLE IF NOT EXISTS tbl_schema_version (
-            version INTEGER NOT NULL,
-            applied_at INTEGER NOT NULL
-        )
-    """
-    schema_version_table_postgres = """
+    schema_version_table = """
         CREATE TABLE IF NOT EXISTS tbl_schema_version (
             version INTEGER NOT NULL,
             applied_at BIGINT NOT NULL
         )
     """
-    if schema_version_table_sqlite not in createSchemaQueries:
-        createSchemaQueries.insert(0, schema_version_table_sqlite)
-    if schema_version_table_postgres not in createPostgreSQLSchemaQueries:
-        createPostgreSQLSchemaQueries.insert(0, schema_version_table_postgres)
+    if schema_version_table not in createSchemaQueries:
+        createSchemaQueries.insert(0, schema_version_table)
     SCHEMA_VERSION = 1  # Increment this on every schema change
 
     def _log_db_error(self, msg, exc):
@@ -734,58 +652,12 @@ class DbCore:
         if '__database' not in opts:
             raise ValueError("__database key missing in opts")
         if '__dbtype' not in opts:
-            opts['__dbtype'] = 'sqlite'
+            opts['__dbtype'] = 'postgresql'
         self.db_type = normalize_db_type(opts['__dbtype'])
+        if self.db_type != 'postgresql':
+            raise ValueError(f"Unsupported database type: {self.db_type}. Only PostgreSQL is supported.")
         database_path = opts['__database']
-        if self.db_type == 'sqlite':
-            Path(database_path).parent.mkdir(exist_ok=True, parents=True)
-            try:
-                dbh = sqlite3.connect(database_path, check_same_thread=False, timeout=30)
-            except Exception as e:
-                self._log_db_error(f"Error connecting to internal database {database_path}", e)
-                raise OSError(f"Error connecting to internal database {database_path}") from e
-            if dbh is None:
-                raise OSError(f"Could not connect to internal database, and could not create {database_path}")
-            dbh.text_factory = str
-            # Enable WAL mode for better concurrent read/write performance
-            dbh.execute("PRAGMA journal_mode=WAL")
-            dbh.execute("PRAGMA busy_timeout=30000")
-            self.conn = dbh
-            self.dbh = dbh.cursor()
-            def __dbregex__(qry: str, data: str) -> bool:
-                """Test if a regular expression matches data."""
-                import re
-                return re.search(qry, data) is not None
-            self.conn.create_function("REGEXP", 2, __dbregex__)
-            with self.dbhLock:
-                try:
-                    self.create()
-                except Exception as e:
-                    self._log_db_error("Tried to set up the SpiderFoot database schema, but failed", e)
-                    raise OSError("Tried to set up the SpiderFoot database schema, but failed") from e
-                try:
-                    self.dbh.execute("SELECT COUNT(*) FROM tbl_event_types")
-                    if self.dbh.fetchone()[0] == 0:
-                        for row in self.eventDetails:
-                            event = row[0]
-                            event_descr = row[1]
-                            event_raw = row[2]
-                            event_type = row[3]
-                            ph = get_placeholder(self.db_type)
-                            upsert_clause = get_upsert_clause(self.db_type, 'tbl_event_types', ['event'], ['event_descr', 'event_raw', 'event_type'])
-                            qry = f"INSERT INTO tbl_event_types (event, event_descr, event_raw, event_type) VALUES ({ph}, {ph}, {ph}, {ph}) {upsert_clause}"
-                            try:
-                                self.dbh.execute(qry, (
-                                    event, event_descr, event_raw, event_type
-                                ))
-                            except Exception as e:
-                                self._log_db_error("Failed to insert event type", e)
-                                continue
-                        self.conn.commit()
-                except Exception as e:
-                    self._log_db_error("Failed to populate event types", e)
-                    raise OSError("Failed to populate event types") from e
-        elif self.db_type == 'postgresql':
+        if self.db_type == 'postgresql':
             try:
                 import psycopg2.extras
                 self.conn = psycopg2.connect(database_path)
@@ -872,7 +744,7 @@ class DbCore:
                         try:
                             self.dbh.execute(qry)
                             self.conn.commit()
-                        except (sqlite3.Error, psycopg2.Error) as qe:
+                        except psycopg2.Error as qe:
                             # PostgreSQL raises UniqueViolation on
                             # CREATE TABLE IF NOT EXISTS when the type
                             # already exists (pg_type_typname_nsp_index).
@@ -904,7 +776,7 @@ class DbCore:
                                 continue
                         self.conn.commit()
                     return
-                except (sqlite3.Error, psycopg2.Error) as e:
+                except psycopg2.Error as e:
                     self._log_db_error("SQL error encountered when setting up database", e)
                     try:
                         self.conn.rollback()
@@ -942,11 +814,10 @@ class DbCore:
         with self.dbhLock:
             for attempt in range(3):
                 try:
-                    if ((self.db_type == 'sqlite') or (self.db_type == 'postgresql')):
-                        self.dbh.execute("VACUUM")
+                    self.dbh.execute("VACUUM")
                     self.conn.commit()
                     return True
-                except (sqlite3.Error, psycopg2.Error) as e:
+                except psycopg2.Error as e:
                     self._log_db_error("SQL error encountered when vacuuming the database", e)
                     if is_transient_error(e) and attempt < 2:
                         time.sleep(DB_RETRY_BACKOFF_BASE * (attempt + 1))
@@ -968,5 +839,5 @@ class DbCore:
             try:
                 self.dbh.execute(qry)
                 return self.dbh.fetchall()
-            except (sqlite3.Error, psycopg2.Error) as e:
+            except psycopg2.Error as e:
                 raise OSError("SQL error encountered when retrieving event types") from e
