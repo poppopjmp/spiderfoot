@@ -394,10 +394,10 @@ class ReportTemplateManager:
         return ctx
 
     def _render_template(self, template: ReportTemplate, context: dict) -> str:
-        """Render a template with Jinja2 or simple string formatting."""
+        """Render a template with Jinja2 sandboxed environment or simple string formatting."""
         try:
-            from jinja2 import Environment, BaseLoader
-            env = Environment(loader=BaseLoader(), autoescape=True)
+            from jinja2.sandbox import SandboxedEnvironment
+            env = SandboxedEnvironment(autoescape=True)
             tmpl = env.from_string(template.body_template)
             body = tmpl.render(**context)
 
@@ -412,10 +412,11 @@ class ReportTemplateManager:
 
             return "\n\n".join(parts)
         except ImportError:
-            # Fallback: simple Python format
+            # Fallback: simple Python format — only use safe string substitution
             try:
-                return template.body_template.format(**context)
-            except (KeyError, ValueError):
+                from string import Template
+                return Template(template.body_template).safe_substitute(context)
+            except Exception:
                 return template.body_template
 
     def _persist(self, t: ReportTemplate) -> None:
