@@ -17,6 +17,8 @@ from __future__ import annotations
 
 import json
 import os.path
+import shutil
+import subprocess
 import tempfile
 import paramiko
 import io
@@ -109,24 +111,29 @@ class sfp_tool_gobuster(SpiderFootModernPlugin):
         """Return the list of events this module produces."""
         return ["URL_DIRECTORY", "URL_FILE"]
 
-    def execute_command(self, cmd: str):
-        """Execute an external command and return the output."""
-        self.debug(f"Executing command: {' '.join(cmd)}")
-        output_file = tempfile.NamedTemporaryFile(mode="w+", delete=False)
+    def execute_command(self, cmd: list[str]):
+        """Execute an external command safely (no shell) and return the output file path."""
+        self.debug(f"Executing command: {cmd}")
+        output_file = tempfile.NamedTemporaryFile(mode="w+", delete=False, suffix=".json")
         output_file.close()
 
         try:
-            if not self.sf.outputProgress(f"Running Gobuster against {cmd[-1]}"):
-                return None
+            full_cmd = cmd + ["-o", output_file.name]
+            result = subprocess.run(
+                full_cmd,
+                capture_output=True,
+                text=True,
+                timeout=self.opts.get("timeout", 30) * 10,  # generous wall-clock limit
+            )
 
-            cmd = " ".join(cmd) + f" -o {output_file.name}"
-            ret_val = self.sf.execute(cmd, useShell=True)
-
-            if ret_val:
-                self.error(f"Failed to execute gobuster: {ret_val}")
+            if result.returncode != 0:
+                self.error(f"Failed to execute gobuster (exit {result.returncode}): {result.stderr.strip()}")
                 return None
 
             return output_file.name
+        except subprocess.TimeoutExpired:
+            self.error("Gobuster execution timed out")
+            return None
         except Exception as e:
             self.error(f"Failed to execute gobuster: {e}")
             return None
@@ -247,13 +254,12 @@ class sfp_tool_gobuster(SpiderFootModernPlugin):
             "/" not in gobuster_path and
             "\\" not in gobuster_path
         ):
-            cmd = ["which", gobuster_path]
-            path = self.sf.execute(cmd, useShell=True)
-            if not path:
+            resolved = shutil.which(gobuster_path)
+            if not resolved:
                 self.error(f"Gobuster tool '{gobuster_path}' not found")
                 self.errorState = True
                 return
-            gobuster_path = path
+            gobuster_path = resolved
 
         if not os.path.isfile(wordlist):
             self.error(f"Wordlist '{wordlist}' not found")
