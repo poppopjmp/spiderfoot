@@ -1,0 +1,326 @@
+name: Deployment Validation — Full Stack
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Dockerfile"
+      - "docker-compose-microservices.yml"
+      - "docker/**"
+      - "requirements.txt"
+      - "frontend/**"
+      - "cli/**"
+      - ".github/workflows/deploy-test.yml"
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  # ─── Job 1: Build the main Docker image ────────────────────────────────────
+  build-image:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Read version
+        id: meta
+        run: echo "version=$(cat VERSION)" >> $GITHUB_OUTPUT
+
+      - name: Build image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          load: true
+          tags: spiderfoot:test
+          cache-from: type=gha,scope=deploy-test
+          cache-to: type=gha,scope=deploy-test,mode=max
+
+      - name: Save image
+        run: docker save spiderfoot:test | gzip > /tmp/spiderfoot-test.tar.gz
+
+      - name: Upload image
+        uses: actions/upload-artifact@v4
+        with:
+          name: spiderfoot-image
+          path: /tmp/spiderfoot-test.tar.gz
+          retention-days: 1
+
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+
+  # ─── Job 2: Validate API starts and responds ───────────────────────────────
+  api-smoke-test:
+    name: API Smoke Test
+    runs-on: ubuntu-latest
+    needs: build-image
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: spiderfoot
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: spiderfoot
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download image
+        uses: actions/download-artifact@v4
+        with:
+          name: spiderfoot-image
+          path: /tmp
+
+      - name: Load image
+        run: docker load < /tmp/spiderfoot-test.tar.gz
+
+      - name: Start API server
+        run: |
+          docker run -d \
+            --name sf-api \
+            --network host \
+            -e SF_DB_TYPE=postgresql \
+            -e SF_DB_HOST=localhost \
+            -e SF_DB_PORT=5432 \
+            -e SF_DB_NAME=spiderfoot \
+            -e SF_DB_USER=spiderfoot \
+            -e SF_DB_PASSWORD=testpass \
+            -e SF_REDIS_URL=redis://localhost:6379/0 \
+            spiderfoot:test \
+            python sf.py --api --api-listen 0.0.0.0:8001
+
+      - name: Wait for API
+        run: |
+          echo "Waiting for API to start..."
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:8001/health > /dev/null 2>&1; then
+              echo "API is up after ${i}s"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "API did not start in 60s"
+          docker logs sf-api
+          exit 1
+
+      - name: Health endpoint
+        run: |
+          curl -sf http://localhost:8001/health | python -m json.tool
+          echo "Health check: OK"
+
+      - name: API docs endpoint
+        run: |
+          STATUS=$(curl -so /dev/null -w "%{http_code}" http://localhost:8001/api/docs)
+          if [ "$STATUS" = "200" ]; then
+            echo "API docs: OK (HTTP $STATUS)"
+          else
+            echo "API docs: FAILED (HTTP $STATUS)"
+            exit 1
+          fi
+
+      - name: Version matches
+        run: |
+          VERSION=$(cat VERSION)
+          API_VERSION=$(curl -sf http://localhost:8001/health | python -c "import sys,json; print(json.load(sys.stdin).get('version',''))" 2>/dev/null || echo "unknown")
+          echo "Expected: $VERSION, Got: $API_VERSION"
+          # If the health endpoint returns version info, verify it matches
+          if [ "$API_VERSION" != "unknown" ] && [ "$API_VERSION" != "" ]; then
+            if [ "$API_VERSION" != "$VERSION" ]; then
+              echo "WARNING: Version mismatch"
+            fi
+          fi
+
+      - name: Collect logs on failure
+        if: failure()
+        run: docker logs sf-api 2>&1 | tail -100
+
+      - name: Cleanup
+        if: always()
+        run: docker rm -f sf-api || true
+
+  # ─── Job 3: Go CLI build + health check against running API ─────────────────
+  cli-integration:
+    name: Go CLI Integration
+    runs-on: ubuntu-latest
+    needs: build-image
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: spiderfoot
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: spiderfoot
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache-dependency-path: cli/go.sum
+
+      - name: Build CLI
+        working-directory: cli
+        run: go build -trimpath -o ../sf .
+
+      - name: Download image
+        uses: actions/download-artifact@v4
+        with:
+          name: spiderfoot-image
+          path: /tmp
+
+      - name: Load image
+        run: docker load < /tmp/spiderfoot-test.tar.gz
+
+      - name: Start API server
+        run: |
+          docker run -d \
+            --name sf-api \
+            --network host \
+            -e SF_DB_TYPE=postgresql \
+            -e SF_DB_HOST=localhost \
+            -e SF_DB_PORT=5432 \
+            -e SF_DB_NAME=spiderfoot \
+            -e SF_DB_USER=spiderfoot \
+            -e SF_DB_PASSWORD=testpass \
+            -e SF_REDIS_URL=redis://localhost:6379/0 \
+            spiderfoot:test \
+            python sf.py --api --api-listen 0.0.0.0:8001
+
+      - name: Wait for API
+        run: |
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:8001/health > /dev/null 2>&1; then
+              echo "API ready"
+              exit 0
+            fi
+            sleep 1
+          done
+          docker logs sf-api
+          exit 1
+
+      - name: CLI health check
+        run: ./sf health --server http://localhost:8001
+
+      - name: CLI version
+        run: ./sf version
+
+      - name: CLI module list
+        run: ./sf modules --server http://localhost:8001 -o json | head -20
+
+      - name: CLI scan list
+        run: ./sf scan list --server http://localhost:8001 || true
+
+      - name: Cleanup
+        if: always()
+        run: docker rm -f sf-api || true
+
+  # ─── Job 4: Frontend build validation ───────────────────────────────────────
+  frontend-build:
+    name: Frontend Build Validation
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript check
+        run: npx tsc --noEmit
+
+      - name: Build production bundle
+        run: npx vite build
+
+      - name: Verify bundle
+        run: |
+          echo "=== Build output ==="
+          ls -lah dist/
+          ls -lah dist/assets/ || true
+
+          # Ensure index.html exists
+          test -f dist/index.html || (echo "FAIL: index.html missing" && exit 1)
+
+          # Check bundle size is reasonable (< 5MB)
+          TOTAL=$(du -sb dist/ | awk '{print $1}')
+          echo "Total bundle size: ${TOTAL} bytes"
+          if [ "$TOTAL" -gt 5242880 ]; then
+            echo "WARNING: Bundle exceeds 5MB"
+          fi
+
+  # ─── Job 5: Summary ─────────────────────────────────────────────────────────
+  deployment-summary:
+    name: Deployment Readiness Summary
+    runs-on: ubuntu-latest
+    needs: [build-image, api-smoke-test, cli-integration, frontend-build]
+    if: always()
+    steps:
+      - name: Summary
+        run: |
+          echo "## Deployment Validation Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Docker Build | ${{ needs.build-image.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| API Smoke Test | ${{ needs.api-smoke-test.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Go CLI Integration | ${{ needs.cli-integration.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend Build | ${{ needs.frontend-build.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Version: ${{ needs.build-image.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Gate
+        if: |
+          needs.build-image.result != 'success' ||
+          needs.api-smoke-test.result != 'success' ||
+          needs.cli-integration.result != 'success' ||
+          needs.frontend-build.result != 'success'
+        run: |
+          echo "One or more deployment checks failed"
+          exit 1
