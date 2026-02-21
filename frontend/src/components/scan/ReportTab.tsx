@@ -14,6 +14,13 @@ import { COUNTRY_NAME_TO_CODE } from '../../lib/geo';
 
 /* ── Helpers ──────────────────────────────────────────────── */
 
+/** Escape a string for safe interpolation into an HTML template literal. */
+function escapeHTML(s: string): string {
+  return s.replace(/[&<>"']/g, (c) =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!),
+  );
+}
+
 function riskBadgeText(risk: string): string {
   const r = risk.toLowerCase();
   if (r === 'critical') return '🔴 CRITICAL';
@@ -501,7 +508,7 @@ function ReportTab({ scanId, scan }: { scanId: string; scan?: Scan }) {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
     printWindow.document.write(`<!DOCTYPE html>
-<html><head><title>${scan?.name || scanId} - Report</title>
+<html><head><title>${escapeHTML(scan?.name || scanId)} - Report</title>
 <style>
   body { font-family: system-ui, -apple-system, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; color: #1a1a2e; }
   h1 { font-size: 24px; border-bottom: 2px solid #6366f1; padding-bottom: 8px; }
@@ -520,7 +527,7 @@ function ReportTab({ scanId, scan }: { scanId: string; scan?: Scan }) {
   .meta { color: #666; font-size: 12px; margin-bottom: 24px; }
   @media print { body { margin: 20px; } }
 </style></head><body>
-<div class="meta">Generated: ${new Date().toLocaleString()} | Target: ${scan?.target ?? ''} | Scan ID: ${scanId}</div>
+<div class="meta">Generated: ${escapeHTML(new Date().toLocaleString())} | Target: ${escapeHTML(scan?.target ?? '')} | Scan ID: ${escapeHTML(scanId)}</div>
 ${html}
 </body></html>`);
     printWindow.document.close();
