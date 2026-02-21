@@ -914,7 +914,7 @@ The UI applies **emotional design principles** for a richer developer experience
 
 ## Frontend Testing
 
-The React frontend includes **270 tests** across 25 test files, powered by Vitest 3 and Testing Library:
+The React frontend includes **282 tests** across 27 test files, powered by Vitest 3 and Testing Library:
 
 | Suite | Tests | Coverage |
 |-------|-------|----------|
@@ -929,6 +929,8 @@ The React frontend includes **270 tests** across 25 test files, powered by Vites
 | ErrorBoundary | 8 | Crash recovery, fallback UI, error logging |
 | Schedules | 4 | Page rendering, empty state, data display, create modal |
 | Safe Storage | 4 | localStorage quota handling |
+| Scan Tabs | 5 | GraphTab, BrowseTab, LogTab, GeoMapTab smoke tests |
+| CommandPalette | 7 | Keyboard shortcuts, search, filtering, ARIA |
 
 ```bash
 cd frontend && npx vitest run    # Run all tests
@@ -1016,7 +1018,7 @@ helm/                     # Kubernetes Helm chart
 pip install -r requirements.txt
 pytest --tb=short -q
 
-# Frontend tests (270 tests, 25 files)
+# Frontend tests (282 tests, 27 files)
 cd frontend && npx vitest run
 
 # Go CLI tests

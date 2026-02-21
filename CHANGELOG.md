@@ -49,6 +49,9 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Admin pages → React Query**: SSOSettings, Users, ApiKeys migrated from useState/useEffect to useQuery/useMutation
 - **Concurrent token refresh deduplication**: Shared `refreshPromise` prevents race conditions
 - **`useDocumentTitle`** on all 13 pages
+- **Workspaces.tsx refactor**: Extracted `WorkspaceReportCard` component and `useWorkspaceMutations` hook — reduced from 1003 to 714 lines
+- **Workspace scans cache isolation**: Separated `['workspace-scans', workspaceId]` query key from global scans list
+- **TypeScript strict compliance**: Zero errors on `tsc --noEmit` — fixed mutation type mismatches, unused imports/parameters across all source and test files
 - **Accessibility**: ARIA labels on scan tabs, forms, filters, checkboxes, GeoMap SVG, skip-to-content link
 
 ### Fixed
