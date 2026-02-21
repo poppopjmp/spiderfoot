@@ -57,6 +57,27 @@
 # Document analysis is handled by the sfp_document_analyzer plugin which
 # communicates with the Tika container — no separate enrichment/user-input
 # services are needed.
+#
+# ── Container Security Hardening ──────────────────────────────────────
+# 13 of 23 services run with:
+#   - security_opt: ["no-new-privileges:true"]  → prevents SUID/SGID escalation
+#   - read_only: true                           → immutable root filesystem
+#   - tmpfs: [/tmp]                             → writable scratch space (RAM-only)
+#
+# Hardened: api, celery-worker, celery-worker-active, redis, frontend,
+#   qdrant, vector, tika, agents, celery-beat, flower, litellm, pg-backup
+#
+# NOT hardened (require writable root filesystem):
+#   - postgres   → writes WAL + data to /var/lib/postgresql
+#   - minio      → writes objects to /data
+#   - grafana    → writes plugins/dashboards to /var/lib/grafana
+#   - prometheus → writes TSDB to /prometheus
+#   - loki       → writes index/chunks to /loki
+#   - traefik    → writes ACME certificates to /etc/traefik/acme.json
+#   - jaeger     → writes trace data to /tmp (could use tmpfs but badger needs it)
+#   - keycloak   → Java temp files + H2/JDBC state
+#   - docker-socket-proxy → privileged socket access required
+#   - minio-init → ephemeral init container (runs once and exits)
 # =============================================================================
 
 name: spiderfoot
