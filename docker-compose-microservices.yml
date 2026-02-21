@@ -228,6 +228,11 @@ services:
     image: ghcr.io/poppopjmp/spiderfoot-api:latest
     container_name: sf-api
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:size=256M
     networks:
       - sf-frontend
       - sf-backend
@@ -831,6 +836,11 @@ services:
     image: ghcr.io/poppopjmp/spiderfoot-base:latest
     container_name: sf-celery-worker
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:size=256M
     networks:
       - sf-backend
       - sf-frontend
@@ -929,6 +939,12 @@ services:
     cap_add:
       - NET_RAW          # nmap SYN scans, naabu raw sockets
       - NET_ADMIN        # nmap OS detection, advanced scans
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:size=512M
+      - /var/tmp:size=256M
     environment:
       SF_SERVICE: celery-worker
       SF_REDIS_URL: redis://redis:6379/0
