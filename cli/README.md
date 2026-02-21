@@ -110,8 +110,11 @@ sf export json <scan-id> --file results.json
 # List schedules
 sf schedule list
 
-# Create a schedule
-sf schedule create --name "Daily scan" --target example.com --cron "0 0 * * *"
+# Create a schedule (interval in hours)
+sf schedule create --name "Daily scan" --target example.com --interval 24
+
+# Update a schedule
+sf schedule update <schedule-id> --interval 12 --description "Twice daily"
 
 # Delete a schedule
 sf schedule delete <schedule-id>
