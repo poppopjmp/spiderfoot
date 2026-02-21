@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueries } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import {
   scanApi, healthApi, formatEpoch, formatDuration,
@@ -35,6 +35,34 @@ export default function DashboardPage() {
 
   const scans = scanData?.items ?? [];
   const total = scanData?.total ?? 0;
+
+  // Fetch correlation risk summaries for recent scans (parallel, cached)
+  const riskQueries = useQueries({
+    queries: scans.map((scan: Scan) => ({
+      queryKey: ['scan-risk', scan.scan_id],
+      queryFn: ({ signal }: { signal: AbortSignal }) =>
+        scanApi.correlationsSummary(scan.scan_id, 'risk', signal),
+      enabled: scan.status === 'FINISHED' || scan.status === 'ERROR-FAILED',
+      staleTime: 5 * 60_000, // Risk data rarely changes — cache 5 min
+    })),
+  });
+
+  // Build a map of scan_id → { high, medium, low, info }
+  const riskMap = new Map<string, { high: number; medium: number; low: number; info: number }>();
+  scans.forEach((scan: Scan, i: number) => {
+    const data = riskQueries[i]?.data;
+    if (data?.summary) {
+      const counts = { high: 0, medium: 0, low: 0, info: 0 };
+      for (const row of data.summary as { risk: string; total: number }[]) {
+        const key = row.risk?.toLowerCase();
+        if (key === 'high') counts.high = row.total;
+        else if (key === 'medium') counts.medium = row.total;
+        else if (key === 'low') counts.low = row.total;
+        else if (key === 'info' || key === 'informational') counts.info = row.total;
+      }
+      riskMap.set(scan.scan_id, counts);
+    }
+  });
 
   // Use facets from search API for accurate cross-scan status counts
   const facets = searchData?.facets?.status ?? {};
@@ -102,7 +130,7 @@ export default function DashboardPage() {
                       <td className="table-cell text-dark-300 font-mono text-xs">{scan.target}</td>
                       <td className="table-cell"><StatusBadge status={scan.status} /></td>
                       <td className="table-cell">
-                        <RiskPills />
+                        <RiskPills {...(riskMap.get(scan.scan_id) ?? {})} />
                       </td>
                       <td className="table-cell text-dark-400 text-xs whitespace-nowrap">{formatEpoch(scan.started)}</td>
                       <td className="table-cell text-dark-400 text-xs whitespace-nowrap">{formatDuration(scan.started, scan.ended)}</td>

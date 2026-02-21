@@ -14,6 +14,21 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+/**
+ * Retrieve auth headers for non-Axios consumers (e.g. EventSource).
+ * Returns an object with Authorization and/or X-API-Key if set.
+ */
+export function getAuthHeaders(): Record<string, string> {
+  const headers: Record<string, string> = {};
+  try {
+    const jwt = localStorage.getItem('sf_access_token');
+    const apiKey = localStorage.getItem('sf_api_key');
+    if (jwt) headers['Authorization'] = `Bearer ${jwt}`;
+    else if (apiKey) headers['X-API-Key'] = apiKey;
+  } catch { /* localStorage blocked */ }
+  return headers;
+}
+
 // Response interceptor — handle 401 with token refresh
 // Use a shared promise to deduplicate concurrent refresh attempts:
 // the first 401 triggers a refresh; subsequent 401s await the same promise.

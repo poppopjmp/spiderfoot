@@ -1,17 +1,19 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { scanApi, formatEpoch, formatDuration, type Scan } from '../lib/api';
 import {
   ArrowLeft, StopCircle, RotateCcw,
   BarChart3, List, Settings, ScrollText,
-  Shield, Network, Loader2, MapPin, Brain,
+  Shield, Network, Loader2, MapPin, Brain, PartyPopper,
 } from 'lucide-react';
-import { Tabs, StatusBadge, CopyButton, Skeleton, Toast, type ToastType } from '../components/ui';
+import { Tabs, StatusBadge, CopyButton, Skeleton, Toast, ProgressBar, Tooltip, type ToastType } from '../components/ui';
 import {
   SummaryTab, BrowseTab, CorrelationsTab, GraphTab,
   GeoMapTab, ReportTab, SettingsTab, LogTab, ExportDropdown,
 } from '../components/scan';
+import { useScanProgress } from '../hooks/useScanProgress';
+import { useNotificationStore } from '../lib/notifications';
 
 type DetailTab = 'summary' | 'browse' | 'correlations' | 'graph' | 'geomap' | 'report' | 'settings' | 'log';
 
@@ -23,11 +25,31 @@ export default function ScanDetailPage() {
 
   const isRunning = (s?: Scan) => ['RUNNING', 'STARTING'].includes(s?.status?.toUpperCase() ?? '');
 
+  const [showCelebration, setShowCelebration] = useState(false);
+  const addNotification = useNotificationStore((s) => s.add);
+
   const { data: scan, isLoading: scanLoading } = useQuery({
     queryKey: ['scan', scanId],
     queryFn: ({ signal }) => scanApi.get(scanId!, signal),
     enabled: !!scanId,
     refetchInterval: (query) => isRunning(query.state.data) ? 5000 : 30000,
+  });
+
+  // Real-time scan progress via SSE
+  const { progress } = useScanProgress(scanId, {
+    enabled: isRunning(scan),
+    interval: 2,
+    onComplete: useCallback(() => {
+      queryClient.invalidateQueries({ queryKey: ['scan', scanId] });
+      setShowCelebration(true);
+      setTimeout(() => setShowCelebration(false), 4000);
+      addNotification({
+        type: 'scan_complete',
+        title: 'Scan Complete',
+        message: `${scan?.name || 'Scan'} finished successfully`,
+        href: `/scans/${scanId}`,
+      });
+    }, [queryClient, scanId, scan?.name, addNotification]),
   });
 
   /* Mutations */
@@ -37,7 +59,7 @@ export default function ScanDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['scan', scanId] });
       setToast({ type: 'success', message: 'Scan stopped' });
     },
-    onError: (err: Error) => {
+    onError: () => {
       setToast({ type: 'error', message: 'Failed to stop scan' });
     },
   });
@@ -47,7 +69,7 @@ export default function ScanDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['scans'] });
       setToast({ type: 'success', message: 'Rerun started' });
     },
-    onError: (err: Error) => {
+    onError: () => {
       setToast({ type: 'error', message: 'Failed to rerun scan' });
     },
   });
@@ -107,16 +129,46 @@ export default function ScanDetailPage() {
         </div>
       </div>
 
-      {/* Risk pills row */}
+      {/* Progress section */}
       {scan && (
-        <div className="flex items-center gap-6 animate-fade-in" style={{ animationDelay: '50ms' }}>
-          {scan.result_count != null && (
-            <span className="text-sm text-dark-400">{scan.result_count.toLocaleString()} results</span>
+        <div className="flex flex-col gap-3 animate-fade-in" style={{ animationDelay: '50ms' }}>
+          <div className="flex items-center gap-6">
+            {scan.result_count != null && (
+              <span className="text-sm text-dark-400">{scan.result_count.toLocaleString()} results</span>
+            )}
+            {isRunning(scan) && progress && (
+              <Tooltip content={`${progress.modules_finished}/${progress.modules_total} modules complete`} side="bottom">
+                <span className="text-sm text-dark-400">
+                  {progress.modules_running} modules running
+                </span>
+              </Tooltip>
+            )}
+            {isRunning(scan) && !progress && (
+              <span className="flex items-center gap-1.5 text-blue-400 text-sm">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" /> Scan in progress...
+              </span>
+            )}
+          </div>
+          {/* Live progress bar */}
+          {isRunning(scan) && progress && (
+            <div className="w-full max-w-xl animate-fade-in">
+              <ProgressBar
+                value={progress.overall_percent}
+                max={100}
+                color="bg-spider-500"
+                showLabel
+              />
+            </div>
           )}
-          {isRunning(scan) && (
-            <span className="flex items-center gap-1.5 text-blue-400 text-sm">
-              <Loader2 className="h-3.5 w-3.5 animate-spin" /> Scan in progress...
-            </span>
+          {/* Celebration banner */}
+          {showCelebration && (
+            <div className="flex items-center gap-3 px-4 py-3 bg-green-900/20 border border-green-800/40 rounded-xl animate-fade-in-up">
+              <PartyPopper className="h-5 w-5 text-green-400 animate-bounce" />
+              <div>
+                <p className="text-sm font-medium text-green-300">Scan Complete!</p>
+                <p className="text-xs text-green-400/70">All modules finished — review your results below.</p>
+              </div>
+            </div>
           )}
         </div>
       )}

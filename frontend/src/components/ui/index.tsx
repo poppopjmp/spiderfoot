@@ -9,7 +9,8 @@
  */
 
 import { clsx } from 'clsx';
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useId } from 'react';
+import { createPortal } from 'react-dom';
 import {
   ChevronDown, ChevronRight, Copy, Check, Search,
   AlertCircle, X, Info, CheckCircle2,
@@ -164,6 +165,105 @@ export function CopyButton({ text, className }: { text: string; className?: stri
         <Copy className="h-3.5 w-3.5" />
       )}
     </button>
+  );
+}
+
+/* ── Tooltip ───────────────────────────────────────────────── */
+/**
+ * Accessible tooltip that appears on hover/focus.
+ * Positions itself above, below, left, or right of the trigger.
+ * Uses CSS class `.tooltip` and renders via portal to avoid clipping.
+ */
+export function Tooltip({
+  children, content, side = 'top', className, delayMs = 200,
+}: {
+  children: React.ReactElement;
+  content: React.ReactNode;
+  side?: 'top' | 'bottom' | 'left' | 'right';
+  className?: string;
+  delayMs?: number;
+}) {
+  const [visible, setVisible] = useState(false);
+  const [coords, setCoords] = useState({ x: 0, y: 0 });
+  const triggerRef = useRef<HTMLElement>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const tooltipId = useId();
+
+  const show = useCallback(() => {
+    timerRef.current = setTimeout(() => setVisible(true), delayMs);
+  }, [delayMs]);
+
+  const hide = useCallback(() => {
+    clearTimeout(timerRef.current);
+    setVisible(false);
+  }, []);
+
+  useEffect(() => () => clearTimeout(timerRef.current), []);
+
+  // Position calculation after tooltip becomes visible
+  useEffect(() => {
+    if (!visible || !triggerRef.current) return;
+    const rect = triggerRef.current.getBoundingClientRect();
+    const gap = 8;
+
+    let x = rect.left + rect.width / 2;
+    let y: number;
+
+    if (side === 'top') {
+      y = rect.top - gap;
+    } else if (side === 'bottom') {
+      y = rect.bottom + gap;
+    } else if (side === 'left') {
+      x = rect.left - gap;
+      y = rect.top + rect.height / 2;
+    } else {
+      x = rect.right + gap;
+      y = rect.top + rect.height / 2;
+    }
+    setCoords({ x, y });
+  }, [visible, side]);
+
+  // Clamp tooltip into viewport
+  useEffect(() => {
+    if (!visible || !tooltipRef.current) return;
+    const el = tooltipRef.current;
+    const r = el.getBoundingClientRect();
+    const overRight = r.right - window.innerWidth + 8;
+    const overLeft = 8 - r.left;
+    if (overRight > 0) el.style.transform = `translateX(-${overRight}px)`;
+    else if (overLeft > 0) el.style.transform = `translateX(${overLeft}px)`;
+  }, [visible, coords]);
+
+  const sideStyle: React.CSSProperties =
+    side === 'top' ? { left: coords.x, top: coords.y, transform: 'translate(-50%, -100%)' }
+    : side === 'bottom' ? { left: coords.x, top: coords.y, transform: 'translate(-50%, 0)' }
+    : side === 'left' ? { left: coords.x, top: coords.y, transform: 'translate(-100%, -50%)' }
+    : { left: coords.x, top: coords.y, transform: 'translate(0, -50%)' };
+
+  return (
+    <>
+      {React.cloneElement(children, {
+        ref: triggerRef,
+        onMouseEnter: show,
+        onMouseLeave: hide,
+        onFocus: show,
+        onBlur: hide,
+        'aria-describedby': visible ? tooltipId : undefined,
+      })}
+      {visible && createPortal(
+        <div
+          ref={tooltipRef}
+          id={tooltipId}
+          role="tooltip"
+          className={clsx('tooltip', className)}
+          style={{ ...sideStyle, position: 'fixed' }}
+        >
+          {content}
+        </div>,
+        document.body,
+      )}
+    </>
   );
 }
 

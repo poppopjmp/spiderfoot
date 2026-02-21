@@ -5,9 +5,10 @@
  * sidebar collapse/expand, services dropdown, user menu, mobile header,
  * admin-only items, and about modal.
  */
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Layout from '../../components/Layout';
 import { useAuthStore } from '../../lib/auth';
 
@@ -26,11 +27,17 @@ vi.mock('../../lib/theme', () => ({
 }));
 
 // Helper to render Layout within a MemoryRouter at a given path
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: false } },
+});
+
 function renderLayout(initialRoute = '/') {
   return render(
-    <MemoryRouter initialEntries={[initialRoute]}>
-      <Layout />
-    </MemoryRouter>,
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={[initialRoute]}>
+        <Layout />
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
 }
 

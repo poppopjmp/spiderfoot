@@ -27,6 +27,8 @@ import { clsx } from 'clsx';
 import { ModalShell } from './ui';
 import { useAuthStore } from '../lib/auth';
 import { useTheme, type Theme } from '../lib/theme';
+import { NotificationBell, NotificationPanel } from './NotificationCenter';
+import { CommandPalette, CommandPaletteTrigger } from './CommandPalette';
 
 interface NavItem {
   name: string;
@@ -198,6 +200,20 @@ export default function Layout() {
           </div>
         </div>
 
+        {/* Quick search */}
+        <div className="px-3 pb-1">
+          <CommandPaletteTrigger />
+        </div>
+
+        {/* Notification center */}
+        <div className="px-3 pb-1 relative">
+          <div className="flex items-center gap-2 px-3">
+            <NotificationBell />
+            <span className="text-xs text-dark-500">Notifications</span>
+          </div>
+          <NotificationPanel />
+        </div>
+
         {/* Services dropdown */}
         <div className="px-3 pb-2">
           <button
@@ -307,6 +323,9 @@ export default function Layout() {
           </div>
         </ModalShell>
       )}
+
+      {/* Command Palette (⌘K / Ctrl+K) */}
+      <CommandPalette />
     </div>
   );
 }
