@@ -19,7 +19,7 @@ function ThrowingChild() {
 }
 
 /* A simpler component that always throws */
-function AlwaysThrows() {
+function AlwaysThrows(): JSX.Element {
   throw new Error('Boom!');
 }
 

@@ -3,7 +3,7 @@
  *
  * Validates rendering, className prop, sanitization, and empty content.
  */
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import MarkdownRenderer from '../../components/MarkdownRenderer';
 

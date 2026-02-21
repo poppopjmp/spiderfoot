@@ -4,7 +4,7 @@
  * Mocks the Zustand auth store and react-router-dom to isolate
  * form rendering, validation, submission, and error display.
  */
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
