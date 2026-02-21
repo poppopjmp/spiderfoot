@@ -6,12 +6,12 @@ import { useAuthStore } from './lib/auth';
 // Core pages (eagerly loaded — most visited)
 import DashboardPage from './pages/Dashboard';
 import ScansPage from './pages/Scans';
-import ScanDetailPage from './pages/ScanDetail';
-import NewScanPage from './pages/NewScan';
-import SettingsPage from './pages/Settings';
 import LoginPage from './pages/Login';
 
-// Secondary pages (lazy loaded)
+// Secondary pages (lazy loaded for reduced initial bundle)
+const ScanDetailPage = lazy(() => import('./pages/ScanDetail'));
+const NewScanPage = lazy(() => import('./pages/NewScan'));
+const SettingsPage = lazy(() => import('./pages/Settings'));
 const WorkspacesPage = lazy(() => import('./pages/Workspaces'));
 const ModulesPage = lazy(() => import('./pages/Modules'));
 const DocumentationPage = lazy(() => import('./pages/Documentation'));
@@ -91,8 +91,8 @@ export default function App() {
 
         {/* Scans — matches CherryPy: /scanlist, /newscan, /scaninfo?id= */}
         <Route path="scans" element={<ScansPage />} />
-        <Route path="scans/new" element={<NewScanPage />} />
-        <Route path="scans/:scanId" element={<ScanDetailPage />} />
+        <Route path="scans/new" element={<Suspense fallback={<LazyFallback />}><NewScanPage /></Suspense>} />
+        <Route path="scans/:scanId" element={<Suspense fallback={<LazyFallback />}><ScanDetailPage /></Suspense>} />
 
         {/* Workspaces — matches CherryPy: /workspaces, /workspacedetails */}
         <Route path="workspaces" element={<Suspense fallback={<LazyFallback />}><WorkspacesPage /></Suspense>} />
@@ -104,7 +104,7 @@ export default function App() {
         <Route path="documentation" element={<Suspense fallback={<LazyFallback />}><DocumentationPage /></Suspense>} />
 
         {/* Settings — matches CherryPy: /opts */}
-        <Route path="settings" element={<SettingsPage />} />
+        <Route path="settings" element={<Suspense fallback={<LazyFallback />}><SettingsPage /></Suspense>} />
 
         {/* Agents — matches CherryPy: /agents (from Services) */}
         <Route path="agents" element={<Suspense fallback={<LazyFallback />}><AgentsPage /></Suspense>} />
