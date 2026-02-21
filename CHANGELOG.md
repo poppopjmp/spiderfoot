@@ -5,7 +5,26 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [5.9.2] — 2026-02-20 — Deep Security & Quality Hardening
 
-### Security — P0 Critical
+### Security — P0 Critical (Batch 2)
+- **API auth on 5 unprotected router groups**: Added `Depends(get_api_key)` to ASM, Marketplace, RBAC Enhanced, Data Retention, and Distributed Scan routers — 60+ endpoints were previously accessible without authentication
+- **React ErrorBoundary**: Added top-level `ErrorBoundary` component wrapping `<App />`; catches render crashes and shows a recoverable fallback UI instead of a white screen
+- **Unsafe JSON.parse in ApiKeys.tsx**: Wrapped `JSON.parse(k.allowed_modules)` in render path with try/catch to prevent runtime crash on malformed data
+- **Dead file upload UI removed**: Removed non-functional drag-and-drop file upload from NewScan page (files were never sent to the API, misleading users)
+
+### Security — P1 High
+- **Shell injection in sfp_tool_gobuster**: Replaced `shell=True` with `subprocess.run(cmd_list)` (no shell) and `shutil.which()` for path resolution; also fixed calls to non-existent `self.sf.execute()` method
+- **Mutation error feedback**: Added `onError` handlers to 14 React Query mutations that silently swallowed failures (ScanDetail, Scans, Modules, Workspaces, CorrelationsTab, ReportTab, BrowseTab)
+- **GraphQL error logging**: Added `exc_info=True` to all 20 `_log.error()` calls in resolvers.py for proper stack traces in logs
+
+### Accessibility
+- **ModalShell a11y overhaul**: Added `role="dialog"`, `aria-modal="true"`, `aria-labelledby`, Escape key handler, focus trap (Tab/Shift+Tab cycle), auto-focus on mount, `aria-label` on close button
+- **Deduplicated ModalShell**: Removed duplicate definition from SSOSettings.tsx; now uses shared component from `components/ui`
+
+### Fixed — Bugs
+- **Ethereum address detection**: Fixed `detectTargetType()` in Workspaces.tsx — Ethereum addresses (`0x...`) were incorrectly labeled as `BITCOIN_ADDRESS`; added proper `ETHEREUM_ADDRESS` type
+- **Resource management**: Wrapped 3 `urllib.request.urlopen()` calls in `notifications.py` with context managers to properly close HTTP responses
+
+### Security — P0 Critical (Batch 1)
 - **JWT hardening**: Replaced hand-rolled HMAC-SHA256 JWT with PyJWT library; auto-detects insecure default secrets (`changeme`, `secret`, etc.) and generates cryptographic random secret at startup; logs CRITICAL warning for insecure configurations
 - **Auth bypass lockdown**: API key dev-mode bypass now requires explicit `SF_AUTH_DISABLED=true` environment variable (previously any misconfiguration could skip auth)
 - **CORS lockdown**: Default allowed origins changed from `*` to `http://localhost:3000,https://localhost`; logs WARNING when wildcard CORS is active
