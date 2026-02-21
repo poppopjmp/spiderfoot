@@ -351,13 +351,18 @@ class SpiderFootEvent:
         """
         self._moduleDataSource = moduleDataSource
 
-    def asDict(self) -> dict:
+    def asDict(self, *, full: bool = False) -> dict:
         """Event object as dictionary.
+
+        Args:
+            full: If True, include hash, confidence, visibility, risk,
+                  sourceEventHash, and moduleDataSource fields.
+                  Default False preserves backward-compatible output.
 
         Returns:
             dict: event as dictionary
         """
-        evtDict = {
+        evtDict: dict = {
             'generated': int(self.generated),
             'type': self.eventType,
             'data': self.data,
@@ -367,6 +372,19 @@ class SpiderFootEvent:
 
         if self.sourceEvent is not None and self.sourceEvent.data is not None:
             evtDict['source'] = self.sourceEvent.data
+
+        if full:
+            evtDict['hash'] = self.hash
+            evtDict['source_event_hash'] = (
+                self.sourceEvent.hash if self.sourceEvent else 'ROOT'
+            )
+            evtDict['confidence'] = self.confidence
+            evtDict['visibility'] = self.visibility
+            evtDict['risk'] = self.risk
+            if self._moduleDataSource:
+                evtDict['module_data_source'] = self._moduleDataSource
+            if self.actualSource:
+                evtDict['actual_source'] = self.actualSource
 
         return evtDict
 

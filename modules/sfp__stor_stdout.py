@@ -32,7 +32,7 @@ class sfp__stor_stdout(SpiderFootModernPlugin):
 
     # Default options - moved from __init__ to class level
     opts = {
-        "_format": "tab",  # tab, csv, json
+        "_format": "tab",  # tab, csv, json, jsonl
         "_requested": [],
         "_showonlyrequested": False,
         "_stripnewline": False,
@@ -134,6 +134,11 @@ class sfp__stor_stdout(SpiderFootModernPlugin):
                 else:
                     print(",")
                 print(json.dumps(d), end='')
+
+            if self.opts['_format'] == "jsonl":
+                d = event.asDict(full=True)
+                d['type'] = event_type
+                print(json.dumps(d, default=str))
         except Exception as e:
             self.error(f"Stdout write failed: {e}")
 
