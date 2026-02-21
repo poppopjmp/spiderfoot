@@ -27,6 +27,7 @@ import {
 import { clsx } from 'clsx';
 import api from '../lib/api';
 import { getErrorMessage } from '../lib/errors';
+import { ModalShell } from '../components/ui';
 
 // ── Types ────────────────────────────────────────────────
 
@@ -344,28 +345,6 @@ export default function SSOSettingsPage() {
 // ══════════════════════════════════════════════════════════
 // Shared UI Helpers
 // ══════════════════════════════════════════════════════════
-
-function ModalShell({ title, onClose, children, wide }: {
-  title: string; onClose: () => void; children: React.ReactNode; wide?: boolean;
-}) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className={clsx(
-        'relative bg-dark-800 border border-dark-700 rounded-2xl p-6 shadow-2xl animate-fade-in-up max-h-[90vh] overflow-y-auto',
-        wide ? 'max-w-2xl w-full' : 'max-w-lg w-full',
-      )}>
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-bold text-foreground">{title}</h2>
-          <button onClick={onClose} className="text-dark-500 hover:text-dark-300 transition-colors">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        {children}
-      </div>
-    </div>
-  );
-}
 
 function FormField({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (

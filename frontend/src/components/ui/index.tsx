@@ -383,18 +383,68 @@ export function ModalShell({
 }: {
   title: string; onClose: () => void; children: React.ReactNode; wide?: boolean;
 }) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const titleId = useRef(`modal-title-${Math.random().toString(36).slice(2, 8)}`).current;
+
+  // Escape key handler
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [onClose]);
+
+  // Focus trap: keep Tab/Shift+Tab inside the dialog
+  useEffect(() => {
+    const el = dialogRef.current;
+    if (!el) return;
+
+    // Auto-focus the dialog panel on mount
+    el.focus();
+
+    const handleTab = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+      const focusable = el.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      );
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener('keydown', handleTab);
+    return () => document.removeEventListener('keydown', handleTab);
+  }, []);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className={clsx(
-        'relative bg-dark-800 border border-dark-700 rounded-2xl p-6 shadow-2xl animate-fade-in-up max-h-[90vh] overflow-y-auto',
-        wide ? 'max-w-2xl w-full' : 'max-w-lg w-full',
-      )}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
+    >
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
+      <div
+        ref={dialogRef}
+        tabIndex={-1}
+        className={clsx(
+          'relative bg-dark-800 border border-dark-700 rounded-2xl p-6 shadow-2xl animate-fade-in-up max-h-[90vh] overflow-y-auto focus:outline-none',
+          wide ? 'max-w-2xl w-full' : 'max-w-lg w-full',
+        )}
+      >
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-bold text-foreground">{title}</h2>
+          <h2 id={titleId} className="text-lg font-bold text-foreground">{title}</h2>
           <button
             onClick={onClose}
             className="text-dark-500 hover:text-dark-300 transition-colors"
+            aria-label="Close dialog"
           >
             <X className="h-5 w-5" />
           </button>
