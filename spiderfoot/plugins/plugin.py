@@ -573,7 +573,18 @@ class SpiderFootPlugin:
         return
 
     def threadWorker(self) -> None:
-        """Main thread loop that processes events from the incoming queue."""
+        """Main thread loop that processes events from the incoming queue.
+
+        If the module's ``handleEvent`` is a coroutine function (i.e. the
+        module subclasses :class:`SpiderFootAsyncPlugin` and declares
+        ``async def handleEvent(...)``), events are dispatched to the
+        shared asyncio event-loop instead of the thread pool.
+        """
+        import asyncio
+        import inspect
+
+        _is_async_handler = inspect.iscoroutinefunction(self.handleEvent)
+
         try:
             # create new database handle since we're in our own thread
             from spiderfoot import SpiderFootDb
@@ -603,7 +614,10 @@ class SpiderFootPlugin:
                         f"{getattr(self, '__name__', self.__class__.__name__)}"
                         f".threadWorker() got event, {sfEvent.eventType},"
                         " from incomingEventQueue.")
-                    self.poolExecute(self.handleEvent, sfEvent)
+                    if _is_async_handler:
+                        self._asyncDispatch(self.handleEvent, sfEvent)
+                    else:
+                        self.poolExecute(self.handleEvent, sfEvent)
         except KeyboardInterrupt:
             self.sf.debug(f"Interrupted module {getattr(self, '__name__', self.__class__.__name__)}.")
             self._stopScanning = True
@@ -626,6 +640,34 @@ class SpiderFootPlugin:
                 # set queue to None to prevent its use
                 # if there are leftover objects in the queue, the scan will hang.
                 self.incomingEventQueue = None
+
+    def _asyncDispatch(self, callback: Callable, *args: Any, **kwargs: Any) -> None:
+        """Dispatch an async callback to the shared event loop.
+
+        Used by :meth:`threadWorker` when the module declares
+        ``async def handleEvent(...)`` (i.e. it subclasses
+        :class:`SpiderFootAsyncPlugin`).
+
+        Args:
+            callback: async function to call
+            args: positional args (passed through)
+            kwargs: keyword args (passed through)
+        """
+        import asyncio
+        try:
+            from .async_plugin import get_event_loop
+            loop = get_event_loop()
+            future = asyncio.run_coroutine_threadsafe(
+                callback(*args, **kwargs), loop
+            )
+            # Block until the coroutine finishes (respects scan timeout)
+            future.result(timeout=300)
+        except Exception as exc:
+            self.sf.error(
+                f"Async dispatch error in"
+                f" {getattr(self, '__name__', self.__class__.__name__)}:"
+                f" {exc}"
+            )
 
     def poolExecute(self, callback: Callable, *args: Any, **kwargs: Any) -> None:
         """Execute a callback with the given args. If we're in a storage

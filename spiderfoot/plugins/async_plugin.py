@@ -4,6 +4,10 @@ Provides an async-capable base class that allows modules to use
 async/await for I/O operations while remaining compatible with the
 synchronous scan engine.
 
+**v2 (Batch 43)** – HTTP and DNS now use native ``aiohttp`` / ``aiodns``
+via :mod:`spiderfoot.sflib.async_network` instead of wrapping the sync
+``requests``-based helpers in ``loop.run_in_executor()``.
+
 Usage::
 
     from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
@@ -11,16 +15,16 @@ Usage::
     class sfp_example_async(SpiderFootAsyncPlugin):
         async def handleEvent(self, event):
             result = await self.async_fetch_url("https://api.example.com")
+            if result.ok:
+                data = result.data["content"]
             ...
 """
 
 from __future__ import annotations
 
 import asyncio
-import functools
 import logging
 import time
-from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Callable, TypeVar
 
 from .modern_plugin import SpiderFootModernPlugin
@@ -30,7 +34,12 @@ log = logging.getLogger("spiderfoot.async_plugin")
 
 T = TypeVar("T")
 
-# Shared event loop for async plugins
+# ---------------------------------------------------------------------------
+# Shared event loop – lives in a background daemon thread so sync callers
+# (the scan engine's threadWorker) can submit coroutines without blocking
+# the main thread.
+# ---------------------------------------------------------------------------
+
 _shared_loop: asyncio.AbstractEventLoop | None = None
 _loop_thread: Any | None = None
 
@@ -57,13 +66,25 @@ def get_event_loop() -> asyncio.AbstractEventLoop:
 
 
 def shutdown_event_loop() -> None:
-    """Shutdown the shared event loop."""
+    """Shutdown the shared event loop and close all aiohttp sessions."""
     global _shared_loop, _loop_thread
+
     if _shared_loop and not _shared_loop.is_closed():
+        # Close aiohttp sessions inside the loop
+        from ..sflib.async_network import close_all_sessions
+        future = asyncio.run_coroutine_threadsafe(
+            close_all_sessions(), _shared_loop
+        )
+        try:
+            future.result(timeout=5)
+        except Exception:
+            pass
+
         _shared_loop.call_soon_threadsafe(_shared_loop.stop)
         if _loop_thread:
             _loop_thread.join(timeout=5)
         _shared_loop.close()
+
     _shared_loop = None
     _loop_thread = None
 
@@ -71,38 +92,37 @@ def shutdown_event_loop() -> None:
 class AsyncResult:
     """Container for async operation results."""
 
+    __slots__ = ("data", "error", "duration", "ok")
+
     def __init__(self, data: Any = None, error: str | None = None,
                  duration: float = 0.0) -> None:
-        """Initialize the AsyncResult."""
         self.data = data
         self.error = error
         self.duration = duration
         self.ok = error is None
 
     def __repr__(self) -> str:
-        """Return a developer-friendly string representation."""
         return f"AsyncResult(ok={self.ok}, duration={self.duration:.3f}s)"
 
 
 class SpiderFootAsyncPlugin(SpiderFootModernPlugin):
-    """
-    Async-capable SpiderFoot plugin base class.
+    """Async-capable SpiderFoot plugin base class.
 
-    Extends SpiderFootModernPlugin with:
-    - async_fetch_url() for non-blocking HTTP requests
-    - async_resolve_host() for non-blocking DNS resolution
-    - async_batch() for parallel async operations
-    - run_async() to bridge sync → async
+    Extends :class:`SpiderFootModernPlugin` with **native** async I/O:
+
+    - :meth:`async_fetch_url` – non-blocking HTTP via ``aiohttp``
+    - :meth:`async_resolve_host` / :meth:`async_reverse_resolve` – non-blocking
+      DNS via ``aiodns`` (falls back to threaded ``getaddrinfo``)
+    - :meth:`async_batch` – fan-out concurrent tasks with concurrency cap
+    - :meth:`run_async` – sync→async bridge for the thread-based engine
     """
 
-    # Maximum concurrent async operations per module
+    # Maximum concurrent async operations per module instance
     _max_async_concurrency = 10
 
     def __init__(self) -> None:
-        """Initialize the SpiderFootAsyncPlugin."""
         super().__init__()
         self._semaphore: asyncio.Semaphore | None = None
-        self._async_executor: ThreadPoolExecutor | None = None
 
     @property
     def _async_sem(self) -> asyncio.Semaphore:
@@ -111,114 +131,140 @@ class SpiderFootAsyncPlugin(SpiderFootModernPlugin):
             self._semaphore = asyncio.Semaphore(self._max_async_concurrency)
         return self._semaphore
 
+    @property
+    def _module_name(self) -> str:
+        return getattr(self, "__name__", self.__class__.__name__)
+
     # ------------------------------------------------------------------
-    # Core async bridge
+    # Core async bridge (sync thread → async loop)
     # ------------------------------------------------------------------
 
     def run_async(self, coro: Any) -> Any:
         """Run an async coroutine from synchronous context.
 
-        Submits the coroutine to the shared event loop and blocks
-        until it completes.
-
-        Parameters
-        ----------
-        coro : coroutine
-            The coroutine to execute.
-
-        Returns
-        -------
-        Any
-            The coroutine's return value.
+        Submits *coro* to the shared background event-loop and blocks
+        the calling thread until it completes (up to 5 min).
         """
         loop = get_event_loop()
         future = asyncio.run_coroutine_threadsafe(coro, loop)
-        return future.result(timeout=300)  # 5 min max
+        return future.result(timeout=300)
 
     # ------------------------------------------------------------------
-    # Async HTTP
+    # Async HTTP – native aiohttp
     # ------------------------------------------------------------------
 
-    async def async_fetch_url(self, url: str, method: str = "GET",
-                              timeout: int = 30,
-                              **kwargs) -> AsyncResult:
-        """Async HTTP fetch with concurrency limiting.
+    async def async_fetch_url(
+        self,
+        url: str,
+        method: str = "GET",
+        timeout: float = 30,
+        *,
+        headers: dict[str, str] | None = None,
+        cookies: dict[str, str] | None = None,
+        post_data: str | bytes | dict | None = None,
+        head_only: bool = False,
+        size_limit: int | None = None,
+        verify_ssl: bool = True,
+        useragent: str = "SpiderFoot",
+    ) -> AsyncResult:
+        """Non-blocking HTTP fetch using ``aiohttp``.
 
-        Falls back to sync fetch_url in a thread pool if no async
-        HTTP client is available.
+        Returns an :class:`AsyncResult` whose ``.data`` is a dict matching
+        the shape of ``network.fetchUrl`` (code, status, content, headers,
+        realurl).
         """
+        from ..sflib.async_network import async_fetch_url as _native_fetch
+
         t0 = time.monotonic()
         async with self._async_sem:
             try:
-                # Use thread pool to run sync fetch_url
-                loop = asyncio.get_running_loop()
-                result = await loop.run_in_executor(
-                    self._get_executor(),
-                    functools.partial(
-                        self.fetch_url, url, method=method,
-                        timeout=timeout, **kwargs
-                    )
+                result = await _native_fetch(
+                    url,
+                    method=method,
+                    timeout=timeout,
+                    headers=headers,
+                    cookies=cookies,
+                    post_data=post_data,
+                    head_only=head_only,
+                    size_limit=size_limit,
+                    verify_ssl=verify_ssl,
+                    useragent=useragent,
+                    module_name=self._module_name,
                 )
                 duration = time.monotonic() - t0
-                if result is None:
-                    return AsyncResult(error="fetch returned None", duration=duration)
+                if result is None or result.get("code") is None:
+                    return AsyncResult(
+                        data=result, error="fetch returned no status",
+                        duration=duration,
+                    )
                 return AsyncResult(data=result, duration=duration)
-            except Exception as e:
-                duration = time.monotonic() - t0
-                return AsyncResult(error=str(e), duration=duration)
+            except Exception as exc:
+                return AsyncResult(
+                    error=str(exc), duration=time.monotonic() - t0
+                )
 
     # ------------------------------------------------------------------
-    # Async DNS
+    # Async DNS – native aiodns / loop.getaddrinfo fallback
     # ------------------------------------------------------------------
 
     async def async_resolve_host(self, hostname: str) -> AsyncResult:
-        """Async DNS resolution."""
+        """Resolve *hostname* to IPv4 addresses (non-blocking)."""
+        from ..sflib.async_network import async_resolve_host as _resolve
+
         t0 = time.monotonic()
         try:
-            loop = asyncio.get_running_loop()
-            result = await loop.run_in_executor(
-                self._get_executor(),
-                self.resolve_host, hostname
-            )
-            return AsyncResult(data=result, duration=time.monotonic() - t0)
-        except Exception as e:
-            return AsyncResult(error=str(e), duration=time.monotonic() - t0)
+            addrs = await _resolve(hostname)
+            return AsyncResult(data=addrs, duration=time.monotonic() - t0)
+        except Exception as exc:
+            return AsyncResult(error=str(exc), duration=time.monotonic() - t0)
+
+    async def async_resolve_host6(self, hostname: str) -> AsyncResult:
+        """Resolve *hostname* to IPv6 addresses (non-blocking)."""
+        from ..sflib.async_network import async_resolve_host6 as _resolve6
+
+        t0 = time.monotonic()
+        try:
+            addrs = await _resolve6(hostname)
+            return AsyncResult(data=addrs, duration=time.monotonic() - t0)
+        except Exception as exc:
+            return AsyncResult(error=str(exc), duration=time.monotonic() - t0)
 
     async def async_reverse_resolve(self, ip_address: str) -> AsyncResult:
-        """Async reverse DNS resolution."""
+        """Reverse-resolve an IP address to hostnames (non-blocking)."""
+        from ..sflib.async_network import async_reverse_resolve as _rev
+
         t0 = time.monotonic()
         try:
-            loop = asyncio.get_running_loop()
-            result = await loop.run_in_executor(
-                self._get_executor(),
-                self.reverse_resolve, ip_address
-            )
-            return AsyncResult(data=result, duration=time.monotonic() - t0)
-        except Exception as e:
-            return AsyncResult(error=str(e), duration=time.monotonic() - t0)
+            names = await _rev(ip_address)
+            return AsyncResult(data=names, duration=time.monotonic() - t0)
+        except Exception as exc:
+            return AsyncResult(error=str(exc), duration=time.monotonic() - t0)
 
     # ------------------------------------------------------------------
     # Batch operations
     # ------------------------------------------------------------------
 
-    async def async_batch(self, items: list[Any],
-                          handler: Callable,
-                          max_concurrency: int | None = None) -> list[AsyncResult]:
-        """Execute an async handler on a batch of items concurrently.
+    async def async_batch(
+        self,
+        items: list[Any],
+        handler: Callable,
+        max_concurrency: int | None = None,
+    ) -> list[AsyncResult]:
+        """Execute *handler* on a list of *items* concurrently.
 
         Parameters
         ----------
         items : list
             Items to process.
         handler : callable
-            Async function taking one item, returning any result.
+            Async function ``(item) -> Any``.
         max_concurrency : int, optional
-            Max parallel tasks. Defaults to _max_async_concurrency.
+            Cap on parallel tasks (default: ``_max_async_concurrency``).
 
         Returns
         -------
         list[AsyncResult]
-            Results in the same order as input items.
+            Results in the same order as *items*.
         """
         sem = asyncio.Semaphore(max_concurrency or self._max_async_concurrency)
 
@@ -228,36 +274,37 @@ class SpiderFootAsyncPlugin(SpiderFootModernPlugin):
                 try:
                     data = await handler(item)
                     return AsyncResult(data=data, duration=time.monotonic() - t0)
-                except Exception as e:
-                    return AsyncResult(error=str(e), duration=time.monotonic() - t0)
+                except Exception as exc:
+                    return AsyncResult(error=str(exc), duration=time.monotonic() - t0)
 
         tasks = [asyncio.create_task(_wrapped(item)) for item in items]
         return await asyncio.gather(*tasks)
 
-    def run_batch(self, items: list[Any],
-                  handler: Callable,
-                  max_concurrency: int | None = None) -> list[AsyncResult]:
-        """Synchronous wrapper for async_batch."""
+    def run_batch(
+        self,
+        items: list[Any],
+        handler: Callable,
+        max_concurrency: int | None = None,
+    ) -> list[AsyncResult]:
+        """Synchronous wrapper for :meth:`async_batch`."""
         return self.run_async(
             self.async_batch(items, handler, max_concurrency)
         )
 
     # ------------------------------------------------------------------
-    # Utilities
+    # Lifecycle
     # ------------------------------------------------------------------
 
-    def _get_executor(self) -> ThreadPoolExecutor:
-        """Lazy thread pool executor."""
-        if self._async_executor is None:
-            self._async_executor = ThreadPoolExecutor(
-                max_workers=self._max_async_concurrency,
-                thread_name_prefix=f"sf-async-{getattr(self, '__name__', 'mod')}",
-            )
-        return self._async_executor
-
     def finished(self) -> None:
-        """Clean up async resources on module finish."""
-        if self._async_executor:
-            self._async_executor.shutdown(wait=False)
-            self._async_executor = None
+        """Clean up async resources when the module exits."""
+        # Close this module's aiohttp session
+        try:
+            from ..sflib.async_network import close_session
+            loop = get_event_loop()
+            fut = asyncio.run_coroutine_threadsafe(
+                close_session(self._module_name), loop
+            )
+            fut.result(timeout=5)
+        except Exception:
+            pass
         super().finished()

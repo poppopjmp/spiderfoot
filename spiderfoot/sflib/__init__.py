@@ -21,6 +21,9 @@ from .core import SpiderFoot
 from .config import configSerialize, configUnserialize
 from .helpers import *  # Expose other helpers as needed
 
+# Async network utilities (native aiohttp / aiodns)
+from . import async_network  # noqa: F401
+
 __all__ = [
     'SpiderFoot',
     'configSerialize',
