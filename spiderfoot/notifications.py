@@ -303,6 +303,7 @@ class NotificationService:
         data: dict[str, Any] | None,
     ) -> None:
         """Send email notification via SMTP."""
+        import html
         import smtplib
         from email.mime.multipart import MIMEMultipart
         from email.mime.text import MIMEText
@@ -324,14 +325,16 @@ class NotificationService:
             )
         msg.attach(MIMEText(text_body, "plain"))
 
-        # HTML
+        # HTML — escape all user-provided values to prevent stored XSS
+        safe_title = html.escape(str(title))
+        safe_message = html.escape(str(message))
         html_body = f"""
         <html>
         <body style="font-family: Arial, sans-serif;">
-            <h2 style="color: #1a73e8;">{title}</h2>
-            <p>{message}</p>
+            <h2 style="color: #1a73e8;">{safe_title}</h2>
+            <p>{safe_message}</p>
             {"<table border='1' cellpadding='5' style='border-collapse: collapse;'>"
-             + "".join(f"<tr><td><b>{k}</b></td><td>{v}</td></tr>" for k, v in (data or {}).items())
+             + "".join(f"<tr><td><b>{html.escape(str(k))}</b></td><td>{html.escape(str(v))}</td></tr>" for k, v in (data or {}).items())
              + "</table>" if data else ""}
             <hr>
             <p style="color: #888; font-size: 12px;">SpiderFoot OSINT Platform</p>
