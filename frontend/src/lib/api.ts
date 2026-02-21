@@ -402,7 +402,7 @@ export const configApi = {
     api.get<{ modules: Module[] }>('/api/modules', { signal }).then((r) => r.data),
 
   eventTypes: (signal?: AbortSignal) =>
-    api.get<{ event_types: unknown[] }>('/api/event-types', { signal }).then((r) => r.data),
+    api.get<{ event_types: Array<{ name: string; description?: string }> }>('/api/event-types', { signal }).then((r) => r.data),
 
   moduleConfig: (name: string, signal?: AbortSignal) =>
     api.get<{ module: string; config: Record<string, unknown> }>(`/api/module-config/${name}`, { signal }).then((r) => r.data),

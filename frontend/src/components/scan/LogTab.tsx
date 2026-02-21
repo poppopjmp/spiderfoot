@@ -40,7 +40,9 @@ function LogTab({ scanId }: { scanId: string }) {
       a.download = `${scanId}-logs.csv`;
       a.click();
       URL.revokeObjectURL(url);
-    } catch { /* ignore */ }
+    } catch (e) {
+      console.error('Log export failed:', e);
+    }
   };
 
   return (

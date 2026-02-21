@@ -22,7 +22,9 @@ function GraphTab({ scanId }: { scanId: string }) {
       a.download = `${scanId}.gexf`;
       a.click();
       URL.revokeObjectURL(url);
-    } catch { /* ignore */ }
+    } catch (e) {
+      console.error('GEXF download failed:', e);
+    }
   };
 
   const nodes = data?.nodes ?? [];
