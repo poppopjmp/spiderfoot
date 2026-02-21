@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { workspaceApi, scanApi, agentsApi, formatEpoch, type Workspace, type WorkspaceTarget, type Scan, type ScanCorrelation } from '../lib/api';
 import { sanitizeHTML } from '../lib/sanitize';
+import { inlineFormat } from '../components/MarkdownRenderer';
 import { Briefcase, Plus, Trash2, Target, Copy, CheckCircle2, FolderOpen, Clock, Edit2, Radar, Link2, Unlink, Brain, FileText, Sparkles, Edit3, Save, Loader2, AlertTriangle, BarChart3, Shield, MapPin } from 'lucide-react';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { StatusBadge, Toast, Tabs, ConfirmDialog, ModalShell, type ToastType } from '../components/ui';
@@ -986,7 +987,7 @@ function WorkspaceReportCard({ workspaceId, workspace, summary, scanIds }: {
                 <thead>
                   <tr className="border-b border-dark-700">
                     {headerCells.map((cell, ci) => (
-                      <th key={ci} className="px-3 py-1.5 text-left text-dark-300 font-semibold" dangerouslySetInnerHTML={{ __html: sanitizeHTML(inlineFmt(cell)) }} />
+                      <th key={ci} className="px-3 py-1.5 text-left text-dark-300 font-semibold" dangerouslySetInnerHTML={{ __html: sanitizeHTML(inlineFormat(cell)) }} />
                     ))}
                   </tr>
                 </thead>
@@ -994,7 +995,7 @@ function WorkspaceReportCard({ workspaceId, workspace, summary, scanIds }: {
                   {dataRows.map((row, ri) => (
                     <tr key={ri} className="border-b border-dark-700/50">
                       {row.map((cell, ci) => (
-                        <td key={ci} className="px-3 py-1.5 text-dark-400" dangerouslySetInnerHTML={{ __html: sanitizeHTML(inlineFmt(cell)) }} />
+                        <td key={ci} className="px-3 py-1.5 text-dark-400" dangerouslySetInnerHTML={{ __html: sanitizeHTML(inlineFormat(cell)) }} />
                       ))}
                     </tr>
                   ))}
@@ -1011,7 +1012,7 @@ function WorkspaceReportCard({ workspaceId, workspace, summary, scanIds }: {
       if (hMatch) {
         const lvl = hMatch[1].length;
         const cls = lvl === 1 ? 'text-xl font-bold text-foreground mt-6 mb-2 border-b border-dark-700 pb-2' : lvl === 2 ? 'text-lg font-bold text-foreground mt-5 mb-2' : 'text-base font-semibold text-foreground mt-4 mb-1';
-        elements.push(<div key={elements.length} className={cls} dangerouslySetInnerHTML={{ __html: sanitizeHTML(inlineFmt(hMatch[2])) }} />);
+        elements.push(<div key={elements.length} className={cls} dangerouslySetInnerHTML={{ __html: sanitizeHTML(inlineFormat(hMatch[2])) }} />);
         i++;
         continue;
       }
@@ -1025,7 +1026,7 @@ function WorkspaceReportCard({ workspaceId, workspace, summary, scanIds }: {
 
       // Blockquote
       if (line.trim().startsWith('>')) {
-        elements.push(<blockquote key={elements.length} className="border-l-2 border-spider-500 pl-3 text-dark-400 italic text-sm my-1" dangerouslySetInnerHTML={{ __html: sanitizeHTML(inlineFmt(line.replace(/^>\s*/, ''))) }} />);
+        elements.push(<blockquote key={elements.length} className="border-l-2 border-spider-500 pl-3 text-dark-400 italic text-sm my-1" dangerouslySetInnerHTML={{ __html: sanitizeHTML(inlineFormat(line.replace(/^>\s*/, ''))) }} />);
         i++;
         continue;
       }
@@ -1033,7 +1034,7 @@ function WorkspaceReportCard({ workspaceId, workspace, summary, scanIds }: {
       // List items
       const liMatch = line.match(/^(\d+\.|[-*])\s+(.*)/);
       if (liMatch) {
-        elements.push(<li key={elements.length} className="text-sm text-dark-300 ml-4 list-disc" dangerouslySetInnerHTML={{ __html: sanitizeHTML(inlineFmt(liMatch[2])) }} />);
+        elements.push(<li key={elements.length} className="text-sm text-dark-300 ml-4 list-disc" dangerouslySetInnerHTML={{ __html: sanitizeHTML(inlineFormat(liMatch[2])) }} />);
         i++;
         continue;
       }
@@ -1046,17 +1047,12 @@ function WorkspaceReportCard({ workspaceId, workspace, summary, scanIds }: {
       }
 
       // Paragraph
-      elements.push(<p key={elements.length} className="text-sm text-dark-300 leading-relaxed" dangerouslySetInnerHTML={{ __html: sanitizeHTML(inlineFmt(line)) }} />);
+      elements.push(<p key={elements.length} className="text-sm text-dark-300 leading-relaxed" dangerouslySetInnerHTML={{ __html: sanitizeHTML(inlineFormat(line)) }} />);
       i++;
     }
 
     return elements;
   };
-
-  const inlineFmt = (t: string) => t
-    .replace(/\*\*(.+?)\*\*/g, '<strong class="text-foreground font-semibold">$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/`(.+?)`/g, '<code class="bg-dark-700 px-1 py-0.5 rounded text-spider-400 text-xs font-mono">$1</code>');
 
   return (
     <div className="card">
