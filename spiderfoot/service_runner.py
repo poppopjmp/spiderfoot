@@ -221,20 +221,22 @@ def _run_api(port: int, config: dict) -> None:
 
 
 def _run_all(port: int, config: dict) -> None:
-    """Run all services in a single process (monolith mode)."""
-    _health.service_name = "monolith"
+    """Run all services in a single process (API + Scanner)."""
+    _health.service_name = "all"
     _health.ready = True
 
-    log.info("Running in monolith mode (all services)")
+    log.info("Running in combined mode (API + Scanner)")
 
-    sys.argv = [
-        "sf.py",
-        "--api",
-        "--api-listen", f"0.0.0.0:{port}",
-    ]
+    # Start scanner in background thread
+    import threading
+    scanner_thread = threading.Thread(
+        target=_run_scanner, args=(port + 1000, config),
+        daemon=True, name="scanner"
+    )
+    scanner_thread.start()
 
-    from sf import main as sf_main
-    sf_main()
+    # Run API in foreground
+    _run_api(port, config)
 
 
 _SERVICE_MAP = {

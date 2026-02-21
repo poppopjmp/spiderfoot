@@ -356,38 +356,6 @@ cd cli && make all
 
 Configuration via flags, `SF_*` environment variables, or `~/.spiderfoot.yaml`. See [cli/README.md](cli/README.md) for full documentation.
 
-### Interactive CLI (Python)
-
-For interactive, analyst-oriented sessions, the Python REPL CLI (`sfcli.py`) provides:
-
-- **Interactive shell** with tab completion, command history, and pipe processing (`| grep`, `| top`, `| file`)
-- **26 commands** including workspaces, targets, batch mode, correlation rules, query, and monitoring
-- **Variable substitution** with `$var` syntax
-
-```bash
-python sfcli.py -s http://localhost:8001
-sf> scans
-sf> start -t example.com -m sfp_dns,sfp_whois
-sf> data -s <scan-id> | grep "INTERNET_NAME"
-sf> export -s <scan-id> | file results.json
-```
-
-### CLI Strategy
-
-| Feature | Go CLI (`sf`) | Python CLI (`sfcli.py`) |
-|---------|--------------|------------------------|
-| Static binary | **Yes** — 6 platforms | No — requires Python |
-| Interactive REPL | No | **Yes** |
-| Pipe/grep/filter | No | **Yes** |
-| Tab completion | Shell-level | **Built-in** |
-| Schedules | **Yes** | No |
-| Workspaces/targets | No | **Yes** |
-| Export formats | JSON, CSV, STIX, Excel | JSON, pretty |
-| Config file | `~/.spiderfoot.yaml` | Internal |
-| CI/CD friendly | **Yes** | No |
-
-**Recommended use**: Go CLI for automation, CI/CD pipelines, and scripted workflows. Python CLI for interactive investigation and analyst sessions.
-
 ---
 
 ## Monitoring & Observability

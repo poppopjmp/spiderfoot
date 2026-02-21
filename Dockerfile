@@ -21,7 +21,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     wget \
     unzip \
-    npm \
     swig \
     && rm -rf /var/lib/apt/lists/*
 
@@ -41,15 +40,8 @@ RUN pip install --no-cache-dir -U pip==25.0.1 && \
     # Install additional security tools
     pip install --no-cache-dir dnstwist snallygaster trufflehog wafw00f
 
-# Build React frontend SPA
-COPY frontend/ /build/frontend/
-RUN cd /build/frontend && \
-    npm ci --no-audit --no-fund && \
-    npx tsc --noEmit || true && \
-    npx vite build && \
-    mkdir -p /build/spiderfoot/static/react && \
-    cp -r /build/frontend/dist/* /build/spiderfoot/static/react/ 2>/dev/null || \
-    cp -r /home/spiderfoot/spiderfoot/static/react/ /build/spiderfoot/static/react/ 2>/dev/null || true
+# NOTE: Frontend is built separately as its own Nginx-based container.
+# See docker-compose-microservices.yml for the full service topology.
 
 # Download and build tools
 RUN mkdir -p /tools/bin && \
@@ -101,9 +93,6 @@ COPY --from=builder /opt/venv /opt/venv
 # Copy tools from builder
 COPY --from=builder /tools /tools
 
-# Copy built React SPA from builder
-COPY --from=builder /build/spiderfoot/static/react /home/spiderfoot/spiderfoot/static/react
-
 # Set up environment with virtual environment
 ENV SPIDERFOOT_DATA=/home/spiderfoot/data \
     SPIDERFOOT_LOGS=/home/spiderfoot/logs \
@@ -137,8 +126,6 @@ RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh && \
 
 # Remove any database files from application directory to prevent conflicts
 RUN rm -f /home/spiderfoot/spiderfoot.db && \
-    # Do NOT chown bind-mounted folders (e.g., /home/spiderfoot/data, /home/spiderfoot/logs, /home/spiderfoot/cache, /etc/spiderfoot) here; this causes errors if the host directory is mounted at runtime.
-    # Only set ownership for files and folders created inside the image, not for host bind-mounts.
     rm -f /home/spiderfoot/data/spiderfoot.db
 
 # Remove any existing logs that might have been copied and recreate logs directory
@@ -161,23 +148,24 @@ RUN chown -R spiderfoot:spiderfoot /home/spiderfoot
 
 USER spiderfoot
 
-# Expose ports for both web UI and API
-EXPOSE 5001 8001
+# Expose API port
+EXPOSE 8001
 
 # Health check for API endpoint
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')" || exit 1
 
 # Default command: FastAPI server
-ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh", "python"]
-CMD ["sf.py", "--api", "--api-listen", "0.0.0.0:8001"]
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+CMD ["python", "sfapi.py", "-H", "0.0.0.0", "-p", "8001"]
 
 # ---
-# NOTE: For persistent storage, logs, cache, and config, ensure the following paths are writeable by the spiderfoot user inside the container:
-#   - /home/spiderfoot/data           (main data, including spiderfoot.db)
+# NOTE: PostgreSQL is the required database backend. Set SF_POSTGRES_DSN
+# environment variable. For persistent storage, ensure these paths are
+# writeable by the spiderfoot user inside the container:
+#   - /home/spiderfoot/data           (main data)
 #   - /home/spiderfoot/cache          (cache)
 #   - /home/spiderfoot/logs           (logs)
 #   - /home/spiderfoot/config         (config, if used)
-# If these are bind-mounted from the host, you must set correct permissions/ownership on the host before starting the container.
-# The Dockerfile cannot change ownership of bind-mounted folders at runtime.
+# If these are bind-mounted from the host, set correct host permissions first.
 # ---

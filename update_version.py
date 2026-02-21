@@ -276,35 +276,6 @@ def update_docker_image_yml():
 def update_test_versions():
     """Update hardcoded version strings in test files and workflow_api.py."""
     version = get_version()
-    # test_sfcli.py
-    sfcli_path = Path(__file__).parent / "test" / "unit" / "test_sfcli.py"
-    if sfcli_path.exists():
-        with open(sfcli_path, encoding='utf-8') as f:
-            content = f.read()
-        new_content = re.sub(r'self.cli.version = "\d+\.\d+\.\d+"', f'self.cli.version = "{version}"', content)
-        if new_content != content:
-            with open(sfcli_path, 'w', encoding='utf-8') as f:
-                f.write(new_content)
-            print(f"[OK] Updated test_sfcli.py with version {version}")
-        else:
-            print(f"[OK] test_sfcli.py already has correct version {version}")
-    else:
-        print(f"WARNING: {sfcli_path} not found")
-
-    # test_spiderfootcli.py
-    spiderfootcli_path = Path(__file__).parent / "test" / "unit" / "test_spiderfootcli.py"
-    if spiderfootcli_path.exists():
-        with open(spiderfootcli_path, encoding='utf-8') as f:
-            content = f.read()
-        new_content = re.sub(r'\["SUCCESS", "\d+\.\d+\.\d+"\]', f'["SUCCESS", "{version}"]', content)
-        if new_content != content:
-            with open(spiderfootcli_path, 'w', encoding='utf-8') as f:
-                f.write(new_content)
-            print(f"[OK] Updated test_spiderfootcli.py with version {version}")
-        else:
-            print(f"[OK] test_spiderfootcli.py already has correct version {version}")
-    else:
-        print(f"WARNING: {spiderfootcli_path} not found")
 
     # workflow_api.py
     workflow_api_path = Path(__file__).parent / "spiderfoot" / "workflow_api.py"

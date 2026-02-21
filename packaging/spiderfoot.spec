@@ -32,11 +32,8 @@ mkdir -p %{buildroot}%{python3_sitelib}/correlations
 cp -r correlations/* %{buildroot}%{python3_sitelib}/correlations/
 mkdir -p %{buildroot}%{python3_sitelib}/spiderfoot
 cp -r spiderfoot/* %{buildroot}%{python3_sitelib}/spiderfoot/
-# Add all sf* and sflib* files from root
-cp sf.py %{buildroot}%{python3_sitelib}/
-cp sfcli.py %{buildroot}%{python3_sitelib}/
+# Add API entry point from root
 cp sfapi.py %{buildroot}%{python3_sitelib}/
-cp sfwebui.py %{buildroot}%{python3_sitelib}/
 
 
 %files
@@ -45,11 +42,8 @@ cp sfwebui.py %{buildroot}%{python3_sitelib}/
 %{python3_sitelib}/spiderfoot*
 %{python3_sitelib}/modules*
 %{python3_sitelib}/correlations*
-# Add all sf* and sflib* files from root
-%{python3_sitelib}/sf.py
-%{python3_sitelib}/sfcli.py
+# API entry point
 %{python3_sitelib}/sfapi.py
-%{python3_sitelib}/sfwebui.py
 
 
 %changelog

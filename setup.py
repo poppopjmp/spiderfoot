@@ -52,8 +52,6 @@ setup(
     install_requires=requirements,
     entry_points={
         "console_scripts": [
-            "spiderfoot=sf:main",
-            "spiderfoot-cli=sfcli:main",
             "spiderfoot-api=sfapi:main",
         ],
     },
