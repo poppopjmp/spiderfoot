@@ -29,6 +29,8 @@
 #
 # =============================================================================
 
+# Global ARG — must be before the first FROM so it's available in all stages
+ARG BASE_IMAGE=spiderfoot-base:latest
 
 # ── Stage 1: Compile Go recon tools ─────────────────────────────────────────
 FROM golang:1.24-bookworm AS go-builder
@@ -143,7 +145,7 @@ RUN git clone --depth 1 https://github.com/sullo/nikto.git /tools/nikto && \
 
 
 # ── Stage 5: Runtime — extend base image ────────────────────────────────────
-ARG BASE_IMAGE=spiderfoot-base:latest
+ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
 
 LABEL org.opencontainers.image.title="SpiderFoot Active Scanner" \
