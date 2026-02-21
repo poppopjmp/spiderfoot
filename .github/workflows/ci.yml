@@ -116,10 +116,38 @@ jobs:
       - name: Run tests with coverage
         run: npx vitest run --coverage --reporter=json --outputFile=test-results.json || true
 
+  go-cli:
+    name: Go CLI Lint & Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cli
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache-dependency-path: cli/go.sum
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Run tests
+        run: go test -v -race -count=1 ./...
+
+      - name: Build (smoke test)
+        run: go build -trimpath -o sf .
+
   integration-test:
     name: Integration Tests
     runs-on: ubuntu-latest
-    needs: [test, frontend]
+    needs: [test, frontend, go-cli]
     services:
       redis:
         image: redis:7-alpine
