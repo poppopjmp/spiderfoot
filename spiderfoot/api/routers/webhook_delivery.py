@@ -12,7 +12,8 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from ..dependencies import get_api_key
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+from .webhooks import _validate_webhook_url
 
 from spiderfoot.webhook_delivery import WebhookDeliveryManager, RetryPolicy
 
@@ -33,6 +34,11 @@ class CreateDeliveryRequest(BaseModel):
     headers: dict = Field(default_factory=dict)
     timeout_seconds: int = Field(30, ge=5, le=120)
     max_retries: int = Field(5, ge=0, le=20)
+
+    @field_validator("endpoint_url")
+    @classmethod
+    def _check_url(cls, v: str) -> str:
+        return _validate_webhook_url(v)
 
 
 class RecordAttemptRequest(BaseModel):

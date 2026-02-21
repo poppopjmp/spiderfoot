@@ -19,12 +19,15 @@ from __future__ import annotations
 
 import logging
 from typing import Any
+from urllib.parse import urlparse
+import ipaddress
+import socket
 
 log = logging.getLogger("spiderfoot.api.webhooks")
 
 try:
     from fastapi import APIRouter, Depends, HTTPException, Query
-    from pydantic import BaseModel, Field
+    from pydantic import BaseModel, Field, field_validator
 
     HAS_FASTAPI = True
 except ImportError:
@@ -32,6 +35,37 @@ except ImportError:
 
 from spiderfoot.notification_manager import get_notification_manager
 from spiderfoot.webhook_dispatcher import WebhookConfig
+
+# ── SSRF protection ──────────────────────────────────────────────
+
+_BLOCKED_HOSTNAMES = frozenset({
+    "localhost", "metadata.google.internal", "169.254.169.254",
+})
+
+
+def _validate_webhook_url(url: str) -> str:
+    """Reject webhook URLs that target private/internal networks (SSRF)."""
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https"):
+        raise ValueError("Webhook URL must use http:// or https://")
+    hostname = parsed.hostname or ""
+    if not hostname:
+        raise ValueError("Webhook URL must have a hostname")
+    if hostname.lower() in _BLOCKED_HOSTNAMES:
+        raise ValueError(f"Webhook URL cannot target reserved hostname: {hostname}")
+    # Resolve hostname and check for private/reserved IP ranges
+    try:
+        for info in socket.getaddrinfo(hostname, None, socket.AF_UNSPEC, socket.SOCK_STREAM):
+            addr = info[4][0]
+            ip = ipaddress.ip_address(addr)
+            if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved:
+                raise ValueError(
+                    f"Webhook URL resolves to a private/internal IP ({addr}). "
+                    "Only public addresses are allowed."
+                )
+    except socket.gaierror:
+        pass  # DNS resolution may fail in CI, allow and let delivery fail later
+    return url
 
 
 # -----------------------------------------------------------------------
@@ -57,6 +91,11 @@ if HAS_FASTAPI:
         max_retries: int = Field(3, ge=0, le=10)
         description: str = ""
 
+        @field_validator("url")
+        @classmethod
+        def _check_url(cls, v: str) -> str:
+            return _validate_webhook_url(v)
+
     class WebhookUpdateRequest(BaseModel):
         """Data model for a webhook update request."""
         url: str | None = None
@@ -66,6 +105,13 @@ if HAS_FASTAPI:
         timeout: float | None = None
         max_retries: int | None = None
         description: str | None = None
+
+        @field_validator("url")
+        @classmethod
+        def _check_url(cls, v: str | None) -> str | None:
+            if v is not None:
+                return _validate_webhook_url(v)
+            return v
 
 
 # -----------------------------------------------------------------------
