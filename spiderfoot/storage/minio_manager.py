@@ -45,12 +45,28 @@ from __future__ import annotations
 import io
 import logging
 import os
+import re as _re
 import time
 from dataclasses import dataclass, field
 from datetime import timedelta
 from typing import Any, BinaryIO
 
 log = logging.getLogger("spiderfoot.storage.minio")
+
+_SAFE_NAME_RE = _re.compile(r'^[a-zA-Z0-9][a-zA-Z0-9._\-]{0,253}$')
+
+
+def _validate_safe_name(name: str, label: str = "name") -> str:
+    """Reject path-traversal and other unsafe characters in storage names.
+
+    Allows alphanumeric, dots, dashes, underscores.  Rejects ``..``, ``/``,
+    ``\\`` and non-ASCII.  Raises ``ValueError`` on invalid input.
+    """
+    if ".." in name or "/" in name or "\\" in name:
+        raise ValueError(f"Invalid {label}: path traversal characters not allowed")
+    if not _SAFE_NAME_RE.match(name):
+        raise ValueError(f"Invalid {label}: must be 1-254 alphanumeric/dash/underscore/dot characters")
+    return name
 
 
 # ---------------------------------------------------------------------------
@@ -290,6 +306,8 @@ class MinIOStorageManager:
         self, collection_name: str, snapshot_id: str, data: bytes | BinaryIO
     ) -> str:
         """Store a Qdrant collection snapshot."""
+        _validate_safe_name(collection_name, "collection_name")
+        _validate_safe_name(snapshot_id, "snapshot_id")
         key = f"collections/{collection_name}/{snapshot_id}.snapshot"
         self._put_data(
             self._config.qdrant_snapshots_bucket, key, data, "application/octet-stream"
@@ -304,6 +322,8 @@ class MinIOStorageManager:
 
     def get_qdrant_snapshot(self, collection_name: str, snapshot_id: str) -> bytes:
         """Retrieve a Qdrant snapshot."""
+        _validate_safe_name(collection_name, "collection_name")
+        _validate_safe_name(snapshot_id, "snapshot_id")
         key = f"collections/{collection_name}/{snapshot_id}.snapshot"
         return self._get_data(self._config.qdrant_snapshots_bucket, key)
 
@@ -319,12 +339,16 @@ class MinIOStorageManager:
         content_type: str = "application/octet-stream",
     ) -> str:
         """Store a generic data artefact for a scan."""
+        _validate_safe_name(scan_id, "scan_id")
+        _validate_safe_name(filename, "filename")
         key = f"scans/{scan_id}/artefacts/{filename}"
         self._put_data(self._config.data_bucket, key, data, content_type)
         return key
 
     def get_artefact(self, scan_id: str, filename: str) -> bytes:
         """Retrieve a scan artefact."""
+        _validate_safe_name(scan_id, "scan_id")
+        _validate_safe_name(filename, "filename")
         key = f"scans/{scan_id}/artefacts/{filename}"
         return self._get_data(self._config.data_bucket, key)
 

@@ -21,6 +21,7 @@ GET  /storage/objects/{bucket} — list objects in a bucket
 from __future__ import annotations
 
 import logging
+import re as _re
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -29,6 +30,25 @@ from pydantic import BaseModel, Field
 from ..dependencies import optional_auth, get_api_key
 
 log = logging.getLogger("spiderfoot.api.storage")
+
+_SAFE_BUCKET_RE = _re.compile(r'^[a-z0-9][a-z0-9.\-]{1,61}[a-z0-9]$')
+_SAFE_NAME_RE = _re.compile(r'^[a-zA-Z0-9][a-zA-Z0-9._\-]{0,253}$')
+
+
+def _validate_bucket(name: str) -> str:
+    """Validate S3 bucket name — only SpiderFoot buckets allowed."""
+    if not _SAFE_BUCKET_RE.match(name) or ".." in name:
+        raise HTTPException(status_code=400, detail="Invalid bucket name")
+    if not name.startswith("sf-"):
+        raise HTTPException(status_code=403, detail="Access to non-SpiderFoot buckets is denied")
+    return name
+
+
+def _validate_name(name: str, label: str = "name") -> str:
+    """Reject path-traversal characters in storage names."""
+    if ".." in name or "/" in name or "\\" in name or not _SAFE_NAME_RE.match(name):
+        raise HTTPException(status_code=400, detail=f"Invalid {label}")
+    return name
 
 router = APIRouter(dependencies=[Depends(get_api_key)])
 optional_auth_dep = Depends(optional_auth)
@@ -223,6 +243,7 @@ async def list_qdrant_snapshots(
 @router.post("/snapshots/{collection}", dependencies=[optional_auth_dep])
 async def snapshot_collection(collection: str) -> SnapshotResult:
     """Create a snapshot of a single Qdrant collection and upload to MinIO."""
+    _validate_name(collection, "collection")
     backup = _get_qdrant_backup()
     try:
         result = backup.snapshot_collection(collection)
@@ -251,6 +272,7 @@ async def list_bucket_objects(
     max_results: int = Query(100, ge=1, le=1000),
 ) -> list[ObjectInfo]:
     """List objects in any MinIO bucket with optional prefix filter."""
+    _validate_bucket(bucket)
     mgr = _get_storage()
     objects = mgr.list_objects(bucket, prefix=prefix)
     return [ObjectInfo(**obj) for obj in objects[:max_results]]
