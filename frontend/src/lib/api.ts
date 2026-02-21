@@ -625,3 +625,66 @@ export function statusBadgeClass(status: string): string {
     default: return 'badge badge-info';
   }
 }
+
+/* ── Schedule API ──────────────────────────────────────────── */
+
+export interface Schedule {
+  id: string;
+  name: string;
+  target: string;
+  engine: string | null;
+  modules: string[] | null;
+  interval_hours: number;
+  enabled: boolean;
+  description: string;
+  tags: string[];
+  notify_on_change: boolean;
+  max_runs: number;
+  runs_completed: number;
+  last_run_at: number | null;
+  next_run_at: number | null;
+  created_at: number;
+}
+
+export interface ScheduleCreate {
+  name: string;
+  target: string;
+  engine?: string;
+  modules?: string[];
+  interval_hours?: number;
+  enabled?: boolean;
+  description?: string;
+  tags?: string[];
+  notify_on_change?: boolean;
+  max_runs?: number;
+}
+
+export const scheduleApi = {
+  list: (signal?: AbortSignal) =>
+    api.get<{ schedules: Schedule[]; total: number }>('/api/schedules', { signal }).then((r) => r.data),
+
+  get: (id: string, signal?: AbortSignal) =>
+    api.get<Schedule>(`/api/schedules/${id}`, { signal }).then((r) => r.data),
+
+  create: (data: ScheduleCreate, signal?: AbortSignal) =>
+    api.post<Schedule>('/api/schedules', data, { signal }).then((r) => r.data),
+
+  update: (id: string, data: Partial<ScheduleCreate>, signal?: AbortSignal) =>
+    api.put<Schedule>(`/api/schedules/${id}`, data, { signal }).then((r) => r.data),
+
+  delete: (id: string, signal?: AbortSignal) =>
+    api.delete(`/api/schedules/${id}`, { signal }).then((r) => r.data),
+
+  trigger: (id: string, signal?: AbortSignal) =>
+    api.post<{ message: string; scan_id?: string }>(`/api/schedules/${id}/trigger`, null, { signal }).then((r) => r.data),
+};
+
+/* ── STIX Export API ───────────────────────────────────────── */
+
+export const stixApi = {
+  exportBundle: (scanId: string, eventTypes?: string[], signal?: AbortSignal) =>
+    api.post('/api/stix/export', {
+      scan_id: scanId,
+      event_types: eventTypes ?? [],
+    }, { signal }).then((r) => r.data),
+};

@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { scanApi } from '../../lib/api';
-import { Download, FileText, Share2 } from 'lucide-react';
+import { scanApi, stixApi } from '../../lib/api';
+import { Download, FileText, Share2, Shield } from 'lucide-react';
 import { DropdownMenu, DropdownItem, type ToastType } from '../ui';
 
 export default function ExportDropdown({ scanId, scanName, onToast }: { scanId: string; scanName: string; onToast: (t: { type: ToastType; message: string }) => void }) {
@@ -32,6 +32,28 @@ export default function ExportDropdown({ scanId, scanName, onToast }: { scanId: 
     }
   };
 
+  const downloadStix = async () => {
+    setExporting('stix');
+    try {
+      const bundle = await stixApi.exportBundle(scanId);
+      const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: 'application/stix+json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${scanName || scanId}-stix.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      onToast({ type: 'success', message: 'STIX 2.1 bundle exported' });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'STIX export failed';
+      onToast({ type: 'error', message: msg });
+    } finally {
+      setExporting(null);
+    }
+  };
+
   return (
     <DropdownMenu trigger={<button className="btn-secondary"><Download className="h-4 w-4" /> Export</button>}>
       <DropdownItem icon={FileText} onClick={() => download('csv')}>
@@ -45,6 +67,9 @@ export default function ExportDropdown({ scanId, scanName, onToast }: { scanId: 
       </DropdownItem>
       <DropdownItem icon={Share2} onClick={() => download('gexf')}>
         {exporting === 'gexf' ? 'Exporting...' : 'GEXF (Graph)'}
+      </DropdownItem>
+      <DropdownItem icon={Shield} onClick={downloadStix}>
+        {exporting === 'stix' ? 'Exporting...' : 'STIX 2.1 Bundle'}
       </DropdownItem>
     </DropdownMenu>
   );
