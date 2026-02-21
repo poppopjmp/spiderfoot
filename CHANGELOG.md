@@ -5,6 +5,20 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [5.9.2] — 2026-02-20 — Deep Security & Quality Hardening
 
+### Security — SSO & Hardening Polish (Batch 9)
+- **SSO callback error sanitization**: Replaced `str(e)` in OAuth2 callback and SAML ACS error redirects with generic "SSO authentication failed" message; full exception logged server-side via `log.exception()`
+- **Docker hardening documentation**: Added comprehensive comment block documenting which 13 services are hardened and why each of the 10 remaining services is excluded (writable filesystem requirements)
+
+### Improved — Frontend Performance (Batch 9)
+- **Route-level code splitting expanded**: Moved ScanDetail, NewScan, and Settings from eager imports to `React.lazy()` with `<Suspense>` boundaries — now 10 of 12 pages are lazy-loaded for smaller initial bundle
+
+### Added — Test Coverage Expansion (Batch 9)
+- **99 additional tests** across 3 new test files:
+  - `auth.test.ts` (36): Zustand auth store — saveTokens, clearTokens, setTokensFromUrl, hasPermission (all roles), login/LDAP errors, token refresh, user fetch
+  - `api.test.ts` (45): API utilities — formatEpoch/formatDuration edge cases, statusColor/statusBadgeClass all variants, getErrorMessage for all error shapes
+  - `Layout.test.tsx` (18): Layout component — nav items, dropdowns, admin visibility, user menu, sign out, about modal, mobile header, theme toggle
+- **Total: 230 tests across 11 files, all passing**
+
 ### Security — Final Hardening Pass (Batch 8)
 - **Auth route info leak closure**: Sanitized `detail=str(e)` in token refresh (catch-all `Exception`) and LDAP login (`ImportError` could expose filesystem paths); generic messages returned, full details logged server-side
 - **Gateway error sanitization**: Removed internal exception message from `GatewayError` in api_gateway.py; prevents service internals from reaching clients
