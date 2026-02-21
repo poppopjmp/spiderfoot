@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   configApi, dataApi, type Module,
@@ -22,6 +22,7 @@ export default function SettingsPage() {
   const [confirmReset, setConfirmReset] = useState(false);
   const [editedValues, setEditedValues] = useState<Record<string, string>>({});
   const [showPasswords, setShowPasswords] = useState<Set<string>>(new Set());
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   /* Queries */
   const { data: configData, isLoading: configLoading } = useQuery({
@@ -129,7 +130,9 @@ export default function SettingsPage() {
       const a = document.createElement('a');
       a.href = url;
       a.download = 'spiderfoot-config.json';
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
       setToast({ type: 'success', message: 'Configuration exported' });
     } catch {
@@ -138,24 +141,24 @@ export default function SettingsPage() {
   };
 
   const handleImport = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json';
-    input.onchange = async (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
-      try {
-        const text = await file.text();
-        const parsed = JSON.parse(text);
-        await configApi.importConfig(parsed);
-        queryClient.invalidateQueries({ queryKey: ['config'] });
-        setToast({ type: 'success', message: 'Configuration imported' });
-      } catch {
-        setToast({ type: 'error', message: 'Import failed — invalid JSON' });
-      }
-    };
-    input.click();
+    importInputRef.current?.click();
   };
+
+  const onImportFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      await configApi.importConfig(parsed);
+      queryClient.invalidateQueries({ queryKey: ['config'] });
+      setToast({ type: 'success', message: 'Configuration imported' });
+    } catch {
+      setToast({ type: 'error', message: 'Import failed — invalid JSON' });
+    }
+    // Reset the input so the same file can be re-imported
+    if (importInputRef.current) importInputRef.current.value = '';
+  }, [queryClient]);
 
   /* Reset */
   const handleReset = async () => {
@@ -189,6 +192,14 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6">
+      {/* Hidden file input for config import (ref-based to avoid orphan DOM nodes) */}
+      <input
+        ref={importInputRef}
+        type="file"
+        accept=".json"
+        className="hidden"
+        onChange={onImportFileChange}
+      />
       <PageHeader title="Settings" subtitle="Configure SpiderFoot options and API keys">
         <div className="flex gap-2">
           <button className="btn-secondary text-sm" onClick={handleImport}>
