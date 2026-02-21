@@ -25,10 +25,10 @@ SpiderFoot features a modern React SPA with a dark theme, real-time updates, and
 **Docker Compose (Recommended):**
 ```bash
 # Core only (5 services)
-docker compose -f docker-compose-microservices.yml up --build -d
+docker compose -f docker-compose.yml up --build -d
 
 # Or full stack (all services except SSO)
-docker compose -f docker-compose-microservices.yml --profile full up --build -d
+docker compose -f docker-compose.yml --profile full up --build -d
 ```
 Access the UI at [http://localhost:3000](http://localhost:3000) (core) or [https://localhost](https://localhost) (with proxy profile) and log in with your admin credentials.
 
@@ -234,3 +234,4 @@ SpiderFoot v5.3.3 provides enhanced result analysis and interpretation:
 ---
 
 Next: [Modules](modules.md) for a list of available modules and their usage.
+

@@ -12,7 +12,7 @@
 #   /bin/bash /opt/keycloak/scripts/setup-realm.sh
 #
 # Or from the host:
-#   docker compose -f docker-compose-microservices.yml --profile sso \
+#   docker compose -f docker-compose.yml --profile sso \
 #     exec keycloak /bin/bash /opt/keycloak/scripts/setup-realm.sh
 # =============================================================================
 
@@ -266,3 +266,4 @@ echo "  Set attribute_mapping JSON to:"
 echo '    {"group_role_map": {"sf-admin": "admin", "sf-analyst": "analyst", "sf-viewer": "viewer"}}'
 echo ""
 echo "═══════════════════════════════════════════════════════════"
+

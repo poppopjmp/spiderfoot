@@ -1,0 +1,10 @@
+name: spiderfoot
+include:
+- docker/compose/core.yml
+- docker/compose/scan.yml
+- docker/compose/proxy.yml
+- docker/compose/storage.yml
+- docker/compose/monitor.yml
+- docker/compose/ai.yml
+- docker/compose/scheduler.yml
+- docker/compose/sso.yml

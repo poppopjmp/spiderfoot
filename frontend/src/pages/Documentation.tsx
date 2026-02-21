@@ -329,7 +329,7 @@ const GUIDES: Guide[] = [
       },
       {
         title: 'Docker Compose deployment',
-        content: `Deploy with: \`docker compose -f docker-compose-microservices.yml up -d\`\n\nKey services:\n- **sf-api**: FastAPI backend (port 443 via Traefik)\n- **celery-worker**: Scan execution workers\n- **celery-beat**: Periodic task scheduler\n- **redis**: Message broker and cache\n- **postgres**: Primary database\n- **flower**: Celery monitoring (accessible at /flower/)\n- **traefik**: Reverse proxy and TLS\n\nAll services run on internal Docker networks with only Traefik exposed externally.`,
+        content: `Deploy with: \`docker compose -f docker-compose.yml up -d\`\n\nKey services:\n- **sf-api**: FastAPI backend (port 443 via Traefik)\n- **celery-worker**: Scan execution workers\n- **celery-beat**: Periodic task scheduler\n- **redis**: Message broker and cache\n- **postgres**: Primary database\n- **flower**: Celery monitoring (accessible at /flower/)\n- **traefik**: Reverse proxy and TLS\n\nAll services run on internal Docker networks with only Traefik exposed externally.`,
       },
     ],
   },
@@ -439,3 +439,4 @@ function GuidesPanel() {
     </div>
   );
 }
+

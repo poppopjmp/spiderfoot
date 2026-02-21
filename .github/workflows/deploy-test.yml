@@ -5,7 +5,7 @@ on:
     branches: [main]
     paths:
       - "Dockerfile"
-      - "docker-compose-microservices.yml"
+      - "docker-compose.yml"
       - "docker/**"
       - "requirements.txt"
       - "frontend/**"
@@ -324,3 +324,4 @@ jobs:
         run: |
           echo "One or more deployment checks failed"
           exit 1
+

@@ -1,0 +1,56 @@
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    container_name: sf-keycloak
+    restart: unless-stopped
+    networks:
+    - sf-frontend
+    - sf-backend
+    ports:
+    - "${KC_PORT:-9080}:8080"
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD:-admin}
+      KC_HTTP_RELATIVE_PATH: /
+      KC_HEALTH_ENABLED: "true"
+      KC_METRICS_ENABLED: "false"
+      KC_DB: dev-file
+      # Hostname v2: pin the issuer to the browser-facing URL so tokens are
+      # valid regardless of whether back-channel calls use the internal Docker
+      # hostname (keycloak:8080) or the external host port (localhost:9080).
+      KC_HOSTNAME: "http://localhost:${KC_PORT:-9080}"
+      KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+      KC_HTTP_ENABLED: "true"
+      KC_PROXY_HEADERS: xforwarded
+    command: ["start-dev"]
+    volumes:
+    - keycloak-data:/opt/keycloak/data
+    - ../../scripts/keycloak-setup-realm.sh:/opt/keycloak/scripts/setup-realm.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/9000 && echo -e 'GET /health/ready
+          HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 &&
+          grep -q '200\\|UP' <&3"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: "${KC_CPUS:-1.0}"
+          memory: "${KC_MEMORY:-768M}"
+    profiles:
+    - sso
+
+networks:
+  sf-frontend:
+    name: sf-frontend
+    driver: bridge
+  sf-backend:
+    name: sf-backend
+    driver: bridge
+    internal: true
+
+volumes:
+  keycloak-data:

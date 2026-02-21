@@ -148,7 +148,7 @@ Modules can find wordlists via `SF_WORDLISTS_PATH` environment variable
 | File | Action | Description |
 |------|--------|-------------|
 | `Dockerfile.active-worker` | **Created** | Multi-stage build: Go builder → C builder → wordlists → runtime |
-| `docker-compose-microservices.yml` | **Modified** | Added `celery-worker-active` service with `scan` profile + `x-sf-active-build` anchor; general worker no longer handles `scan` queue |
+| `docker-compose.yml` | **Modified** | Added `celery-worker-active` service with `scan` profile + `x-sf-active-build` anchor; general worker no longer handles `scan` queue |
 | `documentation/active-scan-worker.md` | **Created** | This file |
 
 ## Build & Run
@@ -160,11 +160,11 @@ Modules can find wordlists via `SF_WORDLISTS_PATH` environment variable
 cp .env.example .env
 
 # 2. Build base image first, then all services including active worker
-docker compose -f docker-compose-microservices.yml --profile scan build api
-docker compose -f docker-compose-microservices.yml --profile scan build
+docker compose -f docker-compose.yml --profile scan build api
+docker compose -f docker-compose.yml --profile scan build
 
 # 3. Start core + active scan worker
-docker compose -f docker-compose-microservices.yml --profile scan up -d
+docker compose -f docker-compose.yml --profile scan up -d
 ```
 
 ### Build order note
@@ -189,7 +189,7 @@ low to avoid resource contention.
 To run multiple active scan workers (horizontal scaling):
 
 ```bash
-docker compose -f docker-compose-microservices.yml up -d \
+docker compose -f docker-compose.yml up -d \
   --scale celery-worker-active=3
 ```
 
@@ -366,3 +366,4 @@ docker build -f Dockerfile.active-worker \
   --build-arg BASE_IMAGE=ghcr.io/org/spiderfoot-base:v5.9.0 \
   -t spiderfoot-active:latest .
 ```
+

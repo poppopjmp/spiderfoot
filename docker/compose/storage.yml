@@ -1,0 +1,244 @@
+services:
+  minio:
+    image: minio/minio:RELEASE.2024-11-07T00-52-20Z
+    container_name: sf-minio
+    restart: unless-stopped
+    networks:
+    - sf-frontend
+    - sf-backend
+    labels:
+    - "traefik.enable=true"
+      # MinIO Console (admin UI)
+    - "traefik.http.routers.minio-console.rule=PathPrefix(`/minio`)"
+    - "traefik.http.routers.minio-console.entrypoints=websecure"
+    - "traefik.http.routers.minio-console.tls=true"
+    - "traefik.http.routers.minio-console.middlewares=strip-minio@file,security-headers@file"
+    - "traefik.http.routers.minio-console.service=minio-console"
+    - "traefik.http.services.minio-console.loadbalancer.server.port=9001"
+      # MinIO API (S3) — internal services use minio:9000, this route is for external S3 clients
+    - "traefik.http.routers.minio-api.rule=PathPrefix(`/s3`)"
+    - "traefik.http.routers.minio-api.entrypoints=websecure"
+    - "traefik.http.routers.minio-api.tls=true"
+    - "traefik.http.middlewares.strip-s3.stripprefix.prefixes=/s3"
+    - "traefik.http.routers.minio-api.middlewares=strip-s3,security-headers@file"
+    - "traefik.http.routers.minio-api.service=minio-api"
+    - "traefik.http.services.minio-api.loadbalancer.server.port=9000"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_PROMETHEUS_AUTH_TYPE: public
+      MINIO_BROWSER_REDIRECT_URL: 
+        ${SF_MINIO_CONSOLE_URL:-https://localhost/minio/}
+    volumes:
+    - minio-data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "${MINIO_CPUS:-1.0}"
+          memory: "${MINIO_MEMORY:-512M}"
+    profiles:
+    - storage
+    - full
+
+  # MinIO bucket initializer — creates required buckets on first start
+  # Also copies the mc binary to a shared volume for the pg-backup sidecar.
+  minio-init:
+    image: minio/mc:RELEASE.2024-11-17T19-35-25Z
+    container_name: sf-minio-init
+    networks:
+    - sf-backend
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+    - mc-bin:/opt/mc-share
+    entrypoint: >
+      /bin/sh -c "
+        mc alias set sfminio http://minio:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD};
+        mc mb --ignore-existing sfminio/sf-logs;
+        mc mb --ignore-existing sfminio/sf-reports;
+        mc mb --ignore-existing sfminio/sf-pg-backups;
+        mc mb --ignore-existing sfminio/sf-qdrant-snapshots;
+        mc mb --ignore-existing sfminio/sf-data;
+        mc mb --ignore-existing sfminio/sf-loki-data;
+        mc mb --ignore-existing sfminio/sf-loki-ruler;
+        mc anonymous set download sfminio/sf-reports;
+        cp /usr/bin/mc /opt/mc-share/mc && chmod +x /opt/mc-share/mc;
+        echo 'MinIO buckets initialized + mc binary shared';
+      "
+    profiles:
+    - storage
+    - full
+
+  qdrant:
+    image: qdrant/qdrant:v1.12.4
+    container_name: sf-qdrant
+    restart: unless-stopped
+    security_opt:
+    - "no-new-privileges:true"
+    read_only: true
+    tmpfs:
+    - /tmp
+    networks:
+    - sf-backend
+    volumes:
+    - qdrant-data:/qdrant/storage
+    environment:
+      QDRANT__SERVICE__GRPC_PORT: "6334"
+      QDRANT__SERVICE__HTTP_PORT: "6333"
+      # S3 snapshot storage via MinIO
+      QDRANT__STORAGE__SNAPSHOTS_PATH: "/qdrant/snapshots"
+    depends_on:
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/6333'"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "${QDRANT_CPUS:-1.0}"
+          memory: "${QDRANT_MEMORY:-1G}"
+    profiles:
+    - storage
+    - full
+
+  # ---------------------------------------------------------------------------
+  # Vector.dev — Data Pipeline (logs, events, metrics)
+  # ---------------------------------------------------------------------------
+  # Integration point for shipping scan data to external storage/analytics:
+  #   - Loki: centralized log aggregation
+  #   - Prometheus: metrics via exporter
+  #   - S3/Minio: long-term archival of all scan events
+  #   - Webhooks: real-time high-severity alerts
+  #
+  # Vector.dev replaces Promtail + OTel Collector, serving as the unified
+  # telemetry pipeline (logs, metrics, traces).
+  #
+  # Enable sinks via env vars — see config/vector.toml for details.
+  # ---------------------------------------------------------------------------
+
+  tika:
+    image: apache/tika:3.1.0.0-full
+    container_name: sf-tika
+    restart: unless-stopped
+    security_opt:
+    - "no-new-privileges:true"
+    read_only: true
+    tmpfs:
+    - /tmp
+    networks:
+    - sf-backend
+    environment:
+      # Tika runs on port 9998 by default; the -full image includes Tesseract OCR
+      TIKA_SERVER_JAVA_OPTS: "-Xmx${TIKA_HEAP:-512m}"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:9998/tika || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: "${TIKA_CPUS:-2.0}"
+          memory: "${TIKA_MEMORY:-1G}"
+    profiles:
+    - storage
+    - full
+
+  # ---------------------------------------------------------------------------
+  # SpiderFoot Agents Service (AI analysis agents)
+  # ---------------------------------------------------------------------------
+  # Hosts AI-powered analysis agents that process scan events:
+  #   - FindingValidator: Validates high-risk findings via LLM
+  #   - CredentialAnalyzer: Assesses exposed credential risk
+  #   - TextSummarizer: Summarizes large content for intelligence
+  #   - ReportGenerator: Generates comprehensive scan reports
+  #   - DocumentAnalyzer: Analyzes user-uploaded documents
+  #   - ThreatIntelAnalyzer: Cross-references findings with threat intel
+  # ---------------------------------------------------------------------------
+
+  pg-backup:
+    image: postgres:15-alpine
+    container_name: sf-pg-backup
+    restart: unless-stopped
+    security_opt:
+    - "no-new-privileges:true"
+    read_only: true
+    tmpfs:
+    - /tmp
+    networks:
+    - sf-backend
+    environment:
+      PGHOST: postgres
+      PGPORT: "5432"
+      PGUSER: ${POSTGRES_USER:-spiderfoot}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB:-spiderfoot}
+      MINIO_ENDPOINT: "http://minio:9000"
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      BACKUP_BUCKET: sf-pg-backups
+      BACKUP_SCHEDULE_HOURS: ${SF_PG_BACKUP_SCHEDULE:-6}
+      BACKUP_RETENTION_DAYS: ${SF_PG_BACKUP_RETENTION:-30}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    volumes:
+    - ../../scripts/pg_backup_minio.sh:/usr/local/bin/pg_backup_minio.sh:ro
+    - mc-bin:/opt/mc-share:ro
+    entrypoint: ["/bin/sh", "/usr/local/bin/pg_backup_minio.sh"]
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: "128M"
+    profiles:
+    - storage
+    - full
+
+  # ---------------------------------------------------------------------------
+  # Keycloak — Identity Provider (SSO / OIDC / SAML testing)
+  # ---------------------------------------------------------------------------
+  # Runs Keycloak in dev mode for local SSO integration testing.
+  # Admin console:  http://localhost:9080  (admin / ${KC_ADMIN_PASSWORD})
+  # OIDC discovery: http://keycloak:8080/realms/spiderfoot/.well-known/openid-configuration
+  #
+  # After first start, run:
+  #   docker compose -f docker-compose.yml exec keycloak \
+  #     /bin/bash /opt/keycloak/scripts/setup-realm.sh
+  # to create the "spiderfoot" realm, OIDC client, and test users.
+  # ---------------------------------------------------------------------------
+
+networks:
+  sf-frontend:
+    name: sf-frontend
+    driver: bridge
+  sf-backend:
+    name: sf-backend
+    driver: bridge
+    internal: true
+
+volumes:
+  qdrant-data:
+  mc-bin:
+  minio-data:
+

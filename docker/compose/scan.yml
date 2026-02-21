@@ -1,0 +1,111 @@
+services:
+  celery-worker-active:
+    build:
+      context: ../../
+      dockerfile: docker/Dockerfile.active-scanner
+    container_name: sf-celery-worker-active
+    restart: unless-stopped
+    networks:
+    - sf-backend
+    - sf-frontend
+    cap_add:
+    - NET_RAW            # nmap SYN scans, naabu raw sockets
+    - NET_ADMIN          # nmap OS detection, advanced scans
+    security_opt:
+    - no-new-privileges:true
+    read_only: true
+    tmpfs:
+    - /tmp:size=512M
+    - /var/tmp:size=256M
+    environment:
+      SF_SERVICE_ROLE: active-scanner
+      SF_REDIS_URL: redis://redis:6379/0
+      SF_POSTGRES_DSN: 
+        postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-spiderfoot}
+      SF_LOG_LEVEL: ${SF_LOG_LEVEL:-INFO}
+      SF_TIKA_URL: "${SF_TIKA_URL:-}"
+      SF_MINIO_ENDPOINT: "${SF_MINIO_ENDPOINT:-}"
+      SF_MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-}
+      SF_MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-}
+      SF_MINIO_SECURE: "false"
+      SF_MINIO_REPORTS_BUCKET: ${SF_MINIO_REPORTS_BUCKET:-sf-reports}
+      SF_MINIO_DATA_BUCKET: ${SF_MINIO_DATA_BUCKET:-sf-data}
+      SF_LLM_PROVIDER: ${SF_LLM_PROVIDER:-mock}
+      SF_LLM_API_BASE: ${SF_LLM_API_BASE:-}
+      SF_LLM_API_KEY: ${SF_LLM_API_KEY:-}
+      SF_LLM_MODEL: ${SF_LLM_MODEL:-}
+      SF_QDRANT_BACKEND: "${SF_QDRANT_BACKEND:-memory}"
+      SF_QDRANT_HOST: "${SF_QDRANT_HOST:-}"
+      SF_QDRANT_PORT: "${SF_QDRANT_PORT:-}"
+      SF_QDRANT_GRPC_PORT: "${SF_QDRANT_GRPC_PORT:-}"
+      SF_QDRANT_PREFIX: "${SF_QDRANT_PREFIX:-sf_}"
+      SF_EMBEDDING_PROVIDER: ${SF_EMBEDDING_PROVIDER:-mock}
+      SF_EMBEDDING_MODEL: ${SF_EMBEDDING_MODEL:-}
+      SF_EMBEDDING_DIMENSIONS: ${SF_EMBEDDING_DIMENSIONS:-384}
+      SF_EMBEDDING_API_KEY: ${SF_LLM_API_KEY:-}
+      SF_EMBEDDING_API_BASE: ${SF_EMBEDDING_API_BASE:-}
+      SF_RERANKER_PROVIDER: ${SF_RERANKER_PROVIDER:-mock}
+      SF_RERANKER_MODEL: ${SF_RERANKER_MODEL:-}
+      SF_RERANKER_API_KEY: ${SF_LLM_API_KEY:-}
+      SF_RERANKER_API_BASE: ${SF_RERANKER_API_BASE:-}
+      SF_RERANKER_TOP_K: ${SF_RERANKER_TOP_K:-10}
+      SF_VECTOR_CORRELATION_ENABLED: ${SF_VECTOR_CORRELATION_ENABLED:-true}
+      OTEL_EXPORTER_OTLP_ENDPOINT: "${OTEL_EXPORTER_OTLP_ENDPOINT:-}"
+      OTEL_SERVICE_NAME: "spiderfoot-celery-worker-active"
+      # Active worker concurrency — one scan can be CPU/network-heavy
+      CELERY_WORKER_CONCURRENCY: ${CELERY_ACTIVE_WORKER_CONCURRENCY:-2}
+      # Wordlists path for gobuster/ffuf/massdns
+      SF_WORDLISTS_PATH: "/tools/wordlists"
+    entrypoint: ["/usr/local/bin/docker-entrypoint.sh"]
+    command:
+    - "python"
+    - "-m"
+    - "celery"
+    - "-A"
+    - "spiderfoot.celery_app:celery_app"
+    - "worker"
+    - "--loglevel=info"
+    - "--queues=scan"
+    - "--concurrency=${CELERY_ACTIVE_WORKER_CONCURRENCY:-2}"
+    - "--hostname=active-scanner@%h"
+    - "--without-heartbeat"
+    - "--without-mingle"
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-m", "celery", "-A", "spiderfoot.celery_app:celery_app",
+        "inspect", "ping", "--timeout", "5"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: "${CELERY_ACTIVE_WORKER_CPUS:-4.0}"
+          memory: "${CELERY_ACTIVE_WORKER_MEMORY:-4G}"
+    profiles:
+    - scan
+    - full
+
+  # ---------------------------------------------------------------------------
+  # Celery Beat — Periodic Task Scheduler  (new in v5.4.0)
+  # ---------------------------------------------------------------------------
+  # Runs periodic tasks defined in celery_app.py beat_schedule:
+  #   - Cleanup expired results (hourly)
+  #   - Service health checks (every 5 min)
+  #   - Recurring scan triggers
+  # ---------------------------------------------------------------------------
+
+networks:
+  sf-frontend:
+    name: sf-frontend
+    driver: bridge
+  sf-backend:
+    name: sf-backend
+    driver: bridge
+    internal: true
+

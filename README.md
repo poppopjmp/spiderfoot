@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/poppopjmp/spiderfoot/master/LICENSE)
 [![Python](https://img.shields.io/badge/python-3.9+-blue)](https://www.python.org)
 [![Version](https://img.shields.io/badge/version-6.0.0-green)](VERSION)
-[![Docker](https://img.shields.io/badge/docker-compose-2496ED?logo=docker)](docker-compose-microservices.yml)
+[![Docker](https://img.shields.io/badge/docker-compose-2496ED?logo=docker)](docker-compose.yml)
 [![GraphQL](https://img.shields.io/badge/GraphQL-Strawberry-E10098?logo=graphql)](spiderfoot/api/graphql/)
 [![CI status](https://github.com/poppopjmp/spiderfoot/workflows/Tests/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"Tests")
 [![codecov](https://codecov.io/github/poppopjmp/spiderfoot/graph/badge.svg?token=ZRD8GIXJSP)](https://codecov.io/github/poppopjmp/spiderfoot)
@@ -148,10 +148,10 @@ cp .env.example .env
 # Edit .env — change passwords, uncomment profile sections as needed
 
 # Core only (5 services: postgres, redis, api, worker, frontend)
-docker compose -f docker-compose-microservices.yml up --build -d
+docker compose -f docker-compose.yml up --build -d
 
 # Full stack (all services except SSO)
-docker compose -f docker-compose-microservices.yml --profile full up --build -d
+docker compose -f docker-compose.yml --profile full up --build -d
 ```
 
 **Core (no profile)** — `http://localhost:3000`:
@@ -200,10 +200,10 @@ Services are organized into **profiles** — activate only what you need:
 
 ```bash
 # Mix and match profiles
-docker compose -f docker-compose-microservices.yml --profile proxy --profile storage up -d
+docker compose -f docker-compose.yml --profile proxy --profile storage up -d
 
 # Full stack + SSO
-docker compose -f docker-compose-microservices.yml --profile full --profile sso up -d
+docker compose -f docker-compose.yml --profile full --profile sso up -d
 ```
 
 ---
@@ -213,8 +213,8 @@ docker compose -f docker-compose-microservices.yml --profile full --profile sso 
 | Mode | Command | Description |
 |------|---------|-------------|
 | **Monolith** | `python3 sf.py -l 0.0.0.0:5001` | Single process, PostgreSQL, minimal dependencies |
-| **Docker Core** | `docker compose -f docker-compose-microservices.yml up -d` | 5 core services (PostgreSQL, Redis, API, Worker, Frontend) |
-| **Docker Full** | `docker compose -f docker-compose-microservices.yml --profile full up -d` | 21+ services with observability, AI, and storage |
+| **Docker Core** | `docker compose -f docker-compose.yml up -d` | 5 core services (PostgreSQL, Redis, API, Worker, Frontend) |
+| **Docker Full** | `docker compose -f docker-compose.yml --profile full up -d` | 21+ services with observability, AI, and storage |
 | **Kubernetes** | `helm install sf helm/` | Horizontal scaling with Helm chart |
 
 ---
@@ -423,7 +423,7 @@ The active worker builds on top of the base image (which includes nmap, nuclei, 
 
 ```bash
 # Build everything (base + active worker)
-docker compose -f docker-compose-microservices.yml up --build -d
+docker compose -f docker-compose.yml up --build -d
 
 # Or build just the active worker
 docker build -f Dockerfile.active-worker -t spiderfoot-active:latest .
@@ -1050,3 +1050,4 @@ SpiderFoot is licensed under the [MIT License](LICENSE).
 ---
 
 *Actively developed since 2012 — 300+ modules, 38+ API routers, 94 correlation rules, 21-service Docker deployment, Go CLI, 247 frontend tests, comprehensive security hardening (9.0+ score), AI agents, vector search, and full observability.*
+

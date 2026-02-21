@@ -291,7 +291,7 @@ Inter-service communication:
 
 ## Docker Microservices
 
-The `docker-compose-microservices.yml` defines 21 containers:
+The `docker-compose.yml` defines 21 containers:
 
 | Container | Image | Purpose |
 |---|---|---|
@@ -1090,3 +1090,4 @@ dict. Sections: Core, Network, Database, Web, API, Cache, EventBus,
 Vector, Worker, Redis, Elasticsearch. Features: `from_dict()` /
 `to_dict()` round-trip, `apply_env_overrides()` for SF_* variables,
 20+ validation rules, and merge semantics for layered overrides.
+

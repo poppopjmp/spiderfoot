@@ -272,7 +272,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **sfp_subdomainradar**: Fixed 3 critical API structure mismatches (auth header, response parsing, endpoint paths)
 
 ### Changed — Docker Compose Profiles
-- Consolidated `docker-compose-microservices.yml` and `docker-compose-simple.yml` into a **single compose file** using Docker Compose profiles
+- Consolidated `docker-compose.yml` and `docker-compose-simple.yml` into a **single compose file** using Docker Compose profiles
 - 5 core services (postgres, redis, api, celery-worker, frontend) always start without any profile
 - 7 opt-in profiles: `scan`, `proxy`, `storage`, `monitor`, `ai`, `scheduler`, `sso`
 - `full` meta-profile activates all profiles except `sso`
@@ -429,3 +429,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - README.md: updated Mermaid architecture diagram (17 containers), version badge (5.3.3), services table, Quick Start URLs, project structure; added Monitoring, AI Agents, Document Enrichment, User-Defined Input, LLM Gateway sections
 - ARCHITECTURE.md: updated topology diagram, service table, package listing; added AI Agents, Enrichment, User Input, LLM Gateway, Observability Stack sections
 - `docker/env.example`: comprehensive example with all new service configuration
+

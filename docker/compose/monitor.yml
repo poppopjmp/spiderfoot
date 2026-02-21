@@ -1,0 +1,261 @@
+services:
+  vector:
+    image: timberio/vector:0.53.0-alpine
+    container_name: sf-vector
+    restart: unless-stopped
+    security_opt:
+    - "no-new-privileges:true"
+    read_only: true
+    tmpfs:
+    - /tmp
+    networks:
+    - sf-backend
+    volumes:
+    - ../../config/vector.toml:/etc/vector/vector.toml:ro
+    - vector-data:/var/lib/vector
+    - vector-logs:/var/log/vector
+    - traefik-logs:/var/log/traefik:ro
+    environment:
+      VECTOR_CONFIG: /etc/vector/vector.toml
+      SF_VECTOR_HTTP_PORT: ${SF_VECTOR_HTTP_PORT:-8686}
+      SF_ES_ENDPOINT: ${SF_ES_ENDPOINT:-http://elasticsearch:9200}
+      SF_LOKI_ENDPOINT: ${SF_LOKI_ENDPOINT:-http://loki:3100}
+      SF_ALERT_WEBHOOK_URL: ${SF_ALERT_WEBHOOK_URL:-http://localhost:9999/alert}
+      SF_S3_BUCKET: ${SF_S3_BUCKET:-spiderfoot-data-archive}
+      SF_S3_REGION: ${SF_S3_REGION:-us-east-1}
+      # MinIO S3-compatible endpoint for log/event archival
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
+      SF_MINIO_ENDPOINT: "http://minio:9000"
+      SF_MINIO_LOGS_BUCKET: ${SF_MINIO_LOGS_BUCKET:-sf-logs}
+    depends_on:
+      docker-socket-proxy:
+        condition: service_started
+      api:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      loki:
+        condition: service_started
+      jaeger:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8687/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "${VECTOR_CPUS:-0.5}"
+          memory: "${VECTOR_MEMORY:-256M}"
+    profiles:
+    - monitor
+    - full
+
+  # ---------------------------------------------------------------------------
+  # Loki — Log Aggregation (Grafana-native)
+  # ---------------------------------------------------------------------------
+  # Receives logs from Vector.dev (replaces Promtail).  Uses MinIO for
+  # chunk/index storage so logs survive container restarts.
+  # ---------------------------------------------------------------------------
+
+  loki:
+    image: grafana/loki:3.3.2
+    container_name: sf-loki
+    restart: unless-stopped
+    networks:
+    - sf-backend
+    volumes:
+    - ../../infra/loki/local-config.yaml:/etc/loki/local-config.yaml:ro
+    command: -config.file=/etc/loki/local-config.yaml -config.expand-env=true
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    depends_on:
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3100/ready || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: "${LOKI_CPUS:-1.0}"
+          memory: "${LOKI_MEMORY:-512M}"
+    profiles:
+    - monitor
+    - full
+
+  # ---------------------------------------------------------------------------
+  # Grafana — Dashboards & Observability UI
+  # ---------------------------------------------------------------------------
+  # Pre-provisioned with datasources (Loki, Prometheus, PostgreSQL) and
+  # dashboards for scan monitoring, event analytics, and service health.
+  # ---------------------------------------------------------------------------
+
+  grafana:
+    image: grafana/grafana:11.4.0
+    container_name: sf-grafana
+    restart: unless-stopped
+    networks:
+    - sf-frontend
+    - sf-backend
+    labels:
+    - "traefik.enable=true"
+    - "traefik.http.routers.grafana.rule=PathPrefix(`/grafana`)"
+    - "traefik.http.routers.grafana.entrypoints=websecure"
+    - "traefik.http.routers.grafana.tls=true"
+    - "traefik.http.routers.grafana.middlewares=security-headers@file"
+    - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GF_SECURITY_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD}
+      GF_SERVER_ROOT_URL: ${GF_SERVER_ROOT_URL:-https://localhost/grafana/}
+      GF_SERVER_SERVE_FROM_SUB_PATH: "true"
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: "Viewer"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_INSTALL_PLUGINS: "grafana-piechart-panel"
+      # Database connection for PostgreSQL datasource
+      SF_POSTGRES_DSN: 
+        postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-spiderfoot}
+    volumes:
+    - ../../infra/grafana/provisioning:/etc/grafana/provisioning:ro
+    - ../../infra/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    - grafana-data:/var/lib/grafana
+    depends_on:
+      loki:
+        condition: service_healthy
+      prometheus:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3000/grafana/api/health
+          || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: "${GRAFANA_CPUS:-1.0}"
+          memory: "${GRAFANA_MEMORY:-512M}"
+    profiles:
+    - monitor
+    - full
+
+  # ---------------------------------------------------------------------------
+  # Prometheus — Metrics Collection & Storage
+  # ---------------------------------------------------------------------------
+  # Scrapes metrics from SpiderFoot API, Vector.dev, Qdrant, MinIO, and
+  # future services (agents, enrichment, LiteLLM, Jaeger).
+  # ---------------------------------------------------------------------------
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: sf-prometheus
+    restart: unless-stopped
+    networks:
+    - sf-frontend
+    - sf-backend
+    labels:
+    - "traefik.enable=true"
+    - "traefik.http.routers.prometheus.rule=PathPrefix(`/prometheus`)"
+    - "traefik.http.routers.prometheus.entrypoints=websecure"
+    - "traefik.http.routers.prometheus.tls=true"
+    - "traefik.http.routers.prometheus.middlewares=security-headers@file"
+    - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
+    - "traefik.docker.network=sf-frontend"
+    volumes:
+    - ../../infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    - prometheus-data:/prometheus
+    command:
+    - '--config.file=/etc/prometheus/prometheus.yml'
+    - '--storage.tsdb.path=/prometheus'
+    - '--storage.tsdb.retention.time=30d'
+    - '--web.enable-lifecycle'
+    - '--web.external-url=/prometheus/'
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:9090/prometheus/-/healthy
+          || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: "${PROMETHEUS_CPUS:-1.0}"
+          memory: "${PROMETHEUS_MEMORY:-512M}"
+    profiles:
+    - monitor
+    - full
+
+  # ---------------------------------------------------------------------------
+  # Apache Tika — Document Text / Metadata Extraction  (new in v5.3.17)
+  # ---------------------------------------------------------------------------
+  # Full Tika image with OCR (Tesseract) — handles 1 000+ file types:
+  #   PDF, DOCX, XLSX, PPTX, RTF, HTML, images (OCR), e-mail, archives …
+  # The sfp_document_analyzer plug-in sends files here via HTTP PUT.
+  # No authentication needed — Tika is on the internal backend network only.
+  # ---------------------------------------------------------------------------
+
+  jaeger:
+    image: jaegertracing/jaeger:2.4.0
+    container_name: sf-jaeger
+    restart: unless-stopped
+    networks:
+    - sf-frontend
+    - sf-backend
+    labels:
+    - "traefik.enable=true"
+    - "traefik.http.routers.jaeger.rule=PathPrefix(`/jaeger`)"
+    - "traefik.http.routers.jaeger.entrypoints=websecure"
+    - "traefik.http.routers.jaeger.tls=true"
+    - "traefik.http.routers.jaeger.middlewares=security-headers@file"
+    - "traefik.http.services.jaeger.loadbalancer.server.port=16686"
+    volumes:
+    - ../../infra/jaeger/config.yaml:/etc/jaeger/config.yaml:ro
+    command: ["--config", "/etc/jaeger/config.yaml"]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:16686/jaeger/ || exit
+          1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "${JAEGER_CPUS:-1.0}"
+          memory: "${JAEGER_MEMORY:-512M}"
+    profiles:
+    - monitor
+    - full
+
+  # ---------------------------------------------------------------------------
+  # PostgreSQL Backup Sidecar — pg_dump to MinIO
+  # ---------------------------------------------------------------------------
+  # Runs pg_dump on a schedule and uploads to MinIO sf-pg-backups bucket.
+  # Default: every 6 hours. Override with SF_PG_BACKUP_SCHEDULE.
+  # ---------------------------------------------------------------------------
+
+networks:
+  sf-frontend:
+    name: sf-frontend
+    driver: bridge
+  sf-backend:
+    name: sf-backend
+    driver: bridge
+    internal: true
+
+volumes:
+  traefik-logs:
+  grafana-data:
+  vector-data:
+  prometheus-data:
+  vector-logs:

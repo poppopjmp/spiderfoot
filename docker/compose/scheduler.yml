@@ -1,0 +1,127 @@
+services:
+  celery-beat:
+    build:
+      context: ../../
+      dockerfile: docker/Dockerfile.base
+    container_name: sf-celery-beat
+    restart: unless-stopped
+    security_opt:
+    - "no-new-privileges:true"
+    read_only: true
+    tmpfs:
+    - /tmp
+    networks:
+    - sf-backend
+    environment:
+      SF_SERVICE_ROLE: celery-beat
+      SF_REDIS_URL: redis://redis:6379/0
+      SF_POSTGRES_DSN: 
+        postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-spiderfoot}
+      SF_LOG_LEVEL: ${SF_LOG_LEVEL:-INFO}
+    entrypoint: ["/usr/local/bin/docker-entrypoint.sh"]
+    command:
+    - "python"
+    - "-m"
+    - "celery"
+    - "-A"
+    - "spiderfoot.celery_app:celery_app"
+    - "beat"
+    - "--loglevel=info"
+    - "--schedule=/tmp/celerybeat-schedule"
+    depends_on:
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "${CELERY_BEAT_CPUS:-0.25}"
+          memory: "${CELERY_BEAT_MEMORY:-128M}"
+    profiles:
+    - scheduler
+    - full
+
+  # ---------------------------------------------------------------------------
+  # Flower — Celery Monitoring Dashboard  (new in v5.4.0)
+  # ---------------------------------------------------------------------------
+  # Real-time Celery worker/task monitoring. Accessible via Traefik at /flower/.
+  # ---------------------------------------------------------------------------
+
+  flower:
+    build:
+      context: ../../
+      dockerfile: docker/Dockerfile.base
+    container_name: sf-flower
+    restart: unless-stopped
+    security_opt:
+    - "no-new-privileges:true"
+    read_only: true
+    tmpfs:
+    - /tmp
+    networks:
+    - sf-frontend
+    - sf-backend
+    labels:
+    - "traefik.enable=true"
+    - "traefik.http.routers.flower.rule=PathPrefix(`/flower`)"
+    - "traefik.http.routers.flower.entrypoints=websecure"
+    - "traefik.http.routers.flower.tls=true"
+    - "traefik.http.routers.flower.middlewares=security-headers@file"
+    - "traefik.http.services.flower.loadbalancer.server.port=5555"
+    - "traefik.docker.network=sf-frontend"
+    environment:
+      SF_REDIS_URL: redis://redis:6379/0
+      FLOWER_BROKER_URL: redis://redis:6379/0
+      FLOWER_URL_PREFIX: /flower
+      FLOWER_BASIC_AUTH: ${FLOWER_BASIC_AUTH}
+    entrypoint: ["/usr/local/bin/docker-entrypoint.sh"]
+    command:
+    - "python"
+    - "-m"
+    - "celery"
+    - "-A"
+    - "spiderfoot.celery_app:celery_app"
+    - "flower"
+    - "--port=5555"
+    - "--url_prefix=flower"
+    - "--broker_api=redis://redis:6379/0"
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import socket; s=socket.create_connection(('localhost',5555),2);
+          s.close()\""]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: "${FLOWER_CPUS:-0.5}"
+          memory: "${FLOWER_MEMORY:-256M}"
+    profiles:
+    - scheduler
+    - full
+
+  # ---------------------------------------------------------------------------
+  # LiteLLM Proxy — Unified LLM Gateway
+  # ---------------------------------------------------------------------------
+  # Routes all LLM requests through a single API endpoint with:
+  #   - Multi-provider support (OpenAI, Anthropic, Ollama, Azure)
+  #   - Cost tracking & usage analytics
+  #   - Redis-backed response caching
+  #   - Prometheus metrics for LLM operations
+  #   - Model fallback chains
+  # All SpiderFoot services connect to litellm:4000 instead of
+  # individual LLM providers.
+  # ---------------------------------------------------------------------------
+
+networks:
+  sf-frontend:
+    name: sf-frontend
+    driver: bridge
+  sf-backend:
+    name: sf-backend
+    driver: bridge
+    internal: true
+

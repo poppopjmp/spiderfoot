@@ -18,7 +18,7 @@ Usage:
 The WebUI runs with SF_WEBUI_API_MODE=true, routing all data access
 through the FastAPI REST API instead of direct database access.
 This is the same architecture used in the Docker Compose microservice
-deployment (docker-compose-microservices.yml).
+deployment (docker-compose.yml).
 """
 from __future__ import annotations
 
@@ -261,3 +261,4 @@ Examples:
 
 if __name__ == "__main__":
     main()
+

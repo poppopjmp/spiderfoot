@@ -1,0 +1,92 @@
+services:
+  docker-socket-proxy:
+    image: tecnativa/docker-socket-proxy:latest
+    container_name: sf-docker-proxy
+    restart: unless-stopped
+    networks:
+    - sf-backend
+    environment:
+      CONTAINERS: 1
+      NETWORKS: 1
+      SERVICES: 1
+      TASKS: 1
+      POST: 0
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock:ro
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: "64M"
+    profiles:
+    - proxy
+    - full
+
+  # ---------------------------------------------------------------------------
+  # Traefik Reverse Proxy / API Gateway  (replaces Nginx since v5.3.17)
+  # ---------------------------------------------------------------------------
+  # Routing is driven by Docker labels on each service — no separate config
+  # file needed for adding/removing routes.  Static config lives in
+  # infra/traefik/traefik.yml; shared middlewares in infra/traefik/dynamic.yml.
+  # ---------------------------------------------------------------------------
+
+  traefik:
+    image: traefik:v3
+    container_name: sf-traefik
+    restart: unless-stopped
+    networks:
+    - sf-frontend
+    - sf-backend
+    environment:
+      # Docker Engine v29+ requires API v1.44+; Traefik defaults to v1.24
+      DOCKER_API_VERSION: "1.44"
+      DOCKER_HOST: "tcp://docker-socket-proxy:2375"
+    ports:
+    - "${SF_HTTP_PORT:-80}:80"
+    - "${SF_HTTPS_PORT:-443}:443"
+    volumes:
+    - ../../infra/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+    - ../../infra/traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
+    - ../../infra/traefik/certs:/certs:ro
+    - traefik-logs:/var/log/traefik
+    depends_on:
+      docker-socket-proxy:
+        condition: service_started
+      api:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "${TRAEFIK_CPUS:-0.5}"
+          memory: "${TRAEFIK_MEMORY:-128M}"
+    profiles:
+    - proxy
+    - full
+
+  # ---------------------------------------------------------------------------
+  # Qdrant — Vector Database for RAG / Rerank Correlations
+  # ---------------------------------------------------------------------------
+  # Provides per-scan and per-workspace vector collections for semantic
+  # similarity search, cross-scan correlation, and multi-hop analysis.
+  # Events are embedded and indexed during scans; workspace meta-collections
+  # aggregate multiple scan collections for cross-scan discovery.
+  # ---------------------------------------------------------------------------
+
+networks:
+  sf-frontend:
+    name: sf-frontend
+    driver: bridge
+  sf-backend:
+    name: sf-backend
+    driver: bridge
+    internal: true
+
+volumes:
+  traefik-logs:

@@ -1,0 +1,333 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: sf-redis
+    restart: unless-stopped
+    security_opt:
+    - "no-new-privileges:true"
+    read_only: true
+    tmpfs:
+    - /tmp
+    networks:
+    - sf-backend
+    command: >
+      redis-server
+        --appendonly yes
+        --maxmemory 512mb
+        --maxmemory-policy allkeys-lru
+    volumes:
+    - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: sf-postgres
+    restart: unless-stopped
+    networks:
+    - sf-backend
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-spiderfoot}
+      POSTGRES_USER: ${POSTGRES_USER:-spiderfoot}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    command: ["postgres", "-c", "max_connections=500"]
+    volumes:
+    - postgres-data:/var/lib/postgresql/data
+    - ../../docker/postgres-initdb.d:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U spiderfoot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # SpiderFoot API Service (FastAPI)
+  # ---------------------------------------------------------------------------
+
+  api:
+    build:
+      context: ../../
+      dockerfile: docker/Dockerfile.api
+    container_name: sf-api
+    restart: unless-stopped
+    security_opt:
+    - no-new-privileges:true
+    read_only: true
+    tmpfs:
+    - /tmp:size=256M
+    networks:
+    - sf-frontend
+    - sf-backend
+    labels:
+    - "traefik.enable=true"
+      # REST API routes
+    - "traefik.http.routers.api.rule=PathPrefix(`/api`)"
+    - "traefik.http.routers.api.entrypoints=websecure"
+    - "traefik.http.routers.api.tls=true"
+    - "traefik.http.routers.api.middlewares=rate-limit-api@file,security-headers@file,gzip-compress@file,body-limit@file"
+    - "traefik.http.services.api.loadbalancer.server.port=8001"
+      # WebSocket for real-time updates
+    - "traefik.http.routers.api-ws.rule=PathPrefix(`/api/ws`)"
+    - "traefik.http.routers.api-ws.entrypoints=websecure"
+    - "traefik.http.routers.api-ws.tls=true"
+    - "traefik.http.services.api-ws.loadbalancer.server.port=8001"
+    environment:
+      SF_SERVICE_ROLE: api
+      SF_DEPLOYMENT_MODE: microservice
+      SF_EXTERNAL_URL: "${SF_EXTERNAL_URL:-https://localhost}"
+      SF_REDIS_URL: redis://redis:6379/0
+      SF_POSTGRES_DSN: 
+        postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-spiderfoot}
+      SF_API_HOST: "0.0.0.0"
+      SF_API_PORT: "8001"
+      SF_API_WORKERS: ${SF_API_WORKERS:-2}
+      SF_LOG_LEVEL: ${SF_LOG_LEVEL:-INFO}
+      SF_API_KEY: ${SF_API_KEY:-}
+      SF_VECTOR_URL: "${SF_VECTOR_URL:-}"
+      # Apache Tika for document analysis (used by sfp_document_analyzer module)
+      SF_TIKA_URL: "${SF_TIKA_URL:-}"
+      # OTEL tracing to Vector → Jaeger
+      OTEL_EXPORTER_OTLP_ENDPOINT: "${OTEL_EXPORTER_OTLP_ENDPOINT:-}"
+      OTEL_SERVICE_NAME: "spiderfoot-api"
+      # Qdrant vector DB settings
+      SF_QDRANT_BACKEND: "${SF_QDRANT_BACKEND:-memory}"
+      SF_QDRANT_HOST: "${SF_QDRANT_HOST:-}"
+      SF_QDRANT_PORT: "${SF_QDRANT_PORT:-}"
+      SF_QDRANT_GRPC_PORT: "${SF_QDRANT_GRPC_PORT:-}"
+      SF_QDRANT_PREFIX: "${SF_QDRANT_PREFIX:-sf_}"
+      # Embedding model settings
+      SF_EMBEDDING_PROVIDER: ${SF_EMBEDDING_PROVIDER:-mock}
+      SF_EMBEDDING_MODEL: ${SF_EMBEDDING_MODEL:-}
+      SF_EMBEDDING_DIMENSIONS: ${SF_EMBEDDING_DIMENSIONS:-384}
+      SF_EMBEDDING_API_KEY: ${SF_LLM_API_KEY:-}
+      SF_EMBEDDING_API_BASE: ${SF_EMBEDDING_API_BASE:-}
+      # Reranker settings
+      SF_RERANKER_PROVIDER: ${SF_RERANKER_PROVIDER:-mock}
+      SF_RERANKER_MODEL: ${SF_RERANKER_MODEL:-}
+      SF_RERANKER_API_KEY: ${SF_LLM_API_KEY:-}
+      SF_RERANKER_API_BASE: ${SF_RERANKER_API_BASE:-}
+      SF_RERANKER_TOP_K: ${SF_RERANKER_TOP_K:-10}
+      SF_RERANKER_SCORE_THRESHOLD: ${SF_RERANKER_SCORE_THRESHOLD:-0.3}
+      # RAG / LLM settings (routed through LiteLLM proxy)
+      SF_LLM_PROVIDER: ${SF_LLM_PROVIDER:-mock}
+      SF_LLM_MODEL: ${SF_LLM_MODEL:-}
+      SF_LLM_API_KEY: ${SF_LLM_API_KEY:-}
+      SF_LLM_API_BASE: ${SF_LLM_API_BASE:-}
+      # Vector correlation settings
+      SF_VECTOR_CORRELATION_ENABLED: ${SF_VECTOR_CORRELATION_ENABLED:-false}
+      SF_VECTOR_SIMILARITY_THRESHOLD: ${SF_VECTOR_SIMILARITY_THRESHOLD:-0.7}
+      SF_VECTOR_CROSS_SCAN_THRESHOLD: ${SF_VECTOR_CROSS_SCAN_THRESHOLD:-0.8}
+      SF_VECTOR_RERANK_ACCURACY: ${SF_VECTOR_RERANK_ACCURACY:-high}
+      # MinIO / S3-compatible object storage
+      SF_MINIO_ENDPOINT: "${SF_MINIO_ENDPOINT:-}"
+      SF_MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-}
+      SF_MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-}
+      SF_MINIO_SECURE: "false"
+      SF_MINIO_REPORTS_BUCKET: ${SF_MINIO_REPORTS_BUCKET:-sf-reports}
+      SF_MINIO_DATA_BUCKET: ${SF_MINIO_DATA_BUCKET:-sf-data}
+      SF_MINIO_LOGS_BUCKET: ${SF_MINIO_LOGS_BUCKET:-sf-logs}
+      # ── Auth / RBAC ──
+      SF_JWT_SECRET: ${SF_JWT_SECRET}
+      SF_JWT_EXPIRY_HOURS: ${SF_JWT_EXPIRY_HOURS:-24}
+      SF_JWT_REFRESH_EXPIRY_HOURS: ${SF_JWT_REFRESH_EXPIRY_HOURS:-168}
+      SF_AUTH_REQUIRED: ${SF_AUTH_REQUIRED:-true}
+      SF_RBAC_ENFORCE: ${SF_RBAC_ENFORCE:-true}
+      SF_ADMIN_USERNAME: ${SF_ADMIN_USERNAME:-admin}
+      SF_ADMIN_PASSWORD: ${SF_ADMIN_PASSWORD}
+      SF_ADMIN_EMAIL: ${SF_ADMIN_EMAIL:-admin@spiderfoot.local}
+      SF_MAX_LOGIN_ATTEMPTS: ${SF_MAX_LOGIN_ATTEMPTS:-5}
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    entrypoint: ["/usr/local/bin/docker-entrypoint.sh"]
+    command: ["python", "-m", "spiderfoot.service_runner", "--service", "api", "--port",
+      "8001"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/api/docs')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: "${API_CPUS:-2.0}"
+          memory: "${API_MEMORY:-2G}"
+
+  # ---------------------------------------------------------------------------
+  # SpiderFoot React SPA Frontend  (self-contained Nginx container)
+  # ---------------------------------------------------------------------------
+  # Serves the production-built React SPA and reverse-proxies /api/* and /ws/*
+  # to the backend API container.  Completely self-contained — no Python, no
+  # CherryPy.  Uses envsubst to inject the API URL at container startup.
+  # ---------------------------------------------------------------------------
+
+  frontend:
+    build:
+      context: ../../frontend
+      dockerfile: Dockerfile
+    container_name: sf-frontend-ui
+    restart: unless-stopped
+    security_opt:
+    - "no-new-privileges:true"
+    read_only: true
+    tmpfs:
+    - /tmp
+    - /var/cache/nginx
+    - /var/run
+    networks:
+    - sf-frontend
+    ports:
+    - "3000:80"
+    labels:
+    - "traefik.enable=true"
+      # Catch-all for the SPA (lowest priority — API routes take precedence)
+    - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
+    - "traefik.http.routers.frontend.entrypoints=websecure"
+    - "traefik.http.routers.frontend.tls=true"
+    - "traefik.http.routers.frontend.priority=1"
+    - "traefik.http.routers.frontend.middlewares=rate-limit-web@file,security-headers@file,gzip-compress@file"
+    - "traefik.http.services.frontend.loadbalancer.server.port=80"
+    environment:
+      # Nginx reverse-proxy targets (envsubst'd into nginx.conf at startup)
+      SF_API_URL: "http://api:8001"
+      SF_WS_URL: "http://api:8001"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "${FRONTEND_CPUS:-0.5}"
+          memory: "${FRONTEND_MEMORY:-128M}"
+
+  # ---------------------------------------------------------------------------
+  # Docker Socket Proxy — Secure Docker API access for Traefik
+  # ---------------------------------------------------------------------------
+  # Required on Docker Desktop (Windows/macOS) where the Docker socket may
+  # not work directly.  Also improves security by limiting API access.
+  # ---------------------------------------------------------------------------
+
+  celery-worker:
+    build:
+      context: ../../
+      dockerfile: docker/Dockerfile.scanner
+    container_name: sf-celery-worker
+    restart: unless-stopped
+    security_opt:
+    - no-new-privileges:true
+    read_only: true
+    tmpfs:
+    - /tmp:size=256M
+    networks:
+    - sf-backend
+    - sf-frontend
+    environment:
+      SF_SERVICE_ROLE: scanner
+      SF_REDIS_URL: redis://redis:6379/0
+      SF_POSTGRES_DSN: 
+        postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-spiderfoot}
+      SF_LOG_LEVEL: ${SF_LOG_LEVEL:-INFO}
+      SF_TIKA_URL: "${SF_TIKA_URL:-}"
+      SF_MINIO_ENDPOINT: "${SF_MINIO_ENDPOINT:-}"
+      SF_MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-}
+      SF_MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-}
+      SF_MINIO_SECURE: "false"
+      SF_MINIO_REPORTS_BUCKET: ${SF_MINIO_REPORTS_BUCKET:-sf-reports}
+      SF_MINIO_DATA_BUCKET: ${SF_MINIO_DATA_BUCKET:-sf-data}
+      SF_LLM_PROVIDER: ${SF_LLM_PROVIDER:-mock}
+      SF_LLM_API_BASE: ${SF_LLM_API_BASE:-}
+      SF_LLM_API_KEY: ${SF_LLM_API_KEY:-}
+      SF_LLM_MODEL: ${SF_LLM_MODEL:-}
+      SF_QDRANT_BACKEND: "${SF_QDRANT_BACKEND:-memory}"
+      SF_QDRANT_HOST: "${SF_QDRANT_HOST:-}"
+      SF_QDRANT_PORT: "${SF_QDRANT_PORT:-}"
+      SF_QDRANT_GRPC_PORT: "${SF_QDRANT_GRPC_PORT:-}"
+      SF_QDRANT_PREFIX: "${SF_QDRANT_PREFIX:-sf_}"
+      # Embedding model settings
+      SF_EMBEDDING_PROVIDER: ${SF_EMBEDDING_PROVIDER:-mock}
+      SF_EMBEDDING_MODEL: ${SF_EMBEDDING_MODEL:-}
+      SF_EMBEDDING_DIMENSIONS: ${SF_EMBEDDING_DIMENSIONS:-384}
+      SF_EMBEDDING_API_KEY: ${SF_LLM_API_KEY:-}
+      SF_EMBEDDING_API_BASE: ${SF_EMBEDDING_API_BASE:-}
+      # Reranker settings
+      SF_RERANKER_PROVIDER: ${SF_RERANKER_PROVIDER:-mock}
+      SF_RERANKER_MODEL: ${SF_RERANKER_MODEL:-}
+      SF_RERANKER_API_KEY: ${SF_LLM_API_KEY:-}
+      SF_RERANKER_API_BASE: ${SF_RERANKER_API_BASE:-}
+      SF_RERANKER_TOP_K: ${SF_RERANKER_TOP_K:-10}
+      # Vector correlation
+      SF_VECTOR_CORRELATION_ENABLED: ${SF_VECTOR_CORRELATION_ENABLED:-true}
+      # OTEL tracing
+      OTEL_EXPORTER_OTLP_ENDPOINT: "${OTEL_EXPORTER_OTLP_ENDPOINT:-}"
+      OTEL_SERVICE_NAME: "spiderfoot-celery-worker"
+      # Worker concurrency (default 4 — one per queue priority)
+      CELERY_WORKER_CONCURRENCY: ${CELERY_WORKER_CONCURRENCY:-4}
+    entrypoint: ["/usr/local/bin/docker-entrypoint.sh"]
+    command:
+    - "python"
+    - "-m"
+    - "celery"
+    - "-A"
+    - "spiderfoot.celery_app:celery_app"
+    - "worker"
+    - "--loglevel=info"
+    - "--queues=default,report,export,agents,monitor"
+    - "--concurrency=${CELERY_WORKER_CONCURRENCY:-4}"
+    - "--hostname=worker@%h"
+    - "--without-heartbeat"
+    - "--without-mingle"
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-m", "celery", "-A", "spiderfoot.celery_app:celery_app",
+        "inspect", "ping", "--timeout", "5"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: "${CELERY_WORKER_CPUS:-2.0}"
+          memory: "${CELERY_WORKER_MEMORY:-2G}"
+
+  # ---------------------------------------------------------------------------
+  # Celery Worker — Active Scan  (dedicated scanning container)
+  # ---------------------------------------------------------------------------
+  # Subscribes ONLY to the "scan" queue.  Ships all active reconnaissance
+  # tools: nmap, nuclei, httpx, subfinder, gobuster, dnsx, naabu, katana,
+  # tlsx, ffuf, massdns, testssl.sh, CMSeeK, retire.js, wafw00f, and more.
+  #
+  # Build order: the base image (spiderfoot-micro:latest) must be built first.
+  #   docker compose build api && docker compose build celery-worker-active
+  # Or simply:
+  #   docker compose up --build -d
+  # ---------------------------------------------------------------------------
+
+networks:
+  sf-frontend:
+    name: sf-frontend
+    driver: bridge
+  sf-backend:
+    name: sf-backend
+    driver: bridge
+    internal: true
+
+volumes:
+  redis-data:
+  postgres-data:

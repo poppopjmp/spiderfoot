@@ -1,0 +1,161 @@
+services:
+  agents:
+    build:
+      context: ../../
+      dockerfile: docker/Dockerfile.base
+    container_name: sf-agents
+    restart: unless-stopped
+    security_opt:
+    - "no-new-privileges:true"
+    read_only: true
+    tmpfs:
+    - /tmp
+    networks:
+    - sf-frontend
+    - sf-backend
+    labels:
+    - "traefik.enable=true"
+    - "traefik.http.routers.agents.rule=PathPrefix(`/api/agents`)"
+    - "traefik.http.routers.agents.entrypoints=websecure"
+    - "traefik.http.routers.agents.tls=true"
+    - "traefik.http.routers.agents.priority=110"
+    - "traefik.http.middlewares.agents-strip.stripprefix.prefixes=/api"
+    - "traefik.http.routers.agents.middlewares=agents-strip,rate-limit-api@file,security-headers@file,body-limit@file"
+    - "traefik.http.services.agents.loadbalancer.server.port=8100"
+    environment:
+      SF_SERVICE_ROLE: agents
+      SF_AGENTS_HOST: "0.0.0.0"
+      SF_AGENTS_PORT: "8100"
+      SF_AGENTS_WORKERS: ${SF_AGENTS_WORKERS:-1}
+      SF_LOG_LEVEL: ${SF_LOG_LEVEL:-INFO}
+      SF_REDIS_URL: redis://redis:6379/0
+      # LLM via LiteLLM proxy
+      SF_LLM_PROVIDER: ${SF_LLM_PROVIDER:-mock}
+      SF_LLM_API_BASE: ${SF_LLM_API_BASE:-http://litellm:4000}
+      SF_LLM_API_KEY: ${SF_LLM_API_KEY}
+      SF_LLM_MODEL: ${SF_LLM_MODEL:-gpt-4o-mini}
+      # Qdrant vector DB for report context
+      SF_QDRANT_BACKEND: "${SF_QDRANT_BACKEND:-memory}"
+      SF_QDRANT_HOST: "${SF_QDRANT_HOST:-}"
+      SF_QDRANT_PORT: "${SF_QDRANT_PORT:-}"
+      SF_QDRANT_GRPC_PORT: "${SF_QDRANT_GRPC_PORT:-}"
+      SF_QDRANT_PREFIX: "${SF_QDRANT_PREFIX:-sf_}"
+      # Embedding model for semantic search
+      SF_EMBEDDING_PROVIDER: ${SF_EMBEDDING_PROVIDER:-litellm}
+      SF_EMBEDDING_MODEL: ${SF_EMBEDDING_MODEL:-text-embedding-3-small}
+      SF_EMBEDDING_DIMENSIONS: ${SF_EMBEDDING_DIMENSIONS:-1536}
+      SF_EMBEDDING_API_KEY: ${SF_LLM_API_KEY}
+      SF_EMBEDDING_API_BASE: ${SF_EMBEDDING_API_BASE:-http://litellm:4000}
+      # Reranker settings
+      SF_RERANKER_PROVIDER: ${SF_RERANKER_PROVIDER:-litellm}
+      SF_RERANKER_MODEL: ${SF_RERANKER_MODEL:-gpt-4o-mini}
+      SF_RERANKER_API_KEY: ${SF_LLM_API_KEY}
+      SF_RERANKER_API_BASE: ${SF_RERANKER_API_BASE:-http://litellm:4000}
+      # OTEL tracing to Vector → Jaeger
+      OTEL_EXPORTER_OTLP_ENDPOINT: "${OTEL_EXPORTER_OTLP_ENDPOINT:-}"
+      OTEL_SERVICE_NAME: "spiderfoot-agents"
+    entrypoint: ["/usr/local/bin/docker-entrypoint.sh"]
+    command: ["python", "-m", "spiderfoot.agents.service"]
+    depends_on:
+      redis:
+        condition: service_healthy
+      litellm:
+        condition: service_started
+      qdrant:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8100/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: "${AGENTS_CPUS:-2.0}"
+          memory: "${AGENTS_MEMORY:-2G}"
+    profiles:
+    - ai
+    - full
+
+  # ---------------------------------------------------------------------------
+  # Celery Worker — Async Task Execution  (new in v5.4.0)
+  # ---------------------------------------------------------------------------
+  # ---------------------------------------------------------------------------
+  # Celery Worker — General Tasks  (reports, exports, agents, monitoring)
+  # ---------------------------------------------------------------------------
+  # Handles all queues EXCEPT "scan" — active scanning is delegated to the
+  # dedicated celery-worker-active container which ships additional recon tools.
+  # ---------------------------------------------------------------------------
+
+  litellm:
+    image: ghcr.io/berriai/litellm:main-latest
+    container_name: sf-litellm
+    restart: unless-stopped
+    security_opt:
+    - "no-new-privileges:true"
+    read_only: true
+    tmpfs:
+    - /tmp
+    networks:
+    - sf-frontend
+    - sf-backend
+    labels:
+    - "traefik.enable=true"
+    - "traefik.http.routers.litellm.rule=PathPrefix(`/litellm`)"
+    - "traefik.http.routers.litellm.entrypoints=websecure"
+    - "traefik.http.routers.litellm.tls=true"
+    - "traefik.http.routers.litellm.middlewares=strip-litellm@file,security-headers@file"
+    - "traefik.http.services.litellm.loadbalancer.server.port=4000"
+    volumes:
+    - ../../infra/litellm/config.yaml:/app/config.yaml:ro
+    environment:
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
+      LITELLM_DATABASE_URL: 
+        postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD}@postgres:5432/litellm
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OLLAMA_API_BASE: ${OLLAMA_API_BASE:-http://host.docker.internal:11434}
+      # OTEL tracing to Vector
+      OTEL_EXPORTER_OTLP_ENDPOINT: "${OTEL_EXPORTER_OTLP_ENDPOINT:-}"
+      OTEL_SERVICE_NAME: "litellm"
+    command: ["--config", "/app/config.yaml", "--port", "4000", "--num_workers", "1"]
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:4000/health/liveliness')\"\
+          \ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: "${LITELLM_CPUS:-1.0}"
+          memory: "${LITELLM_MEMORY:-1G}"
+    profiles:
+    - ai
+    - full
+
+  # ---------------------------------------------------------------------------
+  # Jaeger — Distributed Tracing
+  # ---------------------------------------------------------------------------
+  # All-in-one Jaeger instance for trace collection and visualization.
+  # Services send traces via OTLP (gRPC/HTTP) through Vector.dev or directly.
+  # UI accessible via Traefik at /jaeger/ or direct port 16686.
+  # ---------------------------------------------------------------------------
+
+networks:
+  sf-frontend:
+    name: sf-frontend
+    driver: bridge
+  sf-backend:
+    name: sf-backend
+    driver: bridge
+    internal: true
+
