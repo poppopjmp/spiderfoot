@@ -437,8 +437,8 @@ class FastAPISecurityMiddleware:
             # Import SecurityHeaders from input_validation module
             from ..input_validation import SecurityHeaders
 
-            # Add default security headers
-            for header, value in SecurityHeaders.DEFAULT_HEADERS.items():
+            # Add default security headers (includes HSTS when SF_HSTS_ENABLED)
+            for header, value in SecurityHeaders.get_headers().items():
                 response.headers[header] = value
             return response
         except Exception as e:

@@ -8,6 +8,7 @@ These thin implementations satisfy the interface expected by
 from __future__ import annotations
 
 import html
+import os
 import re
 from typing import Any
 
@@ -23,7 +24,26 @@ class SecurityHeaders:
         "Permissions-Policy": "geolocation=(), camera=(), microphone=()",
         "Cache-Control": "no-store, no-cache, must-revalidate",
         "Pragma": "no-cache",
+        "Content-Security-Policy": (
+            "default-src 'self'; "
+            "script-src 'self'; "
+            "style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data:; "
+            "font-src 'self'; "
+            "connect-src 'self'; "
+            "frame-ancestors 'none'"
+        ),
     }
+
+    @classmethod
+    def get_headers(cls) -> dict[str, str]:
+        """Return security headers, adding HSTS when SF_HSTS_ENABLED is set."""
+        headers = dict(cls.DEFAULT_HEADERS)
+        if os.environ.get("SF_HSTS_ENABLED", "").lower() in ("1", "true", "yes"):
+            headers["Strict-Transport-Security"] = (
+                "max-age=63072000; includeSubDomains"
+            )
+        return headers
 
 
 # ---------------------------------------------------------------------------
