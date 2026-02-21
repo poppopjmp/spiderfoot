@@ -1,11 +1,11 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { workspaceApi, scanApi, agentsApi, formatEpoch, type Workspace, type WorkspaceTarget, type Scan, type ScanCorrelation } from '../lib/api';
+import { useQuery } from '@tanstack/react-query';
+import { workspaceApi, scanApi, formatEpoch, type Workspace, type WorkspaceTarget, type Scan, type ScanCorrelation } from '../lib/api';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
-import MarkdownRenderer from '../components/MarkdownRenderer';
-import { Briefcase, Plus, Trash2, Target, Copy, CheckCircle2, FolderOpen, Clock, Edit2, Radar, Link2, Unlink, Brain, FileText, Sparkles, Edit3, Save, Loader2, AlertTriangle, BarChart3, Shield, MapPin } from 'lucide-react';
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useWorkspaceMutations } from '../hooks/useWorkspaceMutations';
+import WorkspaceReportCard from '../components/workspace/WorkspaceReportCard';
+import { Briefcase, Plus, Trash2, Target, Copy, CheckCircle2, FolderOpen, Clock, Edit2, Radar, Link2, Unlink, Brain, MapPin, BarChart3, Shield } from 'lucide-react';
+import { useState } from 'react';
 import { StatusBadge, Toast, Tabs, ConfirmDialog, ModalShell, type ToastType } from '../components/ui';
-import { safeSetItem } from '../lib/safeStorage';
 import { Link } from 'react-router-dom';
 
 type WorkspaceTab = 'overview' | 'targets' | 'scans' | 'correlations' | 'geomap' | 'report';
@@ -46,7 +46,6 @@ function detectTargetType(target: string): string {
 
 export default function WorkspacesPage() {
   useDocumentTitle('Workspaces');
-  const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showImportScans, setShowImportScans] = useState(false);
@@ -101,116 +100,17 @@ export default function WorkspacesPage() {
   });
   const allScans: Scan[] = scansData?.items ?? [];
 
-  const createMutation = useMutation({
-    mutationFn: workspaceApi.create,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workspaces'] });
-      setShowCreate(false);
-      setCreateForm({ name: '', description: '' });
-      setToast({ type: 'success', message: 'Workspace created' });
-    },
-    onError: () => {
-      setToast({ type: 'error', message: 'Failed to create workspace' });
-    },
-  });
+  const showToast = (t: { type: ToastType; message: string }) => setToast(t);
 
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => workspaceApi.delete(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workspaces'] });
-      if (selectedWorkspace) setSelectedWorkspace(null);
-      setToast({ type: 'success', message: 'Workspace deleted' });
-    },
-    onError: () => setToast({ type: 'error', message: 'Failed to delete workspace' }),
-  });
-
-  const cloneMutation = useMutation({
-    mutationFn: (id: string) => workspaceApi.clone(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workspaces'] });
-      setToast({ type: 'success', message: 'Workspace cloned' });
-    },
-    onError: () => setToast({ type: 'error', message: 'Failed to clone workspace' }),
-  });
-
-  const setActiveMutation = useMutation({
-    mutationFn: (id: string) => workspaceApi.setActive(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workspaces'] });
-      setToast({ type: 'success', message: 'Workspace set as active' });
-    },
-    onError: () => setToast({ type: 'error', message: 'Failed to set active workspace' }),
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: { name?: string; description?: string } }) =>
-      workspaceApi.update(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workspaces'] });
-      queryClient.invalidateQueries({ queryKey: ['workspace', selectedWorkspace] });
-      setShowEdit(false);
-      setToast({ type: 'success', message: 'Workspace updated' });
-    },
-    onError: (err: Error) => {
-      setToast({ type: 'error', message: 'Failed to update workspace' });
-    },
-  });
-
-  const addTargetMutation = useMutation({
-    mutationFn: (data: { target: string; target_type: string }) =>
-      workspaceApi.addTarget(selectedWorkspace!, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workspace-targets', selectedWorkspace] });
-      queryClient.invalidateQueries({ queryKey: ['workspace-summary', selectedWorkspace] });
-      setTargetForm({ target: '', target_type: '' });
-      setToast({ type: 'success', message: 'Target added' });
-    },
-    onError: () => setToast({ type: 'error', message: 'Failed to add target. Check the target value and type.' }),
-  });
-
-  const deleteTargetMutation = useMutation({
-    mutationFn: (targetId: string) =>
-      workspaceApi.deleteTarget(selectedWorkspace!, targetId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workspace-targets', selectedWorkspace] });
-      queryClient.invalidateQueries({ queryKey: ['workspace-summary', selectedWorkspace] });
-      setToast({ type: 'success', message: 'Target removed' });
-    },
-    onError: () => setToast({ type: 'error', message: 'Failed to remove target' }),
-  });
-
-  const multiScanMutation = useMutation({
-    mutationFn: (modules: string[]) =>
-      workspaceApi.multiScan(selectedWorkspace!, modules),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workspace-summary', selectedWorkspace] });
-      queryClient.invalidateQueries({ queryKey: ['scans'] });
-      setShowImportScans(false);
-      setToast({ type: 'success', message: 'Workspace scan launched! Scans will appear below once started.' });
-    },
-    onError: () => setToast({ type: 'error', message: 'Failed to launch workspace scan' }),
-  });
-
-  const linkScanMutation = useMutation({
-    mutationFn: (scanId: string) =>
-      workspaceApi.linkScan(selectedWorkspace!, scanId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workspace', selectedWorkspace] });
-      queryClient.invalidateQueries({ queryKey: ['workspace-summary', selectedWorkspace] });
-      setToast({ type: 'success', message: 'Scan linked to workspace' });
-    },
-    onError: () => setToast({ type: 'error', message: 'Failed to link scan' }),
-  });
-
-  const unlinkScanMutation = useMutation({
-    mutationFn: (scanId: string) =>
-      workspaceApi.unlinkScan(selectedWorkspace!, scanId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workspace', selectedWorkspace] });
-      queryClient.invalidateQueries({ queryKey: ['workspace-summary', selectedWorkspace] });
-      setToast({ type: 'success', message: 'Scan unlinked from workspace' });
-    },
-    onError: () => setToast({ type: 'error', message: 'Failed to unlink scan' }),
+  const {
+    createMutation, deleteMutation, cloneMutation, setActiveMutation,
+    updateMutation, addTargetMutation, deleteTargetMutation,
+    multiScanMutation, linkScanMutation, unlinkScanMutation,
+  } = useWorkspaceMutations(selectedWorkspace, showToast, {
+    onCreateSuccess: () => { setShowCreate(false); setCreateForm({ name: '', description: '' }); },
+    onDeleteSuccess: () => { if (selectedWorkspace) setSelectedWorkspace(null); },
+    onUpdateSuccess: () => setShowEdit(false),
+    onMultiScanSuccess: () => setShowImportScans(false),
   });
 
   const targetList: WorkspaceTarget[] = targets?.items ?? [];
@@ -504,7 +404,10 @@ export default function WorkspacesPage() {
                           setToast({ type: 'error', message: 'Cannot detect target type. Please select one.' });
                           return;
                         }
-                        addTargetMutation.mutate({ target: targetForm.target.trim(), target_type: resolvedType });
+                        addTargetMutation.mutate(
+                          { target: targetForm.target.trim(), target_type: resolvedType },
+                          { onSuccess: () => setTargetForm({ target: '', target_type: '' }) },
+                        );
                       }}
                     >
                       <Plus className="h-4 w-4" /> Add
@@ -846,158 +749,6 @@ export default function WorkspacesPage() {
       )}
 
       {toast && <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />}
-    </div>
-  );
-}
-
-/* ── Workspace AI Report Card ─────────────────────────────── */
-function WorkspaceReportCard({ workspaceId, workspace, summary, scanIds }: {
-  workspaceId: string;
-  workspace?: Workspace;
-  summary?: Record<string, unknown>;
-  scanIds?: string[];
-}) {
-  const [reportContent, setReportContent] = useState('');
-  const [isEditing, setIsEditing] = useState(false);
-  const [editContent, setEditContent] = useState('');
-  const editorRef = useRef<HTMLTextAreaElement>(null);
-
-  const storageKey = `sf_ws_report_${workspaceId}`;
-  useEffect(() => {
-    const saved = localStorage.getItem(storageKey);
-    if (saved) setReportContent(saved);
-    else setReportContent('');
-  }, [storageKey]);
-
-  const generateMut = useMutation({
-    mutationFn: async () => {
-      return agentsApi.report({
-        scan_ids: scanIds ?? [],
-        target: workspace?.name ?? 'Workspace',
-        scan_name: workspace?.name ?? 'Workspace Report',
-        stats: {
-          workspace_id: workspaceId,
-          workspace_name: workspace?.name,
-          ...((summary as Record<string, unknown>) ?? {}),
-        },
-      });
-    },
-    onSuccess: (data) => {
-      // Response: { agent, result_type, data: { report: "markdown..." }, confidence, ... }
-      const reportData = data?.data ?? data;
-      const md = reportData?.report ?? reportData?.content ?? reportData?.markdown ?? JSON.stringify(data, null, 2);
-      setReportContent(md);
-      safeSetItem(storageKey, md);
-    },
-    onError: (err: Error) => {
-      console.error('Failed to generate workspace report:', err);
-    },
-  });
-
-  const generateClientReport = useCallback(() => {
-    const stats = (summary as Record<string, unknown>)?.summary as Record<string, unknown> ?? summary ?? {};
-    const statsObj = (stats?.statistics ?? stats) as Record<string, number>;
-    const lines = [
-      `# Workspace Report: ${workspace?.name ?? 'Unknown'}`,
-      '',
-      `**Workspace ID:** \`${workspaceId}\``,
-      `**Description:** ${workspace?.description || 'N/A'}`,
-      `**Generated:** ${new Date().toLocaleString()}`,
-      '',
-      '---',
-      '',
-      '## Overview',
-      '',
-      `- **Targets:** ${statsObj?.target_count ?? 'N/A'}`,
-      `- **Scans:** ${statsObj?.scan_count ?? 'N/A'}`,
-      `- **Total Events:** ${statsObj?.total_events ?? 'N/A'}`,
-      `- **Correlations:** ${statsObj?.correlation_count ?? 'N/A'}`,
-      '',
-      '## Analysis',
-      '',
-      '> *Edit this section to add your cross-scan threat analysis and insights.*',
-      '',
-      '## Recommendations',
-      '',
-      '1. Review all high-risk correlation findings across linked scans.',
-      '2. Identify patterns across multiple targets in this workspace.',
-      '3. Escalate critical findings to the security team.',
-      '',
-      '---',
-      '*Report generated by SpiderFoot Workspace Analyzer*',
-    ];
-    const md = lines.join('\n');
-    setReportContent(md);
-    safeSetItem(storageKey, md);
-  }, [workspace, workspaceId, summary, storageKey]);
-
-  const startEditing = () => {
-    setEditContent(reportContent);
-    setIsEditing(true);
-    setTimeout(() => editorRef.current?.focus(), 50);
-  };
-
-  const saveEdit = () => {
-    setReportContent(editContent);
-    safeSetItem(storageKey, editContent);
-    setIsEditing(false);
-  };
-
-  return (
-    <div className="card">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-          <Brain className="h-5 w-5 text-spider-400" /> AI Report
-        </h2>
-        <div className="flex items-center gap-2">
-          {reportContent && !isEditing && (
-            <button className="btn-secondary text-xs" onClick={startEditing}>
-              <Edit3 className="h-3 w-3" /> Edit
-            </button>
-          )}
-          {isEditing && (
-            <>
-              <button className="btn-secondary text-xs" onClick={() => setIsEditing(false)}>Cancel</button>
-              <button className="btn-primary text-xs" onClick={saveEdit}><Save className="h-3 w-3" /> Save</button>
-            </>
-          )}
-          <button className="btn-primary text-xs" onClick={() => generateMut.mutate()} disabled={generateMut.isPending}>
-            {generateMut.isPending ? <><Loader2 className="h-3 w-3 animate-spin" /> Generating CTI Report...</> : <><Sparkles className="h-3 w-3" /> AI Report</>}
-          </button>
-          {!reportContent && (
-            <button className="btn-secondary text-xs" onClick={generateClientReport}>
-              <FileText className="h-3 w-3" /> Quick
-            </button>
-          )}
-        </div>
-      </div>
-
-      {generateMut.isError && (
-        <div className="flex items-center gap-2 mb-3 p-2 bg-yellow-900/10 border border-yellow-700/30 rounded-lg text-xs text-yellow-300">
-          <AlertTriangle className="h-3.5 w-3.5" />
-          <span>AI report generation failed: {(generateMut.error as Error)?.message ?? 'Unknown error'}. <button className="underline" onClick={generateClientReport}>Use quick report</button></span>
-        </div>
-      )}
-
-      {isEditing ? (
-        <textarea
-          ref={editorRef}
-          value={editContent}
-          onChange={(e) => setEditContent(e.target.value)}
-          className="w-full bg-dark-900 text-dark-200 font-mono text-xs p-3 focus:outline-none rounded-lg resize-y border border-dark-700"
-          style={{ minHeight: '400px' }}
-          spellCheck={false}
-        />
-      ) : reportContent ? (
-        <div className="max-h-[80vh] overflow-y-auto pr-2">
-          <MarkdownRenderer content={reportContent} className="prose-sm" />
-        </div>
-      ) : (
-        <div className="text-center py-8 text-dark-500">
-          <Brain className="h-10 w-10 mx-auto mb-2 opacity-30" />
-          <p className="text-sm">No report yet. Generate one to get started.</p>
-        </div>
-      )}
     </div>
   );
 }
