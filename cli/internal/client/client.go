@@ -103,6 +103,11 @@ func (c *Client) Put(path string, body io.Reader, result interface{}) error {
 	return c.request(http.MethodPut, path, body, result)
 }
 
+// Patch performs a PATCH request with a JSON body.
+func (c *Client) Patch(path string, body io.Reader, result interface{}) error {
+	return c.request(http.MethodPatch, path, body, result)
+}
+
 // Delete performs a DELETE request.
 func (c *Client) Delete(path string, result interface{}) error {
 	return c.request(http.MethodDelete, path, nil, result)

@@ -11,6 +11,8 @@ Endpoints:
 
 from __future__ import annotations
 
+import re as _re
+
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
 from ..dependencies import get_app_config
 import json
@@ -323,6 +325,12 @@ async def websocket_scan_stream(websocket: WebSocket, scan_id: str) -> None:
     Uses EventRelay push mode if the relay has an EventBus wired.
     Falls back to database polling otherwise.
     """
+    # ── Validate scan_id ────────────────────────────────────────────
+    if not _re.match(r"^[a-zA-Z0-9_\-]{1,64}$", scan_id):
+        await websocket.close(code=4000, reason="Invalid scan ID")
+        log.warning("Rejected WebSocket with invalid scan_id: %s", scan_id[:80])
+        return
+
     # ── Auth gate ─────────────────────────────────────────────────────
     if not await _verify_ws_token(websocket):
         await websocket.close(code=4003, reason="Authentication required")

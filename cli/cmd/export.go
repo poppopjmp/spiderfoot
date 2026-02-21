@@ -64,7 +64,7 @@ func doExport(scanID, format, ext string) error {
 		outFile = fmt.Sprintf("spiderfoot_%s.%s", scanID[:min(12, len(scanID))], ext)
 	}
 
-	if err := os.WriteFile(outFile, data, 0644); err != nil {
+	if err := os.WriteFile(outFile, data, 0600); err != nil {
 		return fmt.Errorf("writing file: %w", err)
 	}
 	output.Success("Exported to %s (%d bytes)", outFile, len(data))

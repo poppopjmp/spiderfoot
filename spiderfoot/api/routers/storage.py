@@ -27,7 +27,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
-from ..dependencies import optional_auth, get_api_key
+from ..dependencies import optional_auth, get_api_key, SafeId
 
 log = logging.getLogger("spiderfoot.api.storage")
 
@@ -163,7 +163,7 @@ async def ensure_buckets():
 # ---------------------------------------------------------------------------
 
 @router.get("/reports/{scan_id}", dependencies=[optional_auth_dep])
-async def list_scan_reports(scan_id: str) -> list[ObjectInfo]:
+async def list_scan_reports(scan_id: SafeId) -> list[ObjectInfo]:
     """List all reports stored in MinIO for a scan."""
     mgr = _get_storage()
     objects = mgr.list_reports(scan_id)
@@ -172,8 +172,8 @@ async def list_scan_reports(scan_id: str) -> list[ObjectInfo]:
 
 @router.get("/reports/{scan_id}/{report_id}/url", dependencies=[optional_auth_dep])
 async def presign_report(
-    scan_id: str,
-    report_id: str,
+    scan_id: SafeId,
+    report_id: SafeId,
     extension: str = Query("json", description="File extension"),
     expires: int = Query(3600, ge=60, le=86400, description="URL expiry in seconds"),
 ) -> dict[str, str]:
@@ -189,8 +189,8 @@ async def presign_report(
 
 @router.delete("/reports/{scan_id}/{report_id}", dependencies=[optional_auth_dep])
 async def delete_report(
-    scan_id: str,
-    report_id: str,
+    scan_id: SafeId,
+    report_id: SafeId,
     extension: str = Query("json", description="File extension"),
 ) -> dict[str, str]:
     """Delete a report from MinIO."""
@@ -204,7 +204,7 @@ async def delete_report(
 
 
 @router.delete("/scans/{scan_id}", dependencies=[optional_auth_dep])
-async def delete_scan_data(scan_id: str) -> dict[str, Any]:
+async def delete_scan_data(scan_id: SafeId) -> dict[str, Any]:
     """Delete ALL MinIO objects for a scan (reports, exports, artefacts)."""
     mgr = _get_storage()
     removed = mgr.delete_scan_data(scan_id)

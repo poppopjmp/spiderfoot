@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"net/url"
 
 	"github.com/spf13/cobra"
 	"github.com/spiderfoot/spiderfoot-cli/internal/client"
@@ -28,7 +29,7 @@ var modulesCmd = &cobra.Command{
 		var modules []moduleInfo
 		path := "/api/modules"
 		if filter != "" {
-			path += "?type=" + filter
+			path += "?type=" + url.QueryEscape(filter)
 		}
 		if err := c.Get(path, &modules); err != nil {
 			return err

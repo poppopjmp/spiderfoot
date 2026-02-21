@@ -259,7 +259,7 @@ async def start_multi_scan(
 
 
 @router.delete("/workspaces/{workspace_id}/scans/{scan_id}")
-async def remove_scan_from_workspace(workspace_id: SafeId, scan_id: str, api_key: str = api_key_dep) -> dict:
+async def remove_scan_from_workspace(workspace_id: SafeId, scan_id: SafeId, api_key: str = api_key_dep) -> dict:
     """
     Remove a scan from a workspace.
 
@@ -289,7 +289,7 @@ async def remove_scan_from_workspace(workspace_id: SafeId, scan_id: str, api_key
 
 
 @router.post("/workspaces/{workspace_id}/scans/{scan_id}")
-async def link_scan_to_workspace(workspace_id: SafeId, scan_id: str, api_key: str = api_key_dep) -> dict:
+async def link_scan_to_workspace(workspace_id: SafeId, scan_id: SafeId, api_key: str = api_key_dep) -> dict:
     """
     Link an existing scan to a workspace for cross-scan correlation.
 

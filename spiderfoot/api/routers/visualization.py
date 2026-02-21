@@ -12,7 +12,9 @@ from fastapi.responses import Response, JSONResponse
 import json
 import logging
 
-from ..dependencies import get_visualization_service, optional_auth, get_api_key, safe_filename
+import re as _re
+
+from ..dependencies import get_visualization_service, optional_auth, get_api_key, safe_filename, SafeId
 from spiderfoot import SpiderFootHelpers
 from spiderfoot.reporting.visualization_service import VisualizationService, VisualizationServiceError
 
@@ -40,6 +42,11 @@ async def get_multi_scan_graph_data(
         scan_list = [s.strip() for s in scan_ids.split(",") if s.strip()]
         if not scan_list:
             raise HTTPException(status_code=400, detail="No valid scan IDs provided")
+        # Validate each ID against SafeId pattern
+        _id_re = _re.compile(r"^[a-zA-Z0-9_\-]{1,64}$")
+        for sid in scan_list:
+            if not _id_re.match(sid):
+                raise HTTPException(status_code=400, detail=f"Invalid scan ID: {sid}")
 
         valid_ids, all_results = svc.get_multi_scan_graph_data(
             scan_list, event_type=filter_type
@@ -77,7 +84,7 @@ async def get_multi_scan_graph_data(
 
 @router.get("/visualization/graph/{scan_id}")
 async def get_scan_graph_data(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = optional_auth_dep,
     format: str = Query("json", description="Output format: json, gexf"),
     filter_type: str | None = Query(None, description="Filter by event type"),
@@ -119,7 +126,7 @@ async def get_scan_graph_data(
 
 @router.get("/visualization/summary/{scan_id}")
 async def get_scan_summary_data(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = optional_auth_dep,
     group_by: str = Query("type", description="Group results by: type, module, risk"),
     svc: VisualizationService = Depends(get_visualization_service),
@@ -140,7 +147,7 @@ async def get_scan_summary_data(
 
 @router.get("/visualization/timeline/{scan_id}")
 async def get_scan_timeline_data(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = optional_auth_dep,
     interval: str = Query("hour", description="Time interval: hour, day, week"),
     event_type: str | None = Query(None, description="Filter by event type"),
@@ -164,7 +171,7 @@ async def get_scan_timeline_data(
 
 @router.get("/visualization/heatmap/{scan_id}")
 async def get_scan_heatmap_data(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = optional_auth_dep,
     dimension_x: str = Query("module", description="X-axis dimension: module, type, risk"),
     dimension_y: str = Query("type", description="Y-axis dimension: module, type, risk"),

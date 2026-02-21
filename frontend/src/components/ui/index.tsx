@@ -132,6 +132,7 @@ export function SearchInput({
         <button
           onClick={() => handleChange('')}
           className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-500 hover:text-dark-300 transition-colors"
+          aria-label="Clear search"
         >
           <X className="h-3.5 w-3.5" />
         </button>
@@ -434,7 +435,7 @@ export function ProgressBar({
   const pct = Math.min(100, Math.round((value / max) * 100));
   return (
     <div className={clsx('flex items-center gap-2', className)}>
-      <div className="progress-bar flex-1">
+      <div className="progress-bar flex-1" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
         <div className={clsx('progress-fill animate-progress', color)} style={{ width: `${pct}%` }} />
       </div>
       {showLabel && <span className="text-xs text-dark-400 w-8 text-right tabular-nums">{pct}%</span>}
@@ -455,15 +456,23 @@ export function DropdownMenu({
     function handleClick(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     }
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === 'Escape' && open) setOpen(false);
+    }
     document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, []);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [open]);
 
   return (
     <div className="relative" ref={ref}>
-      <div onClick={() => setOpen(!open)}>{trigger}</div>
+      <div onClick={() => setOpen(!open)} aria-expanded={open} aria-haspopup="true">{trigger}</div>
       {open && (
         <div
+          role="menu"
           className={clsx(
             'absolute z-40 mt-1 min-w-[180px] bg-dark-800 border border-dark-700 rounded-xl shadow-2xl py-1 animate-fade-in',
             align === 'right' ? 'right-0' : 'left-0',
@@ -630,10 +639,12 @@ export function Tabs<T extends string>({
   onChange: (tab: T) => void;
 }) {
   return (
-    <div className="tab-bar">
+    <div className="tab-bar" role="tablist">
       {tabs.map((t) => (
         <button
           key={t.key}
+          role="tab"
+          aria-selected={active === t.key}
           onClick={() => onChange(t.key)}
           className={active === t.key ? 'tab-button-active' : 'tab-button'}
         >

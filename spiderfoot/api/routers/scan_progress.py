@@ -158,7 +158,7 @@ if not HAS_FASTAPI:
 
     router = _StubRouter()
 else:
-    from ..dependencies import optional_auth
+    from ..dependencies import optional_auth, SafeId
 
     _auth_dep = Depends(optional_auth)
 
@@ -172,7 +172,7 @@ else:
             "overall percentage, ETA, throughput, and module counts."
         ),
     )
-    async def get_progress(scan_id: str, _auth: str | None = _auth_dep) -> dict:
+    async def get_progress(scan_id: SafeId, _auth: str | None = _auth_dep) -> dict:
         """Return the current progress snapshot for a scan."""
         tracker = get_tracker(scan_id)
         if tracker is None:
@@ -196,7 +196,7 @@ else:
             "including status, events, and elapsed time."
         ),
     )
-    async def get_module_progress(scan_id: str, _auth: str | None = _auth_dep) -> dict:
+    async def get_module_progress(scan_id: SafeId, _auth: str | None = _auth_dep) -> dict:
         """Return per-module progress breakdown for a scan."""
         tracker = get_tracker(scan_id)
         if tracker is None:
@@ -247,7 +247,7 @@ else:
             "Returns the list of recorded progress snapshots for a scan."
         ),
     )
-    async def get_progress_history(scan_id: str, _auth: str | None = _auth_dep) -> dict:
+    async def get_progress_history(scan_id: SafeId, _auth: str | None = _auth_dep) -> dict:
         """Return historical progress snapshots for a scan."""
         tracker = get_tracker(scan_id)
         if tracker is None:
@@ -272,7 +272,7 @@ else:
         ),
     )
     async def stream_progress(
-        scan_id: str,
+        scan_id: SafeId,
         request: Request,
         interval: float = _DEFAULT_SSE_INTERVAL,
         _auth: str | None = _auth_dep,
@@ -315,7 +315,7 @@ else:
             "Typically called automatically when a scan starts."
         ),
     )
-    async def create_tracker(scan_id: str, modules: list[str] | None = None, _auth: str | None = _auth_dep) -> dict:
+    async def create_tracker(scan_id: SafeId, modules: list[str] | None = None, _auth: str | None = _auth_dep) -> dict:
         """Create and start a new progress tracker for a scan."""
         if not HAS_TRACKER:
             raise HTTPException(

@@ -138,6 +138,59 @@ var scheduleCreateCmd = &cobra.Command{
 	},
 }
 
+var scheduleUpdateCmd = &cobra.Command{
+	Use:   "update [schedule-id]",
+	Short: "Update a schedule (partial update)",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		updates := make(map[string]interface{})
+
+		if cmd.Flags().Changed("name") {
+			v, _ := cmd.Flags().GetString("name")
+			updates["name"] = v
+		}
+		if cmd.Flags().Changed("target") {
+			v, _ := cmd.Flags().GetString("target")
+			updates["target"] = v
+		}
+		if cmd.Flags().Changed("interval") {
+			v, _ := cmd.Flags().GetFloat64("interval")
+			updates["interval_hours"] = v
+		}
+		if cmd.Flags().Changed("description") {
+			v, _ := cmd.Flags().GetString("description")
+			updates["description"] = v
+		}
+		if cmd.Flags().Changed("enabled") {
+			v, _ := cmd.Flags().GetBool("enabled")
+			updates["enabled"] = v
+		}
+
+		if len(updates) == 0 {
+			return fmt.Errorf("at least one flag must be specified")
+		}
+
+		payload, err := json.Marshal(updates)
+		if err != nil {
+			return fmt.Errorf("failed to marshal request: %w", err)
+		}
+
+		c := client.New()
+		var resp map[string]interface{}
+		if err := c.Patch(fmt.Sprintf("/api/schedules/%s", args[0]), bytes.NewReader(payload), &resp); err != nil {
+			return err
+		}
+
+		switch output.Current() {
+		case output.JSON:
+			output.PrintJSON(resp)
+		default:
+			output.Success("Schedule %s updated", args[0])
+		}
+		return nil
+	},
+}
+
 var scheduleDeleteCmd = &cobra.Command{
 	Use:   "delete [schedule-id]",
 	Short: "Delete a schedule",
@@ -173,8 +226,15 @@ func init() {
 	scheduleCreateCmd.Flags().Float64("interval", 24, "Interval in hours between runs (required)")
 	scheduleCreateCmd.Flags().StringP("description", "d", "", "Schedule description")
 
+	scheduleUpdateCmd.Flags().StringP("name", "n", "", "New schedule name")
+	scheduleUpdateCmd.Flags().StringP("target", "t", "", "New scan target")
+	scheduleUpdateCmd.Flags().Float64("interval", 0, "Interval in hours between runs")
+	scheduleUpdateCmd.Flags().StringP("description", "d", "", "New description")
+	scheduleUpdateCmd.Flags().Bool("enabled", true, "Enable or disable the schedule")
+
 	scheduleCmd.AddCommand(scheduleListCmd)
 	scheduleCmd.AddCommand(scheduleCreateCmd)
+	scheduleCmd.AddCommand(scheduleUpdateCmd)
 	scheduleCmd.AddCommand(scheduleDeleteCmd)
 	scheduleCmd.AddCommand(scheduleTriggerCmd)
 	rootCmd.AddCommand(scheduleCmd)
