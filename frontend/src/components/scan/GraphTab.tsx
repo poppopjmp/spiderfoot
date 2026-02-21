@@ -65,6 +65,7 @@ export default function GraphTab({ scanId }: { scanId: string }) {
 
     let running = true;
     let frame = 0;
+    let rafId = 0;
     const maxFrames = 200;
 
     function tick() {
@@ -138,13 +139,14 @@ export default function GraphTab({ scanId }: { scanId: string }) {
         });
       }
 
-      if (frame < maxFrames) requestAnimationFrame(tick);
+      if (frame < maxFrames) rafId = requestAnimationFrame(tick);
       else setGraphReady(true);
     }
 
     tick();
-    return () => { running = false; };
-  }, [nodes, edges]);
+    return () => { running = false; cancelAnimationFrame(rafId); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nodes.length, edges.length]);
 
   return (
     <div className="space-y-4">

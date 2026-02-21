@@ -55,14 +55,14 @@ export default function App() {
   useEffect(() => {
     setTokensFromUrl();
     fetchAuthStatus();
-  }, []);
+  }, [setTokensFromUrl, fetchAuthStatus]);
 
   // Fetch current user when access token changes
   useEffect(() => {
     if (accessToken) {
       fetchCurrentUser();
     }
-  }, [accessToken]);
+  }, [accessToken, fetchCurrentUser]);
 
   return (
     <Routes>
