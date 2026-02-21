@@ -133,7 +133,10 @@ jobs:
           cache-dependency-path: cli/go.sum
 
       - name: Download dependencies
-        run: go mod download
+        run: |
+          # Ensure go.mod/go.sum are synchronized; tidy will populate missing go.sum entries
+          go mod tidy
+          go mod download
 
       - name: Vet
         run: go vet ./...
