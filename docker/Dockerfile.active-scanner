@@ -157,7 +157,7 @@ USER root
 RUN apt-get update && apt-get install -y --no-install-recommends \
     nmap nbtscan onesixtyone whatweb sslscan bsdmainutils \
     libpcap0.8 libcap2-bin \
-    chromium \
+    chromium git \
     perl libnet-ssleay-perl libwhisker2-perl libjson-perl libxml-writer-perl \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
@@ -165,7 +165,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN /opt/venv/bin/pip install --no-cache-dir \
     dnstwist snallygaster trufflehog wafw00f \
     arjun sslyze \
-    git+https://github.com/GerbenJavado/LinkFinder.git
+    git+https://github.com/GerbenJavado/LinkFinder.git \
+    && apt-get purge -y --auto-remove git && rm -rf /var/lib/apt/lists/*
 
 # CMSeeK deps
 COPY --from=tool-downloader /tools/CMSeeK/requirements.txt /tmp/cmseek-reqs.txt
