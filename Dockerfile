@@ -166,7 +166,7 @@ EXPOSE 5001 8001
 
 # Health check for API endpoint
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8001/api/v1/health')" || exit 1
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')" || exit 1
 
 # Default command: FastAPI server
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh", "python"]

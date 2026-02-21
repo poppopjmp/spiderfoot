@@ -10,11 +10,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 TAG="${2:-latest}"
 PUSH=false
+REGISTRY="${REGISTRY:-}"   # e.g. ghcr.io/poppopjmp/
 
 for arg in "$@"; do
     case $arg in
         --push) PUSH=true ;;
         --tag) TAG="$2" ;;
+        --registry) REGISTRY="$2" ;;
     esac
 done
 
@@ -23,35 +25,43 @@ cd "$PROJECT_ROOT"
 echo "=== Building SpiderFoot microservice images (tag: $TAG) ==="
 
 # 1. Base image
-echo "[1/4] Building base image..."
+echo "[1/5] Building base image..."
 docker build \
     -f docker/Dockerfile.base \
-    -t spiderfoot-base:latest \
-    -t spiderfoot-base:$TAG \
+    -t ${REGISTRY}spiderfoot-base:latest \
+    -t ${REGISTRY}spiderfoot-base:$TAG \
     .
 
 # 2. Scanner
-echo "[2/4] Building scanner image..."
+echo "[2/5] Building scanner image..."
 docker build \
     -f docker/Dockerfile.scanner \
-    -t spiderfoot-scanner:latest \
-    -t spiderfoot-scanner:$TAG \
+    -t ${REGISTRY}spiderfoot-scanner:latest \
+    -t ${REGISTRY}spiderfoot-scanner:$TAG \
     .
 
 # 3. API
-echo "[3/4] Building API image..."
+echo "[3/5] Building API image..."
 docker build \
     -f docker/Dockerfile.api \
-    -t spiderfoot-api:latest \
-    -t spiderfoot-api:$TAG \
+    -t ${REGISTRY}spiderfoot-api:latest \
+    -t ${REGISTRY}spiderfoot-api:$TAG \
     .
 
 # 4. WebUI
-echo "[4/4] Building WebUI image..."
+echo "[4/5] Building WebUI image..."
 docker build \
     -f docker/Dockerfile.webui \
-    -t spiderfoot-webui:latest \
-    -t spiderfoot-webui:$TAG \
+    -t ${REGISTRY}spiderfoot-webui:latest \
+    -t ${REGISTRY}spiderfoot-webui:$TAG \
+    .
+
+# 5. Active Worker
+echo "[5/5] Building active-worker image..."
+docker build \
+    -f Dockerfile.active-worker \
+    -t ${REGISTRY}spiderfoot-active-worker:latest \
+    -t ${REGISTRY}spiderfoot-active-worker:$TAG \
     .
 
 echo ""
@@ -62,8 +72,8 @@ docker images --filter "reference=spiderfoot-*" --format "  {{.Repository}}:{{.T
 if [ "$PUSH" = true ]; then
     echo ""
     echo "=== Pushing images ==="
-    for svc in base scanner api webui; do
-        docker push spiderfoot-$svc:$TAG
-        docker push spiderfoot-$svc:latest
+    for svc in base scanner api webui active-worker; do
+        docker push ${REGISTRY}spiderfoot-$svc:$TAG
+        docker push ${REGISTRY}spiderfoot-$svc:latest
     done
 fi
