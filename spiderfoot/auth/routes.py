@@ -809,9 +809,11 @@ async def oauth2_callback(
             client["ip_address"], client["user_agent"], "oauth2"
         )
 
-        # Redirect to frontend with token
+        # Redirect to frontend with tokens in hash fragment (not query params)
+        # Hash fragments are never sent to the server in HTTP requests,
+        # preventing token leakage via server logs, Referer headers, etc.
         return RedirectResponse(
-            url=f"/?access_token={access_token}&refresh_token={refresh_token}",
+            url=f"/#access_token={access_token}&refresh_token={refresh_token}",
             status_code=302,
         )
     except Exception as e:
@@ -870,7 +872,7 @@ async def saml_acs(provider_id: str, request: Request):
 
         from fastapi.responses import RedirectResponse as _Redir
         return _Redir(
-            url=f"/?access_token={access_token}&refresh_token={refresh_token}",
+            url=f"/#access_token={access_token}&refresh_token={refresh_token}",
             status_code=302,
         )
     except Exception as e:

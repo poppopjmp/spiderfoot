@@ -248,7 +248,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   setTokensFromUrl: () => {
-    const params = new URLSearchParams(window.location.search);
+    // Read tokens from hash fragment (not query params) to prevent
+    // leakage via server logs, Referer headers, and browser history.
+    // Hash fragments are never sent to the server in HTTP requests.
+    const hash = window.location.hash.replace(/^#/, '');
+    const params = new URLSearchParams(hash);
     const access = params.get('access_token');
     const refresh = params.get('refresh_token');
     if (access) {
@@ -258,7 +262,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         refreshToken: refresh,
         isAuthenticated: true,
       });
-      // Clean URL
+      // Clean URL — remove hash fragment immediately
       window.history.replaceState({}, '', window.location.pathname);
     }
   },
