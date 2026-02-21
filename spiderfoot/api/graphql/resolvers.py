@@ -674,7 +674,7 @@ class Mutation:
             _log.error("GraphQL startScan() error: %s", e, exc_info=True)
             return ScanCreateResult(
                 success=False,
-                message=f"Failed to start scan: {e}",
+                message="Failed to start scan",
             )
 
     @strawberry.mutation(description="Stop a running scan")
@@ -694,7 +694,7 @@ class Mutation:
             )
         except Exception as e:
             _log.error("GraphQL stopScan() error: %s", e, exc_info=True)
-            return MutationResult(success=False, message=str(e))
+            return MutationResult(success=False, message="An internal error occurred")
 
     @strawberry.mutation(description="Delete a scan and all its data")
     def delete_scan(self, scan_id: str) -> MutationResult:
@@ -723,7 +723,7 @@ class Mutation:
             )
         except Exception as e:
             _log.error("GraphQL deleteScan() error: %s", e, exc_info=True)
-            return MutationResult(success=False, message=str(e))
+            return MutationResult(success=False, message="An internal error occurred")
 
     @strawberry.mutation(description="Mark scan results as false positive (or unmark)")
     def set_false_positive(
@@ -753,7 +753,7 @@ class Mutation:
             )
         except Exception as e:
             _log.error("GraphQL setFalsePositive() error: %s", e, exc_info=True)
-            return FalsePositiveResult(success=False, message=str(e))
+            return FalsePositiveResult(success=False, message="An internal error occurred")
 
     @strawberry.mutation(description="Rerun a completed scan with same configuration")
     def rerun_scan(self, scan_id: str) -> ScanCreateResult:
@@ -793,7 +793,7 @@ class Mutation:
             )
         except Exception as e:
             _log.error("GraphQL rerunScan() error: %s", e, exc_info=True)
-            return ScanCreateResult(success=False, message=str(e))
+            return ScanCreateResult(success=False, message="An internal error occurred")
 
 
 # ── Subscription Root ───────────────────────────────────────────────
