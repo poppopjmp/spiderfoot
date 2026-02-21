@@ -160,6 +160,17 @@ def get_limit_offset_clause(db_type: str, limit: int | None = None, offset: int 
         clause += f' OFFSET {int(offset)}'
     return clause
 
+def _quote_ident(name: str, db_type: str) -> str:
+    """Quote a SQL identifier to prevent injection.
+
+    SQLite and PostgreSQL both support double-quoting identifiers.
+    We also reject any embedded double-quotes as an extra safety layer.
+    """
+    if '"' in name:
+        raise ValueError(f"Invalid identifier: {name!r}")
+    return f'"{name}"'
+
+
 def drop_all_tables(db_type: str, conn: object) -> None:
     """Drop all user tables in the database (for test isolation)."""
     db_type = normalize_db_type(db_type)
@@ -169,12 +180,12 @@ def drop_all_tables(db_type: str, conn: object) -> None:
             cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")
             tables = [row[0] for row in cursor.fetchall()]
             for t in tables:
-                cursor.execute(f"DROP TABLE IF EXISTS {t}")
+                cursor.execute(f"DROP TABLE IF EXISTS {_quote_ident(t, db_type)}")
         elif db_type == 'postgresql':
             cursor.execute("SELECT tablename FROM pg_tables WHERE schemaname='public'")
             tables = [row[0] for row in cursor.fetchall()]
             for t in tables:
-                cursor.execute(f'DROP TABLE IF EXISTS {t} CASCADE')
+                cursor.execute(f"DROP TABLE IF EXISTS {_quote_ident(t, db_type)} CASCADE")
         conn.commit()
         cursor.close()
     except Exception as e:
@@ -192,9 +203,12 @@ def dump_schema(db_type: str, conn: object) -> str:
         cursor.execute("SELECT table_name FROM information_schema.tables WHERE table_schema='public'")
         tables = [row[0] for row in cursor.fetchall()]
         for t in tables:
-            cursor.execute(f"SELECT column_name, data_type FROM information_schema.columns WHERE table_name='{t}'")
+            cursor.execute(
+                "SELECT column_name, data_type FROM information_schema.columns WHERE table_name = %s",
+                (t,),
+            )
             cols = ', '.join([f"{col} {typ}" for col, typ in cursor.fetchall()])
-            schema += f"CREATE TABLE {t} ({cols});\n"
+            schema += f"CREATE TABLE {_quote_ident(t, db_type)} ({cols});\n"
     cursor.close()
     return schema
 
