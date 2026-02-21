@@ -3,7 +3,7 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [6.0.0-rc.1] — 2026-06-08 — Release Candidate
+## [6.0.0] — 2026-02-21
 
 ### Added
 - **Go CLI**: Full-featured cross-platform CLI (`spiderfoot-cli`) built with Cobra/Viper — scan management, module listing, STIX/JSON/CSV export, schedule CRUD, health check, config management
@@ -33,7 +33,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Export SafeID validation**: Added `validateSafeID` call in CLI export command
 
 ### Changed
-- **Version bump to 6.0.0-rc.1**: VERSION, package.json, CLI root.go/client.go, Layout.tsx, README badge
+- **Version bump to 6.0.0**: VERSION, package.json, CLI root.go/client.go, Layout.tsx, README badge
 - **STIX API path corrected**: `/scans/` → `/api/scans/` prefix
 - **Health CLI path corrected**: `/api/health` → `/health` (root-mounted router)
 - **GeoMapTab**: Migrated 4 individual `useQuery` calls to single `useQueries()` for parallel fetching
@@ -64,6 +64,29 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **useEffect dependency arrays**: Fixed stale closures in App.tsx
 - **Report store thread-safety**: Added `threading.Lock` to in-memory fallback dict
 - **Unbounded multi-scan batches**: Capped at 50 IDs per request
+- **`__version__.py` VERSION tuple crash**: Pre-release suffix (e.g. `6.0.0-rc.1`) caused `ValueError` in `tuple(map(int, ...))` — now strips suffix before parsing
+- **Go CLI Makefile stale version**: Changed from hardcoded `5.9.2` to `$(shell cat ../VERSION)`
+- **Go CLI `GetRaw` User-Agent**: Fixed stale `5.9.2` in export request header
+- **`sfcli.py` entry point**: Added `main()` function for `console_scripts` compatibility; guarded unconditional debug print behind `-d` flag
+- **CI branch references**: Fixed 4 workflows targeting `master` instead of `main` (build-artifacts, wiki-sync, semgrep, codeql-analysis)
+- **CodeQL `actions/checkout@v2`**: Updated to `@v4`
+- **Build-artifacts packaging gates**: Changed from Python 3.9 (not in matrix) to 3.10 so .deb/.rpm/snap/Homebrew steps actually run
+- **Acceptance tests**: Fixed port `5001`→`8001` and endpoint `/ping`→`/health` for v6 API
+- **Dockerfile HEALTHCHECK**: Standardized to `/health` endpoint
+- **`docker/build.sh`**: Added active-worker build step (5th image); added configurable `REGISTRY` prefix
+
+### Added (CI/CD)
+- **Go CLI in CI**: New `go-cli` job in `ci.yml` — `go vet`, `go test -race`, smoke build
+- **Go CLI cross-compilation in releases**: 6-platform matrix build in `release.yml` with artifacts attached to GitHub Releases
+- **Go vulnerability scanning**: `govulncheck` step in `security-scan.yml` for `cli/go.mod`
+- **Full-stack deployment test**: New `deploy-test.yml` workflow — Docker build, API smoke test, Go CLI integration against live API, frontend production build validation, summary gate
+- **Semgrep action**: Updated from pinned SHA to tagged `@v1`
+- **Python 3.13 classifier**: Added to `setup.py`
+
+### Documentation
+- **Dual-CLI strategy**: README now documents both Go CLI and Python REPL CLI with comparison table and recommended use cases
+- **Go CLI README**: Fixed `--cron` → `--interval` in schedule examples; added `update` subcommand
+- **Pipfile**: Added deprecation notice — canonical deps are `requirements.txt`
 
 ## [5.9.2] — 2026-02-20 — Deep Security & Quality Hardening
 

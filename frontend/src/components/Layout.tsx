@@ -60,7 +60,7 @@ const SERVICE_LINKS = [
   { name: 'Flower', url: '/flower/', internal: false, desc: 'Celery monitor' },
 ];
 
-const APP_VERSION = '6.0.0-rc.1';
+const APP_VERSION = '6.0.0';
 
 export default function Layout() {
   const [showAbout, setShowAbout] = useState(false);

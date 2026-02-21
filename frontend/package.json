@@ -1,6 +1,6 @@
 {
   "name": "spiderfoot-ui",
-  "version": "6.0.0-rc.1",
+  "version": "6.0.0",
   "private": true,
   "engines": { "node": ">=18" },
   "description": "SpiderFoot Modern Web UI — React SPA",
