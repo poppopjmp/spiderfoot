@@ -472,7 +472,7 @@ async def _store_report(
 
         endpoint = os.environ.get("SF_MINIO_ENDPOINT", "minio:9000")
         access_key = os.environ.get("SF_MINIO_ACCESS_KEY", "spiderfoot")
-        secret_key = os.environ.get("SF_MINIO_SECRET_KEY", "changeme123")
+        secret_key = os.environ.get("SF_MINIO_SECRET_KEY", "")
         bucket = "sf-enrichment"
 
         client = Minio(endpoint, access_key=access_key, secret_key=secret_key, secure=False)

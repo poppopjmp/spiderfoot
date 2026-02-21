@@ -48,12 +48,12 @@ const navItems: NavItem[] = [
 
 const SERVICE_LINKS = [
   { name: 'AI Agents', url: '/agents', internal: true, desc: 'AI agent orchestrator' },
-  { name: 'Grafana', url: '/grafana/', internal: false, desc: 'Metrics & dashboards (admin/spiderfoot)' },
+  { name: 'Grafana', url: '/grafana/', internal: false, desc: 'Metrics & dashboards' },
   { name: 'Jaeger', url: '/jaeger/', internal: false, desc: 'Distributed tracing' },
   { name: 'Prometheus', url: '/prometheus/', internal: false, desc: 'Metrics collection' },
-  { name: 'Traefik', url: '/dashboard/', internal: false, desc: 'Reverse proxy (admin/spiderfoot)' },
-  { name: 'MinIO', url: '/minio/', internal: false, desc: 'Object storage (spiderfoot/changeme123)' },
-  { name: 'Flower', url: '/flower/', internal: false, desc: 'Celery monitor (admin/spiderfoot)' },
+  { name: 'Traefik', url: '/dashboard/', internal: false, desc: 'Reverse proxy' },
+  { name: 'MinIO', url: '/minio/', internal: false, desc: 'Object storage' },
+  { name: 'Flower', url: '/flower/', internal: false, desc: 'Celery monitor' },
 ];
 
 export default function Layout() {

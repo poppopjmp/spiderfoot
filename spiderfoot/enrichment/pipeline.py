@@ -82,7 +82,7 @@ class EnrichmentPipeline:
             "SF_MINIO_ACCESS_KEY", "spiderfoot"
         )
         self.minio_secret_key = minio_secret_key or os.environ.get(
-            "SF_MINIO_SECRET_KEY", "changeme123"
+            "SF_MINIO_SECRET_KEY", ""
         )
 
     def process(

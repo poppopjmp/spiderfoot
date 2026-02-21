@@ -243,7 +243,7 @@ def _store_report(
 
         endpoint = os.environ.get("SF_MINIO_ENDPOINT", "minio:9000")
         access_key = os.environ.get("SF_MINIO_ACCESS_KEY", opts.get("MINIO_ROOT_USER", "spiderfoot"))
-        secret_key = os.environ.get("SF_MINIO_SECRET_KEY", opts.get("MINIO_ROOT_PASSWORD", "changeme123"))
+        secret_key = os.environ.get("SF_MINIO_SECRET_KEY", opts.get("MINIO_ROOT_PASSWORD", ""))
         bucket = os.environ.get("SF_MINIO_REPORTS_BUCKET", "sf-reports")
         secure = os.environ.get("SF_MINIO_SECURE", "false").lower() == "true"
 

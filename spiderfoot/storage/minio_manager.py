@@ -57,13 +57,16 @@ log = logging.getLogger("spiderfoot.storage.minio")
 # Configuration
 # ---------------------------------------------------------------------------
 
+_INSECURE_MINIO_SECRETS = frozenset({"changeme123", "changeme", "password", "minioadmin", ""})
+
+
 @dataclass
 class MinIOConfig:
     """MinIO / S3-compatible storage configuration."""
 
     endpoint: str = "localhost:9000"
-    access_key: str = "spiderfoot"
-    secret_key: str = "changeme123"
+    access_key: str = ""
+    secret_key: str = ""
     secure: bool = False
     region: str = "us-east-1"
 
@@ -77,10 +80,10 @@ class MinIOConfig:
     @classmethod
     def from_env(cls) -> MinIOConfig:
         """Build config from SF_MINIO_* environment variables."""
-        return cls(
+        cfg = cls(
             endpoint=os.environ.get("SF_MINIO_ENDPOINT", "localhost:9000").replace("http://", "").replace("https://", ""),
-            access_key=os.environ.get("SF_MINIO_ACCESS_KEY", "spiderfoot"),
-            secret_key=os.environ.get("SF_MINIO_SECRET_KEY", "changeme123"),
+            access_key=os.environ.get("SF_MINIO_ACCESS_KEY", ""),
+            secret_key=os.environ.get("SF_MINIO_SECRET_KEY", ""),
             secure=os.environ.get("SF_MINIO_SECURE", "false").lower() in ("true", "1", "yes"),
             region=os.environ.get("SF_MINIO_REGION", "us-east-1"),
             reports_bucket=os.environ.get("SF_MINIO_REPORTS_BUCKET", "sf-reports"),
@@ -89,6 +92,12 @@ class MinIOConfig:
             qdrant_snapshots_bucket=os.environ.get("SF_MINIO_QDRANT_BUCKET", "sf-qdrant-snapshots"),
             data_bucket=os.environ.get("SF_MINIO_DATA_BUCKET", "sf-data"),
         )
+        if cfg.secret_key in _INSECURE_MINIO_SECRETS:
+            log.critical(
+                "MinIO secret_key is unset or matches a known insecure default. "
+                "Set SF_MINIO_SECRET_KEY to a strong value in production."
+            )
+        return cfg
 
 
 # ---------------------------------------------------------------------------
