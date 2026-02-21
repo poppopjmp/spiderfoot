@@ -1,0 +1,223 @@
+# =============================================================================
+# SpiderFoot Active Scanner (Scan Worker)
+# =============================================================================
+# Celery worker dedicated to the "scan" queue.  Extends the base image with
+# system recon tools (nmap, nuclei, testssl.sh, etc.) and Go/C/Python-based
+# active scanning tools compiled from source.
+#
+# Build (requires base image first):
+#   docker build -f docker/Dockerfile.base           -t spiderfoot-base:latest .
+#   docker build -f docker/Dockerfile.active-scanner -t spiderfoot-active-scanner:latest .
+#
+# Tools added beyond the base image:
+#
+#   System tools (apt):
+#     nmap, nbtscan, onesixtyone, whatweb, sslscan, bsdmainutils
+#
+#   Python tools (pip):
+#     dnstwist, snallygaster, trufflehog, wafw00f, arjun, sslyze, linkfinder
+#
+#   Pre-built downloads:
+#     nuclei (+templates), testssl.sh, CMSeeK, retire.js, nikto
+#
+#   Go tools (compiled from source):
+#     httpx, subfinder, gobuster, dnsx, naabu, katana, tlsx, ffuf, amass,
+#     gau, waybackurls, gospider, hakrawler, gowitness, gitleaks, dalfox
+#
+#   C tools (compiled from source):
+#     massdns, masscan
+#
+# =============================================================================
+
+
+# ── Stage 1: Compile Go recon tools ─────────────────────────────────────────
+FROM golang:1.24-bookworm AS go-builder
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpcap-dev git ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV GOBIN=/tools/bin GOTOOLCHAIN=auto
+RUN mkdir -p /tools/bin
+
+# ProjectDiscovery suite
+RUN go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
+RUN go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
+RUN go install -v github.com/projectdiscovery/dnsx/cmd/dnsx@latest
+RUN go install -v github.com/projectdiscovery/naabu/v2/cmd/naabu@latest
+RUN go install -v github.com/projectdiscovery/katana/cmd/katana@latest
+RUN go install -v github.com/projectdiscovery/tlsx/cmd/tlsx@latest
+
+# Brute-forcing / fuzzing
+RUN go install -v github.com/OJ/gobuster/v3@latest
+RUN go install -v github.com/ffuf/ffuf/v2@latest
+
+# Attack surface mapping
+RUN go install -v github.com/owasp-amass/amass/v4/...@master
+
+# URL discovery
+RUN go install -v github.com/lc/gau/v2/cmd/gau@latest
+RUN go install -v github.com/tomnomnom/waybackurls@latest
+
+# Web crawling
+RUN go install -v github.com/jaeles-project/gospider@latest
+RUN go install -v github.com/hakluke/hakrawler@latest
+
+# Screenshotting
+RUN go install -v github.com/sensepost/gowitness@latest
+
+# Secret detection
+RUN go install -v github.com/zricethezav/gitleaks/v8@latest
+
+# XSS scanning
+RUN go install -v github.com/hahwul/dalfox/v2@latest
+
+
+# ── Stage 2: Compile C recon tools ──────────────────────────────────────────
+FROM debian:bookworm-slim AS c-builder
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git make gcc libc6-dev libpcap-dev ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /tools/bin
+
+# massdns
+RUN git clone --depth 1 https://github.com/blechschmidt/massdns.git /build/massdns && \
+    cd /build/massdns && make && cp bin/massdns /tools/bin/massdns
+
+# masscan
+RUN git clone --depth 1 https://github.com/robertdavidgraham/masscan.git /build/masscan && \
+    cd /build/masscan && make -j$(nproc) && cp bin/masscan /tools/bin/masscan
+
+
+# ── Stage 3: Download wordlists ─────────────────────────────────────────────
+FROM debian:bookworm-slim AS wordlists
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    wget ca-certificates && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /tools/wordlists && \
+    wget -q -O /tools/wordlists/common.txt \
+      https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/Web-Content/common.txt && \
+    wget -q -O /tools/wordlists/raft-medium-directories.txt \
+      https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/Web-Content/raft-medium-directories.txt && \
+    wget -q -O /tools/wordlists/subdomains-top1million-5000.txt \
+      https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/DNS/subdomains-top1million-5000.txt && \
+    wget -q -O /tools/wordlists/subdomains-top1million-20000.txt \
+      https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/DNS/subdomains-top1million-20000.txt && \
+    wget -q -O /tools/wordlists/resolvers.txt \
+      https://raw.githubusercontent.com/trickest/resolvers/main/resolvers.txt
+
+
+# ── Stage 4: Download pre-built tools ───────────────────────────────────────
+FROM debian:bookworm-slim AS tool-downloader
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git wget unzip ca-certificates npm \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /tools/bin /tools/nuclei-templates
+
+# Nuclei
+RUN wget -q https://github.com/projectdiscovery/nuclei/releases/download/v3.3.9/nuclei_3.3.9_linux_amd64.zip && \
+    unzip nuclei_3.3.9_linux_amd64.zip -d /tools/bin && \
+    rm nuclei_3.3.9_linux_amd64.zip && chmod +x /tools/bin/nuclei
+
+# Nuclei templates
+RUN git clone --depth 1 https://github.com/projectdiscovery/nuclei-templates.git /tools/nuclei-templates
+
+# testssl.sh
+RUN git clone --depth 1 https://github.com/testssl/testssl.sh.git /tools/testssl.sh
+
+# CMSeeK
+RUN git clone --depth 1 https://github.com/Tuhinshubhra/CMSeeK /tools/CMSeeK && \
+    mkdir -p /tools/CMSeeK/Results
+
+# retire.js
+RUN npm config set prefix /tools && npm install -g retire
+
+# Nikto
+RUN git clone --depth 1 https://github.com/sullo/nikto.git /tools/nikto && \
+    rm -rf /tools/nikto/.git
+
+
+# ── Stage 5: Runtime — extend base image ────────────────────────────────────
+ARG REGISTRY=
+ARG TAG=latest
+FROM ${REGISTRY}spiderfoot-base:${TAG}
+
+LABEL org.opencontainers.image.title="SpiderFoot Active Scanner" \
+      org.opencontainers.image.description="Celery worker for active scanning with full recon toolkit"
+
+USER root
+
+# System recon tools (apt)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    nmap nbtscan onesixtyone whatweb sslscan bsdmainutils \
+    libpcap0.8 libcap2-bin \
+    chromium \
+    perl libnet-ssleay-perl libwhisker2-perl libjson-perl libxml-writer-perl \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Python recon tools (in existing venv)
+RUN /opt/venv/bin/pip install --no-cache-dir \
+    dnstwist snallygaster trufflehog wafw00f \
+    arjun sslyze \
+    git+https://github.com/GerbenJavado/LinkFinder.git
+
+# CMSeeK deps
+COPY --from=tool-downloader /tools/CMSeeK/requirements.txt /tmp/cmseek-reqs.txt
+RUN /opt/venv/bin/pip install --no-cache-dir -r /tmp/cmseek-reqs.txt && rm /tmp/cmseek-reqs.txt
+
+# Copy compiled Go tools
+COPY --from=go-builder /tools/bin/ /tools/bin/
+
+# Copy compiled C tools
+COPY --from=c-builder /tools/bin/ /tools/bin/
+
+# Copy wordlists
+COPY --from=wordlists /tools/wordlists /tools/wordlists
+
+# Copy pre-built tools
+COPY --from=tool-downloader /tools/bin/nuclei  /tools/bin/nuclei
+COPY --from=tool-downloader /tools/nuclei-templates /tools/nuclei-templates
+COPY --from=tool-downloader /tools/testssl.sh  /tools/testssl.sh
+COPY --from=tool-downloader /tools/CMSeeK      /tools/CMSeeK
+COPY --from=tool-downloader /tools/lib          /tools/lib
+COPY --from=tool-downloader /tools/nikto        /tools/nikto
+
+# Nikto symlink
+RUN ln -sf /tools/nikto/program/nikto.pl /usr/local/bin/nikto && \
+    chmod +x /tools/nikto/program/nikto.pl
+
+# Make all tools executable
+RUN chmod +x /tools/bin/*
+
+# Raw-socket capabilities for network scanners
+RUN setcap cap_net_raw,cap_net_admin=eip /usr/bin/nmap           2>/dev/null || true && \
+    setcap cap_net_raw,cap_net_admin=eip /tools/bin/naabu        2>/dev/null || true && \
+    setcap cap_net_raw,cap_net_admin=eip /tools/bin/massdns      2>/dev/null || true && \
+    setcap cap_net_raw,cap_net_admin=eip /tools/bin/masscan      2>/dev/null || true
+
+# Add tools to PATH
+ENV PATH="/tools/bin:$PATH" \
+    SF_SERVICE_ROLE=active-scanner \
+    SF_WORDLISTS_PATH=/tools/wordlists \
+    CELERY_WORKER_CONCURRENCY=2
+
+USER spiderfoot
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD python -m celery -A spiderfoot.celery_app:celery_app inspect ping --timeout 5 || exit 1
+
+# Celery worker — scan queue only
+CMD ["python", "-m", "celery", \
+     "-A", "spiderfoot.celery_app:celery_app", \
+     "worker", \
+     "--loglevel=info", \
+     "--queues=scan", \
+     "--concurrency=2", \
+     "--hostname=active-scanner@%h", \
+     "--without-heartbeat", \
+     "--without-mingle"]

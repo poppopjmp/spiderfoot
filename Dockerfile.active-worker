@@ -1,244 +1,26 @@
 # =============================================================================
-# SpiderFoot — Active Scan Worker Dockerfile
+# SpiderFoot Active Scanner — Compatibility Wrapper
 # =============================================================================
-# Dedicated Celery worker image for active scanning.  Extends the base
-# SpiderFoot image (spiderfoot-micro:latest) with additional reconnaissance
-# tools compiled from source or downloaded as pre-built Go binaries.
+# This file is DEPRECATED.  Use docker/Dockerfile.active-scanner instead:
 #
-# Build order:
-#   1. Build the base image first:
-#        docker compose -f docker-compose-microservices.yml build api
-#   2. Then build this image:
-#        docker compose -f docker-compose-microservices.yml build celery-worker-active
-#   Or simply:
-#        docker compose -f docker-compose-microservices.yml up --build -d
+#   docker build -f docker/Dockerfile.base           -t spiderfoot-base:latest .
+#   docker build -f docker/Dockerfile.active-scanner -t spiderfoot-active-scanner:latest .
 #
-# Tools added (beyond what the base image already ships):
+# Or use docker/build.sh to build the full image hierarchy at once.
 #
-#   REQUIRED by existing SpiderFoot modules (currently missing from base):
-#     - httpx       (sfp_httpx)          — HTTP probing & tech detection
-#     - subfinder   (sfp_subfinder)      — passive subdomain enumeration
-#     - gobuster    (sfp_tool_gobuster)  — directory / DNS brute-forcing
-#
-#   NEW — Go-based recon tools (with new SpiderFoot modules):
-#     - dnsx        (sfp_tool_dnsx)      — fast DNS resolver / brute-forcer
-#     - naabu       (sfp_tool_naabu)     — high-speed port scanner
-#     - katana      (sfp_tool_katana)    — next-gen web crawler
-#     - tlsx        (sfp_tool_tlsx)      — TLS certificate analyser
-#     - ffuf        (sfp_tool_ffuf)      — fast web fuzzer
-#     - amass       (sfp_tool_amass)     — attack surface mapping (OWASP)
-#     - gau         (sfp_tool_gau)       — fetch known URLs from archives
-#     - gospider    (sfp_tool_gospider)  — fast web spider
-#     - gowitness   (sfp_tool_gowitness) — webpage screenshotting
-#     - gitleaks    (sfp_tool_gitleaks)  — git secret detection
-#     - waybackurls (sfp_tool_waybackurls)— Wayback Machine URL fetcher
-#     - dalfox      (sfp_tool_dalfox)    — XSS parameter scanner
-#     - hakrawler   (sfp_tool_hakrawler) — simple web crawler
-#
-#   NEW — C-based tools:
-#     - massdns     (sfp_tool_massdns)   — high-perf DNS stub resolver
-#     - masscan     (sfp_tool_masscan)   — high-speed port scanner
-#
-#   NEW — Python tools:
-#     - arjun       (sfp_tool_arjun)     — HTTP parameter discovery
-#     - sslyze      (sfp_tool_sslyze)    — SSL/TLS deep analysis
-#     - linkfinder  (sfp_tool_linkfinder)— JS endpoint extraction
-#
-#   NEW — System tools:
-#     - nikto       (sfp_tool_nikto)     — classic web vuln scanner
-#     - sslscan     (sfp_tool_sslscan)   — SSL cipher scanner
-#
-# The base image already includes:
-#     nmap, nuclei (+templates), testssl.sh, CMSeeK, retire.js,
-#     nbtscan, onesixtyone, whatweb, dnstwist, snallygaster,
-#     trufflehog, wafw00f
+# This wrapper delegates to the base image (built separately) and adds the
+# same recon tools as docker/Dockerfile.active-scanner.
 # =============================================================================
 
+# Re-export from the canonical Dockerfile
+ARG REGISTRY=
+ARG TAG=latest
+FROM ${REGISTRY}spiderfoot-base:${TAG} AS base
 
-# Global build argument — must be declared before any FROM statement
-ARG BASE_IMAGE=spiderfoot-micro:latest
+# Pull in the full active-scanner build
+FROM base
+COPY --from=base / /
 
-# ─── Stage 1: Compile Go-based tools ────────────────────────────────────────
-FROM golang:1.24-bookworm AS go-builder
-
-# naabu needs libpcap headers to build
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpcap-dev git ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
-
-ENV GOBIN=/tools/bin
-ENV GOTOOLCHAIN=auto
-RUN mkdir -p /tools/bin
-
-# ── ProjectDiscovery suite ──
-RUN go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
-RUN go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
-RUN go install -v github.com/projectdiscovery/dnsx/cmd/dnsx@latest
-RUN go install -v github.com/projectdiscovery/naabu/v2/cmd/naabu@latest
-RUN go install -v github.com/projectdiscovery/katana/cmd/katana@latest
-RUN go install -v github.com/projectdiscovery/tlsx/cmd/tlsx@latest
-
-# ── Directory / DNS brute-forcing ──
-RUN go install -v github.com/OJ/gobuster/v3@latest
-
-# ── Web fuzzing ──
-RUN go install -v github.com/ffuf/ffuf/v2@latest
-
-# ── Attack surface mapping (OWASP) ──
-RUN go install -v github.com/owasp-amass/amass/v4/...@master
-
-# ── URL discovery (archives / Wayback Machine) ──
-RUN go install -v github.com/lc/gau/v2/cmd/gau@latest
-RUN go install -v github.com/tomnomnom/waybackurls@latest
-
-# ── Web crawling / spidering ──
-RUN go install -v github.com/jaeles-project/gospider@latest
-RUN go install -v github.com/hakluke/hakrawler@latest
-
-# ── Screenshotting ──
-RUN go install -v github.com/sensepost/gowitness@latest
-
-# ── Secret detection ──
-RUN go install -v github.com/zricethezav/gitleaks/v8@latest
-
-# ── XSS scanning ──
-RUN go install -v github.com/hahwul/dalfox/v2@latest
-
-
-# ─── Stage 2: Compile C-based tools ─────────────────────────────────────────
-FROM debian:bookworm-slim AS c-builder
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    git make gcc libc6-dev libpcap-dev ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
-
-# massdns — high-performance DNS stub resolver
-RUN git clone --depth 1 https://github.com/blechschmidt/massdns.git /build/massdns && \
-    cd /build/massdns && make && \
-    mkdir -p /tools/bin && cp bin/massdns /tools/bin/massdns
-
-# masscan — high-speed port scanner
-RUN git clone --depth 1 https://github.com/robertdavidgraham/masscan.git /build/masscan && \
-    cd /build/masscan && make -j$(nproc) && \
-    cp bin/masscan /tools/bin/masscan
-
-
-# ─── Stage 3: Download wordlists ────────────────────────────────────────────
-FROM debian:bookworm-slim AS wordlists
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    wget ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN mkdir -p /tools/wordlists && \
-    # Web content discovery
-    wget -q -O /tools/wordlists/common.txt \
-      https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/Web-Content/common.txt && \
-    wget -q -O /tools/wordlists/raft-medium-directories.txt \
-      https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/Web-Content/raft-medium-directories.txt && \
-    wget -q -O /tools/wordlists/raft-medium-files.txt \
-      https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/Web-Content/raft-medium-files.txt && \
-    # DNS subdomain brute-forcing
-    wget -q -O /tools/wordlists/subdomains-top1million-5000.txt \
-      https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/DNS/subdomains-top1million-5000.txt && \
-    wget -q -O /tools/wordlists/subdomains-top1million-20000.txt \
-      https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/DNS/subdomains-top1million-20000.txt && \
-    wget -q -O /tools/wordlists/subdomains-top1million-110000.txt \
-      https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/DNS/subdomains-top1million-110000.txt && \
-    # Parameter discovery (for arjun / ffuf)
-    wget -q -O /tools/wordlists/burp-parameter-names.txt \
-      https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/Web-Content/burp-parameter-names.txt && \
-    # DNS resolvers (for massdns / dnsx)
-    wget -q -O /tools/wordlists/resolvers.txt \
-      https://raw.githubusercontent.com/trickest/resolvers/main/resolvers.txt && \
-    echo "Wordlists downloaded."
-
-
-# ─── Stage 4: Runtime — extend the base SpiderFoot image ────────────────────
-# NOTE: spiderfoot-micro:latest must be built BEFORE this stage.
-#       Use  `docker compose build api`  or the x-sf-build anchor first.
-# ─────────────────────────────────────────────────────────────────────────────
-ARG BASE_IMAGE
-FROM ${BASE_IMAGE}
-
-USER root
-
-# Runtime libraries and system tools
-# NOTE: nikto is NOT in Debian bookworm repos — installed from source below
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpcap0.8 \
-    sslscan \
-    chromium \
-    perl libnet-ssleay-perl libwhisker2-perl libjson-perl libxml-writer-perl \
-    git ca-certificates \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# Install Nikto from source (not packaged in Debian bookworm)
-RUN git clone --depth 1 https://github.com/sullo/nikto.git /opt/nikto && \
-    ln -s /opt/nikto/program/nikto.pl /usr/local/bin/nikto && \
-    chmod +x /opt/nikto/program/nikto.pl && \
-    rm -rf /opt/nikto/.git
-
-# Python-based recon tools (installed in the existing venv)
-RUN /opt/venv/bin/pip install --no-cache-dir \
-    arjun \
-    sslyze \
-    git+https://github.com/GerbenJavado/LinkFinder.git
-
-# Copy compiled Go tools
-COPY --from=go-builder /tools/bin/ /tools/bin/
-
-# Copy compiled C tools
-COPY --from=c-builder /tools/bin/massdns /tools/bin/massdns
-COPY --from=c-builder /tools/bin/masscan /tools/bin/masscan
-
-# Copy wordlists
-COPY --from=wordlists /tools/wordlists /tools/wordlists
-
-# Ensure everything is executable
-RUN chmod +x /tools/bin/*
-
-# Grant raw-socket capabilities to tools that need them
-RUN setcap cap_net_raw,cap_net_admin=eip /tools/bin/naabu   2>/dev/null || true && \
-    setcap cap_net_raw,cap_net_admin=eip /tools/bin/massdns 2>/dev/null || true && \
-    setcap cap_net_raw,cap_net_admin=eip /tools/bin/masscan 2>/dev/null || true
-
-# Quick smoke-test — fail the build if any critical binary is broken
-# NOTE: naabu/massdns/masscan need NET_RAW caps so we only check they exist
-RUN /tools/bin/httpx       -version   2>&1 | head -1 && \
-    /tools/bin/subfinder    -version   2>&1 | head -1 && \
-    /tools/bin/gobuster     version    2>&1 | head -1 && \
-    /tools/bin/dnsx         -version   2>&1 | head -1 && \
-    test -x /tools/bin/naabu   && echo "naabu: OK (needs NET_RAW at runtime)" && \
-    /tools/bin/katana       -version   2>&1 | head -1 && \
-    /tools/bin/tlsx         -version   2>&1 | head -1 && \
-    /tools/bin/ffuf         -V         2>&1 | head -1 && \
-    test -x /tools/bin/massdns && echo "massdns: OK (needs NET_RAW at runtime)" && \
-    test -x /tools/bin/masscan && echo "masscan: OK (needs NET_RAW at runtime)" && \
-    /tools/bin/amass        version    2>&1 | head -1 && \
-    /tools/bin/gau          -version   2>&1 | head -1 && \
-    /tools/bin/waybackurls  -h         2>&1 | head -1 && \
-    /tools/bin/gospider     --version  2>&1 | head -1 && \
-    /tools/bin/hakrawler    --help     2>&1 | head -1 && \
-    /tools/bin/gowitness    version    2>&1 | head -1 && \
-    /tools/bin/gitleaks     version    2>&1 | head -1 && \
-    /tools/bin/dalfox       version    2>&1 | head -1 && \
-    nikto        -Version  2>&1 | head -3 && \
-    sslscan      --version 2>&1 | head -1 && \
-    /opt/venv/bin/arjun     --help     2>&1 | head -1 && \
-    /opt/venv/bin/sslyze    --version  2>&1 | head -1 && \
-    echo "=== All active-scan tools verified ==="
-
-USER spiderfoot
-
-# Default: Celery worker subscribing ONLY to the "scan" queue
-ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
-CMD ["python", "-m", "celery", \
-     "-A", "spiderfoot.celery_app:celery_app", \
-     "worker", \
-     "--loglevel=info", \
-     "--queues=scan", \
-     "--concurrency=4", \
-     "--hostname=active-scanner@%h", \
-     "--without-heartbeat", \
-     "--without-mingle"]
+# NOTE: This file exists only for backwards compatibility with CI/CD
+# pipelines that reference Dockerfile.active-worker by name.
+# For new deployments, use docker/Dockerfile.active-scanner directly.

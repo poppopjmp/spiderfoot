@@ -1,46 +1,52 @@
 #!/bin/bash
 # SpiderFoot Docker startup script — Microservice mode (PostgreSQL only)
+#
+# Service roles (set via SF_SERVICE_ROLE env var):
+#   api              → FastAPI REST API
+#   scanner          → Celery worker (passive queues)
+#   active-scanner   → Celery worker (scan queue + recon tools)
+#   celery-beat      → Celery periodic scheduler
+#   agents           → AI analysis agents
+#
+# If SF_SERVICE_ROLE is not set, auto-detects from the command arguments.
 
 set -e
 
-# Ensure runtime directories exist
-mkdir -p /home/spiderfoot/.spiderfoot/logs
-mkdir -p /home/spiderfoot/logs
-mkdir -p /home/spiderfoot/cache
-mkdir -p /home/spiderfoot/data
+# Ensure runtime directories exist and are writable
+for dir in logs cache data .spiderfoot/logs; do
+    mkdir -p "/home/spiderfoot/$dir"
+done
 
-# Ensure proper permissions
-if [ -d "/home/spiderfoot/logs" ]; then
-    rm -rf /home/spiderfoot/logs/*
+# Clean stale logs on start
+rm -rf /home/spiderfoot/logs/*
+
+# Fix ownership (only if running as root — skipped in rootless containers)
+if [ "$(id -u)" = "0" ]; then
+    chown -R spiderfoot:spiderfoot /home/spiderfoot/.spiderfoot \
+        /home/spiderfoot/logs /home/spiderfoot/cache /home/spiderfoot/data
+    chmod -R 755 /home/spiderfoot/logs
 fi
 
-chown -R spiderfoot:spiderfoot /home/spiderfoot/.spiderfoot
-chown -R spiderfoot:spiderfoot /home/spiderfoot/logs
-chown -R spiderfoot:spiderfoot /home/spiderfoot/cache
-chown -R spiderfoot:spiderfoot /home/spiderfoot/data
-chmod -R 755 /home/spiderfoot/logs
-
-echo "Starting SpiderFoot..."
-
-# ── Microservice deployment support ──
-# Auto-detect service role from SF_SERVICE_ROLE or command arguments
-if [ -z "${SF_SERVICE_ROLE}" ]; then
-    case "$1" in
-        *sfapi*|*api*)     export SF_SERVICE_ROLE="api" ;;
-        *scanner*)         export SF_SERVICE_ROLE="scanner" ;;
-        *)                 export SF_SERVICE_ROLE="api" ;;
+# Auto-detect service role from command arguments if not explicitly set
+if [ -z "${SF_SERVICE_ROLE:-}" ]; then
+    case "$*" in
+        *sfapi*|*"service api"*|*"--service api"*)  export SF_SERVICE_ROLE="api" ;;
+        *"--queues=scan"*)                           export SF_SERVICE_ROLE="active-scanner" ;;
+        *celery*worker*)                             export SF_SERVICE_ROLE="scanner" ;;
+        *celery*beat*)                               export SF_SERVICE_ROLE="celery-beat" ;;
+        *celery*flower*)                             export SF_SERVICE_ROLE="flower" ;;
+        *agents*)                                    export SF_SERVICE_ROLE="agents" ;;
+        *)                                           export SF_SERVICE_ROLE="api" ;;
     esac
 fi
 
-echo "Service role: ${SF_SERVICE_ROLE}"
-echo "Deployment mode: ${SF_DEPLOYMENT_MODE:-microservice}"
+echo "SpiderFoot starting — role=${SF_SERVICE_ROLE} mode=${SF_DEPLOYMENT_MODE:-microservice}"
 
 # Validate PostgreSQL connectivity
-if [ -n "${SF_POSTGRES_DSN}" ]; then
+if [ -n "${SF_POSTGRES_DSN:-}" ]; then
     echo "PostgreSQL DSN configured"
 else
     echo "WARNING: SF_POSTGRES_DSN not set — database operations will fail"
 fi
 
-# Execute the original command
 exec "$@"

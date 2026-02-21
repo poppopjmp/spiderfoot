@@ -81,14 +81,12 @@ def start_api(host: str, port: int, log_level: str) -> subprocess.Popen:
     """Start the FastAPI REST API server as a subprocess."""
     env = os.environ.copy()
     env.update({
-        "SF_SERVICE": "api",
+        "SF_SERVICE_ROLE": "api",
         "SF_API_HOST": host,
         "SF_API_PORT": str(port),
         "SF_API_WORKERS": "1",
         "SF_LOG_LEVEL": log_level,
-        # Use local PostgreSQL database by default
         "SF_DEPLOYMENT_MODE": "microservice",
-        "SF_SERVICE_ROLE": "api",
     })
 
     cmd = [
@@ -114,7 +112,7 @@ def start_webui(host: str, port: int, api_url: str, log_level: str) -> subproces
     """Start the CherryPy WebUI server as a subprocess in API proxy mode."""
     env = os.environ.copy()
     env.update({
-        "SF_SERVICE": "webui",
+        "SF_SERVICE_ROLE": "webui",
         "SF_WEB_HOST": host,
         "SF_WEB_PORT": str(port),
         "SF_LOG_LEVEL": log_level,
@@ -123,7 +121,6 @@ def start_webui(host: str, port: int, api_url: str, log_level: str) -> subproces
         "SF_WEBUI_API_URL": api_url,
         "SF_WEBUI_API_KEY": os.environ.get("SF_API_KEY", ""),
         "SF_DEPLOYMENT_MODE": "microservice",
-        "SF_SERVICE_ROLE": "webui",
     })
 
     cmd = [

@@ -42,13 +42,12 @@ try {
     if (-not $WebUiOnly) {
         Write-Host "  ▶ Starting API server on ${Host}:${ApiPort}" -ForegroundColor Blue
 
-        $env:SF_SERVICE = "api"
+        $env:SF_SERVICE_ROLE = "api"
         $env:SF_API_HOST = $Host
         $env:SF_API_PORT = $ApiPort
         $env:SF_API_WORKERS = "1"
         $env:SF_LOG_LEVEL = $LogLevel
         $env:SF_DEPLOYMENT_MODE = "microservice"
-        $env:SF_SERVICE_ROLE = "api"
 
         $ApiProc = Start-Process -FilePath python -ArgumentList @(
             "-m", "spiderfoot.service_runner",
@@ -88,14 +87,13 @@ try {
     if (-not $ApiOnly) {
         Write-Host "  ▶ Starting WebUI on ${Host}:${WebUiPort} (API proxy → $ApiUrl)" -ForegroundColor Blue
 
-        $env:SF_SERVICE = "webui"
+        $env:SF_SERVICE_ROLE = "webui"
         $env:SF_WEB_HOST = $Host
         $env:SF_WEB_PORT = $WebUiPort
         $env:SF_LOG_LEVEL = $LogLevel
         $env:SF_WEBUI_API_MODE = "true"
         $env:SF_WEBUI_API_URL = $ApiUrl
         $env:SF_DEPLOYMENT_MODE = "microservice"
-        $env:SF_SERVICE_ROLE = "webui"
 
         $WebUiProc = Start-Process -FilePath python -ArgumentList @(
             "-m", "spiderfoot.service_runner",
@@ -149,7 +147,7 @@ finally {
     Write-Host "  ✓ All services stopped." -ForegroundColor Green
 
     # Clean up env vars
-    Remove-Item Env:\SF_SERVICE -ErrorAction SilentlyContinue
+    Remove-Item Env:\SF_SERVICE_ROLE -ErrorAction SilentlyContinue
     Remove-Item Env:\SF_WEBUI_API_MODE -ErrorAction SilentlyContinue
     Remove-Item Env:\SF_WEBUI_API_URL -ErrorAction SilentlyContinue
     Remove-Item Env:\SF_DEPLOYMENT_MODE -ErrorAction SilentlyContinue

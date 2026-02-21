@@ -20,7 +20,7 @@ Run individual SpiderFoot services for microservice deployment:
     python -m spiderfoot.service_runner --service all  # monolith mode
 
 Environment variables:
-    SF_SERVICE           Service to run (scanner|api|all)
+    SF_SERVICE_ROLE      Service to run (scanner|api|all)
     SF_REDIS_URL         Redis connection URL
     SF_POSTGRES_DSN      PostgreSQL DSN
     SF_VECTOR_ENDPOINT   Vector.dev HTTP source endpoint
@@ -258,7 +258,7 @@ def main() -> None:
     parser.add_argument(
         "--service", "-s",
         choices=list(_SERVICE_MAP.keys()),
-        default=os.environ.get("SF_SERVICE", "all"),
+        default=os.environ.get("SF_SERVICE_ROLE", os.environ.get("SF_SERVICE", "all")),
         help="Service to run (default: all)",
     )
     parser.add_argument(

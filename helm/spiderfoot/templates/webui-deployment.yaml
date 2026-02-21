@@ -36,7 +36,7 @@ spec:
               protocol: TCP
           env:
             {{- include "spiderfoot.env" . | nindent 12 }}
-            - name: SF_SERVICE
+            - name: SF_SERVICE_ROLE
               value: "webui"
             {{- with .Values.webui.env }}
             {{- toYaml . | nindent 12 }}

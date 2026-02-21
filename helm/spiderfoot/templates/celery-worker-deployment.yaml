@@ -40,7 +40,7 @@ spec:
             - {{ .Values.celery.worker.queues }}
           env:
             {{- include "spiderfoot.env" . | nindent 12 }}
-            - name: SF_SERVICE
+            - name: SF_SERVICE_ROLE
               value: "celery-worker"
             - name: CELERY_BROKER_URL
               value: "redis://{{ include "spiderfoot.redis.host" . }}:6379/0"

@@ -1,29 +1,32 @@
+# =============================================================================
+# SpiderFoot Scanner (Passive Worker)
+# =============================================================================
+# Celery worker for non-scan queues: default, report, export, agents, monitor.
+# Does NOT include active recon tools — those are in the active-scanner image.
 #
-# SpiderFoot Scanner Service
-# Runs scan execution via ScanScheduler + WorkerPool
-#
-# In microservice mode, the scanner accesses data through the API
-# service's DataService interface (HTTP or gRPC) instead of direct DB.
-#
-ARG BASE_IMAGE=spiderfoot-base:latest
-FROM ${BASE_IMAGE}
+# Build (requires base image first):
+#   docker build -f docker/Dockerfile.base    -t spiderfoot-base:latest .
+#   docker build -f docker/Dockerfile.scanner -t spiderfoot-scanner:latest .
+# =============================================================================
+ARG REGISTRY=
+ARG TAG=latest
+FROM ${REGISTRY}spiderfoot-base:${TAG}
 
-LABEL service="scanner"
-LABEL description="SpiderFoot scan execution engine"
+LABEL org.opencontainers.image.title="SpiderFoot Scanner" \
+      org.opencontainers.image.description="Celery worker for passive tasks (reports, exports, agents, monitoring)"
 
-ENV SF_SERVICE=scanner \
-    SF_SCANNER_MAX_SCANS=3 \
-    SF_SCANNER_POLL_INTERVAL=5.0 \
-    SF_WORKER_MAX=8 \
-    SF_WORKER_STRATEGY=thread \
-    # DataService backend — use HTTP to access data through API service
-    SF_DATASERVICE_BACKEND=http \
-    SF_DATASERVICE_API_URL=http://api:8001/api \
-    SF_DATASERVICE_API_KEY=""
+ENV SF_SERVICE_ROLE=scanner \
+    CELERY_WORKER_CONCURRENCY=4
 
-HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
-    CMD curl -f http://localhost:5003/health || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
+    CMD python -m celery -A spiderfoot.celery_app:celery_app inspect ping --timeout 5 || exit 1
 
-EXPOSE 5003
-
-CMD ["python", "-m", "spiderfoot.service_runner", "--service", "scanner", "--port", "5003"]
+CMD ["python", "-m", "celery", \
+     "-A", "spiderfoot.celery_app:celery_app", \
+     "worker", \
+     "--loglevel=info", \
+     "--queues=default,report,export,agents,monitor", \
+     "--concurrency=4", \
+     "--hostname=scanner@%h", \
+     "--without-heartbeat", \
+     "--without-mingle"]

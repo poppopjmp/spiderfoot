@@ -1,24 +1,22 @@
+# =============================================================================
+# SpiderFoot Base Image
+# =============================================================================
+# Shared foundation for api, scanner, and active-scanner containers.
+# Contains: Python 3.11, all pip deps, SpiderFoot library + modules.
 #
-# SpiderFoot Microservices - Base Image
-# Shared base for all SpiderFoot service containers
-#
+# Build:
+#   docker build -f docker/Dockerfile.base -t spiderfoot-base:latest .
+# =============================================================================
 
-FROM python:3.11-slim-bullseye as builder
+# ── Stage 1: Compile Python deps ────────────────────────────────────────────
+FROM python:3.11-slim-bookworm AS builder
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    build-essential \
-    libxml2-dev \
-    libxslt-dev \
-    libjpeg-dev \
-    zlib1g-dev \
-    libffi-dev \
-    libssl-dev \
-    python3-dev \
+    gcc build-essential libxml2-dev libxslt-dev libjpeg-dev \
+    zlib1g-dev libffi-dev libssl-dev python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /build
-
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
@@ -26,35 +24,59 @@ COPY requirements.txt ./
 RUN pip install --no-cache-dir -U pip==25.0.1 && \
     pip install --no-cache-dir -r requirements.txt
 
-# Runtime stage
-FROM python:3.11-slim-bullseye
+# ── Stage 2: Runtime base ───────────────────────────────────────────────────
+FROM python:3.11-slim-bookworm
 
+LABEL maintainer="SpiderFoot <support@spiderfoot.net>" \
+      org.opencontainers.image.title="SpiderFoot Base" \
+      org.opencontainers.image.description="Shared base for SpiderFoot microservices" \
+      org.opencontainers.image.source="https://github.com/poppopjmp/spiderfoot"
+
+# Runtime-only system libraries
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libxml2 \
-    libxslt1.1 \
-    libjpeg62-turbo \
-    zlib1g \
-    dnsutils \
-    ca-certificates \
-    curl \
+    libxml2 libxslt1.1 libjpeg62-turbo zlib1g \
+    dnsutils ca-certificates curl \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# Copy compiled venv from builder
 COPY --from=builder /opt/venv /opt/venv
 
 ENV PATH="/opt/venv/bin:$PATH" \
     VIRTUAL_ENV="/opt/venv" \
-    PYTHONPATH="/app" \
+    PYTHONPATH="/home/spiderfoot" \
     PYTHONUNBUFFERED=1
 
+# Create non-root user
 RUN addgroup --system spiderfoot && \
-    adduser --system --ingroup spiderfoot --home /app \
+    adduser --system --ingroup spiderfoot --home /home/spiderfoot \
             --shell /usr/sbin/nologin --gecos "SpiderFoot" spiderfoot
 
-WORKDIR /app
+WORKDIR /home/spiderfoot
 
-COPY --chown=spiderfoot:spiderfoot . .
+# Copy application source
+COPY --chown=spiderfoot:spiderfoot spiderfoot/  spiderfoot/
+COPY --chown=spiderfoot:spiderfoot modules/     modules/
+COPY --chown=spiderfoot:spiderfoot correlations/ correlations/
+COPY --chown=spiderfoot:spiderfoot sfapi.py     sfapi.py
+COPY --chown=spiderfoot:spiderfoot VERSION      VERSION
+COPY --chown=spiderfoot:spiderfoot setup.py     setup.py
+COPY --chown=spiderfoot:spiderfoot setup.cfg    setup.cfg
+COPY --chown=spiderfoot:spiderfoot config/      config/
 
-RUN mkdir -p /app/data /app/logs /app/cache && \
-    chown -R spiderfoot:spiderfoot /app
+# Copy entrypoint
+COPY --chown=root:root docker-entrypoint.sh /usr/local/bin/
+RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh && \
+    chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# Create runtime directories
+RUN mkdir -p /home/spiderfoot/data /home/spiderfoot/logs \
+             /home/spiderfoot/cache /home/spiderfoot/.spiderfoot/logs && \
+    chown -R spiderfoot:spiderfoot /home/spiderfoot
+
+# Ensure package init files
+RUN touch /home/spiderfoot/__init__.py \
+          /home/spiderfoot/modules/__init__.py
 
 USER spiderfoot
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]

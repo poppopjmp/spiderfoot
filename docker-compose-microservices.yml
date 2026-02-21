@@ -51,8 +51,8 @@
 #   Flower           -> https://localhost/flower/        (basic auth)
 #   MinIO Console    -> https://localhost/minio/
 #
-# All SpiderFoot services share the same Docker image built from /Dockerfile.
-# The service role is selected via SF_SERVICE env var + command override.
+# SpiderFoot images are built from docker/Dockerfile.{base,api,scanner,active-scanner}.
+# The service role is selected via SF_SERVICE_ROLE env var.
 #
 # Document analysis is handled by the sfp_document_analyzer plugin which
 # communicates with the Tika container — no separate enrichment/user-input
@@ -82,18 +82,12 @@
 
 name: spiderfoot
 
-# Centralized image naming for all services (built from the same Dockerfile) 
-# # Shared build definition (anchored for YAML reuse)
-# x-sf-build: &sf-build
-#   build:
-#     context: .
-#     dockerfile: Dockerfile
-
-# # Active scan worker build — extends the base image with recon tools
-# x-sf-active-build: &sf-active-build
-#   build:
-#     context: .
-#     dockerfile: Dockerfile.active-worker
+# Shared environment block for SpiderFoot Python services
+x-sf-common-env: &sf-common-env
+  SF_REDIS_URL: redis://redis:6379/0
+  SF_POSTGRES_DSN: postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-spiderfoot}
+  SF_LOG_LEVEL: ${SF_LOG_LEVEL:-INFO}
+  SF_DEPLOYMENT_MODE: microservice
 
 networks:
   sf-frontend:
@@ -249,9 +243,9 @@ services:
   # ---------------------------------------------------------------------------
 
   api:
-    # Build from the same Dockerfile but with a different target stage for the active scan worker (includes recon tools)
-    # <<: *sf-build
-    image: ghcr.io/poppopjmp/spiderfoot-api:latest
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
     container_name: sf-api
     restart: unless-stopped
     security_opt:
@@ -276,7 +270,6 @@ services:
       - "traefik.http.routers.api-ws.tls=true"
       - "traefik.http.services.api-ws.loadbalancer.server.port=8001"
     environment:
-      SF_SERVICE: api
       SF_SERVICE_ROLE: api
       SF_DEPLOYMENT_MODE: microservice
       SF_EXTERNAL_URL: "${SF_EXTERNAL_URL:-https://localhost}"
@@ -368,10 +361,9 @@ services:
   # ---------------------------------------------------------------------------
 
   frontend:
-    # build:
-    #   context: ./frontend
-    #   dockerfile: Dockerfile
-    image: ghcr.io/poppopjmp/spiderfoot-frontend:latest
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
     container_name: sf-frontend-ui
     restart: unless-stopped
     security_opt:
@@ -797,8 +789,9 @@ services:
   # ---------------------------------------------------------------------------
 
   agents:
-    <<: *sf-build
-    image: ghcr.io/poppopjmp/spiderfoot-base:latest
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.base
     container_name: sf-agents
     restart: unless-stopped
     security_opt:
@@ -819,7 +812,7 @@ services:
       - "traefik.http.routers.agents.middlewares=agents-strip,rate-limit-api@file,security-headers@file,body-limit@file"
       - "traefik.http.services.agents.loadbalancer.server.port=8100"
     environment:
-      SF_SERVICE: agents
+      SF_SERVICE_ROLE: agents
       SF_AGENTS_HOST: "0.0.0.0"
       SF_AGENTS_PORT: "8100"
       SF_AGENTS_WORKERS: ${SF_AGENTS_WORKERS:-1}
@@ -885,8 +878,9 @@ services:
   # ---------------------------------------------------------------------------
 
   celery-worker:
-    <<: *sf-build
-    image: ghcr.io/poppopjmp/spiderfoot-base:latest
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.scanner
     container_name: sf-celery-worker
     restart: unless-stopped
     security_opt:
@@ -898,7 +892,7 @@ services:
       - sf-backend
       - sf-frontend
     environment:
-      SF_SERVICE: celery-worker
+      SF_SERVICE_ROLE: scanner
       SF_REDIS_URL: redis://redis:6379/0
       SF_POSTGRES_DSN: postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-spiderfoot}
       SF_LOG_LEVEL: ${SF_LOG_LEVEL:-INFO}
@@ -982,8 +976,9 @@ services:
   # ---------------------------------------------------------------------------
 
   celery-worker-active:
-    # <<: *sf-active-build
-    image: ghcr.io/poppopjmp/spiderfoot-active-worker:latest
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.active-scanner
     container_name: sf-celery-worker-active
     restart: unless-stopped
     networks:
@@ -999,7 +994,7 @@ services:
       - /tmp:size=512M
       - /var/tmp:size=256M
     environment:
-      SF_SERVICE: celery-worker
+      SF_SERVICE_ROLE: active-scanner
       SF_REDIS_URL: redis://redis:6379/0
       SF_POSTGRES_DSN: postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-spiderfoot}
       SF_LOG_LEVEL: ${SF_LOG_LEVEL:-INFO}
@@ -1080,8 +1075,9 @@ services:
   # ---------------------------------------------------------------------------
 
   celery-beat:
-    <<: *sf-build
-    image: ghcr.io/poppopjmp/spiderfoot-base:latest
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.base
     container_name: sf-celery-beat
     restart: unless-stopped
     security_opt:
@@ -1092,7 +1088,7 @@ services:
     networks:
       - sf-backend
     environment:
-      SF_SERVICE: celery-beat
+      SF_SERVICE_ROLE: celery-beat
       SF_REDIS_URL: redis://redis:6379/0
       SF_POSTGRES_DSN: postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-spiderfoot}
       SF_LOG_LEVEL: ${SF_LOG_LEVEL:-INFO}
@@ -1125,8 +1121,9 @@ services:
   # ---------------------------------------------------------------------------
 
   flower:
-    <<: *sf-build
-    image: ghcr.io/poppopjmp/spiderfoot-base:latest
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.base
     container_name: sf-flower
     restart: unless-stopped
     security_opt:

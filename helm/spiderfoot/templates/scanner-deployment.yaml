@@ -32,7 +32,7 @@ spec:
           command: ["python", "-m", "spiderfoot.service_runner", "--service", "scanner"]
           env:
             {{- include "spiderfoot.env" . | nindent 12 }}
-            - name: SF_SERVICE
+            - name: SF_SERVICE_ROLE
               value: "scanner"
             {{- with .Values.scanner.env }}
             {{- toYaml . | nindent 12 }}

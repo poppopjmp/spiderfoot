@@ -1,21 +1,27 @@
-#
+# =============================================================================
 # SpiderFoot API Service
-# Runs the FastAPI REST API
+# =============================================================================
+# FastAPI REST API server.  Extends the shared base image.
 #
-ARG BASE_IMAGE=spiderfoot-base:latest
-FROM ${BASE_IMAGE}
+# Build (requires base image first):
+#   docker build -f docker/Dockerfile.base -t spiderfoot-base:latest .
+#   docker build -f docker/Dockerfile.api  -t spiderfoot-api:latest .
+# =============================================================================
+ARG REGISTRY=
+ARG TAG=latest
+FROM ${REGISTRY}spiderfoot-base:${TAG}
 
-LABEL service="api"
-LABEL description="SpiderFoot REST API service"
+LABEL org.opencontainers.image.title="SpiderFoot API" \
+      org.opencontainers.image.description="SpiderFoot REST API (FastAPI/Uvicorn)"
 
-ENV SF_SERVICE=api \
+ENV SF_SERVICE_ROLE=api \
     SF_API_HOST=0.0.0.0 \
     SF_API_PORT=8001 \
     SF_API_WORKERS=4
 
-HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
-    CMD curl -f http://localhost:8001/healthz || exit 1
-
 EXPOSE 8001
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')" || exit 1
 
 CMD ["python", "-m", "spiderfoot.service_runner", "--service", "api", "--port", "8001"]
