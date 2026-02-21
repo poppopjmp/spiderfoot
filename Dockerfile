@@ -33,7 +33,7 @@ RUN pip install --no-cache-dir -U pip==25.0.1 && \
 # ── Stage 2: Runtime ────────────────────────────────────────────────────────
 FROM python:3.11-slim-bookworm
 
-LABEL maintainer="SpiderFoot <support@spiderfoot.net>" \
+LABEL maintainer="Van1sh  <van1sh@van1shland.io>" \
       org.opencontainers.image.title="SpiderFoot" \
       org.opencontainers.image.description="OSINT automation platform — API service" \
       org.opencontainers.image.source="https://github.com/poppopjmp/spiderfoot" \

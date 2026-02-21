@@ -27,7 +27,7 @@ RUN pip install --no-cache-dir -U pip==25.0.1 && \
 # ── Stage 2: Runtime base ───────────────────────────────────────────────────
 FROM python:3.11-slim-bookworm
 
-LABEL maintainer="SpiderFoot <support@spiderfoot.net>" \
+LABEL maintainer="Van1sh  <van1sh@van1shland.io>" \
       org.opencontainers.image.title="SpiderFoot Base" \
       org.opencontainers.image.description="Shared base for SpiderFoot microservices" \
       org.opencontainers.image.source="https://github.com/poppopjmp/spiderfoot"
