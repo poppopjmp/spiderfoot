@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, Link } from 'react-router-dom';
 import { lazy, Suspense, useEffect } from 'react';
 import Layout from './components/Layout';
 import { useAuthStore } from './lib/auth';
@@ -134,12 +134,12 @@ export default function App() {
           <div className="flex flex-col items-center justify-center h-64 text-center">
             <p className="text-6xl font-bold text-dark-600 mb-4">404</p>
             <p className="text-lg text-dark-400 mb-6">Page not found</p>
-            <a
-              href="/"
+            <Link
+              to="/"
               className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-spider-600 text-white hover:bg-spider-500 transition-colors"
             >
               Back to Dashboard
-            </a>
+            </Link>
           </div>
         } />
       </Route>

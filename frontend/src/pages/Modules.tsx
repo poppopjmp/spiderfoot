@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { dataApi, type Module } from '../lib/api';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import {
   Cpu, Lock, Unlock, ToggleLeft, ToggleRight,
   ChevronDown, ChevronRight, Shield,
@@ -14,6 +15,7 @@ import {
 type FilterKey = 'all' | 'enabled' | 'disabled' | 'api_key';
 
 export default function ModulesPage() {
+  useDocumentTitle('Modules');
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<FilterKey>('all');

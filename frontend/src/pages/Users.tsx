@@ -6,6 +6,7 @@
  */
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import {
   Users as UsersIcon,
   Plus,
@@ -71,6 +72,7 @@ function formatDate(ts: number): string {
 // ── Component ────────────────────────────────────────────
 
 export default function UsersPage() {
+  useDocumentTitle('Users');
   const queryClient = useQueryClient();
   const { user: currentUser, hasPermission } = useAuthStore();
 

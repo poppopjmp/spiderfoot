@@ -1,5 +1,6 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { aiConfigApi, agentsApi } from '../lib/api';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import {
   Bot, Cpu, Sparkles, Zap, Loader2, RefreshCw,
   Shield, FileSearch, AlertTriangle, Clock, ChevronDown, ChevronUp,
@@ -85,6 +86,7 @@ const AGENT_META: Record<string, { icon: typeof Bot; label: string; color: strin
 /* ── Component ────────────────────────────────────────── */
 
 export default function AgentsPage() {
+  useDocumentTitle('Agents');
   const [target, setTarget] = useState('');
   const [targetType, setTargetType] = useState('domain');
   const [objective, setObjective] = useState('recon');

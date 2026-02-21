@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { dataApi, Module } from '../lib/api';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { Search, Cpu, Tag, ChevronRight, ChevronDown, BookOpen, Layers, Shield, ExternalLink } from 'lucide-react';
 
 export default function DocumentationPage() {
+  useDocumentTitle('Documentation');
   const [search, setSearch] = useState('');
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
   const [activeTab, setActiveTab] = useState<'modules' | 'events' | 'guides'>('modules');

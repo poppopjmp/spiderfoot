@@ -7,6 +7,7 @@
  */
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import {
   Key,
   Plus,
@@ -91,6 +92,7 @@ function expiresLabel(ts: number): string {
 // ── Component ────────────────────────────────────────────
 
 export default function ApiKeysPage() {
+  useDocumentTitle('API Keys');
   const { user: currentUser, hasPermission } = useAuthStore();
   const isAdmin = hasPermission('user:read');
 

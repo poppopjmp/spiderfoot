@@ -168,6 +168,8 @@ function GraphTab({ scanId }: { scanId: string }) {
         ) : nodes.length > 0 ? (
           <canvas
             ref={canvasRef}
+            role="img"
+            aria-label="Scan results relationship graph"
             className="w-full h-[500px] cursor-move"
             style={{ background: '#0f172a' }}
           />

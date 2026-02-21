@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { workspaceApi, scanApi, agentsApi, formatEpoch, type Workspace, type WorkspaceTarget, type Scan, type ScanCorrelation } from '../lib/api';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import MarkdownRenderer from '../components/MarkdownRenderer';
 import { Briefcase, Plus, Trash2, Target, Copy, CheckCircle2, FolderOpen, Clock, Edit2, Radar, Link2, Unlink, Brain, FileText, Sparkles, Edit3, Save, Loader2, AlertTriangle, BarChart3, Shield, MapPin } from 'lucide-react';
 import { useState, useRef, useEffect, useCallback } from 'react';
@@ -44,6 +45,7 @@ function detectTargetType(target: string): string {
 }
 
 export default function WorkspacesPage() {
+  useDocumentTitle('Workspaces');
   const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
   const [showEdit, setShowEdit] = useState(false);

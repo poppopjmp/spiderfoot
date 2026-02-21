@@ -914,7 +914,7 @@ The UI applies **emotional design principles** for a richer developer experience
 
 ## Frontend Testing
 
-The React frontend includes **247 tests** across 13 test files, powered by Vitest 3 and Testing Library:
+The React frontend includes **270 tests** across 25 test files, powered by Vitest 3 and Testing Library:
 
 | Suite | Tests | Coverage |
 |-------|-------|----------|
@@ -994,7 +994,7 @@ frontend/                 # React SPA (TypeScript + Vite + Tailwind)
 ├── src/pages/            # 14 pages (Dashboard, Scans, ScanDetail, Schedules, ...)
 ├── src/hooks/            # Custom hooks (useScanProgress SSE)
 ├── src/lib/              # API client, auth, notifications store
-├── src/__tests__/        # 247 tests — Vitest + Testing Library
+├── src/__tests__/        # 270 tests — Vitest + Testing Library
 └── vite.config.ts        # Build config
 infra/                    # Infrastructure configs
 ├── grafana/              # Dashboards + datasource provisioning
@@ -1016,7 +1016,7 @@ helm/                     # Kubernetes Helm chart
 pip install -r requirements.txt
 pytest --tb=short -q
 
-# Frontend tests (247 tests, 13 files)
+# Frontend tests (270 tests, 25 files)
 cd frontend && npx vitest run
 
 # Go CLI tests

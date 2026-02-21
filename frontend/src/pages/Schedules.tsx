@@ -6,6 +6,7 @@
  */
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import {
   scheduleApi, formatEpoch,
   type Schedule, type ScheduleCreate,
@@ -21,6 +22,7 @@ import {
 } from '../components/ui';
 
 export default function SchedulesPage() {
+  useDocumentTitle('Schedules');
   const queryClient = useQueryClient();
   const [toast, setToast] = useState<{ type: ToastType; message: string } | null>(null);
   const [creating, setCreating] = useState(false);

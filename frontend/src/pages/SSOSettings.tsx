@@ -7,6 +7,7 @@
  */
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import {
   Shield,
   Plus,
@@ -105,6 +106,7 @@ const KEYCLOAK_DEFAULTS = {
 // ── Component ────────────────────────────────────────────
 
 export default function SSOSettingsPage() {
+  useDocumentTitle('SSO Settings');
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
 

@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import {
   dataApi, scanApi, type Module, type ScanCreateRequest, type ScanProfile,
 } from '../lib/api';
@@ -31,6 +32,7 @@ const QUICK_SCAN_MODULES = [
 ];
 
 export default function NewScanPage() {
+  useDocumentTitle('New Scan');
   const navigate = useNavigate();
   const [tab, setTab] = useState<TabKey>('usecase');
   const [target, setTarget] = useState('');
