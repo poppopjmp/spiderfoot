@@ -7,6 +7,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	"github.com/spiderfoot/spiderfoot-cli/internal/client"
 )
 
 var version = "6.0.0"
@@ -36,6 +38,9 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initConfig)
+
+	// Propagate build version to HTTP client User-Agent header.
+	client.Version = version
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default $HOME/.spiderfoot.yaml)")
 	rootCmd.PersistentFlags().String("server", defaultAddr, "SpiderFoot API server URL")

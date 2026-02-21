@@ -12,7 +12,10 @@ from __future__ import annotations
 from spiderfoot.data_service.base import DataService, DataServiceConfig, DataServiceBackend
 from spiderfoot.data_service.local import LocalDataService
 from spiderfoot.data_service.http_client import HttpDataService
-from spiderfoot.data_service.grpc_client import GrpcDataService
+try:
+    from spiderfoot.data_service.grpc_client import GrpcDataService
+except ImportError:
+    GrpcDataService = None  # gRPC deps not installed; use HTTP or local backend
 from spiderfoot.data_service.resilient import ResilientDataService
 from spiderfoot.data_service.factory import create_data_service
 

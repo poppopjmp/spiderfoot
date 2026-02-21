@@ -14,6 +14,9 @@ import (
 	"github.com/spf13/viper"
 )
 
+// Version is set at build time via -ldflags and used in User-Agent headers.
+var Version = "dev"
+
 // Client talks to the SpiderFoot API.
 type Client struct {
 	BaseURL    string
@@ -63,7 +66,7 @@ func (c *Client) request(method, path string, body io.Reader, result interface{}
 		req.Header.Set("Content-Type", "application/json")
 	}
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("User-Agent", "SpiderFoot-CLI/6.0.0")
+	req.Header.Set("User-Agent", "SpiderFoot-CLI/"+Version)
 
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
@@ -129,7 +132,7 @@ func (c *Client) GetRaw(path string) ([]byte, string, error) {
 	} else if c.APIKey != "" {
 		req.Header.Set("X-API-Key", c.APIKey)
 	}
-	req.Header.Set("User-Agent", "SpiderFoot-CLI/6.0.0")
+	req.Header.Set("User-Agent", "SpiderFoot-CLI/"+Version)
 
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {

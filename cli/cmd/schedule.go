@@ -143,6 +143,9 @@ var scheduleUpdateCmd = &cobra.Command{
 	Short: "Update a schedule (partial update)",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if err := validateSafeID(args[0], "schedule ID"); err != nil {
+			return err
+		}
 		updates := make(map[string]interface{})
 
 		if cmd.Flags().Changed("name") {
@@ -196,6 +199,9 @@ var scheduleDeleteCmd = &cobra.Command{
 	Short: "Delete a schedule",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if err := validateSafeID(args[0], "schedule ID"); err != nil {
+			return err
+		}
 		c := client.New()
 		if err := c.Delete(fmt.Sprintf("/api/schedules/%s", args[0]), nil); err != nil {
 			return err
@@ -210,6 +216,9 @@ var scheduleTriggerCmd = &cobra.Command{
 	Short: "Manually trigger a scheduled scan",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if err := validateSafeID(args[0], "schedule ID"); err != nil {
+			return err
+		}
 		c := client.New()
 		var resp map[string]interface{}
 		if err := c.Post(fmt.Sprintf("/api/schedules/%s/trigger", args[0]), nil, &resp); err != nil {
