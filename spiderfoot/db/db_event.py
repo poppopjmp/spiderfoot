@@ -390,15 +390,24 @@ class EventManager:
             raise TypeError(f"instanceId is {type(instanceId)}; expected str()")
         if not isinstance(elementIdList, list):
             raise TypeError(f"elementIdList is {type(elementIdList)}; expected list()")
-        hashIds = []
-        for hashId in elementIdList:
-            if not hashId:
-                continue
-            if not hashId.isalnum():
-                continue
-            hashIds.append(hashId)
-        qry = f"SELECT ROUND(c.generated) AS generated, c.data, s.data as source_data, c.module, c.type, c.confidence, c.visibility, c.risk, c.hash, c.source_event_hash, t.event_descr, t.event_type, s.scan_instance_id, c.false_positive as fp, s.false_positive as parent_fp, s.type, s.module, st.event_type as source_entity_type FROM tbl_scan_results c, tbl_scan_results s, tbl_event_types t, tbl_event_types st WHERE c.scan_instance_id = {self._ph} AND c.source_event_hash = s.hash AND s.scan_instance_id = c.scan_instance_id AND st.event = s.type AND t.event = c.type AND c.hash in ('%s')" % "','".join(hashIds)
-        qvars = [instanceId]
+        hashIds = [h for h in elementIdList if h and h.isalnum()]
+        if not hashIds:
+            return []
+        placeholders = ",".join([self._ph] * len(hashIds))
+        qry = (
+            "SELECT ROUND(c.generated) AS generated, c.data, s.data as source_data, "
+            "c.module, c.type, c.confidence, c.visibility, c.risk, c.hash, "
+            "c.source_event_hash, t.event_descr, t.event_type, s.scan_instance_id, "
+            "c.false_positive as fp, s.false_positive as parent_fp, s.type, s.module, "
+            "st.event_type as source_entity_type "
+            "FROM tbl_scan_results c, tbl_scan_results s, tbl_event_types t, tbl_event_types st "
+            f"WHERE c.scan_instance_id = {self._ph} "
+            "AND c.source_event_hash = s.hash "
+            "AND s.scan_instance_id = c.scan_instance_id "
+            "AND st.event = s.type AND t.event = c.type "
+            f"AND c.hash IN ({placeholders})"
+        )
+        qvars = [instanceId] + hashIds
         with self.dbhLock:
             try:
                 self.dbh.execute(qry, qvars)
@@ -412,15 +421,23 @@ class EventManager:
             raise TypeError(f"instanceId is {type(instanceId)}; expected str()")
         if not isinstance(elementIdList, list):
             raise TypeError(f"elementIdList is {type(elementIdList)}; expected list()")
-        hashIds = []
-        for hashId in elementIdList:
-            if not hashId:
-                continue
-            if not hashId.isalnum():
-                continue
-            hashIds.append(hashId)
-        qry = f"SELECT ROUND(c.generated) AS generated, c.data, s.data as source_data, c.module, c.type, c.confidence, c.visibility, c.risk, c.hash, c.source_event_hash, t.event_descr, t.event_type, s.scan_instance_id, c.false_positive as fp, s.false_positive as parent_fp FROM tbl_scan_results c, tbl_scan_results s, tbl_event_types t WHERE c.scan_instance_id = {self._ph} AND c.source_event_hash = s.hash AND s.scan_instance_id = c.scan_instance_id AND t.event = c.type AND s.hash in ('%s')" % "','".join(hashIds)
-        qvars = [instanceId]
+        hashIds = [h for h in elementIdList if h and h.isalnum()]
+        if not hashIds:
+            return []
+        placeholders = ",".join([self._ph] * len(hashIds))
+        qry = (
+            "SELECT ROUND(c.generated) AS generated, c.data, s.data as source_data, "
+            "c.module, c.type, c.confidence, c.visibility, c.risk, c.hash, "
+            "c.source_event_hash, t.event_descr, t.event_type, s.scan_instance_id, "
+            "c.false_positive as fp, s.false_positive as parent_fp "
+            "FROM tbl_scan_results c, tbl_scan_results s, tbl_event_types t "
+            f"WHERE c.scan_instance_id = {self._ph} "
+            "AND c.source_event_hash = s.hash "
+            "AND s.scan_instance_id = c.scan_instance_id "
+            "AND t.event = c.type "
+            f"AND s.hash IN ({placeholders})"
+        )
+        qvars = [instanceId] + hashIds
         with self.dbhLock:
             try:
                 self.dbh.execute(qry, qvars)
