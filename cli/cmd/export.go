@@ -51,6 +51,9 @@ var exportExcelCmd = &cobra.Command{
 }
 
 func doExport(scanID, format, ext string) error {
+	if err := validateSafeID(scanID, "scan ID"); err != nil {
+		return err
+	}
 	c := client.New()
 	path := fmt.Sprintf("/api/scans/%s/export/%s", scanID, format)
 

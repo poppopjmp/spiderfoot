@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-var version = "5.9.2"
+var version = "6.0.0-rc.1"
 
 const defaultAddr = "http://127.0.0.1:8001"
 

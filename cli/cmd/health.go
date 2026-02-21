@@ -21,7 +21,7 @@ var healthCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c := client.New()
 		var resp healthResp
-		if err := c.Get("/api/health", &resp); err != nil {
+		if err := c.Get("/health", &resp); err != nil {
 			output.Error("Server unreachable: %v", err)
 			return err
 		}

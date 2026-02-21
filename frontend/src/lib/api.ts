@@ -684,5 +684,5 @@ export const scheduleApi = {
 
 export const stixApi = {
   exportBundle: (scanId: string, _eventTypes?: string[], signal?: AbortSignal) =>
-    api.get(`/scans/${scanId}/export/stix`, { signal }).then((r) => r.data),
+    api.get(`/api/scans/${scanId}/export/stix`, { signal }).then((r) => r.data),
 };

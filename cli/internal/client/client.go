@@ -63,7 +63,7 @@ func (c *Client) request(method, path string, body io.Reader, result interface{}
 		req.Header.Set("Content-Type", "application/json")
 	}
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("User-Agent", "SpiderFoot-CLI/5.9.2")
+	req.Header.Set("User-Agent", "SpiderFoot-CLI/6.0.0-rc.1")
 
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {

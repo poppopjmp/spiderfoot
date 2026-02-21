@@ -103,8 +103,17 @@ export default function LoginPage() {
     window.location.href = `/api/auth/sso/saml/login/${provider.id}`;
   };
 
-  // URL error from SSO callback
-  const urlError = new URLSearchParams(window.location.search).get('error');
+  // URL error from SSO callback — sanitize to known error codes only
+  const SSO_ERROR_MAP: Record<string, string> = {
+    access_denied: 'Access denied by identity provider.',
+    invalid_request: 'Invalid authentication request.',
+    server_error: 'Identity provider encountered an error.',
+    temporarily_unavailable: 'Identity provider is temporarily unavailable.',
+    unauthorized_client: 'Client is not authorized for this operation.',
+    auth_failed: 'Authentication failed. Please try again.',
+  };
+  const rawUrlError = new URLSearchParams(window.location.search).get('error');
+  const urlError = rawUrlError ? (SSO_ERROR_MAP[rawUrlError] ?? 'Authentication failed. Please try again.') : null;
 
   return (
     <div className="min-h-screen bg-dark-950 flex items-center justify-center p-4">
