@@ -5,6 +5,22 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [5.9.2] — 2026-02-20 — Deep Security & Quality Hardening
 
+### Security — P0 Critical (Batch 3)
+- **SQL injection in db_event.py**: Replaced string-interpolated `IN` clauses in `scanElementSourcesDirect` and `scanElementChildrenDirect` with parameterized placeholders; added early-return on empty input
+- **Jinja2 SSTI sandbox**: Replaced `jinja2.Environment` with `jinja2.sandbox.SandboxedEnvironment` in report_templates.py; replaced dangerous `str.format()` fallback with `string.Template.safe_substitute()`
+- **SSO tokens moved from URL to hash fragment**: OAuth2 callback and SAML ACS now redirect to `/#access_token=…` instead of `/?access_token=…`; frontend reads from `window.location.hash` — tokens no longer appear in server logs or Referer headers
+
+### Security — P1 High (Batch 3)
+- **API auth on 20 unprotected routers**: Added `Depends(get_api_key)` to all remaining unprotected router groups (~170 endpoints); only health, SSO, auth, and WebSocket routers remain intentionally public
+- **Stored XSS in email notifications**: Wrapped title, message, and data key/value interpolations in `_send_email` with `html.escape()` to prevent stored XSS via crafted scan names or event data
+- **Content-Disposition header injection**: Added `safe_filename()` utility to sanitise download filenames (strips CR/LF, quotes, backslashes, path separators, non-ASCII); applied across all 16 Content-Disposition headers in export, scan, visualization, workspace, and reports routers
+
+### Performance (Batch 3)
+- **useEffect dependency arrays**: Fixed missing deps in App.tsx (`setTokensFromUrl`, `fetchAuthStatus`, `fetchCurrentUser`) to prevent stale closures
+- **Canvas animation memory leak**: GraphTab now stores `requestAnimationFrame` ID and calls `cancelAnimationFrame` in cleanup; uses stable `nodes.length`/`edges.length` deps
+- **SearchInput debounce**: Added `useDebounce<T>` hook; SearchInput accepts optional `debounceMs` prop; enabled on LogTab and BrowseTab to reduce re-renders during typing
+- **React.memo on scan tabs**: Wrapped all 8 scan tab components (`SummaryTab`, `SettingsTab`, `LogTab`, `BrowseTab`, `CorrelationsTab`, `ReportTab`, `GeoMapTab`, `GraphTab`) with `React.memo` to skip unnecessary re-renders
+
 ### Security — P0 Critical (Batch 2)
 - **API auth on 5 unprotected router groups**: Added `Depends(get_api_key)` to ASM, Marketplace, RBAC Enhanced, Data Retention, and Distributed Scan routers — 60+ endpoints were previously accessible without authentication
 - **React ErrorBoundary**: Added top-level `ErrorBoundary` component wrapping `<App />`; catches render crashes and shows a recoverable fallback UI instead of a white screen
