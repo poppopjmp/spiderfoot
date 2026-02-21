@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { workspaceApi, scanApi, agentsApi, formatEpoch, type Workspace, type WorkspaceTarget, type Scan, type ScanCorrelation } from '../lib/api';
-import { sanitizeHTML } from '../lib/sanitize';
-import { inlineFormat } from '../components/MarkdownRenderer';
+import MarkdownRenderer from '../components/MarkdownRenderer';
 import { Briefcase, Plus, Trash2, Target, Copy, CheckCircle2, FolderOpen, Clock, Edit2, Radar, Link2, Unlink, Brain, FileText, Sparkles, Edit3, Save, Loader2, AlertTriangle, BarChart3, Shield, MapPin } from 'lucide-react';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { StatusBadge, Toast, Tabs, ConfirmDialog, ModalShell, type ToastType } from '../components/ui';
@@ -942,118 +941,6 @@ function WorkspaceReportCard({ workspaceId, workspace, summary, scanIds }: {
     setIsEditing(false);
   };
 
-  /* Simple inline markdown renderer — supports h1-h3, hr, blockquote, lists, tables, code blocks, paragraphs */
-  const renderSimpleMd = (md: string) => {
-    const lines = md.split('\n');
-    const elements: React.ReactNode[] = [];
-    let i = 0;
-
-    while (i < lines.length) {
-      const line = lines[i];
-
-      // Code blocks (``` ... ```)
-      if (line.trim().startsWith('```')) {
-        const codeLines: string[] = [];
-        i++;
-        while (i < lines.length && !lines[i].trim().startsWith('```')) {
-          codeLines.push(lines[i]);
-          i++;
-        }
-        i++; // skip closing ```
-        elements.push(
-          <pre key={elements.length} className="bg-dark-900 border border-dark-700 rounded-lg p-3 my-2 overflow-x-auto text-xs font-mono text-dark-300 whitespace-pre-wrap">
-            {codeLines.join('\n')}
-          </pre>
-        );
-        continue;
-      }
-
-      // Tables (| ... |)
-      if (line.trim().startsWith('|') && line.trim().endsWith('|')) {
-        const tableLines: string[] = [];
-        while (i < lines.length && lines[i].trim().startsWith('|') && lines[i].trim().endsWith('|')) {
-          tableLines.push(lines[i]);
-          i++;
-        }
-        if (tableLines.length >= 2) {
-          const headerCells = tableLines[0].split('|').filter(c => c.trim() !== '').map(c => c.trim());
-          // skip separator row (row 1) and parse data rows
-          const dataRows = tableLines.slice(2).map(row =>
-            row.split('|').filter(c => c.trim() !== '').map(c => c.trim())
-          );
-          elements.push(
-            <div key={elements.length} className="overflow-x-auto my-2">
-              <table className="w-full text-xs border-collapse">
-                <thead>
-                  <tr className="border-b border-dark-700">
-                    {headerCells.map((cell, ci) => (
-                      <th key={ci} className="px-3 py-1.5 text-left text-dark-300 font-semibold" dangerouslySetInnerHTML={{ __html: sanitizeHTML(inlineFormat(cell)) }} />
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {dataRows.map((row, ri) => (
-                    <tr key={ri} className="border-b border-dark-700/50">
-                      {row.map((cell, ci) => (
-                        <td key={ci} className="px-3 py-1.5 text-dark-400" dangerouslySetInnerHTML={{ __html: sanitizeHTML(inlineFormat(cell)) }} />
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          );
-          continue;
-        }
-      }
-
-      // Headings
-      const hMatch = line.match(/^(#{1,3})\s+(.*)/);
-      if (hMatch) {
-        const lvl = hMatch[1].length;
-        const cls = lvl === 1 ? 'text-xl font-bold text-foreground mt-6 mb-2 border-b border-dark-700 pb-2' : lvl === 2 ? 'text-lg font-bold text-foreground mt-5 mb-2' : 'text-base font-semibold text-foreground mt-4 mb-1';
-        elements.push(<div key={elements.length} className={cls} dangerouslySetInnerHTML={{ __html: sanitizeHTML(inlineFormat(hMatch[2])) }} />);
-        i++;
-        continue;
-      }
-
-      // Horizontal rule
-      if (/^---+$/.test(line.trim())) {
-        elements.push(<hr key={elements.length} className="border-dark-700/50 my-4" />);
-        i++;
-        continue;
-      }
-
-      // Blockquote
-      if (line.trim().startsWith('>')) {
-        elements.push(<blockquote key={elements.length} className="border-l-2 border-spider-500 pl-3 text-dark-400 italic text-sm my-1" dangerouslySetInnerHTML={{ __html: sanitizeHTML(inlineFormat(line.replace(/^>\s*/, ''))) }} />);
-        i++;
-        continue;
-      }
-
-      // List items
-      const liMatch = line.match(/^(\d+\.|[-*])\s+(.*)/);
-      if (liMatch) {
-        elements.push(<li key={elements.length} className="text-sm text-dark-300 ml-4 list-disc" dangerouslySetInnerHTML={{ __html: sanitizeHTML(inlineFormat(liMatch[2])) }} />);
-        i++;
-        continue;
-      }
-
-      // Empty line
-      if (line.trim() === '') {
-        elements.push(<div key={elements.length} className="h-2" />);
-        i++;
-        continue;
-      }
-
-      // Paragraph
-      elements.push(<p key={elements.length} className="text-sm text-dark-300 leading-relaxed" dangerouslySetInnerHTML={{ __html: sanitizeHTML(inlineFormat(line)) }} />);
-      i++;
-    }
-
-    return elements;
-  };
-
   return (
     <div className="card">
       <div className="flex items-center justify-between mb-4">
@@ -1101,7 +988,7 @@ function WorkspaceReportCard({ workspaceId, workspace, summary, scanIds }: {
         />
       ) : reportContent ? (
         <div className="max-h-[80vh] overflow-y-auto pr-2">
-          {renderSimpleMd(reportContent)}
+          <MarkdownRenderer content={reportContent} className="prose-sm" />
         </div>
       ) : (
         <div className="text-center py-8 text-dark-500">
