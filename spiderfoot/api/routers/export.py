@@ -243,8 +243,8 @@ async def export_scan_stream(
 
             log.info("Streamed %d events for scan %s", yielded, scan_id)
         except Exception as exc:
-            log.error("Streaming export error for %s: %s", scan_id, exc)
-            yield json.dumps({"error": str(exc)}) + "\n"
+            log.error("Streaming export error for %s: %s", scan_id, exc, exc_info=True)
+            yield json.dumps({"error": "Internal export error"}) + "\n"
 
     return StreamingResponse(
         _event_generator(),

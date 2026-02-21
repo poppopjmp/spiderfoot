@@ -108,7 +108,7 @@ def _profile_to_dict(p, all_modules: dict) -> dict:
 
 
 @router.get("/scan-profiles", summary="List available scan profiles")
-def list_scan_profiles():
+def list_scan_profiles(api_key: str = api_key_dep):
     """Return all built-in and custom scan profiles."""
     try:
         from spiderfoot.scan.scan_profile import get_profile_manager
@@ -122,7 +122,7 @@ def list_scan_profiles():
 
 
 @router.get("/scan-profiles/{profile_name}", summary="Get a specific scan profile")
-def get_scan_profile(profile_name: str):
+def get_scan_profile(profile_name: str, api_key: str = api_key_dep):
     """Return details of a specific scan profile."""
     try:
         from spiderfoot.scan.scan_profile import get_profile_manager
@@ -1095,7 +1095,7 @@ async def run_scan_correlations(
         raise
     except Exception as e:
         log.error("Correlation run failed for %s: %s", scan_id, e, exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Correlation failed: {e}") from e
+        raise HTTPException(status_code=500, detail="Correlation analysis failed") from e
 
 
 @router.delete("/scans/{scan_id}", response_model=ScanDeleteResponse)
@@ -1819,7 +1819,8 @@ async def rerun_scan(
             p.daemon = True
             p.start()
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Scan [{new_scan_id}] failed: {e}")
+        log.error("Scan rerun failed for %s: %s", new_scan_id, e, exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to start scan rerun")
 
     while dbh.scanInstanceGet(new_scan_id) is None:
         time.sleep(1)
@@ -1865,7 +1866,8 @@ async def clone_scan(
         dbh.scanInstanceCreate(new_scan_id, f"{record.name} (Clone)", scantarget)
         dbh.scanConfigSet(new_scan_id, scanconfig)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Scan [{new_scan_id}] clone failed: {e}") from e
+        log.error("Scan clone failed for %s: %s", new_scan_id, e, exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to clone scan") from e
 
     return ScanCloneResponse(new_scan_id=new_scan_id)
 
