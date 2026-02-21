@@ -5,6 +5,20 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [5.9.2] — 2026-02-20 — Deep Security & Quality Hardening
 
+### Security — P1 Auth Gaps Closed (Batch 7)
+- **WebSocket authentication**: Added `_verify_ws_token()` that validates `?token=<jwt_or_api_key>` query parameters; unauthenticated connections are rejected with code 4003 before `websocket_manager.connect()` (BaseHTTPMiddleware does not intercept WS)
+- **Scan progress endpoint auth**: Added `Depends(optional_auth)` to all 6 scan_progress REST/SSE endpoints; sanitized 5 error messages that leaked scan IDs
+- **Auth token localStorage safety**: Wrapped `saveTokens`/`clearTokens` and the refresh interceptor in try/catch to prevent QuotaExceededError from breaking auth flows
+
+### Improved — Frontend Architecture (Batch 7)
+- **AbortSignal for request cancellation**: Added optional `signal?: AbortSignal` to all 84 API methods in api.ts; updated all 38 `queryFn` call sites across 17 files to forward TanStack Query's signal — enables automatic cancellation on component unmount
+- **Admin pages → React Query**: Migrated SSOSettings.tsx (1 query + 3 mutations), Users.tsx (1 query + 4 mutations), ApiKeys.tsx (1 query + 3 mutations) from manual useState + useEffect to useQuery/useMutation with signal support
+- **Shared MarkdownRenderer**: Extracted 110-line `renderMarkdownToHTML()` and `inlineFormat()` into a shared component; replaced duplicate code in ReportTab.tsx and Workspaces.tsx
+- **Settings.tsx DOM leak**: Replaced `document.createElement('input')` with a ref-based hidden `<input>` in JSX; added proper append/remove for the download anchor
+
+### Added — Test Infrastructure (Batch 7)
+- **Vitest frontend test foundation**: Added vitest + @testing-library/react + jsdom; 39 tests across 4 suites: sanitize (7 XSS tests), MarkdownRenderer (14 render tests), safeStorage (4 quota tests), API helpers (14 utility tests)
+
 ### Security — Defense-in-Depth (Batch 6)
 - **Error detail leak sweep (25 more instances)**: Sanitized 5 GraphQL resolver `message=str(e)`, 13 health endpoint `str(e)` (leaking DSNs/URLs), and 7 scan bulk-op / reports / engines `str(e)` with generic messages; all server-side logging preserved
 - **Path parameter validation**: Added `SafeId` (`^[a-zA-Z0-9_\\-]{1,64}$`) and `SafeName` type aliases to dependencies.py; applied to 59 route handlers across scan.py (38), workspace.py (17), and reports.py (4) — FastAPI returns 422 for non-matching input
