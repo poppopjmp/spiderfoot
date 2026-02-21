@@ -1,9 +1,10 @@
+import { memo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { scanApi, type ScanCorrelation } from '../../lib/api';
 import { AlertTriangle, Shield, Info, Loader2, RefreshCw } from 'lucide-react';
 import { TableSkeleton, EmptyState, Expandable } from '../ui';
 
-export default function CorrelationsTab({ scanId }: { scanId: string }) {
+function CorrelationsTab({ scanId }: { scanId: string }) {
   const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
@@ -95,3 +96,5 @@ export default function CorrelationsTab({ scanId }: { scanId: string }) {
     </div>
   );
 }
+
+export default memo(CorrelationsTab);

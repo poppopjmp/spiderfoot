@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { scanApi, type ScanEvent } from '../../lib/api';
 import { MapPin } from 'lucide-react';
@@ -6,7 +6,7 @@ import { TableSkeleton, EmptyState } from '../ui';
 import MiniStat from './MiniStat';
 import { GEO_EVENT_TYPES, COUNTRY_COORDS, COUNTRY_NAME_TO_CODE, WORLD_MAP_IMAGE } from '../../lib/geo';
 
-export default function GeoMapTab({ scanId }: { scanId: string }) {
+function GeoMapTab({ scanId }: { scanId: string }) {
   /* Fetch all geo-related event types */
   const geoQueries = GEO_EVENT_TYPES.map((t) => ({
     queryKey: ['scan-events-geo', scanId, t],
@@ -238,3 +238,5 @@ export default function GeoMapTab({ scanId }: { scanId: string }) {
     </div>
   );
 }
+
+export default memo(GeoMapTab);

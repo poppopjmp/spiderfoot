@@ -1,10 +1,10 @@
-import { useState, useMemo } from 'react';
+import { memo, useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { scanApi, formatEpoch, type ScanEvent, type EventSummaryDetail } from '../../lib/api';
 import { Eye, EyeOff, List } from 'lucide-react';
 import { SearchInput, EmptyState, TableSkeleton } from '../ui';
 
-export default function BrowseTab({ scanId }: { scanId: string }) {
+function BrowseTab({ scanId }: { scanId: string }) {
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewUnique, setViewUnique] = useState(false);
@@ -86,7 +86,7 @@ export default function BrowseTab({ scanId }: { scanId: string }) {
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-semibold text-foreground">{selectedType}</h3>
               <div className="flex items-center gap-2">
-                <SearchInput value={searchQuery} onChange={setSearchQuery} placeholder="Filter events..." className="w-60" />
+                <SearchInput value={searchQuery} onChange={setSearchQuery} placeholder="Filter events..." className="w-60" debounceMs={250} />
                 <button
                   className={hideFP ? 'btn-primary text-xs' : 'btn-secondary text-xs'}
                   onClick={() => setHideFP(!hideFP)}
@@ -195,3 +195,5 @@ export default function BrowseTab({ scanId }: { scanId: string }) {
     </div>
   );
 }
+
+export default memo(BrowseTab);

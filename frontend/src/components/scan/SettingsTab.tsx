@@ -1,8 +1,9 @@
+import { memo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { scanApi, formatEpoch, formatDuration, type Scan } from '../../lib/api';
 import { TableSkeleton, Expandable } from '../ui';
 
-export default function SettingsTab({ scanId, scan }: { scanId: string; scan?: Scan }) {
+function SettingsTab({ scanId, scan }: { scanId: string; scan?: Scan }) {
   const { data: options, isLoading } = useQuery({
     queryKey: ['scan-options', scanId],
     queryFn: () => scanApi.options(scanId),
@@ -74,3 +75,5 @@ export default function SettingsTab({ scanId, scan }: { scanId: string; scan?: S
     </div>
   );
 }
+
+export default memo(SettingsTab);

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { memo, useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import {
   scanApi, agentsApi, formatDuration,
@@ -141,7 +141,7 @@ function extractReportMarkdown(resp: Record<string, unknown>, target: string): s
 
 /* ── Component ────────────────────────────────────────────── */
 
-export default function ReportTab({ scanId, scan }: { scanId: string; scan?: Scan }) {
+function ReportTab({ scanId, scan }: { scanId: string; scan?: Scan }) {
   const [reportContent, setReportContent] = useState<string>('');
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState('');
@@ -640,3 +640,5 @@ ${html}
     </div>
   );
 }
+
+export default memo(ReportTab);

@@ -1,10 +1,10 @@
-import { useState, useMemo } from 'react';
+import { memo, useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { scanApi, formatEpoch, type ScanLogEntry } from '../../lib/api';
 import { ScrollText, Download } from 'lucide-react';
 import { SearchInput, EmptyState, TableSkeleton } from '../ui';
 
-export default function LogTab({ scanId }: { scanId: string }) {
+function LogTab({ scanId }: { scanId: string }) {
   const [logFilter, setLogFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
 
@@ -47,7 +47,7 @@ export default function LogTab({ scanId }: { scanId: string }) {
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
         <div className="flex gap-3 items-center flex-1">
-          <SearchInput value={logFilter} onChange={setLogFilter} placeholder="Filter log messages..." className="flex-1 max-w-md" />
+          <SearchInput value={logFilter} onChange={setLogFilter} placeholder="Filter log messages..." className="flex-1 max-w-md" debounceMs={250} />
           <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className="input-field w-auto min-w-[120px] text-sm">
             <option value="">All Types</option>
             {logTypes.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -106,3 +106,5 @@ export default function LogTab({ scanId }: { scanId: string }) {
     </div>
   );
 }
+
+export default memo(LogTab);

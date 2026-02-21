@@ -75,12 +75,48 @@ export function StatCard({
   );
 }
 
+/* ── Debounce Hook ────────────────────────────────────────── */
+/**
+ * Returns a debounced version of the value that only updates
+ * after the specified delay (default 250ms). Useful for search
+ * inputs to avoid firing on every keystroke.
+ */
+export function useDebounce<T>(value: T, delay = 250): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+  return debounced;
+}
+
 /* ── Search Input ─────────────────────────────────────────── */
 export function SearchInput({
-  value, onChange, placeholder = 'Search...', className,
+  value, onChange, placeholder = 'Search...', className, debounceMs,
 }: {
   value: string; onChange: (v: string) => void; placeholder?: string; className?: string;
+  /** When set, onChange fires only after debounceMs of inactivity. */
+  debounceMs?: number;
 }) {
+  const [local, setLocal] = useState(value);
+  const debounced = useDebounce(local, debounceMs ?? 0);
+  const isDebounced = (debounceMs ?? 0) > 0;
+
+  // Sync debounced value back to parent
+  useEffect(() => {
+    if (isDebounced) onChange(debounced);
+  }, [debounced, isDebounced, onChange]);
+
+  // Sync external value changes to local state
+  useEffect(() => {
+    if (!isDebounced) setLocal(value);
+  }, [value, isDebounced]);
+
+  const handleChange = (v: string) => {
+    setLocal(v);
+    if (!isDebounced) onChange(v);
+  };
+
   return (
     <div className={clsx('relative', className)}>
       <Search className="h-4 w-4 text-dark-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -88,12 +124,12 @@ export function SearchInput({
         type="text"
         className="input-search"
         placeholder={placeholder}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
+        value={local}
+        onChange={(e) => handleChange(e.target.value)}
       />
-      {value && (
+      {local && (
         <button
-          onClick={() => onChange('')}
+          onClick={() => handleChange('')}
           className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-500 hover:text-dark-300 transition-colors"
         >
           <X className="h-3.5 w-3.5" />

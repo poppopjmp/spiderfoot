@@ -1,10 +1,10 @@
-import { useState, useRef, useEffect } from 'react';
+import { memo, useState, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { scanApi } from '../../lib/api';
 import { Network, Download, Loader2 } from 'lucide-react';
 import { EmptyState } from '../ui';
 
-export default function GraphTab({ scanId }: { scanId: string }) {
+function GraphTab({ scanId }: { scanId: string }) {
   const { data, isLoading } = useQuery({
     queryKey: ['scan-viz', scanId],
     queryFn: () => scanApi.viz(scanId),
@@ -184,3 +184,5 @@ export default function GraphTab({ scanId }: { scanId: string }) {
     </div>
   );
 }
+
+export default memo(GraphTab);

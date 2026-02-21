@@ -1,9 +1,10 @@
+import { memo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { scanApi, formatEpoch, formatDuration, type Scan, type EventSummaryDetail } from '../../lib/api';
 import { Skeleton, TableSkeleton } from '../ui';
 import MiniStat from './MiniStat';
 
-export default function SummaryTab({ scanId, scan }: { scanId: string; scan?: Scan }) {
+function SummaryTab({ scanId, scan }: { scanId: string; scan?: Scan }) {
   const { data: summaryData, isLoading } = useQuery({
     queryKey: ['scan-summary', scanId],
     queryFn: () => scanApi.summary(scanId),
@@ -140,3 +141,5 @@ export default function SummaryTab({ scanId, scan }: { scanId: string; scan?: Sc
     </div>
   );
 }
+
+export default memo(SummaryTab);
