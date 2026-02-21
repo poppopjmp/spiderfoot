@@ -1,5 +1,5 @@
 import { memo, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQueries } from '@tanstack/react-query';
 import { scanApi, type ScanEvent } from '../../lib/api';
 import { MapPin } from 'lucide-react';
 import { TableSkeleton, EmptyState } from '../ui';
@@ -7,19 +7,18 @@ import MiniStat from './MiniStat';
 import { GEO_EVENT_TYPES, COUNTRY_COORDS, COUNTRY_NAME_TO_CODE, WORLD_MAP_IMAGE } from '../../lib/geo';
 
 function GeoMapTab({ scanId }: { scanId: string }) {
-  /* Fetch all geo-related event types */
-  const geoQueries = GEO_EVENT_TYPES.map((t) => ({
-    queryKey: ['scan-events-geo', scanId, t],
-    queryFn: ({ signal }: { signal?: AbortSignal }) => scanApi.events(scanId, { event_type: t }, signal),
-    enabled: !!scanId,
-  }));
+  /* Fetch all geo-related event types in parallel via useQueries */
+  const geoResults = useQueries({
+    queries: GEO_EVENT_TYPES.map((t) => ({
+      queryKey: ['scan-events-geo', scanId, t],
+      queryFn: ({ signal }: { signal?: AbortSignal }) => scanApi.events(scanId, { event_type: t }, signal),
+      enabled: !!scanId,
+    })),
+  });
 
-  const q0 = useQuery(geoQueries[0]);
-  const q1 = useQuery(geoQueries[1]);
-  const q2 = useQuery(geoQueries[2]);
-  const q3 = useQuery(geoQueries[3]);
+  const [q0, q1, q2, q3] = geoResults;
 
-  const isLoading = q0.isLoading || q1.isLoading || q2.isLoading || q3.isLoading;
+  const isLoading = geoResults.some((q) => q.isLoading);
 
   /* Parse country data from GEOINFO events */
   const countryMap = useMemo(() => {

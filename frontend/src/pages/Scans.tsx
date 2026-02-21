@@ -34,13 +34,14 @@ export default function ScansPage() {
 
   /* Server-side search when query is present */
   const { data: searchData, isLoading: searchLoading } = useQuery({
-    queryKey: ['scans-search', search, statusFilter],
+    queryKey: ['scans-search', search, statusFilter, page],
     queryFn: ({ signal }) => scanApi.search({
       target: search || undefined,
       status: statusFilter || undefined,
       sort_by: 'created',
       sort_order: 'desc',
-      limit: 200,
+      limit: PAGE_SIZE,
+      offset: (page - 1) * PAGE_SIZE,
     }, signal),
     enabled: !!(search || statusFilter),
     refetchInterval: 10_000,
@@ -58,7 +59,9 @@ export default function ScansPage() {
   const isLoading = isSearchMode ? searchLoading : listLoading;
 
   const scans = isSearchMode ? (searchData?.scans ?? []) : (listData?.items ?? []);
-  const totalPages = isSearchMode ? 1 : (listData?.pages ?? 1);
+  const totalPages = isSearchMode
+    ? Math.max(1, Math.ceil((searchData?.total ?? 0) / PAGE_SIZE))
+    : (listData?.pages ?? 1);
   const totalCount = isSearchMode ? (searchData?.total ?? scans.length) : (listData?.total ?? 0);
 
   /* No further client-side filtering needed — server handles it */
@@ -177,14 +180,14 @@ export default function ScansPage() {
         <div className="flex gap-3 items-center flex-1 w-full sm:w-auto">
           <SearchInput
             value={search}
-            onChange={setSearch}
+            onChange={(v: string) => { setSearch(v); setPage(1); }}
             placeholder="Search by name, target, or ID..."
             className="flex-1 max-w-md"
           />
           <select
             aria-label="Filter by scan status"
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
             className="input-field w-auto min-w-[140px] text-sm"
           >
             <option value="">All Statuses</option>
@@ -388,7 +391,7 @@ export default function ScansPage() {
       </div>
 
       {/* Pagination */}
-      {!isSearchMode && totalPages > 1 && (
+      {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-dark-500">
             Page {page} of {totalPages} ({totalCount} total)

@@ -3,6 +3,65 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [6.0.0-rc.1] — 2026-06-08 — Release Candidate
+
+### Added
+- **Go CLI**: Full-featured cross-platform CLI (`spiderfoot-cli`) built with Cobra/Viper — scan management, module listing, STIX/JSON/CSV export, schedule CRUD, health check, config management
+- **Command Palette**: Global `Ctrl+K` quick-navigate with fuzzy search over pages and recent scans, ARIA-compliant `combobox` pattern
+- **Schedules CRUD page**: Create, edit, enable/disable, delete scan schedules from the frontend with PATCH support
+- **STIX export**: Full STIX 2.1 bundle export from scan detail page
+- **Emotional design system**: Tooltip component, risk pills, SSE-driven progress bars, scan completion celebrations, toast notifications
+- **Comprehensive test coverage**: 282 tests across 27 test files — pages, components, utilities, auth, API client, scan tabs, CommandPalette
+
+### Security
+- **SQL injection fix** (P0): Parameterized `IN` clauses in `db_event.py` (`scanElementSourcesDirect`, `scanElementChildrenDirect`)
+- **Jinja2 SSTI sandbox**: Replaced `jinja2.Environment` with `SandboxedEnvironment` in report templates
+- **SSO tokens → hash fragment**: OAuth2/SAML callbacks redirect to `/#access_token=…` instead of query params
+- **XSS in PDF export**: Escaped `scan.name`, `scan.target`, `scanId` in `document.write()`
+- **Stored XSS in email notifications**: Escaped HTML in `_send_email` title/message/data interpolation
+- **Login URL error sanitization**: Whitelisted SSO error codes via `SSO_ERROR_MAP`; unknown codes get generic message
+- **API auth on all routers**: Added `Depends(get_api_key)` to ~170 previously unprotected endpoints
+- **WebSocket authentication**: JWT/API-key verification on WS connect (code 4003 on failure)
+- **Path parameter validation**: `SafeId` regex applied to 59+ route handlers across scan, workspace, reports, export routers
+- **SSRF webhook URL validation**: Blocks private/loopback/link-local IPs and dangerous hostnames
+- **Content-Disposition injection**: `safe_filename()` applied to all 16 download headers
+- **SSE token leak fix**: Replaced EventSource with fetch+ReadableStream to avoid token in URL
+- **Docker hardening**: `no-new-privileges`, `read_only`, `tmpfs` on 13/23 services
+- **Content-Security-Policy** and optional **HSTS** headers
+- **Error detail leak sweep**: 80+ `detail=str(e)` patterns replaced with generic messages across all routers
+- **Hardcoded credentials removed**: MinIO `changeme123` and PostgreSQL `changeme` fallbacks eliminated
+- **Export SafeID validation**: Added `validateSafeID` call in CLI export command
+
+### Changed
+- **Version bump to 6.0.0-rc.1**: VERSION, package.json, CLI root.go/client.go, Layout.tsx, README badge
+- **STIX API path corrected**: `/scans/` → `/api/scans/` prefix
+- **Health CLI path corrected**: `/api/health` → `/health` (root-mounted router)
+- **GeoMapTab**: Migrated 4 individual `useQuery` calls to single `useQueries()` for parallel fetching
+- **Scans search pagination**: Search mode now uses server-side `limit`/`offset` pagination instead of fetching 200 results; pagination controls shown in search mode
+- **Search/filter reset**: Page resets to 1 when search query or status filter changes
+- **Event types type safety**: `unknown[]` → `Array<{ name: string; description?: string }>`
+- **Empty catch blocks**: GraphTab and LogTab now log errors instead of silently swallowing
+- **`@types/dompurify`** moved from dependencies to devDependencies
+- **Node engines field**: Added `"engines": { "node": ">=18" }` to package.json
+- **Layout version constant**: Extracted `APP_VERSION` constant, replacing 2 hardcoded `v5.9.2` references
+- **Route-level code splitting**: 10 of 12 pages lazy-loaded via `React.lazy()`
+- **AbortSignal support**: All 84 API methods accept `signal`; all 38 `queryFn` call sites forward TanStack Query's signal
+- **Admin pages → React Query**: SSOSettings, Users, ApiKeys migrated from useState/useEffect to useQuery/useMutation
+- **Concurrent token refresh deduplication**: Shared `refreshPromise` prevents race conditions
+- **`useDocumentTitle`** on all 13 pages
+- **Accessibility**: ARIA labels on scan tabs, forms, filters, checkboxes, GeoMap SVG, skip-to-content link
+
+### Fixed
+- **GraphQL subscription DB leak**: Connection created once before polling loop instead of per-iteration
+- **Canvas animation memory leak**: Proper `cancelAnimationFrame` cleanup in GraphTab
+- **localStorage QuotaExceededError**: `safeStorage.ts` with LRU eviction for report cache
+- **Background polling**: `refetchIntervalInBackground: false` as QueryClient default
+- **Token refresh → centralized `saveTokens()`**
+- **Clipboard unhandled rejections**: `.catch()` on all `navigator.clipboard.writeText()` calls
+- **useEffect dependency arrays**: Fixed stale closures in App.tsx
+- **Report store thread-safety**: Added `threading.Lock` to in-memory fallback dict
+- **Unbounded multi-scan batches**: Capped at 50 IDs per request
+
 ## [5.9.2] — 2026-02-20 — Deep Security & Quality Hardening
 
 ### Security — SSO & Hardening Polish (Batch 9)
