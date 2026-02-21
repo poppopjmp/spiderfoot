@@ -13,8 +13,10 @@ import {
   Skeleton,
   type ToastType,
 } from '../components/ui';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 export default function SettingsPage() {
+  useDocumentTitle('Settings');
   const queryClient = useQueryClient();
   const [activeSection, setActiveSection] = useState('__global__');
   const [search, setSearch] = useState('');

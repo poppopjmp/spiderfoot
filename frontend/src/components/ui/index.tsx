@@ -363,10 +363,14 @@ export function Toast({
   }, []);
 
   return (
-    <div className={clsx(
-      'animate-toast fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-xl border shadow-2xl max-w-sm',
-      cfg.bg,
-    )}>
+    <div
+      role="status"
+      aria-live="polite"
+      className={clsx(
+        'animate-toast fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-xl border shadow-2xl max-w-sm',
+        cfg.bg,
+      )}
+    >
       <Icon className={clsx('h-5 w-5 flex-shrink-0', cfg.color)} />
       <p className="text-sm text-dark-100 flex-1">{message}</p>
       <button onClick={onClose} className="text-dark-400 hover:text-dark-200">
@@ -494,6 +498,7 @@ export function DropdownItem({
 }) {
   return (
     <button
+      role="menuitem"
       onClick={onClick}
       disabled={disabled}
       className={clsx(

@@ -11,8 +11,10 @@ import {
 import {
   PageHeader, StatCard, StatusBadge, RiskPills, EmptyState, TableSkeleton,
 } from '../components/ui';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 export default function DashboardPage() {
+  useDocumentTitle('Dashboard');
   const { data: scanData, isLoading: scansLoading } = useQuery({
     queryKey: ['scans', { page: 1, page_size: 10, sort_by: 'created', sort_order: 'desc' }],
     queryFn: ({ signal }) => scanApi.list({ page: 1, page_size: 10, sort_by: 'created', sort_order: 'desc' }, signal),

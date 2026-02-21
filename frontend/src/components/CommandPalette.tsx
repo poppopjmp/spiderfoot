@@ -180,6 +180,11 @@ export function CommandPalette() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleListKey}
+            role="combobox"
+            aria-expanded={filtered.length > 0}
+            aria-controls="cmd-palette-listbox"
+            aria-activedescendant={selectedIdx >= 0 ? `cmd-palette-opt-${selectedIdx}` : undefined}
+            aria-autocomplete="list"
             className="flex-1 bg-transparent text-foreground text-sm placeholder:text-dark-500 focus:outline-none"
           />
           <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-mono text-dark-500 bg-dark-700/60 rounded">
@@ -188,7 +193,7 @@ export function CommandPalette() {
         </div>
 
         {/* Results */}
-        <div ref={listRef} className="max-h-80 overflow-y-auto py-2">
+        <div ref={listRef} id="cmd-palette-listbox" role="listbox" className="max-h-80 overflow-y-auto py-2">
           {filtered.length > 0 ? (
             Array.from(grouped.entries()).map(([section, items]) => (
               <div key={section}>
@@ -201,6 +206,9 @@ export function CommandPalette() {
                   return (
                     <button
                       key={item.id}
+                      id={`cmd-palette-opt-${idx}`}
+                      role="option"
+                      aria-selected={idx === selectedIdx}
                       data-idx={idx}
                       onClick={() => navigate_(item.href)}
                       className={clsx(

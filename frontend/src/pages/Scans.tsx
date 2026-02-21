@@ -15,10 +15,12 @@ import {
   EmptyState, TableSkeleton, ConfirmDialog, Toast, DropdownMenu, DropdownItem,
   type ToastType,
 } from '../components/ui';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 const PAGE_SIZE = 20;
 
 export default function ScansPage() {
+  useDocumentTitle('Scans');
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [page, setPage] = useState(1);

@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { lazy, Suspense, useEffect } from 'react';
 import Layout from './components/Layout';
 import { useAuthStore } from './lib/auth';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Core pages (eagerly loaded — most visited)
 import DashboardPage from './pages/Dashboard';
@@ -81,6 +82,7 @@ export default function App() {
   }, [accessToken, fetchCurrentUser]);
 
   return (
+    <ErrorBoundary>
     <Routes>
       {/* Login page — always accessible */}
       <Route path="/login" element={<LoginPage />} />
@@ -130,11 +132,18 @@ export default function App() {
         {/* 404 catch-all */}
         <Route path="*" element={
           <div className="flex flex-col items-center justify-center h-64 text-center">
-            <p className="text-4xl font-bold text-dark-400 mb-2">404</p>
-            <p className="text-dark-500">Page not found</p>
+            <p className="text-6xl font-bold text-dark-600 mb-4">404</p>
+            <p className="text-lg text-dark-400 mb-6">Page not found</p>
+            <a
+              href="/"
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-spider-600 text-white hover:bg-spider-500 transition-colors"
+            >
+              Back to Dashboard
+            </a>
           </div>
         } />
       </Route>
     </Routes>
+    </ErrorBoundary>
   );
 }

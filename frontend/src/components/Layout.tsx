@@ -75,6 +75,14 @@ export default function Layout() {
 
   return (
     <div className="flex h-full">
+      {/* Skip to content — WCAG 2.4.1 */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-spider-600 focus:text-white focus:rounded-lg focus:text-sm focus:font-medium"
+      >
+        Skip to content
+      </a>
+
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
@@ -297,7 +305,7 @@ export default function Layout() {
           <img src="/spiderfoot-icon.png" alt="SpiderFoot" className="h-5 w-5" />
           <span className="text-sm font-bold text-foreground">SpiderFoot</span>
         </div>
-        <div className="px-6 py-8">
+        <div id="main-content" className="px-6 py-8">
           <Outlet />
         </div>
       </main>

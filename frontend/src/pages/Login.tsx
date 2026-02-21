@@ -173,6 +173,8 @@ export default function LoginPage() {
                   placeholder="Enter username"
                   autoFocus
                   autoComplete="username"
+                  required
+                  minLength={1}
                 />
               </div>
               <div>
@@ -187,11 +189,14 @@ export default function LoginPage() {
                     className="w-full px-3 py-2.5 bg-dark-800 border border-dark-600 rounded-lg text-foreground placeholder-dark-500 focus:outline-none focus:border-spider-500 focus:ring-1 focus:ring-spider-500 transition-colors pr-10"
                     placeholder="Enter password"
                     autoComplete="current-password"
+                    required
+                    minLength={1}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-500 hover:text-dark-300"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -260,6 +265,7 @@ export default function LoginPage() {
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-500 hover:text-dark-300"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>

@@ -14,6 +14,7 @@ import {
 } from '../components/scan';
 import { useScanProgress } from '../hooks/useScanProgress';
 import { useNotificationStore } from '../lib/notifications';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 type DetailTab = 'summary' | 'browse' | 'correlations' | 'graph' | 'geomap' | 'report' | 'settings' | 'log';
 
@@ -34,6 +35,8 @@ export default function ScanDetailPage() {
     enabled: !!scanId,
     refetchInterval: (query) => isRunning(query.state.data) ? 5000 : 30000,
   });
+
+  useDocumentTitle(scan?.name ? `Scan: ${scan.name}` : 'Scan Detail');
 
   // Real-time scan progress via SSE
   const { progress } = useScanProgress(scanId, {

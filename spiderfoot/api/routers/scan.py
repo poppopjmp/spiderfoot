@@ -7,10 +7,12 @@ of all 25 endpoints, eliminating every raw ``SpiderFootDb`` call.
 
 from __future__ import annotations
 
+import asyncio
 import csv
 import json
 import logging
 import multiprocessing as mp
+import re as _re
 import time
 from copy import deepcopy
 from io import BytesIO, StringIO
@@ -59,8 +61,8 @@ optional_auth_dep = Depends(optional_auth)
 
 class ScanRequest(BaseModel):
     """Data model for a scan creation request."""
-    name: str = Field(..., description="Name of the scan")
-    target: str = Field(..., description="Target for the scan")
+    name: str = Field(..., description="Name of the scan", min_length=1, max_length=256)
+    target: str = Field(..., description="Target for the scan", min_length=1, max_length=1024)
     modules: list[str] | None = Field(None, description="List of module names to run")
     type_filter: list[str] | None = Field(None, description="List of event types to include")
     engine: str | None = Field(None, description="Scan engine profile name (from /api/engines)")
@@ -204,6 +206,21 @@ def start_scan_background(
 
 
 MAX_MULTI_SCAN_IDS = 50  # hard cap on multi-scan batch endpoints
+_SAFE_ID_RE = _re.compile(r"^[a-zA-Z0-9_\-]{1,64}$")
+
+
+def _validate_multi_ids(raw: str) -> list[str]:
+    """Split comma-separated IDs, validate each against SafeId pattern."""
+    parts = [s.strip() for s in raw.split(",") if s.strip()]
+    if len(parts) > MAX_MULTI_SCAN_IDS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Too many scan IDs (max {MAX_MULTI_SCAN_IDS})",
+        )
+    for sid in parts:
+        if not _SAFE_ID_RE.match(sid):
+            raise HTTPException(status_code=422, detail=f"Invalid scan ID: {sid!r}")
+    return parts
 
 
 @router.get("/scans/export-multi")
@@ -213,12 +230,7 @@ async def export_scan_json_multi(
     svc: ScanService = Depends(get_scan_service),
 ) -> StreamingResponse:
     """Export event results for multiple scans as JSON."""
-    id_parts = [s.strip() for s in ids.split(",") if s.strip()]
-    if len(id_parts) > MAX_MULTI_SCAN_IDS:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Too many scan IDs (max {MAX_MULTI_SCAN_IDS})",
-        )
+    id_parts = _validate_multi_ids(ids)
     scaninfo: list = []
     scan_name = ""
 
@@ -267,12 +279,7 @@ async def export_scan_viz_multi(
     if not ids:
         raise HTTPException(status_code=400, detail="No scan IDs provided")
 
-    id_parts_viz = [s.strip() for s in ids.split(",") if s.strip()]
-    if len(id_parts_viz) > MAX_MULTI_SCAN_IDS:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Too many scan IDs (max {MAX_MULTI_SCAN_IDS})",
-        )
+    id_parts_viz = _validate_multi_ids(ids)
 
     data: list = []
     roots: list = []
@@ -318,12 +325,7 @@ async def rerun_scan_multi(
     dbh = svc.dbh
     new_scan_ids: list = []
 
-    id_parts_rerun = [s.strip() for s in ids.split(",") if s.strip()]
-    if len(id_parts_rerun) > MAX_MULTI_SCAN_IDS:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Too many scan IDs (max {MAX_MULTI_SCAN_IDS})",
-        )
+    id_parts_rerun = _validate_multi_ids(ids)
 
     for scan_id in id_parts_rerun:
         record = svc.get_scan(scan_id)
@@ -371,7 +373,7 @@ async def rerun_scan_multi(
         except Exception as e:
             continue
         while dbh.scanInstanceGet(new_scan_id) is None:
-            time.sleep(1)
+            await asyncio.sleep(1)
         new_scan_ids.append(new_scan_id)
 
     return {"new_scan_ids": new_scan_ids, "message": f"{len(new_scan_ids)} scans rerun started"}
@@ -1840,7 +1842,7 @@ async def rerun_scan(
         raise HTTPException(status_code=500, detail="Failed to start scan rerun")
 
     while dbh.scanInstanceGet(new_scan_id) is None:
-        time.sleep(1)
+        await asyncio.sleep(1)
 
     return ScanRerunResponse(new_scan_id=new_scan_id)
 
