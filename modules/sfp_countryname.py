@@ -21,10 +21,10 @@ import phonenumbers
 from phonenumbers.phonenumberutil import region_code_for_country_code
 
 from spiderfoot import SpiderFootEvent, SpiderFootHelpers
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_countryname(SpiderFootModernPlugin):
+class sfp_countryname(SpiderFootAsyncPlugin):
     """SpiderFoot plugin to identify country names in any obtained data."""
     meta = {
         'name': "Country Name Extractor",

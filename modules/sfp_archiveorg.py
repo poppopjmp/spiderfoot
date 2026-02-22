@@ -19,10 +19,10 @@ import datetime
 import json
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_archiveorg(SpiderFootModernPlugin):
+class sfp_archiveorg(SpiderFootAsyncPlugin):
     """
     SpiderFoot plugin to query archive.org (Wayback Machine) for historic versions of certain pages/files.
     Emits events for historic versions found, based on input event types and configuration.

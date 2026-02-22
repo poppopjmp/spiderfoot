@@ -17,10 +17,10 @@ from __future__ import annotations
 import dns.resolver
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_cloudfront(SpiderFootModernPlugin):
+class sfp_cloudfront(SpiderFootAsyncPlugin):
     """SpiderFoot plugin to identify domains using Amazon CloudFront CDN."""
     meta = {
         "name": "Amazon CloudFront Detector",

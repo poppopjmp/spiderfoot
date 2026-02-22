@@ -21,10 +21,10 @@ from subprocess import PIPE, Popen, TimeoutExpired
 
 from spiderfoot import SpiderFootEvent
 from spiderfoot import SpiderFootHelpers
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_tool_wafw00f(SpiderFootModernPlugin):
+class sfp_tool_wafw00f(SpiderFootAsyncPlugin):
     """Identify what web application firewall (WAF) is in use on the specified website."""
 
     meta = {

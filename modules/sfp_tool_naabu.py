@@ -14,10 +14,10 @@ import os
 import subprocess
 import tempfile
 
-from spiderfoot import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_tool_naabu(SpiderFootModernPlugin):
+class sfp_tool_naabu(SpiderFootAsyncPlugin):
     """Fast port scanning via Naabu."""
 
     meta = {

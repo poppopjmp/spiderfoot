@@ -18,10 +18,10 @@ import json
 import time
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_emailrep(SpiderFootModernPlugin):
+class sfp_emailrep(SpiderFootAsyncPlugin):
     """SpiderFoot plugin to search EmailRep.io for email address reputation."""
     meta = {
         'name': "EmailRep",

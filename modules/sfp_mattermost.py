@@ -3,9 +3,9 @@ from __future__ import annotations
 """SpiderFoot plug-in module: mattermost."""
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
-class sfp_mattermost(SpiderFootModernPlugin):
+class sfp_mattermost(SpiderFootAsyncPlugin):
     """Monitors Mattermost servers for messages and emits events."""
 
     meta = {

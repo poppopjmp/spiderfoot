@@ -21,10 +21,10 @@ import urllib.parse
 from datetime import datetime, timedelta
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_hunterhow(SpiderFootModernPlugin):
+class sfp_hunterhow(SpiderFootAsyncPlugin):
 
     """Search Hunter.how for open ports, banners, domains and geolocation data."""
 

@@ -18,10 +18,10 @@ import json
 import time
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_leakcheck(SpiderFootModernPlugin):
+class sfp_leakcheck(SpiderFootAsyncPlugin):
     """Gather breach data from LeakCheck API."""
 
     meta = {

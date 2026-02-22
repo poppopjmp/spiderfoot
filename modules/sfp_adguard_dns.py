@@ -18,10 +18,10 @@ from __future__ import annotations
 import dns.resolver
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_adguard_dns(SpiderFootModernPlugin):
+class sfp_adguard_dns(SpiderFootAsyncPlugin):
     """SpiderFoot plug-in for looking up whether hosts are blocked by AdGuard DNS servers."""
     meta = {
         'name': "AdGuard DNS",

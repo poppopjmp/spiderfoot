@@ -19,10 +19,10 @@ import json
 import urllib.parse
 
 from spiderfoot import SpiderFootEvent, SpiderFootHelpers
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_snov(SpiderFootModernPlugin):
+class sfp_snov(SpiderFootAsyncPlugin):
 
     """Gather available email IDs from identified domains"""
 

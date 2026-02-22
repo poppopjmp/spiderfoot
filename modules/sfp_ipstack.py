@@ -18,10 +18,10 @@ from __future__ import annotations
 import json
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_ipstack(SpiderFootModernPlugin):
+class sfp_ipstack(SpiderFootAsyncPlugin):
 
     """Identifies the physical location of IP addresses identified using ipstack.com."""
 

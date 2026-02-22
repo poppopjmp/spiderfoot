@@ -797,7 +797,7 @@ class sfp__stor_db_advanced(SpiderFootModernPlugin):
             self._bulk_store_default(events)
 
     def _bulk_store_default(self, events: list[Any]):
-        """Bulk store events using default database.""
+        """Bulk store events using default database."""
         for event in events:
             if self.opts['maxstorage'] != 0 and len(event.data) > self.opts['maxstorage']:
                 self.__sfdb__.scanEventStore(

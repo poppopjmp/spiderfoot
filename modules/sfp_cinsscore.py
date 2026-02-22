@@ -17,10 +17,10 @@ from __future__ import annotations
 from netaddr import IPAddress, IPNetwork
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_cinsscore(SpiderFootModernPlugin):
+class sfp_cinsscore(SpiderFootAsyncPlugin):
     """SpiderFoot plugin to check if an IP address is malicious according to the CINS Army list."""
 
     meta = {

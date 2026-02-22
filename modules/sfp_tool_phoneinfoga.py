@@ -7,9 +7,9 @@ from __future__ import annotations
 import json
 import time
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
-class sfp_tool_phoneinfoga(SpiderFootModernPlugin):
+class sfp_tool_phoneinfoga(SpiderFootAsyncPlugin):
     """Gather phone number intelligence using PhoneInfoga."""
 
     meta = {

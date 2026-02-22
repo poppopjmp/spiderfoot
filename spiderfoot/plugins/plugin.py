@@ -10,6 +10,12 @@
 # -------------------------------------------------------------------------------
 """Base class for all SpiderFoot modules (plugins).
 
+.. deprecated:: 6.0.0
+    This class is retained for **backward compatibility only**.
+    New modules should subclass :class:`~spiderfoot.plugins.async_plugin.SpiderFootAsyncPlugin`
+    which inherits all functionality from this class (via ``SpiderFootModernPlugin``)
+    and adds native async I/O support.
+
 Provides the :class:`SpiderFootPlugin` ABC that every ``sfp_*`` module
 subclasses.  Handles event registration, listener management, thread
 coordination, error tracking, and the ``handleEvent`` / ``producedEvents``

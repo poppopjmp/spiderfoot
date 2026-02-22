@@ -18,10 +18,10 @@ from __future__ import annotations
 import json
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_seon(SpiderFootModernPlugin):
+class sfp_seon(SpiderFootAsyncPlugin):
 
     """Queries seon.io to gather intelligence about IP Addresses, email addresses, and phone numbers"""
 

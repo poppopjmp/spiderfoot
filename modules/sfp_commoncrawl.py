@@ -19,10 +19,10 @@ import json
 import re
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_commoncrawl(SpiderFootModernPlugin):
+class sfp_commoncrawl(SpiderFootAsyncPlugin):
     """SpiderFoot plugin to search CommonCrawl.org for URLs related to the target."""
     meta = {
         'name': "CommonCrawl",

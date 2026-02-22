@@ -18,10 +18,10 @@ import base64
 import json
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_twilio(SpiderFootModernPlugin):
+class sfp_twilio(SpiderFootAsyncPlugin):
 
     """Obtain information from Twilio about phone numbers. Ensure you have the Caller Name add-on installed in Twilio."""
 

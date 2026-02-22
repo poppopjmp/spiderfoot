@@ -15,10 +15,10 @@ import subprocess
 import tempfile
 from typing import Any
 
-from spiderfoot import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_httpx(SpiderFootModernPlugin):
+class sfp_httpx(SpiderFootAsyncPlugin):
     """HTTP probing and technology detection via httpx."""
 
     meta = {

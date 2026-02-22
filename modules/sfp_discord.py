@@ -3,11 +3,11 @@ from __future__ import annotations
 """SpiderFoot plug-in module: discord."""
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 import json
 import requests
 
-class sfp_discord(SpiderFootModernPlugin):
+class sfp_discord(SpiderFootAsyncPlugin):
     """Discord Channel Monitor"""
     meta = {
         'name': "Discord Channel Monitor",

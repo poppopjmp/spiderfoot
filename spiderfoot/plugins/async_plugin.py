@@ -1,8 +1,12 @@
 """Async module support for SpiderFoot modern plugins.
 
+**This is the recommended base class for all new SpiderFoot modules.**
+
 Provides an async-capable base class that allows modules to use
 async/await for I/O operations while remaining compatible with the
-synchronous scan engine.
+synchronous scan engine. Modules with synchronous ``handleEvent`` methods
+work unchanged — the async dispatch is only activated when
+``handleEvent`` is an ``async def``.
 
 **v2 (Batch 43)** – HTTP and DNS now use native ``aiohttp`` / ``aiodns``
 via :mod:`spiderfoot.sflib.async_network` instead of wrapping the sync

@@ -20,10 +20,10 @@ import json
 import time
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_intelx(SpiderFootModernPlugin):
+class sfp_intelx(SpiderFootAsyncPlugin):
 
     """Obtain information from IntelligenceX about identified IP addresses, domains, e-mail addresses and phone numbers."""
 

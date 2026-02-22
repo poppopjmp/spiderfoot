@@ -21,10 +21,10 @@ import re
 import urllib.parse
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_keybase(SpiderFootModernPlugin):
+class sfp_keybase(SpiderFootAsyncPlugin):
 
     """Obtain additional information about domain names and identified usernames."""
 

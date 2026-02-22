@@ -18,10 +18,10 @@ import re
 import urllib.parse
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_base64(SpiderFootModernPlugin):
+class sfp_base64(SpiderFootAsyncPlugin):
     """SpiderFoot plugin to identify Base64-encoded strings in URLs."""
     __name__ = "sfp_base64"
 

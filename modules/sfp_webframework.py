@@ -17,7 +17,7 @@ from __future__ import annotations
 import re
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 regexps = dict({
     "jQuery": list(['jquery']),  # unlikely false positive
@@ -32,7 +32,7 @@ regexps = dict({
 })
 
 
-class sfp_webframework(SpiderFootModernPlugin):
+class sfp_webframework(SpiderFootAsyncPlugin):
     """Identify the usage of popular web frameworks like jQuery, YUI and others."""
 
     __name__ = "sfp_webframework"

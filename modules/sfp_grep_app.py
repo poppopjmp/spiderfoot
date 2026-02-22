@@ -21,10 +21,10 @@ import time
 import urllib.parse
 
 from spiderfoot import SpiderFootEvent, SpiderFootHelpers
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_grep_app(SpiderFootModernPlugin):
+class sfp_grep_app(SpiderFootAsyncPlugin):
 
     """Search grep.app API for links and emails related to the specified domain."""
 

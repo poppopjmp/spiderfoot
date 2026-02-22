@@ -18,10 +18,10 @@ import json
 import urllib.parse
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_viewdns(SpiderFootModernPlugin):
+class sfp_viewdns(SpiderFootAsyncPlugin):
 
     """Identify co-hosted websites and perform reverse Whois lookups using ViewDNS.info."""
 

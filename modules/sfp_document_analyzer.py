@@ -52,7 +52,7 @@ import urllib.error
 import urllib.request
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 log = logging.getLogger("spiderfoot.module.sfp_document_analyzer")
 
@@ -126,7 +126,7 @@ def _extract_entities(text: str) -> dict[str, list[str]]:
 # ---- Module class ----
 
 
-class sfp_document_analyzer(SpiderFootModernPlugin):
+class sfp_document_analyzer(SpiderFootAsyncPlugin):
     """Tika-powered document analysis — extracts text, metadata and IOCs
     from user-uploaded files and publishes them as SpiderFoot events.
 

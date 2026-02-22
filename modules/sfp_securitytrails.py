@@ -18,10 +18,10 @@ import json
 import time
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_securitytrails(SpiderFootModernPlugin):
+class sfp_securitytrails(SpiderFootAsyncPlugin):
 
     """Obtain Passive DNS and other information from SecurityTrails"""
 

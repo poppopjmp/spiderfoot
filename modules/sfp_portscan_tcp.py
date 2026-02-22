@@ -22,10 +22,10 @@ import time
 from netaddr import IPNetwork
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_portscan_tcp(SpiderFootModernPlugin):
+class sfp_portscan_tcp(SpiderFootAsyncPlugin):
 
     """Scans for commonly open TCP ports on Internet-facing systems."""
 

@@ -19,10 +19,10 @@ import json
 import time
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_datalastic(SpiderFootModernPlugin):
+class sfp_datalastic(SpiderFootAsyncPlugin):
 
     """Query Datalastic for maritime vessel tracking, specs, ports and intelligence."""
 

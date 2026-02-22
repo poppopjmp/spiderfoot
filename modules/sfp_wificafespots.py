@@ -3,9 +3,9 @@ from __future__ import annotations
 """SpiderFoot plug-in module: wificafespots."""
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
-class sfp_wificafespots(SpiderFootModernPlugin):
+class sfp_wificafespots(SpiderFootAsyncPlugin):
     """Queries WiFiCafeSpots.com for public WiFi hotspots and related info."""
 
     meta = {

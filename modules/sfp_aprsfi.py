@@ -19,10 +19,10 @@ import json
 import time
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_aprsfi(SpiderFootModernPlugin):
+class sfp_aprsfi(SpiderFootAsyncPlugin):
 
     """Query aprs.fi for APRS station locations and AIS vessel tracking data."""
 

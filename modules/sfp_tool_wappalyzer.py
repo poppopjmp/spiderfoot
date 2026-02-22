@@ -17,10 +17,10 @@ from __future__ import annotations
 import json
 import requests
 from spiderfoot import SpiderFootEvent, SpiderFootHelpers
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_tool_wappalyzer(SpiderFootModernPlugin):
+class sfp_tool_wappalyzer(SpiderFootAsyncPlugin):
     """Wappalyzer identifies technologies on websites using the official API."""
 
     meta = {

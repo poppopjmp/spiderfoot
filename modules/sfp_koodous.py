@@ -20,10 +20,10 @@ import time
 import urllib.parse
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_koodous(SpiderFootModernPlugin):
+class sfp_koodous(SpiderFootAsyncPlugin):
 
     """Search Koodous for mobile apps."""
 

@@ -18,10 +18,10 @@ import re
 import urllib.parse
 
 from spiderfoot import SpiderFootEvent, SpiderFootHelpers
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_google_tag_manager(SpiderFootModernPlugin):
+class sfp_google_tag_manager(SpiderFootAsyncPlugin):
     """SpiderFoot plugin to search Google Tag Manager (GTM) for hosts sharing the same GTM code."""
     __name__ = "sfp_google_tag_manager"
     meta = {

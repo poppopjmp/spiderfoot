@@ -21,10 +21,10 @@ import time
 
 from urllib.parse import urlparse
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_s3bucket(SpiderFootModernPlugin):
+class sfp_s3bucket(SpiderFootAsyncPlugin):
     """Search for potential Amazon S3 buckets associated with the target and attempt to list their contents."""
 
     meta = {

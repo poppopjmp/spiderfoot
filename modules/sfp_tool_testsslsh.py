@@ -22,10 +22,10 @@ from netaddr import IPNetwork
 from subprocess import PIPE, Popen, TimeoutExpired
 
 from spiderfoot import SpiderFootEvent, SpiderFootHelpers
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_tool_testsslsh(SpiderFootModernPlugin):
+class sfp_tool_testsslsh(SpiderFootAsyncPlugin):
 
     """Identify various TLS/SSL weaknesses, including Heartbleed, CRIME and ROBOT."""
 

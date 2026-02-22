@@ -20,10 +20,10 @@ import json
 from netaddr import IPNetwork
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_torexits(SpiderFootModernPlugin):
+class sfp_torexits(SpiderFootAsyncPlugin):
 
     """Check if an IP adddress or netblock appears on the Tor Metrics exit node list."""
 

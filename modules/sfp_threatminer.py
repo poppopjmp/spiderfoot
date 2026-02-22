@@ -21,10 +21,10 @@ from datetime import datetime
 from netaddr import IPNetwork
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_threatminer(SpiderFootModernPlugin):
+class sfp_threatminer(SpiderFootAsyncPlugin):
 
     """Obtain information from ThreatMiner"""
 

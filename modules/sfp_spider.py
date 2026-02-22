@@ -19,10 +19,10 @@ import json
 import time
 
 from spiderfoot import SpiderFootEvent, SpiderFootHelpers
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_spider(SpiderFootModernPlugin):
+class sfp_spider(SpiderFootAsyncPlugin):
 
     """Spidering of web-pages to extract content for searching."""
 

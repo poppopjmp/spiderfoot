@@ -20,10 +20,10 @@ import time
 import urllib.parse
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_emailcrawlr(SpiderFootModernPlugin):
+class sfp_emailcrawlr(SpiderFootAsyncPlugin):
     """EmailCrawlr plugin for searching email addresses and phone numbers associated with a domain."""
     meta = {
         'name': "EmailCrawlr",

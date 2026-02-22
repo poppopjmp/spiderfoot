@@ -18,10 +18,10 @@ from __future__ import annotations
 import urllib.parse
 
 from spiderfoot import SpiderFootEvent, SpiderFootHelpers
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_botscout(SpiderFootModernPlugin):
+class sfp_botscout(SpiderFootAsyncPlugin):
     """SpiderFoot plugin to search BotScout.com for malicious IPs and email addresses."""
     meta = {
         'name': "BotScout",

@@ -19,7 +19,7 @@ from __future__ import annotations
 import re
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 # Indentify pages that use Javascript libs, handle passwords, have forms,
 # permit file uploads and more to come.
@@ -33,7 +33,7 @@ regexps = dict({
 })
 
 
-class sfp_pageinfo(SpiderFootModernPlugin):
+class sfp_pageinfo(SpiderFootAsyncPlugin):
 
     """Obtain information about web pages (do they take passwords, do they contain forms, etc.)"""
 

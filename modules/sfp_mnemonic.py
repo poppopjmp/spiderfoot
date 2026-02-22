@@ -20,10 +20,10 @@ import time
 import urllib.parse
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_mnemonic(SpiderFootModernPlugin):
+class sfp_mnemonic(SpiderFootAsyncPlugin):
 
     """Obtain Passive DNS information from PassiveDNS.mnemonic.no."""
 

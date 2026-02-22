@@ -57,7 +57,7 @@ except ImportError:
     HAS_AUTH_LIBS = False
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
 class SecurityLevel(Enum):
@@ -745,7 +745,7 @@ class ZeroTrustController:
             }
 
 
-class sfp__security_hardening(SpiderFootModernPlugin):
+class sfp__security_hardening(SpiderFootAsyncPlugin):
     """Advanced Security Hardening Module."""
 
     meta = {

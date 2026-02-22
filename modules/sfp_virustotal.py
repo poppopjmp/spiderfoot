@@ -20,10 +20,10 @@ import time
 from netaddr import IPNetwork
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_virustotal(SpiderFootModernPlugin):
+class sfp_virustotal(SpiderFootAsyncPlugin):
 
     """Obtain information from VirusTotal about identified IP addresses."""
 

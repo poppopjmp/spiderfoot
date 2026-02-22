@@ -18,11 +18,11 @@ import json
 import time
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 import requests
 
 
-class sfp_rocketreach(SpiderFootModernPlugin):
+class sfp_rocketreach(SpiderFootAsyncPlugin):
     """Look up contact information from RocketReach using the official API."""
 
     meta = {

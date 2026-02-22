@@ -17,10 +17,10 @@ from __future__ import annotations
 import dns.resolver
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_dns_for_family(SpiderFootModernPlugin):
+class sfp_dns_for_family(SpiderFootAsyncPlugin):
     """DNS for Family"""
 
     meta = {

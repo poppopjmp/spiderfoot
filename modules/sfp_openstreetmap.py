@@ -21,10 +21,10 @@ import time
 import urllib.parse
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_openstreetmap(SpiderFootModernPlugin):
+class sfp_openstreetmap(SpiderFootAsyncPlugin):
 
     """Retrieves latitude/longitude coordinates for physical addresses from OpenStreetMap API."""
 

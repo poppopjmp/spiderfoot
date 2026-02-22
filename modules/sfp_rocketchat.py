@@ -3,9 +3,9 @@ from __future__ import annotations
 """SpiderFoot plug-in module: rocketchat."""
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
-class sfp_rocketchat(SpiderFootModernPlugin):
+class sfp_rocketchat(SpiderFootAsyncPlugin):
     """Monitors Rocket.Chat servers for messages and emits events."""
 
     meta = {

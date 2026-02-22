@@ -19,10 +19,10 @@ import time
 import urllib.parse
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_citadel(SpiderFootModernPlugin):
+class sfp_citadel(SpiderFootAsyncPlugin):
     """SpiderFoot plugin to search Leak-Lookup.com's database of breaches."""
     meta = {
         'name': "Leak-Lookup",

@@ -19,10 +19,10 @@ import time
 import urllib.parse
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_apple_itunes(SpiderFootModernPlugin):
+class sfp_apple_itunes(SpiderFootAsyncPlugin):
     """Query Apple iTunes for mobile apps."""
     meta = {
         'name': "Apple iTunes",

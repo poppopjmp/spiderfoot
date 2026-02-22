@@ -18,10 +18,10 @@ import json
 import time
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_cisco_umbrella(SpiderFootModernPlugin):
+class sfp_cisco_umbrella(SpiderFootAsyncPlugin):
     """SpiderFoot plugin to query Cisco Umbrella Investigate API for domain information."""
     meta = {
         "name": "Cisco Umbrella Investigate",

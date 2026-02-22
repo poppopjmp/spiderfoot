@@ -13,10 +13,10 @@ import os
 import subprocess
 import tempfile
 
-from spiderfoot import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_tool_gau(SpiderFootModernPlugin):
+class sfp_tool_gau(SpiderFootAsyncPlugin):
     """Fetch known URLs from web archives via gau."""
 
     meta = {

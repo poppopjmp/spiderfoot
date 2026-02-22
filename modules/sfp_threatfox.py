@@ -18,10 +18,10 @@ import json
 import time
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_threatfox(SpiderFootModernPlugin):
+class sfp_threatfox(SpiderFootAsyncPlugin):
 
     """Check if an IP address is malicious according to ThreatFox."""
 

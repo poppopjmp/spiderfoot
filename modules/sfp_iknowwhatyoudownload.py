@@ -17,10 +17,10 @@ import json
 import urllib.parse
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_iknowwhatyoudownload(SpiderFootModernPlugin):
+class sfp_iknowwhatyoudownload(SpiderFootAsyncPlugin):
 
     """Check iknowwhatyoudownload.com for IP addresses that have been using torrents."""
 

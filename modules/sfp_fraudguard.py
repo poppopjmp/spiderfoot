@@ -22,10 +22,10 @@ from datetime import datetime
 from netaddr import IPNetwork
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_fraudguard(SpiderFootModernPlugin):
+class sfp_fraudguard(SpiderFootAsyncPlugin):
     """SpiderFoot plugin for querying Fraudguard.io API."""
     __name__ = "sfp_fraudguard"
     meta = {

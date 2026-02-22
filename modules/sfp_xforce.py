@@ -23,10 +23,10 @@ from datetime import datetime
 from netaddr import IPNetwork
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_xforce(SpiderFootModernPlugin):
+class sfp_xforce(SpiderFootAsyncPlugin):
 
     """Obtain IP reputation and passive DNS information from IBM X-Force Exchange."""
 

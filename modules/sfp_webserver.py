@@ -19,10 +19,10 @@ import json
 import re
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_webserver(SpiderFootModernPlugin):
+class sfp_webserver(SpiderFootAsyncPlugin):
 
     """Obtain web server banners to identify versions of web servers being used."""
 

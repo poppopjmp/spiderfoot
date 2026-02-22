@@ -19,10 +19,10 @@ import json
 import time
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_mandiant_ti(SpiderFootModernPlugin):
+class sfp_mandiant_ti(SpiderFootAsyncPlugin):
 
     """Obtain threat intelligence information from Mandiant Threat Intelligence API."""
 

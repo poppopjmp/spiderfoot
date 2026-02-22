@@ -19,10 +19,10 @@ import time
 import urllib.parse
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_whatcms(SpiderFootModernPlugin):
+class sfp_whatcms(SpiderFootAsyncPlugin):
 
     """Check web technology using WhatCMS.org API."""
 

@@ -12,10 +12,10 @@ import os
 import re
 import subprocess
 
-from spiderfoot import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_tool_linkfinder(SpiderFootModernPlugin):
+class sfp_tool_linkfinder(SpiderFootAsyncPlugin):
     """JavaScript endpoint extraction via LinkFinder."""
 
     meta = {

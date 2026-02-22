@@ -19,10 +19,10 @@ import json
 import re
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_ripe(SpiderFootModernPlugin):
+class sfp_ripe(SpiderFootAsyncPlugin):
 
     """Queries the RIPE registry (includes ARIN data) to identify netblocks and other info."""
 

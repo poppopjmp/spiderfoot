@@ -18,10 +18,10 @@ from __future__ import annotations
 import re
 
 from spiderfoot import SpiderFootEvent, SpiderFootHelpers
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_pastebin(SpiderFootModernPlugin):
+class sfp_pastebin(SpiderFootAsyncPlugin):
 
     """PasteBin search (via Google Search API) to identify related content."""
 

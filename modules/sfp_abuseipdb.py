@@ -20,10 +20,10 @@ import urllib.parse
 import requests
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_abuseipdb(SpiderFootModernPlugin):
+class sfp_abuseipdb(SpiderFootAsyncPlugin):
     """SpiderFoot plugin to check if an IP address is malicious according to AbuseIPDB.com."""
     meta = {
         'name': "AbuseIPDB",

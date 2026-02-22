@@ -20,10 +20,10 @@ import time
 import urllib.parse
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_networksdb(SpiderFootModernPlugin):
+class sfp_networksdb(SpiderFootAsyncPlugin):
 
     """Search NetworksDB.io API for IP address and domain information."""
 

@@ -20,10 +20,10 @@ import re
 import time
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_circllu(SpiderFootModernPlugin):
+class sfp_circllu(SpiderFootAsyncPlugin):
     """SpiderFoot plugin to obtain information from CIRCL.LU's Passive DNS and Passive SSL databases."""
     meta = {    
         'name': "CIRCL.LU",

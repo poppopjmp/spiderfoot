@@ -34,7 +34,7 @@ import hashlib
 import logging
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
 class AdvancedCorrelationEngine:
@@ -182,7 +182,7 @@ class AdvancedCorrelationEngine:
         return max_distance
 
 
-class sfp_advanced_correlation(SpiderFootModernPlugin):
+class sfp_advanced_correlation(SpiderFootAsyncPlugin):
     """Advanced correlation and entity resolution module."""
 
     meta = {

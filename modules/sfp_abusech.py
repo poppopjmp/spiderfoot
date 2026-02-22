@@ -19,10 +19,10 @@ import requests
 from netaddr import IPAddress, IPNetwork
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_abusech(SpiderFootModernPlugin):
+class sfp_abusech(SpiderFootAsyncPlugin):
     """SpiderFoot plugin to check if a host/domain, IP address or netblock is malicious according to Abuse.ch."""
     meta = {
         'name': "abuse.ch",

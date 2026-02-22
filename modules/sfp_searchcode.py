@@ -19,10 +19,10 @@ import time
 import urllib.parse
 
 from spiderfoot import SpiderFootEvent, SpiderFootHelpers
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_searchcode(SpiderFootModernPlugin):
+class sfp_searchcode(SpiderFootAsyncPlugin):
 
     """Search searchcode for code repositories mentioning the target domain."""
 

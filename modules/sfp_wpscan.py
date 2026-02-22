@@ -20,10 +20,10 @@ import re
 import time
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_wpscan(SpiderFootModernPlugin):
+class sfp_wpscan(SpiderFootAsyncPlugin):
 
     """Query WPScan Vulnerability Database for known WordPress core, plugin and theme vulnerabilities."""
 

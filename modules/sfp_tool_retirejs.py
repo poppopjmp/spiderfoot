@@ -21,10 +21,10 @@ import tempfile
 from subprocess import Popen, PIPE, TimeoutExpired
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_tool_retirejs(SpiderFootModernPlugin):
+class sfp_tool_retirejs(SpiderFootAsyncPlugin):
 
     """Scanner detecting the use of JavaScript libraries with known vulnerabilities"""
 

@@ -19,10 +19,10 @@ import time
 import urllib
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_abstractapi(SpiderFootModernPlugin):
+class sfp_abstractapi(SpiderFootAsyncPlugin):
     """Look up domain, phone and IP address information from AbstractAPI."""
 
     meta = {

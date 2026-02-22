@@ -19,10 +19,10 @@ import json
 import requests
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_zoomeye(SpiderFootModernPlugin):
+class sfp_zoomeye(SpiderFootAsyncPlugin):
     """Look up domain, IP address, and other information from ZoomEye."""
 
     meta = {

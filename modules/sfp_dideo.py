@@ -3,12 +3,12 @@ from __future__ import annotations
 """SpiderFoot plug-in module: dideo."""
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 import re
 import json
 
 
-class sfp_dideo(SpiderFootModernPlugin):
+class sfp_dideo(SpiderFootAsyncPlugin):
     
     """Monitors Dideo.ir for new videos and emits events."""
 

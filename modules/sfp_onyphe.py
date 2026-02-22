@@ -20,10 +20,10 @@ import time
 from datetime import datetime
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_onyphe(SpiderFootModernPlugin):
+class sfp_onyphe(SpiderFootAsyncPlugin):
 
     """Check Onyphe data (threat list, geo-location, pastries, vulnerabilities)  about a given IP."""
 

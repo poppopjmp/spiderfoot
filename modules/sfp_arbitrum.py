@@ -3,9 +3,9 @@ from __future__ import annotations
 """SpiderFoot plug-in module: arbitrum."""
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
-class sfp_arbitrum(SpiderFootModernPlugin):
+class sfp_arbitrum(SpiderFootAsyncPlugin):
     """Monitors Arbitrum blockchain for transactions and emits events."""
     meta = {
         'name': "Arbitrum Blockchain Monitor",

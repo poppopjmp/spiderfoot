@@ -18,10 +18,10 @@ import json
 import time
 
 from spiderfoot import SpiderFootEvent, SpiderFootHelpers
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_zonefiles(SpiderFootModernPlugin):
+class sfp_zonefiles(SpiderFootAsyncPlugin):
 
     """Search ZoneFiles.io Domain query API for domain information."""
 

@@ -17,10 +17,10 @@ from __future__ import annotations
 from netaddr import IPNetwork
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_bingsharedip(SpiderFootModernPlugin):
+class sfp_bingsharedip(SpiderFootAsyncPlugin):
     """SpiderFoot plugin to search Bing for hosts sharing the same IP."""
     meta = {
         'name': "Bing (Shared IPs)",

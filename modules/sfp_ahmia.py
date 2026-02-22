@@ -19,10 +19,10 @@ import re
 import urllib.parse
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_ahmia(SpiderFootModernPlugin):
+class sfp_ahmia(SpiderFootAsyncPlugin):
     """Search the Tor search engine 'Ahmia' for content related to the target."""
     meta = {
         'name': "Ahmia",

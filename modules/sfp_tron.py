@@ -3,9 +3,9 @@ from __future__ import annotations
 """SpiderFoot plug-in module: tron."""
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
-class sfp_tron(SpiderFootModernPlugin):
+class sfp_tron(SpiderFootAsyncPlugin):
     """Monitors Tron blockchain for transactions and emits events."""
 
     meta = {

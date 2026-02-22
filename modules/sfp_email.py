@@ -16,10 +16,10 @@ from __future__ import annotations
 # -------------------------------------------------------------------------------
 
 from spiderfoot import SpiderFootEvent, SpiderFootHelpers
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_email(SpiderFootModernPlugin):
+class sfp_email(SpiderFootAsyncPlugin):
     """SpiderFoot plugin to identify e-mail addresses in scraped webpages."""
     meta = {
         'name': "E-Mail Address Extractor",

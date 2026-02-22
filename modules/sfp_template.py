@@ -19,10 +19,10 @@ import json
 from netaddr import IPNetwork
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_template(SpiderFootModernPlugin):
+class sfp_template(SpiderFootAsyncPlugin):
     # The module descriptor dictionary contains all the meta data about a module necessary
     # for users to understand...
     """This is an example module to help developers create their own SpiderFoot modules."""

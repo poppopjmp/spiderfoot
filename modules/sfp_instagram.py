@@ -3,9 +3,9 @@ from __future__ import annotations
 """SpiderFoot plug-in module: instagram."""
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
-class sfp_instagram(SpiderFootModernPlugin):
+class sfp_instagram(SpiderFootAsyncPlugin):
     """Monitors Instagram for new posts or stories and emits events."""
 
     meta = {

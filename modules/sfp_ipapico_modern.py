@@ -37,10 +37,10 @@ import time
 from typing import Any
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_ipapico_modern(SpiderFootModernPlugin):
+class sfp_ipapico_modern(SpiderFootAsyncPlugin):
 
     """Queries ipapi.co to identify geolocation of IP Addresses """
 

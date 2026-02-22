@@ -19,10 +19,10 @@ import time
 import urllib.parse
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_hudsonrock(SpiderFootModernPlugin):
+class sfp_hudsonrock(SpiderFootAsyncPlugin):
 
     """Query Hudson Rock Cavalier API for infostealer compromise intelligence on domains, emails, usernames and phone numbers."""
 

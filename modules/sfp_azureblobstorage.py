@@ -20,10 +20,10 @@ import threading
 import time
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_azureblobstorage(SpiderFootModernPlugin):
+class sfp_azureblobstorage(SpiderFootAsyncPlugin):
     """Search for potential Azure blobs associated with the target and attempt to list their contents."""
     meta = {
         "name": "Azure Blob Finder",

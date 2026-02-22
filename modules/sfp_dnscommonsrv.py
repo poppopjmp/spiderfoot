@@ -18,10 +18,10 @@ from __future__ import annotations
 import dns.resolver
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_dnscommonsrv(SpiderFootModernPlugin):
+class sfp_dnscommonsrv(SpiderFootAsyncPlugin):
     """SpiderFoot plugin to brute-force common DNS SRV records."""
     meta = {
         'name': "DNS Common SRV",

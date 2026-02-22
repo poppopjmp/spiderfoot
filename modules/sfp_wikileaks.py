@@ -18,10 +18,10 @@ import datetime
 from urllib.parse import urlparse
 
 from spiderfoot import SpiderFootEvent, SpiderFootHelpers
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_wikileaks(SpiderFootModernPlugin):
+class sfp_wikileaks(SpiderFootAsyncPlugin):
 
     """Search Wikileaks for mentions of domain names and e-mail addresses."""
 

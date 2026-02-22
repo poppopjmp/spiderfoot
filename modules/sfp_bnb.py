@@ -3,9 +3,9 @@ from __future__ import annotations
 """SpiderFoot plug-in module: bnb."""
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
-class sfp_bnb(SpiderFootModernPlugin):
+class sfp_bnb(SpiderFootAsyncPlugin):
     """SpiderFoot plugin to monitor Binance Smart Chain (BNB) for transactions and emit events."""
     meta = {
         'name': "BNB Chain Monitor",

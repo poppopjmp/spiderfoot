@@ -19,10 +19,10 @@ import json
 from netaddr import IPNetwork
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_threatcrowd(SpiderFootModernPlugin):
+class sfp_threatcrowd(SpiderFootAsyncPlugin):
 
     """Obtain information from ThreatCrowd about identified IP addresses, domains and e-mail addresses."""
 

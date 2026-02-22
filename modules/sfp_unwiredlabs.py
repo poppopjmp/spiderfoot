@@ -3,9 +3,9 @@ from __future__ import annotations
 """SpiderFoot plug-in module: unwiredlabs."""
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
-class sfp_unwiredlabs(SpiderFootModernPlugin):
+class sfp_unwiredlabs(SpiderFootAsyncPlugin):
     """Queries UnwiredLabs for geolocation data based on cell towers, WiFi, or IP."""
 
     meta = {

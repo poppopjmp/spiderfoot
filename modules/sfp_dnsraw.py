@@ -22,10 +22,10 @@ import dns.rdatatype
 import dns.resolver
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_dnsraw(SpiderFootModernPlugin):
+class sfp_dnsraw(SpiderFootAsyncPlugin):
     """SpiderFoot plugin for collecting raw DNS records such as MX, TXT and others."""
     meta = {
         'name': "DNS Raw Records",

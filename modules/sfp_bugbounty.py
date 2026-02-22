@@ -20,10 +20,10 @@ import time
 from ipaddress import ip_network
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_bugbounty(SpiderFootModernPlugin):
+class sfp_bugbounty(SpiderFootAsyncPlugin):
     """Bug Bounty Scope — Import in-scope targets from HackerOne, Bugcrowd, and Intigriti."""
 
     meta = {

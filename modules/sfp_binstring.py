@@ -17,10 +17,10 @@ from __future__ import annotations
 import string
 
 from spiderfoot import SpiderFootEvent, SpiderFootHelpers
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_binstring(SpiderFootModernPlugin):
+class sfp_binstring(SpiderFootAsyncPlugin):
     """SpiderFoot plugin to identify strings in binary content."""
     meta = {
         'name': "Binary String Extractor",

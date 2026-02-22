@@ -3,9 +3,9 @@ from __future__ import annotations
 """SpiderFoot plug-in module: aparat."""
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
-class sfp_aparat(SpiderFootModernPlugin):
+class sfp_aparat(SpiderFootAsyncPlugin):
     """Monitors Aparat for new videos and emits events."""
     meta = {
         'name': "Aparat Monitor",

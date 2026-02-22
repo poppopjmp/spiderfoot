@@ -18,10 +18,10 @@ from __future__ import annotations
 import json
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_debounce(SpiderFootModernPlugin):
+class sfp_debounce(SpiderFootAsyncPlugin):
     """SpiderFoot plugin to check whether an email is disposable using Debounce API."""
     meta = {
         'name': "Debounce",

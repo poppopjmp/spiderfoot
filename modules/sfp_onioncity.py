@@ -18,10 +18,10 @@ from __future__ import annotations
 import re
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_onioncity(SpiderFootModernPlugin):
+class sfp_onioncity(SpiderFootAsyncPlugin):
 
     """Search Tor """
 

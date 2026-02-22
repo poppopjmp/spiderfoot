@@ -18,10 +18,10 @@ from __future__ import annotations
 from netaddr import IPAddress, IPNetwork
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_multiproxy(SpiderFootModernPlugin):
+class sfp_multiproxy(SpiderFootAsyncPlugin):
 
     """Check if an IP address is an open proxy according to multiproxy.org open proxy list."""
 

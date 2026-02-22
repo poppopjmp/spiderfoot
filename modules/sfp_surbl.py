@@ -18,10 +18,10 @@ from __future__ import annotations
 from netaddr import IPNetwork
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_surbl(SpiderFootModernPlugin):
+class sfp_surbl(SpiderFootAsyncPlugin):
 
     """Check if a netblock, IP address or domain is in the SURBL blacklist."""
 

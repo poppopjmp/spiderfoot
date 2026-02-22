@@ -18,10 +18,10 @@ from __future__ import annotations
 from netaddr import IPNetwork
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_honeypot(SpiderFootModernPlugin):
+class sfp_honeypot(SpiderFootAsyncPlugin):
 
     """Query the Project Honey Pot database for IP addresses."""
 

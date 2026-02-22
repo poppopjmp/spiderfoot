@@ -22,10 +22,10 @@ import time
 import dns.resolver
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_tldsearch(SpiderFootModernPlugin):
+class sfp_tldsearch(SpiderFootAsyncPlugin):
 
     """Search all Internet TLDs for domains with the same name as the target (this can be very slow.)"""
 

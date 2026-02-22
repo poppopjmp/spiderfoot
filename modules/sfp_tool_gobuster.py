@@ -24,10 +24,10 @@ import paramiko
 import io
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_tool_gobuster(SpiderFootModernPlugin):
+class sfp_tool_gobuster(SpiderFootAsyncPlugin):
     """Identify web paths on target websites using the Gobuster tool."""
 
     meta = {

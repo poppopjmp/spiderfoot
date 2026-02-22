@@ -17,10 +17,10 @@ from __future__ import annotations
 # -------------------------------------------------------------------------------
 
 from spiderfoot import SpiderFootEvent, SpiderFootHelpers
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_pgp(SpiderFootModernPlugin):
+class sfp_pgp(SpiderFootAsyncPlugin):
 
     """Look up domains and e-mail addresses in PGP public key servers."""
 

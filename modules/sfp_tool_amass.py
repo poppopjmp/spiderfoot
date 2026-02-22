@@ -14,10 +14,10 @@ import os
 import subprocess
 import tempfile
 
-from spiderfoot import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_tool_amass(SpiderFootModernPlugin):
+class sfp_tool_amass(SpiderFootAsyncPlugin):
     """Attack surface mapping and subdomain discovery via OWASP Amass."""
 
     meta = {

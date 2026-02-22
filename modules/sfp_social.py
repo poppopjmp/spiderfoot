@@ -17,7 +17,7 @@ from __future__ import annotations
 import re
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 regexps = dict({
     "LinkedIn (Individual)": list(['.*linkedin.com/in/([a-zA-Z0-9_]+$)']),
@@ -38,7 +38,7 @@ regexps = dict({
 })
 
 
-class sfp_social(SpiderFootModernPlugin):
+class sfp_social(SpiderFootAsyncPlugin):
     """Identify presence on social media networks such as LinkedIn, Twitter and others."""
 
     __name__ = "sfp_social"

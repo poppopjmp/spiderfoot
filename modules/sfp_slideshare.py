@@ -16,10 +16,10 @@ from __future__ import annotations
 import re
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_slideshare(SpiderFootModernPlugin):
+class sfp_slideshare(SpiderFootAsyncPlugin):
 
     """Gather name and location from SlideShare profiles."""
 

@@ -22,10 +22,10 @@ from datetime import datetime
 from netaddr import IPNetwork
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_greynoise(SpiderFootModernPlugin):
+class sfp_greynoise(SpiderFootAsyncPlugin):
 
     """Obtain IP enrichment data from GreyNoise"""
 

@@ -19,10 +19,10 @@ from __future__ import annotations
 from netaddr import IPNetwork
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_sorbs(SpiderFootModernPlugin):
+class sfp_sorbs(SpiderFootAsyncPlugin):
 
     """Query the SORBS database for open relays, open proxies, vulnerable servers, etc."""
 

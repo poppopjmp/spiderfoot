@@ -16,10 +16,10 @@ from __future__ import annotations
 # -------------------------------------------------------------------------------
 
 from spiderfoot import SpiderFootEvent, SpiderFootHelpers
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_hashes(SpiderFootModernPlugin):
+class sfp_hashes(SpiderFootAsyncPlugin):
 
     """Identify MD5 and SHA hashes in web content, files and more."""
 

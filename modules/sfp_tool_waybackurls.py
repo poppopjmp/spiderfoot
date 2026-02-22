@@ -12,10 +12,10 @@ from __future__ import annotations
 import os
 import subprocess
 
-from spiderfoot import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_tool_waybackurls(SpiderFootModernPlugin):
+class sfp_tool_waybackurls(SpiderFootAsyncPlugin):
     """Fetch historical URLs from Wayback Machine via waybackurls."""
 
     meta = {

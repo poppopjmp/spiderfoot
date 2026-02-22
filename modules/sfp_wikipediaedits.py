@@ -21,10 +21,10 @@ import urllib.parse
 from html.parser import HTMLParser
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_wikipediaedits(SpiderFootModernPlugin):
+class sfp_wikipediaedits(SpiderFootAsyncPlugin):
 
     """Identify edits to Wikipedia articles made from a given IP address or username."""
 

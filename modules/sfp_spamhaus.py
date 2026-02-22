@@ -19,10 +19,10 @@ from __future__ import annotations
 from netaddr import IPNetwork
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_spamhaus(SpiderFootModernPlugin):
+class sfp_spamhaus(SpiderFootAsyncPlugin):
 
     """Check if a netblock or IP address is in the Spamhaus Zen database."""
 

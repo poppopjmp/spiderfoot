@@ -22,10 +22,10 @@ from datetime import datetime
 from netaddr import IPNetwork
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_alienvault(SpiderFootModernPlugin):
+class sfp_alienvault(SpiderFootAsyncPlugin):
     """SpiderFoot plug-in to obtain information from AlienVault Open Threat Exchange (OTX)."""
     meta = {
         'name': "AlienVault OTX",

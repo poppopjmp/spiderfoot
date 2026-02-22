@@ -20,10 +20,10 @@ import netaddr
 import whois
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_whois(SpiderFootModernPlugin):
+class sfp_whois(SpiderFootAsyncPlugin):
 
     """Perform a WHOIS look-up on domain names and owned netblocks."""
 

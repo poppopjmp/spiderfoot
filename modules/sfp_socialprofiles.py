@@ -18,7 +18,7 @@ import re
 import urllib.parse
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 sites = {
     # Search string to use, domain name the profile will sit on within
@@ -47,7 +47,7 @@ sites = {
 }
 
 
-class sfp_socialprofiles(SpiderFootModernPlugin):
+class sfp_socialprofiles(SpiderFootAsyncPlugin):
 
     """Tries to discover the social media profiles for human names identified."""
 

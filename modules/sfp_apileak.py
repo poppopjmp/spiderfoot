@@ -3,12 +3,12 @@ from __future__ import annotations
 """SpiderFoot plug-in module: apileak."""
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 import requests
 import re
 import base64
 
-class sfp_apileak(SpiderFootModernPlugin):
+class sfp_apileak(SpiderFootAsyncPlugin):
     """Searches for leaked API keys and secrets on GitHub and paste sites."""
     meta = {
         'name': "API Key/Secret Leak Detector",

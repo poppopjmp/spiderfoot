@@ -3,9 +3,9 @@ from __future__ import annotations
 """SpiderFoot plug-in module: mastodon."""
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
-class sfp_mastodon(SpiderFootModernPlugin):
+class sfp_mastodon(SpiderFootAsyncPlugin):
     """Monitors Mastodon for posts and emits events."""
 
     meta = {

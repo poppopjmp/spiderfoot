@@ -16,10 +16,10 @@ from __future__ import annotations
 import re
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_h1nobbdde(SpiderFootModernPlugin):
+class sfp_h1nobbdde(SpiderFootAsyncPlugin):
 
     """Check external vulnerability scanning/reporting service h1.nobbd.de to see if the target is listed."""
 

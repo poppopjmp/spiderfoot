@@ -15,10 +15,10 @@ from __future__ import annotations
 # -------------------------------------------------------------------------------
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_phishtank(SpiderFootModernPlugin):
+class sfp_phishtank(SpiderFootAsyncPlugin):
 
     """Check if a host/domain is malicious according to PhishTank."""
 

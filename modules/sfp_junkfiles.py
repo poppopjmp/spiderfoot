@@ -17,10 +17,10 @@ from __future__ import annotations
 import random
 
 from spiderfoot import SpiderFootEvent, SpiderFootHelpers
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_junkfiles(SpiderFootModernPlugin):
+class sfp_junkfiles(SpiderFootAsyncPlugin):
 
     """Looks for old/temporary and other similar files."""
 

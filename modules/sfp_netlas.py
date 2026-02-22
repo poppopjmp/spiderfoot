@@ -17,10 +17,10 @@ import time
 import urllib
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_netlas(SpiderFootModernPlugin):
+class sfp_netlas(SpiderFootAsyncPlugin):
     """SpiderFoot plug-in for searching Netlas API for domain, IP address, and
     other information.
 

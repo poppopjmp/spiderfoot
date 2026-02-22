@@ -17,6 +17,11 @@
 """
 SpiderFoot Modern Plugin Base
 
+.. deprecated:: 6.0.0
+    This class is retained for **backward compatibility** and as the base for
+    storage modules (``sfp__stor_*``). New modules should subclass
+    :class:`~spiderfoot.plugins.async_plugin.SpiderFootAsyncPlugin` instead.
+
 Extends SpiderFootPlugin with direct service access and metrics instrumentation.
 
 Usage (new-style module)::

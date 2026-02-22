@@ -20,10 +20,10 @@ import time
 from collections.abc import Generator
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_rapiddns(SpiderFootModernPlugin):
+class sfp_rapiddns(SpiderFootAsyncPlugin):
 
     """Query RapidDNS.io for subdomains (forward DNS) and reverse IP lookups. Free, no API key required."""
 

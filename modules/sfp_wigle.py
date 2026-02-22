@@ -19,10 +19,10 @@ import json
 import urllib.parse
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_wigle(SpiderFootModernPlugin):
+class sfp_wigle(SpiderFootAsyncPlugin):
 
     """Query WiGLE to identify nearby WiFi access points."""
 

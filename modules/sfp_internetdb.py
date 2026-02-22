@@ -20,10 +20,10 @@ import json
 from netaddr import IPNetwork
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_internetdb(SpiderFootModernPlugin):
+class sfp_internetdb(SpiderFootAsyncPlugin):
 
     """Query Shodan InternetDB for open ports, vulnerabilities, hostnames and CPEs."""
 

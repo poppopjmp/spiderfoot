@@ -13,10 +13,10 @@ import os
 import subprocess
 import tempfile
 
-from spiderfoot import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_tool_gitleaks(SpiderFootModernPlugin):
+class sfp_tool_gitleaks(SpiderFootAsyncPlugin):
     """Secret detection in git repositories via Gitleaks."""
 
     meta = {

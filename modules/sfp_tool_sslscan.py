@@ -12,10 +12,10 @@ import os
 import re
 import subprocess
 
-from spiderfoot import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_tool_sslscan(SpiderFootModernPlugin):
+class sfp_tool_sslscan(SpiderFootAsyncPlugin):
     """SSL cipher enumeration via sslscan."""
 
     meta = {
