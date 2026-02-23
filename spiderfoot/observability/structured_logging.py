@@ -109,7 +109,7 @@ class StructuredFormatter(logging.Formatter):
 
         sf_module = getattr(record, 'sf_module', None)
         if sf_module:
-            log_entry["module"] = sf_module
+            log_entry["sf_module"] = sf_module
 
         event_type = getattr(record, 'event_type', None)
         if event_type:

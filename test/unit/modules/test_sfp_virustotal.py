@@ -47,7 +47,7 @@ class TestModuleVirustotal(TestModuleBase):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_virustotal()
-        module.setup(sf, dict())
+        module.setup(sf, {'api_key': ''})
 
         target_value = 'example target value'
         target_type = 'IP_ADDRESS'
@@ -72,7 +72,8 @@ class TestModuleVirustotal(TestModuleBase):
         module.setup(sf, {'api_key': 'DUMMY', '_fetchtimeout': 1})
         module.setTarget(SpiderFootTarget('8.8.8.8', 'IP_ADDRESS'))
         event = SpiderFootEvent('IP_ADDRESS', '8.8.8.8', 'test', None)
-        vt_response = json.dumps({'detected_urls': [{}]})
+        # v3 API response format: data.attributes.last_analysis_stats
+        vt_response = json.dumps({'data': {'attributes': {'last_analysis_stats': {'malicious': 5, 'suspicious': 0, 'harmless': 0, 'undetected': 0}}}})
         with mock.patch.object(module.sf, 'fetchUrl', return_value={'content': vt_response, 'code': '200'}), \
              mock.patch.object(module, 'notifyListeners') as mock_notify, \
              mock.patch.object(time, 'sleep', return_value=None):
@@ -87,11 +88,13 @@ class TestModuleVirustotal(TestModuleBase):
         module.setup(sf, {'api_key': 'DUMMY', '_fetchtimeout': 1})
         module.setTarget(SpiderFootTarget('8.8.8.8', 'IP_ADDRESS'))
         event = SpiderFootEvent('IP_ADDRESS', '8.8.8.8', 'test', None)
-        vt_response = json.dumps({'detected_urls': [{}]})
+        # v3 API response format: data.attributes.last_analysis_stats
+        vt_response = json.dumps({'data': {'attributes': {'last_analysis_stats': {'malicious': 5, 'suspicious': 0, 'harmless': 0, 'undetected': 0}}}})
         with mock.patch.object(module.sf, 'fetchUrl', return_value={'content': vt_response, 'code': '200'}), \
-             mock.patch.object(module, 'notifyListeners') as mock_notify:
+             mock.patch.object(module, 'notifyListeners') as mock_notify, \
+             mock.patch.object(time, 'sleep', return_value=None):
             module.handleEvent(event)
-            module.handleEvent(event)  # Should not emit again
+            module.handleEvent(event)  # Should not emit again due to deduplication
             self.assertEqual(mock_notify.call_count, 1)
 
     def test_handleEvent_api_error_sets_errorState(self):

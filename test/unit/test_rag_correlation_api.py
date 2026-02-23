@@ -37,13 +37,14 @@ def _mock_engine():
     engine.index_events = MagicMock(return_value=None)
 
     from types import SimpleNamespace
-    hit = SimpleNamespace(
+    event = SimpleNamespace(
         event_id="e1", event_type="IP_ADDRESS", data="1.2.3.4",
-        scan_id="s1", score=0.95, metadata={"asn": "AS13335"},
+        scan_id="s1", extra={"asn": "AS13335"},
     )
+    hit = SimpleNamespace(event=event, score=0.95)
     result = SimpleNamespace(
-        hits=[hit], analysis="RAG analysis text",
-        confidence=0.87, risk_level="MEDIUM",
+        hits=[hit], rag_analysis="RAG analysis text",
+        confidence=0.87, risk_assessment="MEDIUM",
     )
     engine.correlate = MagicMock(return_value=result)
     return engine
@@ -174,7 +175,7 @@ class TestStats:
 # ---------------------------------------------------------------------------
 
 class TestSearch:
-    @patch("spiderfoot.embedding_service.get_embedding_service")
+    @patch("spiderfoot.services.embedding_service.get_embedding_service")
     @patch("spiderfoot.qdrant_client.get_qdrant_client")
     def test_search_success(self, mock_qd_fn, mock_emb_fn):
         from types import SimpleNamespace
@@ -185,7 +186,7 @@ class TestSearch:
 
         mock_qd = MagicMock()
         sr = SimpleNamespace(id="e1", score=0.9, payload={"data": "1.2.3.4"})
-        mock_qd.search.return_value = [sr]
+        mock_qd.search.return_value = SimpleNamespace(points=[sr])
         mock_qd_fn.return_value = mock_qd
 
         engine = _mock_engine()

@@ -50,6 +50,11 @@ class sfp_datalastic(SpiderFootAsyncPlugin):
                 "port data, historical positions, casualty reports, ownership, "
                 "inspections, and classification data."
             ),
+            'apiKeyInstructions': [
+                "Register at https://datalastic.com/",
+                "Navigate to your account dashboard to find your API key",
+                "Enter the key in the _api_key option",
+            ],
         }
     }
 

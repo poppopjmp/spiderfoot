@@ -190,7 +190,35 @@ class TestReportStore:
 # Background generation tests
 # ---------------------------------------------------------------------------
 
+def _make_mock_report(executive_summary="No findings to report."):
+    """Create a fake GeneratedReport-like object for tests."""
+    from unittest.mock import MagicMock
+    mock_report = MagicMock()
+    mock_report.title = "Mock Report"
+    mock_report.executive_summary = executive_summary
+    mock_report.recommendations = "No recommendations."
+    mock_report.sections = []
+    mock_report.metadata = {}
+    mock_report.generation_time_ms = 100.0
+    mock_report.total_tokens_used = 50
+    mock_report.report_type.value = "full"
+    return mock_report
+
+
 class TestBackgroundGeneration:
+    @pytest.fixture(autouse=True)
+    def mock_llm(self):
+        """Prevent real LLM/network calls during background generation tests."""
+        with patch(
+            "spiderfoot.reporting.report_generator.ReportGenerator",
+        ) as mock_cls:
+            mock_cls.return_value.generate.side_effect = (
+                lambda events, metadata: _make_mock_report(
+                    "No findings to report." if not events else "Mock executive summary."
+                )
+            )
+            yield mock_cls
+
     def test_generate_report_background_completes(self):
         report_id = "RPT-BG-1"
         store_report(report_id, _sample_stored_report(report_id, status="pending"))
@@ -294,9 +322,33 @@ class TestBackgroundGeneration:
 class TestAPIEndpoints:
     @pytest.fixture
     def client(self):
+        from spiderfoot.api.dependencies import get_scan_service, get_api_key
+        from unittest.mock import MagicMock
         app = FastAPI()
         app.include_router(router, prefix="/api")
+        # Override DB-dependent services so tests don't need a real PostgreSQL
+        mock_svc = MagicMock()
+        mock_svc.get_scan.return_value = None
+        mock_svc.get_events.return_value = []
+        app.dependency_overrides[get_scan_service] = lambda: mock_svc
+        app.dependency_overrides[get_api_key] = lambda: "test-key"
         return TestClient(app)
+
+    @pytest.fixture(autouse=True)
+    def mock_llm(self):
+        """Prevent real LLM/network calls in all endpoint tests."""
+        with patch(
+            "spiderfoot.reporting.report_generator.ReportGenerator",
+        ) as mock_cls:
+            mock_cls.return_value.generate.side_effect = (
+                lambda events, metadata: _make_mock_report(
+                    "No findings to report." if not events else "Mock executive summary."
+                )
+            )
+            mock_cls.return_value.generate_executive_only.return_value = (
+                "Mock executive-only summary."
+            )
+            yield mock_cls
 
     def test_generate_report_endpoint(self, client):
         with patch(

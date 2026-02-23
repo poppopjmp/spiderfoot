@@ -37,7 +37,7 @@ class TestSpiderFootPlugin(TestModuleBase):
         self.assertIsNone(self.plugin.sharedThreadPool)
 
     def test_log(self):
-        with patch('spiderfoot.plugin.logging.getLogger') as mock_getLogger:
+        with patch('spiderfoot.plugins.plugin.logging.getLogger') as mock_getLogger:
             log = self.plugin.log
             self.assertIsNotNone(log)
             mock_getLogger.assert_called_once_with(
@@ -250,7 +250,7 @@ class TestSpiderFootPlugin(TestModuleBase):
         callback.assert_called_once()
 
     def test_threadPool(self):
-        with patch('spiderfoot.plugin.SpiderFootThreadPool') as mock_SpiderFootThreadPool:
+        with patch('spiderfoot.plugins.plugin.SpiderFootThreadPool') as mock_SpiderFootThreadPool:
             pool = self.plugin.threadPool()
             mock_SpiderFootThreadPool.assert_called_once()
             self.assertEqual(pool, mock_SpiderFootThreadPool.return_value)
@@ -390,7 +390,7 @@ class TestSpiderFootPlugin(TestModuleBase):
             callback, taskName=f"{self.plugin.__name__}_threadWorker", maxThreads=self.plugin.maxThreads)
 
     def test_threadPool_with_arguments(self):
-        with patch('spiderfoot.plugin.SpiderFootThreadPool') as mock_SpiderFootThreadPool:
+        with patch('spiderfoot.plugins.plugin.SpiderFootThreadPool') as mock_SpiderFootThreadPool:
             pool = self.plugin.threadPool(5, 10)
             mock_SpiderFootThreadPool.assert_called_once_with(5, 10)
             self.assertEqual(pool, mock_SpiderFootThreadPool.return_value)

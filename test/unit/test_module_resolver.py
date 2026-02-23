@@ -43,23 +43,23 @@ class TestModuleResolver(unittest.TestCase):
         # Build a chain: target → dns → portscan → vulnscan
         self.r.register(_make_desc(
             "sfp_target",
-            watched_events=["ROOT"],
-            produced_events=["DOMAIN_NAME", "IP_ADDRESS_INTERNAL"],
+            watched=["ROOT"],
+            produced=["DOMAIN_NAME", "IP_ADDRESS_INTERNAL"],
         ))
         self.r.register(_make_desc(
             "sfp_dns",
-            watched_events=["DOMAIN_NAME"],
-            produced_events=["IP_ADDRESS"],
+            watched=["DOMAIN_NAME"],
+            produced=["IP_ADDRESS"],
         ))
         self.r.register(_make_desc(
             "sfp_portscan",
-            watched_events=["IP_ADDRESS"],
-            produced_events=["TCP_PORT_OPEN"],
+            watched=["IP_ADDRESS"],
+            produced=["TCP_PORT_OPEN"],
         ))
         self.r.register(_make_desc(
             "sfp_vulnscan",
-            watched_events=["TCP_PORT_OPEN"],
-            produced_events=["VULNERABILITY"],
+            watched=["TCP_PORT_OPEN"],
+            produced=["VULNERABILITY"],
         ))
 
     def test_register_and_list(self):
@@ -93,8 +93,8 @@ class TestModuleResolver(unittest.TestCase):
 
     def test_all_event_types(self):
         evts = self.r.all_event_types()
-        self.assertIn("VULNERABILITY")
-        self.assertIn("ROOT")
+        self.assertIn("VULNERABILITY", evts)
+        self.assertIn("ROOT", evts)
 
     def test_resolve_target_events(self):
         result = self.r.resolve(target_events=["VULNERABILITY"])
@@ -129,8 +129,8 @@ class TestModuleResolver(unittest.TestCase):
         r2 = ModuleResolver()
         r2.register(_make_desc(
             "sfp_orphan",
-            watched_events=["NONEXISTENT_EVENT"],
-            produced_events=["RESULT"],
+            watched=["NONEXISTENT_EVENT"],
+            produced=["RESULT"],
         ))
         result = r2.resolve(target_events=["RESULT"])
         self.assertEqual(result.status, ResolveStatus.MISSING_DEPS)

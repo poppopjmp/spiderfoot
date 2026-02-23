@@ -34,14 +34,17 @@ def test_produced_events(plugin):
 
 def test_option_validation():
     p = sfp_mastodon()
-    with pytest.raises(ValueError):
-        p.setup(None, {"access_token": "", "username": "user", "instance_url": "https://mastodon.social", "max_posts": 10, "output_format": "summary"})
-    with pytest.raises(ValueError):
-        p.setup(None, {"access_token": "token", "username": "", "instance_url": "https://mastodon.social", "max_posts": 10, "output_format": "summary"})
-    with pytest.raises(ValueError):
-        p.setup(None, {"access_token": "token", "username": "user", "instance_url": "https://mastodon.social", "max_posts": 0, "output_format": "summary"})
-    with pytest.raises(ValueError):
-        p.setup(None, {"access_token": "token", "username": "user", "instance_url": "https://mastodon.social", "max_posts": 10, "output_format": "invalid"})
+    p.setup(None, {"access_token": "", "username": "user", "instance_url": "https://mastodon.social", "max_posts": 10, "output_format": "summary"})
+    assert p.errorState
+    p = sfp_mastodon()
+    p.setup(None, {"access_token": "token", "username": "", "instance_url": "https://mastodon.social", "max_posts": 10, "output_format": "summary"})
+    assert p.errorState
+    p = sfp_mastodon()
+    p.setup(None, {"access_token": "token", "username": "user", "instance_url": "https://mastodon.social", "max_posts": 0, "output_format": "summary"})
+    assert p.errorState
+    p = sfp_mastodon()
+    p.setup(None, {"access_token": "token", "username": "user", "instance_url": "https://mastodon.social", "max_posts": 10, "output_format": "invalid"})
+    assert p.errorState
 
 def test_handle_event_stub(plugin):
     event = SpiderFootEvent('ROOT', 'test', 'test', None)

@@ -38,7 +38,7 @@ class TestSpiderFootModuleLoading(TestModuleBase):
     def test_module_labels_are_valid(self):
         sf = SpiderFoot(self.default_options)
         valid_labels = ["errorprone", "tor",
-                        "slow", "invasive", "apikey", "tool", "enterprise", "ai", "ml", "security", "production", "external"]
+                        "slow", "invasive", "apikey", "tool", "enterprise", "ai", "ml", "security", "production", "external", "experimental", "interactive", "deprecated"]
 
         sfModules = self.load_modules(sf)
         for module in sfModules:
@@ -209,11 +209,8 @@ class TestSpiderFootModuleLoading(TestModuleBase):
 
     def test_module_watched_events_are_valid(self):
         sf = SpiderFoot(self.default_options)
-        sf.dbh = SpiderFootDb(self.default_options, True)
-
-        valid_events = []
-        for event in sf.dbh.eventTypes():
-            valid_events.append(event[1])
+        from spiderfoot.db import SpiderFootDb
+        valid_events = [e[0] for e in SpiderFootDb.eventDetails]
 
         sfModules = self.load_modules(sf)
         for module in sfModules:
@@ -226,11 +223,8 @@ class TestSpiderFootModuleLoading(TestModuleBase):
 
     def test_module_produced_events_are_valid(self):
         sf = SpiderFoot(self.default_options)
-        sf.dbh = SpiderFootDb(self.default_options, True)
-
-        valid_events = []
-        for event in sf.dbh.eventTypes():
-            valid_events.append(event[1])
+        from spiderfoot.db import SpiderFootDb
+        valid_events = [e[0] for e in SpiderFootDb.eventDetails]
 
         sfModules = self.load_modules(sf)
         for module in sfModules:

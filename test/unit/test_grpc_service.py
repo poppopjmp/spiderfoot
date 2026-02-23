@@ -39,7 +39,11 @@ class TestServiceServer(unittest.TestCase):
         conn.request("POST", f"/rpc/test/{method}", body=body,
                      headers={"Content-Type": "application/json"})
         resp = conn.getresponse()
-        data = json.loads(resp.read().decode())
+        raw = resp.read().decode()
+        try:
+            data = json.loads(raw)
+        except json.JSONDecodeError:
+            data = {"_raw": raw}
         conn.close()
         return resp.status, data
 

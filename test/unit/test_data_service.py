@@ -197,8 +197,9 @@ class TestFactory(unittest.TestCase):
     def test_create_http_fallback(self):
         config = DataServiceConfig(backend=DataServiceBackend.HTTP)
         ds = create_data_service(config)
-        # Falls back to local until HTTP is implemented
-        self.assertIsInstance(ds, LocalDataService)
+        # HTTP backend is wrapped in ResilientDataService
+        from spiderfoot.data_service.resilient import ResilientDataService
+        self.assertIsInstance(ds, ResilientDataService)
     
     def test_create_from_config(self):
         sf_config = {

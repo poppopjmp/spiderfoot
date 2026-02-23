@@ -69,8 +69,11 @@ class TestModuleStor_db(TestModuleBase):
         module = sfp__stor_db()
         self.assertEqual(len(module.opts), len(module.optdescs))
 
-    def test_setup_postgresql_default(self):
+    @patch('modules.sfp__stor_db.psycopg2.connect')
+    def test_setup_postgresql_default(self, mock_connect):
         """Test setup with default PostgreSQL configuration."""
+        mock_conn = MagicMock()
+        mock_connect.return_value = mock_conn
         module = sfp__stor_db()
         # Use PostgreSQL mode
         module.setup(self.sf_instance, {'db_type': 'postgresql'})
@@ -224,25 +227,43 @@ class TestModuleStor_db(TestModuleBase):
         # Verify that scanEventStore was called
         self.mock_dbh.scanEventStore.assert_called()
 
-    def test_postgresql_storage_with_size_limit(self):
-        """Test PostgreSQL storage with size limits."""
+    @patch('modules.sfp__stor_db.psycopg2.connect')
+    def test_postgresql_storage_with_size_limit(self, mock_connect):
+        """Test PostgreSQL storage falls back to default handler with size limit on connection failure."""
+        mock_conn = MagicMock()
+        mock_cursor = MagicMock()
+        mock_conn.cursor.return_value = mock_cursor
+
+        # First connect call succeeds (setup), second call fails (reconnect)
+        mock_connect.side_effect = [mock_conn, psycopg2.OperationalError("Reconnect failed")]
+        # Health check fails so module attempts reconnect
+        mock_cursor.execute.side_effect = psycopg2.OperationalError("Connection lost")
+
         module = sfp__stor_db()
         module.setup(self.sf_instance, {
             '_store': True,
             'db_type': 'postgresql',
-            'maxstorage': 10  # Very small limit
+            'postgresql_host': 'localhost',
+            'postgresql_port': 5432,
+            'postgresql_database': 'spiderfoot',
+            'postgresql_username': 'user',
+            'postgresql_password': 'pass',
+            'maxstorage': 10,
+            'enable_auto_recovery': False,
         })
-        
+
+        self.assertFalse(module.errorState)
+
         # Create test event with large data
         large_data = "x" * 100  # 100 characters, exceeds limit
         test_event = self.create_test_event("IP_ADDRESS", large_data)
-        
+
         # Mock getScanId
         module.getScanId = MagicMock(return_value="test_scan_id")
-        
+
         module.handleEvent(test_event)
-        
-        # Verify that scanEventStore was called with size limit
+
+        # Verify that scanEventStore was called with size limit (fallback path)
         self.mock_dbh.scanEventStore.assert_called_with(
             "test_scan_id", test_event, 10
         )
@@ -465,7 +486,8 @@ class TestModuleStor_db(TestModuleBase):
             '_store': True,
             'db_type': 'postgresql',
             'enable_performance_monitoring': True,
-            'collect_metrics': True
+            'collect_metrics': True,
+            'enable_auto_recovery': True,  # Prevent errorState when PostgreSQL unavailable
         }
         
         module.setup(self.sf_instance, opts)
@@ -630,7 +652,8 @@ class TestModuleStor_db(TestModuleBase):
         legacy_opts = {
             'maxstorage': 1024,
             '_store': True,
-            'db_type': 'postgresql'
+            'db_type': 'postgresql',
+            'enable_auto_recovery': True,  # Allow fallback when PostgreSQL unavailable
         }
         
         module.setup(self.sf_instance, legacy_opts)
@@ -653,7 +676,8 @@ class TestModuleStor_db(TestModuleBase):
             'maxstorage': 1024,
             '_store': True,
             'db_type': 'postgresql',
-            'enable_performance_benchmarking': True
+            'enable_performance_benchmarking': True,
+            'enable_auto_recovery': True,  # Allow fallback when PostgreSQL unavailable
         }
         
         module.setup(self.sf_instance, opts)

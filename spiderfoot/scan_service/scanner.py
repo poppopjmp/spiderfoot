@@ -110,22 +110,16 @@ class SpiderFootScanner():
         if not globalOpts:
             raise ValueError("globalOpts is empty")
 
-        self.__config = deepcopy(globalOpts)
-        self.__dbh = SpiderFootDb(self.__config)
-
+        # Validate all arguments BEFORE creating expensive resources (DB connection)
         if not isinstance(scanName, str):
             raise TypeError(f"scanName is {type(scanName)}; expected str()")
         if not scanName:
             raise ValueError("scanName value is blank")
 
-        self.__scanName = scanName
-
         if not isinstance(scanId, str):
             raise TypeError(f"scanId is {type(scanId)}; expected str()")
         if not scanId:
             raise ValueError("scanId value is blank")
-
-        self.__scanId = scanId
 
         if not isinstance(targetValue, str):
             raise TypeError(
@@ -133,20 +127,26 @@ class SpiderFootScanner():
         if not targetValue:
             raise ValueError("targetValue value is blank")
 
-        self.__targetValue = targetValue
-
         if not isinstance(targetType, str):
             raise TypeError(
                 f"targetType is {type(targetType)}; expected str()")
         if not targetType:
             raise ValueError("targetType value is blank")
 
-        self.__targetType = targetType
         if not isinstance(moduleList, list):
             raise TypeError(
                 f"moduleList is {type(moduleList)}; expected list()")
         if not moduleList:
             raise ValueError("moduleList is empty")
+
+        # All args validated — now create the DB connection and set instance vars
+        self.__config = deepcopy(globalOpts)
+        self.__dbh = SpiderFootDb(self.__config)
+
+        self.__scanName = scanName
+        self.__scanId = scanId
+        self.__targetValue = targetValue
+        self.__targetType = targetType
 
         # Filter out empty/whitespace-only entries
         moduleList = [m.strip() for m in moduleList if m and m.strip()]
@@ -161,12 +161,6 @@ class SpiderFootScanner():
         self.__moduleList = moduleList
         self.__sf = SpiderFoot(self.__config)
         self.__sf.dbh = self.__dbh
-
-        # Create a unique ID for this scan in the back-end DB.
-        if scanId:
-            self.__scanId = scanId
-        else:
-            self.__scanId = SpiderFootHelpers.genScanInstanceId()
 
         # Improved exception handling for scanInstanceCreate
         try:

@@ -35,26 +35,33 @@ def test_handle_event_stub(plugin):
     event = SpiderFootEvent('ROOT', 'test', 'test', None)
     assert plugin.handleEvent(event) is None
 
-def test_setup_requires_api_key(plugin):
-    with pytest.raises(ValueError):
-        plugin.setup(None, {'api_key': '', 'search_type': 'ip', 'search_value': '1.2.3.4'})
+def test_setup_requires_api_key():
+    p = sfp_unwiredlabs()
+    p.setup(None, {'api_key': '', 'search_type': 'ip', 'search_value': '1.2.3.4'})
+    assert p.errorState
 
-def test_setup_requires_search_value(plugin):
-    with pytest.raises(ValueError):
-        plugin.setup(None, {'api_key': 'key', 'search_type': 'ip', 'search_value': ''})
+def test_setup_requires_search_value():
+    p = sfp_unwiredlabs()
+    p.setup(None, {'api_key': 'key', 'search_type': 'ip', 'search_value': ''})
+    assert p.errorState
 
-def test_setup_invalid_search_type(plugin):
-    with pytest.raises(ValueError):
-        plugin.setup(None, {'api_key': 'key', 'search_type': 'invalid', 'search_value': 'foo'})
+def test_setup_invalid_search_type():
+    p = sfp_unwiredlabs()
+    p.setup(None, {'api_key': 'key', 'search_type': 'invalid', 'search_value': 'foo'})
+    assert p.errorState
 
-def test_setup_invalid_max_results(plugin):
-    with pytest.raises(ValueError):
-        plugin.setup(None, {'api_key': 'key', 'search_type': 'ip', 'search_value': 'foo', 'max_results': 0})
-    with pytest.raises(ValueError):
-        plugin.setup(None, {'api_key': 'key', 'search_type': 'ip', 'search_value': 'foo', 'max_results': -1})
-    with pytest.raises(ValueError):
-        plugin.setup(None, {'api_key': 'key', 'search_type': 'ip', 'search_value': 'foo', 'max_results': 'foo'})
+def test_setup_invalid_max_results():
+    p = sfp_unwiredlabs()
+    p.setup(None, {'api_key': 'key', 'search_type': 'ip', 'search_value': 'foo', 'max_results': 0})
+    assert p.errorState
+    p = sfp_unwiredlabs()
+    p.setup(None, {'api_key': 'key', 'search_type': 'ip', 'search_value': 'foo', 'max_results': -1})
+    assert p.errorState
+    p = sfp_unwiredlabs()
+    p.setup(None, {'api_key': 'key', 'search_type': 'ip', 'search_value': 'foo', 'max_results': 'foo'})
+    assert p.errorState
 
-def test_setup_invalid_output_format(plugin):
-    with pytest.raises(ValueError):
-        plugin.setup(None, {'api_key': 'key', 'search_type': 'ip', 'search_value': 'foo', 'output_format': 'invalid'})
+def test_setup_invalid_output_format():
+    p = sfp_unwiredlabs()
+    p.setup(None, {'api_key': 'key', 'search_type': 'ip', 'search_value': 'foo', 'output_format': 'invalid'})
+    assert p.errorState

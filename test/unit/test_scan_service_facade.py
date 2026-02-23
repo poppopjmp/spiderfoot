@@ -212,13 +212,13 @@ class TestScanService:
 
     def test_stop_scan_running(self):
         svc = _make_svc(_sample_records())
-        # s1 is RUNNING — should transition to STOPPING then persist ABORTED
+        # s1 is RUNNING — should transition to STOPPING then persist ABORT-REQUESTED
         status = svc.stop_scan("s1")
-        assert status == "ABORTED"
+        assert status == "ABORT-REQUESTED"
 
     def test_stop_scan_created(self):
         svc = _make_svc(_sample_records())
-        # s3 is CREATED — should transition to CANCELLED
+        # s3 is CREATED — should transition to CANCELLED → ABORTED
         status = svc.stop_scan("s3")
         assert status == "ABORTED"
 
@@ -326,7 +326,7 @@ class TestScanRouter:
         client, _ = self._make_client()
         resp = client.post("/scans/s1/stop")
         assert resp.status_code == 200
-        assert resp.json()["status"] == "ABORTED"
+        assert resp.json()["status"] == "ABORT-REQUESTED"
 
     def test_stop_scan_completed_conflict(self):
         client, _ = self._make_client()

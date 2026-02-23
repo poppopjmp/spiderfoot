@@ -166,7 +166,7 @@ class TestScanScheduler(unittest.TestCase):
         self.scheduler.complete_scan("s1")
         self.assertEqual(self.scheduler.active_count, 0)
         completed = self.scheduler.get_scan_status("s1")
-        self.assertEqual(completed["state"], "FINISHED")
+        self.assertEqual(completed["state"], "COMPLETED")
     
     def test_error_scan(self):
         status = ScanStatus(
@@ -177,7 +177,7 @@ class TestScanScheduler(unittest.TestCase):
         
         self.scheduler.error_scan("s1", "Something broke")
         completed = self.scheduler.get_scan_status("s1")
-        self.assertEqual(completed["state"], "ERROR")
+        self.assertEqual(completed["state"], "FAILED")
         self.assertEqual(completed["error_message"], "Something broke")
     
     def test_update_progress(self):
@@ -247,9 +247,9 @@ class TestSchedulerTimeout(unittest.TestCase):
         
         scheduler._check_timeouts()
         
-        # Should be aborted
+        # Should be cancelled due to timeout
         result = scheduler.get_scan_status("s1")
-        self.assertEqual(result["state"], "ABORTED")
+        self.assertEqual(result["state"], "CANCELLED")
         scheduler.shutdown()
 
 

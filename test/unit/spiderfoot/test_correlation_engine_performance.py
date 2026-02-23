@@ -10,6 +10,7 @@ import time
 @pytest.fixture
 def dbh():
     dbh = MagicMock()
+    dbh.db_type = 'postgresql'
     # Simulate 10,000 EMAILADDR events for performance
     dbh.get_events_for_scan.return_value = [
         {'type': 'EMAILADDR', 'data': f'user{i}@example.com', 'scan_id': 'scan1'} for i in range(10000)

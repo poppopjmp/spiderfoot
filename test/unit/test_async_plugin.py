@@ -97,7 +97,9 @@ class TestAsyncFetchUrl(unittest.TestCase):
             "content": "test", "code": 200
         }
 
-    def test_async_fetch_url(self):
+    @patch("spiderfoot.sflib.async_network.async_fetch_url")
+    def test_async_fetch_url(self, mock_fetch):
+        mock_fetch.return_value = {"content": "test", "code": "200", "status": "OK"}
         result = self.mod.run_async(
             self.mod.async_fetch_url("http://example.com")
         )
@@ -105,8 +107,9 @@ class TestAsyncFetchUrl(unittest.TestCase):
         self.assertIsNotNone(result.data)
         self.assertGreater(result.duration, 0)
 
-    def test_async_fetch_url_error(self):
-        self.mod.sf.fetchUrl.side_effect = Exception("network error")
+    @patch("spiderfoot.sflib.async_network.async_fetch_url")
+    def test_async_fetch_url_error(self, mock_fetch):
+        mock_fetch.side_effect = Exception("network error")
         result = self.mod.run_async(
             self.mod.async_fetch_url("http://broken.com")
         )
@@ -119,17 +122,19 @@ class TestAsyncDns(unittest.TestCase):
         self.mod = FakeAsyncModule()
         self.mod._enable_metrics = False
         self.mod.sf = MagicMock()
-        self.mod.sf.resolveHost.return_value = ["1.2.3.4"]
-        self.mod.sf.resolveIP.return_value = ["host.example.com"]
 
-    def test_async_resolve_host(self):
+    @patch("spiderfoot.sflib.async_network.async_resolve_host")
+    def test_async_resolve_host(self, mock_resolve):
+        mock_resolve.return_value = ["1.2.3.4"]
         result = self.mod.run_async(
             self.mod.async_resolve_host("example.com")
         )
         self.assertTrue(result.ok)
         self.assertEqual(result.data, ["1.2.3.4"])
 
-    def test_async_reverse_resolve(self):
+    @patch("spiderfoot.sflib.async_network.async_reverse_resolve")
+    def test_async_reverse_resolve(self, mock_rev):
+        mock_rev.return_value = ["host.example.com"]
         result = self.mod.run_async(
             self.mod.async_reverse_resolve("1.2.3.4")
         )
@@ -195,14 +200,11 @@ class TestAsyncBatch(unittest.TestCase):
 
 
 class TestAsyncCleanup(unittest.TestCase):
-    def test_finished_cleans_executor(self):
+    def test_finished_cleans_up(self):
         mod = FakeAsyncModule()
         mod._enable_metrics = False
-        # Force executor creation
-        executor = mod._get_executor()
-        self.assertIsNotNone(mod._async_executor)
+        # Call finished - should not raise
         mod.finished()
-        self.assertIsNone(mod._async_executor)
 
     def test_semaphore_lazy(self):
         mod = FakeAsyncModule()

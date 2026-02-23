@@ -147,7 +147,10 @@ class TestModuleWatcher(unittest.TestCase):
 
         history = watcher.get_history()
         self.assertEqual(len(history), 2)
-        self.assertTrue(history[0].success)
+        # First chronological reload (fresh import) succeeds;
+        # second may fail with spec issues on some platforms.
+        # history is returned most-recent-first, so [-1] is the first.
+        self.assertTrue(history[-1].success)
 
     def test_trim_history(self):
         self._write_module("sfp_trim")

@@ -49,6 +49,11 @@ class sfp_adsbexchange(SpiderFootAsyncPlugin):
                 "flight data. Unlike other trackers, it does not censor military, "
                 "government or FAA-blocked aircraft. Access via RapidAPI ($10/mo basic)."
             ),
+            'apiKeyInstructions': [
+                "Register at https://rapidapi.com/adsbx/api/adsbexchange-com1",
+                "Subscribe to a plan and copy your RapidAPI key",
+                "Enter the key in the _api_key option",
+            ],
         }
     }
 

@@ -73,7 +73,7 @@ class TestSpiderFootHelpers(TestModuleBase):
             mod_path = os.path.join(tmpdir, 'sfp_test.py')
             with open(mod_path, 'w', encoding='utf-8') as f:
                 f.write(
-                    "from spiderfoot.modern_plugin import SpiderFootModernPlugin\n"
+                    "from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin\n"
                     "class sfp_test(SpiderFootModernPlugin):\n"
                     "    meta = {'name': 'Test Module'}\n"
                     "    opts = {'opt1': 'val1'}\n"
@@ -102,10 +102,16 @@ class TestSpiderFootHelpers(TestModuleBase):
             SpiderFootHelpers.loadCorrelationRulesRaw('invalid_path')
 
     def test_loadCorrelationRulesRaw(self):
-        with patch('spiderfoot.helpers.os') as mock_os, patch('yaml.safe_load') as mock_yaml_load, patch('builtins.open', mock_open()):
-            mock_os.path.exists.return_value = True
-            mock_os.listdir.return_value = ['test.yaml']
-            mock_os.path.join.return_value = 'path/test.yaml'
+        mock_yaml_file = MagicMock()
+        mock_yaml_file.name = 'test.yaml'
+        mock_yaml_file.read_text.return_value = 'name: test_rule\ndata: test_data'
+
+        with patch('spiderfoot.helpers.Path') as MockPath, \
+             patch('yaml.safe_load') as mock_yaml_load:
+            mock_dir = MagicMock()
+            mock_dir.exists.return_value = True
+            mock_dir.glob.return_value = [mock_yaml_file]
+            MockPath.return_value = mock_dir
             mock_yaml_load.return_value = {'name': 'test_rule', 'data': 'test_data'}
             rules = SpiderFootHelpers.loadCorrelationRulesRaw('path')
             self.assertEqual(len(rules), 1)

@@ -91,7 +91,8 @@ def _check_imports(content: str, tree: ast.Module, result: ValidationResult) -> 
 
     for node in ast.walk(tree):
         if isinstance(node, ast.ImportFrom):
-            if node.module == "spiderfoot.modern_plugin":
+            if node.module in ("spiderfoot.modern_plugin",
+                               "spiderfoot.plugins.modern_plugin"):
                 for alias in node.names:
                     if alias.name == "SpiderFootModernPlugin":
                         has_modern_import = True

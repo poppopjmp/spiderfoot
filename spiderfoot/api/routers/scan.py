@@ -1761,9 +1761,9 @@ async def get_scan_options(
     scan_id: SafeId,
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
+    config=Depends(get_app_config),
 ) -> dict:
     """Return configuration used for the specified scan."""
-    config = get_app_config()
     ret = svc.get_scan_options(scan_id, config.get_config())
     return ret
 

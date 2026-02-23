@@ -20,6 +20,10 @@ if project_root not in sys.path:
 # Set testing mode to avoid config initialization
 os.environ['TESTING_MODE'] = '1'
 
+import pytest
+if not os.environ.get('SF_POSTGRES_DSN'):
+    pytest.skip('PostgreSQL not available (SF_POSTGRES_DSN not set)', allow_module_level=True)
+
 import sfapi
 
 

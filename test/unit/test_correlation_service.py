@@ -216,7 +216,7 @@ class TestGetCorrelationService(unittest.TestCase):
     """Tests for the singleton accessor."""
 
     def test_returns_instance(self):
-        import spiderfoot.correlation_service as mod
+        import spiderfoot.services.correlation_service as mod
         mod._instance = None  # Reset singleton
         svc = get_correlation_service({})
         self.assertIsInstance(svc, CorrelationService)

@@ -106,14 +106,14 @@ class TestRetentionManager:
 
         preview = manager.preview()
         assert len(preview) == 1
-        # Items aged 12, 13, 14 should be candidates
-        assert preview[0].candidates_found == 3
+        # Items aged 13, 14 should be candidates (strictly > 12)
+        assert preview[0].candidates_found == 2
         assert preview[0].dry_run is True
 
         # Enforce
         results = manager.enforce()
-        assert results[0].items_processed == 3
-        assert len(adapter.list_items("scans")) == 2
+        assert results[0].items_processed == 2
+        assert len(adapter.list_items("scans")) == 3
 
     def test_count_based_cleanup(self, manager, adapter):
         items = make_candidates("scans", 10)

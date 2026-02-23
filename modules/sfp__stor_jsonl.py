@@ -58,6 +58,7 @@ class sfp__stor_jsonl(SpiderFootModernPlugin):
     }
 
     optdescs = {
+        "_store": "Enable this storage module?",
         "output_dir": "Directory to write JSONL files into (one file per scan).",
         "include_root": "Include the ROOT seed event in the output?",
         "max_file_size_mb": (

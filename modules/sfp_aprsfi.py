@@ -50,6 +50,11 @@ class sfp_aprsfi(SpiderFootAsyncPlugin):
                 "Includes AIS vessel tracking with MMSI, IMO, course, speed, heading, "
                 "length, width and draught data."
             ),
+            'apiKeyInstructions': [
+                "Register an account at https://aprs.fi/",
+                "Go to Account Settings and locate your API key",
+                "Enter the API key in the _api_key option",
+            ],
         }
     }
 

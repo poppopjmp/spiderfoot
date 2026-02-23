@@ -69,7 +69,7 @@ class AbstractRepository(ABC):
         if self._dbh is not None:
             try:
                 self._dbh.close()
-            except OSError:
+            except Exception:
                 pass
             self._dbh = None
 

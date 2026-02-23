@@ -77,8 +77,8 @@ class VectorHealthStatus:
 @dataclass
 class VectorBootstrapConfig:
     """Configuration for the Vector bootstrapper."""
-    vector_api_url: str = "http://localhost:8687"
-    vector_graphql_url: str = "http://localhost:8687/graphql"
+    vector_api_url: str = "http://localhost:8686"
+    vector_graphql_url: str = "http://localhost:8686/graphql"
     config_path: str = "config/vector.toml"
     health_timeout: float = 5.0
     enabled_sinks: list[str] = field(default_factory=lambda: ["console", "file"])
@@ -106,7 +106,7 @@ class VectorBootstrap:
     @classmethod
     def from_config(cls, sf_config: dict) -> VectorBootstrap:
         """Create from SpiderFoot configuration dict."""
-        endpoint = sf_config.get("_vector_endpoint", "http://localhost:8687")
+        endpoint = sf_config.get("_vector_endpoint", "http://localhost:8686")
         config_path = sf_config.get("_vector_config_path", "config/vector.toml")
 
         return cls(VectorBootstrapConfig(

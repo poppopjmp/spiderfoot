@@ -211,7 +211,7 @@ class TestSpiderFootComprehensive(TestModuleBase):
         expected = hashlib.sha256(str(test_dict).encode('raw_unicode_escape')).hexdigest()
         self.assertEqual(result, expected)    # ===== CACHING =====
 
-    @patch('spiderfoot.sflib.SpiderFootHelpers.cachePath')
+    @patch('spiderfoot.sflib.helpers.SpiderFootHelpers.cachePath')
     @patch('os.stat')
     @patch('builtins.open', new_callable=mock_open, read_data='cached content')
     def test_cacheGet_valid_cache(self, mock_file, mock_stat, mock_cache_path):
@@ -224,7 +224,7 @@ class TestSpiderFootComprehensive(TestModuleBase):
         result = self.sf.cacheGet("test_label", 24)
         self.assertEqual(result, 'cached content')
 
-    @patch('spiderfoot.sflib.SpiderFootHelpers.cachePath')
+    @patch('spiderfoot.sflib.helpers.SpiderFootHelpers.cachePath')
     @patch('os.stat')
     def test_cacheGet_expired_cache(self, mock_stat, mock_cache_path):
         """Test cacheGet with expired cache."""
@@ -236,7 +236,7 @@ class TestSpiderFootComprehensive(TestModuleBase):
         result = self.sf.cacheGet("test_label", 1)  # 1 hour timeout
         self.assertIsNone(result)
 
-    @patch('spiderfoot.sflib.SpiderFootHelpers.cachePath')
+    @patch('spiderfoot.sflib.helpers.SpiderFootHelpers.cachePath')
     @patch('os.stat')
     def test_cacheGet_nonexistent_file(self, mock_stat, mock_cache_path):
         """Test cacheGet with non-existent cache file."""
@@ -251,8 +251,8 @@ class TestSpiderFootComprehensive(TestModuleBase):
         result = self.sf.cacheGet("", 24)
         self.assertIsNone(result)
 
-    @patch('spiderfoot.sflib.SpiderFootHelpers.cachePath')
-    @patch('spiderfoot.sflib.io.open', new_callable=mock_open)
+    @patch('spiderfoot.sflib.helpers.SpiderFootHelpers.cachePath')
+    @patch('spiderfoot.sflib.helpers.open', new_callable=mock_open)
     @patch('builtins.open', new_callable=mock_open)
     def test_cachePut_string_data(self, mock_builtins_open, mock_io_open, mock_cache_path):
         """Test cachePut with string data."""
@@ -264,8 +264,8 @@ class TestSpiderFootComprehensive(TestModuleBase):
             "Expected either builtins.open or spiderfoot.sflib.io.open to have been called."
         )
 
-    @patch('spiderfoot.sflib.SpiderFootHelpers.cachePath')
-    @patch('spiderfoot.sflib.io.open', new_callable=mock_open)
+    @patch('spiderfoot.sflib.helpers.SpiderFootHelpers.cachePath')
+    @patch('spiderfoot.sflib.helpers.open', new_callable=mock_open)
     @patch('builtins.open', new_callable=mock_open)
     def test_cachePut_list_data(self, mock_builtins_open, mock_io_open, mock_cache_path):
         """Test cachePut with list data."""
@@ -277,8 +277,8 @@ class TestSpiderFootComprehensive(TestModuleBase):
             "Expected either builtins.open or spiderfoot.sflib.io.open to have been called."
         )
 
-    @patch('spiderfoot.sflib.SpiderFootHelpers.cachePath')
-    @patch('spiderfoot.sflib.io.open', new_callable=mock_open)
+    @patch('spiderfoot.sflib.helpers.SpiderFootHelpers.cachePath')
+    @patch('spiderfoot.sflib.helpers.open', new_callable=mock_open)
     @patch('builtins.open', new_callable=mock_open)
     def test_cachePut_bytes_data(self, mock_builtins_open, mock_io_open, mock_cache_path):
         """Test cachePut with bytes data."""
@@ -714,7 +714,7 @@ class TestSpiderFootComprehensive(TestModuleBase):
     @patch('socket.gethostbyname_ex')
     def test_resolveHost_resolution_error(self, mock_gethostbyname_ex):
         """Test resolveHost with resolution error."""
-        mock_gethostbyname_ex.side_effect = Exception("Name resolution failed")
+        mock_gethostbyname_ex.side_effect = socket.gaierror("Name resolution failed")
         
         result = self.sf.resolveHost('nonexistent.example.com')
         self.assertEqual(result, [])
@@ -741,7 +741,7 @@ class TestSpiderFootComprehensive(TestModuleBase):
     @patch('socket.gethostbyaddr')
     def test_resolveIP_resolution_error(self, mock_gethostbyaddr):
         """Test resolveIP with resolution error."""
-        mock_gethostbyaddr.side_effect = Exception("Reverse resolution failed")
+        mock_gethostbyaddr.side_effect = socket.herror("Reverse resolution failed")
         
         result = self.sf.resolveIP('93.184.216.34')
         self.assertEqual(result, [])
@@ -768,7 +768,7 @@ class TestSpiderFootComprehensive(TestModuleBase):
     @patch('socket.getaddrinfo')
     def test_resolveHost6_resolution_error(self, mock_getaddrinfo):
         """Test resolveHost6 with resolution error."""
-        mock_getaddrinfo.side_effect = Exception("IPv6 resolution failed")
+        mock_getaddrinfo.side_effect = socket.gaierror("IPv6 resolution failed")
         
         result = self.sf.resolveHost6('nonexistent.example.com')
         self.assertEqual(result, [])

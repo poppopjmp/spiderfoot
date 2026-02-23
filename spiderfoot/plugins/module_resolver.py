@@ -348,7 +348,9 @@ class ModuleResolver:
 
                 producers = self.producers_of(evt) - exclude
                 if not producers:
-                    missing.setdefault("__target__", []).append(evt)
+                    # Root / wildcard events are produced by the engine, not modules
+                    if not evt.startswith("ROOT") and evt != "*":
+                        missing.setdefault("__target__", []).append(evt)
                     continue
 
                 # Pick all producers (user can filter later)

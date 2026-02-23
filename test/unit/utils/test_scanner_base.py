@@ -14,6 +14,7 @@ import threading
 import time
 from contextlib import suppress
 from typing import Any
+from unittest.mock import MagicMock, patch
 
 try:
     # Relative imports (when called from package)
@@ -111,6 +112,16 @@ class TestScannerBase(unittest.TestCase):
         }
         
         print(f"🧪 Setting up scanner test class: {self.__class__.__name__}")
+
+        # Patch SpiderFootDb to avoid requiring a real PostgreSQL connection.
+        # Tests that need real DB behaviour should stop this patcher manually.
+        self._mock_db = MagicMock()
+        self._mock_db.scanInstanceGet.return_value = None  # simulate new scan
+        self._sfdb_patcher = patch(
+            'spiderfoot.scan_service.scanner.SpiderFootDb',
+            return_value=self._mock_db,
+        )
+        self._sfdb_patcher.start()
     
     def register_scanner(self, scanner: Any, scan_id: str = None) -> int:
         """
@@ -395,6 +406,10 @@ class TestScannerBase(unittest.TestCase):
             self._test_scanners.clear()
             self._test_databases.clear()
             self._scan_instances.clear()
+
+            # Stop the SpiderFootDb mock patcher
+            with suppress(Exception):
+                self._sfdb_patcher.stop()
             
             # Call parent tearDown
             super().tearDown()

@@ -48,6 +48,11 @@ class sfp_aviationstack(SpiderFootAsyncPlugin):
                 "and historical flight tracking data, airport timetables, airline "
                 "routes, and aircraft registrations. Free tier: 100 requests/month."
             ),
+            'apiKeyInstructions': [
+                "Register at https://aviationstack.com/signup/free",
+                "Copy your API Access Key from the dashboard",
+                "Enter the key in the _api_key option",
+            ],
         }
     }
 

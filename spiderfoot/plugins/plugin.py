@@ -141,6 +141,24 @@ class SpiderFootPlugin:
 
     def __init__(self) -> None:
         """Initialize the plugin."""
+        # Create instance-level copy of opts/optdescs using the original snapshot
+        # captured by __init_subclass__ (before any cross-test mutation).
+        # Falls back to current class dict if no snapshot available.
+        _opts: dict = {}
+        _optdescs: dict = {}
+        for _cls in type(self).__mro__:
+            if '_original_opts' in _cls.__dict__ and not _opts:
+                _opts = dict(_cls.__dict__['_original_opts'])
+            elif 'opts' in _cls.__dict__ and not _opts:
+                _opts = dict(_cls.__dict__['opts'])
+            if '_original_optdescs' in _cls.__dict__ and not _optdescs:
+                _optdescs = dict(_cls.__dict__['_original_optdescs'])
+            elif 'optdescs' in _cls.__dict__ and not _optdescs:
+                _optdescs = dict(_cls.__dict__['optdescs'])
+            if _opts and _optdescs:
+                break
+        self.opts = _opts
+        self.optdescs = _optdescs
         self._listeners = []
         self.errorState = False
         self._stopScanning = False
@@ -152,6 +170,20 @@ class SpiderFootPlugin:
     def __repr__(self) -> str:
         """Return a string representation of the plugin."""
         return f"SpiderFootPlugin({self._name!r})"
+
+    @classmethod
+    def __init_subclass__(cls, **kwargs: object) -> None:
+        """Capture original opts/optdescs at class definition time.
+
+        This snapshot is used by __init__ to provide each instance with
+        a clean copy of opts, preventing cross-instance/cross-test mutations
+        to the class-level dict from leaking into new instances.
+        """
+        super().__init_subclass__(**kwargs)
+        if 'opts' in cls.__dict__:
+            cls._original_opts = dict(cls.__dict__['opts'])
+        if 'optdescs' in cls.__dict__:
+            cls._original_optdescs = dict(cls.__dict__['optdescs'])
 
     def finished(self) -> None:
         """Called when the module should finish processing."""

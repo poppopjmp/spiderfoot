@@ -5,9 +5,12 @@ including creation, loading, target/scan management, and error handling.
 """
 from __future__ import annotations
 
-import json
 import os
 import pytest
+if not os.environ.get('SF_POSTGRES_DSN'):
+    pytest.skip('PostgreSQL not available (SF_POSTGRES_DSN not set)', allow_module_level=True)
+
+import json
 import tempfile
 import time
 import uuid

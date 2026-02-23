@@ -7,6 +7,7 @@ functions, and aggregation logic.
 """
 from __future__ import annotations
 
+import os
 import time
 from unittest.mock import MagicMock, patch
 
@@ -16,9 +17,9 @@ import spiderfoot.api.routers.health as health_mod
 from spiderfoot.api.routers.health import (
     _SUBSYSTEM_CHECKS,
     _check_app_config,
-    _check_database,
-    _check_eventbus,
-    _check_modules,
+    _check_celery,
+    _check_postgresql,
+    _check_redis,
     _check_report_storage,
     _check_vector,
     _get_metrics_text,
@@ -63,80 +64,64 @@ def client():
 # Individual subsystem check functions
 # ===================================================================
 
-class TestDatabaseCheck:
-    def test_no_registry(self):
-        with patch.object(health_mod, "_get_registry", return_value=None):
-            result = _check_database()
+class TestPostgresqlCheck:
+    def test_no_dsn(self):
+        with patch.dict(os.environ, {"SF_POSTGRES_DSN": ""}):
+            result = _check_postgresql()
         assert result["status"] == "unknown"
-        assert "ServiceRegistry" in result["message"]
+        assert "SF_POSTGRES_DSN" in result["message"]
 
-    def test_no_data_service(self):
-        mock_reg = MagicMock()
-        mock_reg.get_optional.return_value = None
-        with patch.object(health_mod, "_get_registry", return_value=mock_reg):
-            result = _check_database()
-        assert result["status"] == "unknown"
-        assert "not registered" in result["message"]
-
-    def test_no_dbh(self):
-        mock_data = MagicMock(spec=["dbh"])
-        mock_data.dbh = None
-        mock_reg = MagicMock()
-        mock_reg.get_optional.return_value = mock_data
-        with patch.object(health_mod, "_get_registry", return_value=mock_reg):
-            result = _check_database()
-        assert result["status"] == "down"
-
-    def test_database_up(self):
-        mock_data = MagicMock()
-        mock_data.dbh.conn.execute.return_value = None
-        mock_reg = MagicMock()
-        mock_reg.get_optional.return_value = mock_data
-        with patch.object(health_mod, "_get_registry", return_value=mock_reg):
-            result = _check_database()
+    def test_postgresql_up(self):
+        mock_cursor = MagicMock()
+        mock_cursor.fetchone.side_effect = [("PostgreSQL 15.2",), (42,)]
+        mock_conn = MagicMock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_psycopg2 = MagicMock()
+        mock_psycopg2.connect.return_value = mock_conn
+        with patch.dict(os.environ, {"SF_POSTGRES_DSN": "postgresql://localhost/sf"}):
+            with patch.dict("sys.modules", {"psycopg2": mock_psycopg2}):
+                result = _check_postgresql()
         assert result["status"] == "up"
+        assert result["scan_count"] == 42
+        assert "PostgreSQL" in result["version"]
 
-    def test_database_query_fails(self):
-        mock_data = MagicMock()
-        mock_data.dbh.conn.execute.side_effect = RuntimeError("disk I/O")
-        mock_reg = MagicMock()
-        mock_reg.get_optional.return_value = mock_data
-        with patch.object(health_mod, "_get_registry", return_value=mock_reg):
-            result = _check_database()
+    def test_postgresql_connection_fails(self):
+        mock_psycopg2 = MagicMock()
+        mock_psycopg2.connect.side_effect = RuntimeError("connection refused")
+        with patch.dict(os.environ, {"SF_POSTGRES_DSN": "postgresql://localhost/sf"}):
+            with patch.dict("sys.modules", {"psycopg2": mock_psycopg2}):
+                result = _check_postgresql()
         assert result["status"] == "down"
-        assert "disk I/O" in result["message"]
+
+    def test_psycopg2_not_installed(self):
+        with patch.dict(os.environ, {"SF_POSTGRES_DSN": "postgresql://localhost/sf"}):
+            with patch.dict("sys.modules", {"psycopg2": None}):
+                result = _check_postgresql()
+        assert result["status"] in ("unknown", "down")
 
 
-class TestEventBusCheck:
-    def test_no_registry(self):
-        with patch.object(health_mod, "_get_registry", return_value=None):
-            result = _check_eventbus()
-        assert result["status"] == "unknown"
-
-    def test_no_bus(self):
-        mock_reg = MagicMock()
-        mock_reg.get_optional.return_value = None
-        with patch.object(health_mod, "_get_registry", return_value=mock_reg):
-            result = _check_eventbus()
-        assert result["status"] == "unknown"
-
-    def test_plain_bus_connected(self):
-        mock_bus = MagicMock(spec=[])  # no health_check
-        mock_bus.is_connected = MagicMock(return_value=True)
-        mock_reg = MagicMock()
-        mock_reg.get_optional.return_value = mock_bus
-        with patch.object(health_mod, "_get_registry", return_value=mock_reg):
-            result = _check_eventbus()
+class TestRedisCheck:
+    def test_redis_up(self):
+        mock_redis_instance = MagicMock()
+        mock_redis_instance.info.return_value = {"redis_version": "7.0.0"}
+        mock_redis_mod = MagicMock()
+        mock_redis_mod.Redis.from_url.return_value = mock_redis_instance
+        with patch.dict("sys.modules", {"redis": mock_redis_mod}):
+            result = _check_redis()
         assert result["status"] == "up"
+        assert result["redis_version"] == "7.0.0"
 
-    def test_plain_bus_disconnected(self):
-        mock_bus = MagicMock(spec=[])
-        mock_bus.is_connected = MagicMock(return_value=False)
-        mock_reg = MagicMock()
-        mock_reg.get_optional.return_value = mock_bus
-        with patch.object(health_mod, "_get_registry", return_value=mock_reg):
-            result = _check_eventbus()
+    def test_redis_connection_fails(self):
+        mock_redis_mod = MagicMock()
+        mock_redis_mod.Redis.from_url.side_effect = ConnectionError("refused")
+        with patch.dict("sys.modules", {"redis": mock_redis_mod}):
+            result = _check_redis()
         assert result["status"] == "down"
+
+    def test_redis_not_installed(self):
+        with patch.dict("sys.modules", {"redis": None}):
+            result = _check_redis()
+        assert result["status"] in ("unknown", "down")
 
 
 class TestVectorCheck:
@@ -177,57 +162,30 @@ class TestVectorCheck:
         assert result["status"] in ("down", "unknown")
 
 
-class TestModulesCheck:
-    def _make_monitor(self, summary):
-        mock = MagicMock()
-        mock.get_report.return_value = {"summary": summary}
-        return mock
-
-    def test_no_modules_registered(self):
-        m = self._make_monitor({"total": 0})
-        with patch(
-            "spiderfoot.module_health.get_health_monitor",
-            return_value=m,
-        ):
-            result = _check_modules()
-        assert result["status"] == "unknown"
-
-    def test_all_healthy(self):
-        m = self._make_monitor({
-            "total": 10, "healthy": 10,
-            "degraded": 0, "unhealthy": 0, "stalled": 0,
-        })
-        with patch(
-            "spiderfoot.module_health.get_health_monitor",
-            return_value=m,
-        ):
-            result = _check_modules()
+class TestCeleryCheck:
+    def test_celery_up(self):
+        mock_redis_instance = MagicMock()
+        mock_redis_instance.keys.return_value = [b"celery-task-meta-1", b"celery-task-meta-2"]
+        mock_redis_instance.llen.return_value = 3
+        mock_redis_mod = MagicMock()
+        mock_redis_mod.Redis.from_url.return_value = mock_redis_instance
+        with patch.dict("sys.modules", {"redis": mock_redis_mod}):
+            result = _check_celery()
         assert result["status"] == "up"
-        assert result["total"] == 10
+        assert result["completed_tasks"] == 2
+        assert result["pending_queue"] == 3
 
-    def test_some_unhealthy(self):
-        m = self._make_monitor({
-            "total": 10, "healthy": 7,
-            "degraded": 1, "unhealthy": 2, "stalled": 0,
-        })
-        with patch(
-            "spiderfoot.module_health.get_health_monitor",
-            return_value=m,
-        ):
-            result = _check_modules()
-        assert result["status"] == "degraded"
-
-    def test_majority_unhealthy(self):
-        m = self._make_monitor({
-            "total": 10, "healthy": 2,
-            "degraded": 0, "unhealthy": 6, "stalled": 2,
-        })
-        with patch(
-            "spiderfoot.module_health.get_health_monitor",
-            return_value=m,
-        ):
-            result = _check_modules()
+    def test_celery_connection_fails(self):
+        mock_redis_mod = MagicMock()
+        mock_redis_mod.Redis.from_url.side_effect = ConnectionError("refused")
+        with patch.dict("sys.modules", {"redis": mock_redis_mod}):
+            result = _check_celery()
         assert result["status"] == "down"
+
+    def test_redis_not_installed_for_celery(self):
+        with patch.dict("sys.modules", {"redis": None}):
+            result = _check_celery()
+        assert result["status"] in ("unknown", "down")
 
 
 class TestReportStorageCheck:
@@ -237,7 +195,7 @@ class TestReportStorageCheck:
         mock_store.config.backend.value = "postgresql"
 
         with patch(
-            "spiderfoot.report_storage.ReportStore",
+            "spiderfoot.reporting.report_storage.ReportStore",
             return_value=mock_store,
         ):
             result = _check_report_storage()
@@ -246,12 +204,12 @@ class TestReportStorageCheck:
 
     def test_storage_error(self):
         with patch(
-            "spiderfoot.report_storage.ReportStore",
+            "spiderfoot.reporting.report_storage.ReportStore",
             side_effect=RuntimeError("DB locked"),
         ):
             result = _check_report_storage()
         assert result["status"] == "down"
-        assert "locked" in result.get("message", "")
+        assert "message" in result
 
 
 class TestAppConfigCheck:
@@ -260,7 +218,7 @@ class TestAppConfigCheck:
         assert result["status"] == "up"
 
     def test_config_import_error(self):
-        with patch.dict("sys.modules", {"spiderfoot.app_config": None}):
+        with patch.dict("sys.modules", {"spiderfoot.config.app_config": None}):
             result = _check_app_config()
         assert result["status"] in ("down", "unknown")
 
@@ -271,8 +229,20 @@ class TestAppConfigCheck:
 
 class TestRunAllChecks:
     def test_all_checks_return_dict(self):
-        """Each check should return without throwing."""
-        result = run_all_checks()
+        """Each check should return without throwing (all checks mocked)."""
+        mock_checks = {
+            "postgresql": lambda: {"status": "up"},
+            "redis": lambda: {"status": "up"},
+            "celery": lambda: {"status": "up"},
+            "vector": lambda: {"status": "up"},
+            "minio": lambda: {"status": "up"},
+            "app_config": lambda: {"status": "up"},
+            "report_storage": lambda: {"status": "up"},
+            "scan_hooks": lambda: {"status": "up"},
+            "module_timeout": lambda: {"status": "up"},
+        }
+        with patch.dict(health_mod._SUBSYSTEM_CHECKS, mock_checks, clear=True):
+            result = run_all_checks()
         assert "status" in result
         assert "components" in result
         assert "uptime_seconds" in result
@@ -289,8 +259,8 @@ class TestRunAllChecks:
 
     def test_overall_degraded(self):
         checks = {
-            "svc_a": lambda: {"status": "up"},
-            "svc_b": lambda: {"status": "degraded"},
+            "postgresql": lambda: {"status": "up"},
+            "redis": lambda: {"status": "degraded"},
         }
         with patch.dict(_SUBSYSTEM_CHECKS, checks, clear=True):
             result = run_all_checks()
@@ -298,8 +268,8 @@ class TestRunAllChecks:
 
     def test_overall_down(self):
         checks = {
-            "svc_a": lambda: {"status": "up"},
-            "svc_b": lambda: {"status": "down"},
+            "postgresql": lambda: {"status": "up"},
+            "redis": lambda: {"status": "down"},
         }
         with patch.dict(_SUBSYSTEM_CHECKS, checks, clear=True):
             result = run_all_checks()
@@ -310,15 +280,15 @@ class TestRunAllChecks:
             raise RuntimeError("boom")
 
         checks = {
-            "svc_bad": bad,
-            "svc_ok": lambda: {"status": "up"},
+            "postgresql": bad,
+            "redis": lambda: {"status": "up"},
         }
         with patch.dict(_SUBSYSTEM_CHECKS, checks, clear=True):
             result = run_all_checks()
         assert result["status"] == "down"
-        assert result["components"]["svc_bad"]["status"] == "down"
-        assert "boom" in result["components"]["svc_bad"]["message"]
-        assert result["components"]["svc_ok"]["status"] == "up"
+        assert result["components"]["postgresql"]["status"] == "down"
+        assert "Service check failed" in result["components"]["postgresql"]["message"]
+        assert result["components"]["redis"]["status"] == "up"
 
     def test_latency_tracked(self):
         checks = {"svc": lambda: {"status": "up"}}
@@ -327,7 +297,8 @@ class TestRunAllChecks:
         assert "latency_ms" in result["components"]["svc"]
 
     def test_uptime_positive(self):
-        result = run_all_checks()
+        with patch.dict(_SUBSYSTEM_CHECKS, {}, clear=True):
+            result = run_all_checks()
         assert result["uptime_seconds"] >= 0
 
 
@@ -352,7 +323,7 @@ class TestRunSingleCheck:
         with patch.dict(_SUBSYSTEM_CHECKS, checks, clear=True):
             result = run_single_check("bad")
         assert result["status"] == "down"
-        assert "oops" in result["message"]
+        assert "Service check failed" in result["message"]
 
 
 # ===================================================================
@@ -377,7 +348,7 @@ class TestMetrics:
         assert len(text) > 0
 
     def test_metrics_import_error(self):
-        with patch.dict("sys.modules", {"spiderfoot.metrics": None}):
+        with patch.dict("sys.modules", {"spiderfoot.observability.metrics": None}):
             text = _get_metrics_text()
         assert "unavailable" in text
 
@@ -418,7 +389,7 @@ class TestHealthEndpoints:
         assert data["status"] == "up"
 
     def test_health_overall_down(self, client):
-        checks = {"svc": lambda: {"status": "down"}}
+        checks = {"postgresql": lambda: {"status": "down"}}
         with patch.dict(_SUBSYSTEM_CHECKS, checks, clear=True):
             resp = client.get("/health")
         assert resp.status_code == 503
@@ -436,7 +407,7 @@ class TestHealthEndpoints:
         assert resp.status_code == 200
 
     def test_readiness_down_503(self, client):
-        checks = {"svc": lambda: {"status": "down"}}
+        checks = {"postgresql": lambda: {"status": "down"}}
         with patch.dict(_SUBSYSTEM_CHECKS, checks, clear=True):
             resp = client.get("/health/ready")
         assert resp.status_code == 503

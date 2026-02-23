@@ -74,10 +74,10 @@ class FakeDbh:
     def scanResultDelete(self, scan_id):
         self._deleted_results.add(scan_id)
 
-    def scanLogs(self, scan_id):
+    def scanLogs(self, scan_id, limit=None, from_row_id=0, reverse=False):
         return self._logs.get(scan_id, [])
 
-    def scanCorrelations(self, scan_id):
+    def scanCorrelationList(self, scan_id):
         return self._correlations.get(scan_id, [])
 
     def scanMetadataGet(self, scan_id):
