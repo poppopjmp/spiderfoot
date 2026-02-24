@@ -222,7 +222,7 @@ class TestPerformanceOptimizer(TestModuleBase):
     
     def test_module_metadata(self):
         """Test module metadata is correctly defined."""
-        self.assertEqual(self.module.meta['name'], "Performance Optimizer")
+        self.assertEqual(self.module.meta['name'], "Performance Optimizer [DEPRECATED]")
         self.assertIn("Content Analysis", self.module.meta['categories'])
     
     def test_ttl_cache_basic_operations(self):

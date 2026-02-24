@@ -287,7 +287,7 @@ class TestStructuredJsonOutput:
         buf.seek(0)
         data = json.loads(buf.read().strip())
         assert data["scan_id"] == "scan-123"
-        assert data["module"] == "sfp_dns"
+        assert data["sf_module"] == "sfp_dns"
 
     def test_json_exception_info(self):
         import io

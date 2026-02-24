@@ -400,6 +400,7 @@ class SpiderFootDb:
         ['WIFICAFESPOTS_HOTSPOT', 'WiFi Cafe Spots Hotspot', 0, 'ENTITY'],
         ['WIFIMAPIO_HOTSPOT', 'Wifimap.io Hotspot', 0, 'ENTITY'],
         ['XIAOHONGSHU_POST', 'Xiaohongshu Post', 0, 'DESCRIPTOR'],
+        ['PERFORMANCE_STATS', 'Performance Statistics', 1, 'DATA'],
     ]
 
     def __init__(self, *args, **kwargs) -> None:
