@@ -402,6 +402,7 @@ class SpiderFootDb:
         ['XIAOHONGSHU_POST', 'Xiaohongshu Post', 0, 'DESCRIPTOR'],
         ['PERFORMANCE_STATS', 'Performance Statistics', 1, 'DATA'],
         ['CACHE_STATS', 'Cache Statistics', 1, 'DATA'],
+        ['RESOURCE_USAGE', 'Resource Usage', 1, 'DATA'],
     ]
 
     def __init__(self, *args, **kwargs) -> None:
