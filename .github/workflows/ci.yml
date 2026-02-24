@@ -68,7 +68,7 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest pytest-cov pytest-xdist
+          pip install pytest pytest-cov pytest-xdist pytest-asyncio
 
       - name: Run unit tests
         run: |
