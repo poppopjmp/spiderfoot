@@ -22,7 +22,7 @@ class TestSpiderFootModuleLoading(TestModuleBase):
     def load_modules(sf):
         mod_dir = os.path.dirname(
             os.path.abspath(__file__)) + '/../../modules/'
-        return SpiderFootHelpers.loadModulesAsDict(mod_dir, ['sfp_template.py'])
+        return SpiderFootHelpers.loadModulesAsDict(mod_dir, ['sfp_shodan'])
 
     def test_module_use_cases_are_valid(self):
         sf = SpiderFoot(self.default_options)

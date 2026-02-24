@@ -19,3 +19,4 @@ pycodestyle==2.14.0
 responses==0.25.7
 telethon
 openai
+pytest-asyncio
