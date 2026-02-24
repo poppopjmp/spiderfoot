@@ -257,11 +257,13 @@ class TestRateLimiterService:
         limiter.set_limit("cl", RateLimit(requests=5, window=0.1))
         limiter.allow("cl")
 
-        # Force stale
+        # Force stale: set last_refill to a small positive epoch value so
+        # it is always > 0 (avoids flakiness when process uptime < 400s)
+        # and always satisfies now - last_refill > max_idle.
         with limiter._lock:
-            limiter._states["cl"].last_refill = time.monotonic() - 400
+            limiter._states["cl"].last_refill = 1.0  # very early monotonic time
 
-        removed = limiter.cleanup(max_idle=300.0)
+        removed = limiter.cleanup(max_idle=0.5)
         assert removed == 1
 
     def test_thread_safety(self, limiter):
