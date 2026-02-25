@@ -57,15 +57,12 @@ class TestTransformStage(unittest.TestCase):
         t = TransformStage(lambda d: d.upper())
         e = PipelineEvent(event_type="T", data="hello")
         self.assertEqual(t.process(e), StageResult.CONTINUE)
-        # Note: TransformStage.process() returns CONTINUE without
-        # actually applying the transform function to event data
-        self.assertEqual(e.data, "hello")
+        self.assertEqual(e.data, "HELLO")
 
     def test_transform_error(self):
         t = TransformStage(lambda d: 1 / 0)
         e = PipelineEvent(event_type="T", data="x")
-        # The transform function is not invoked, so no error occurs
-        self.assertEqual(t.process(e), StageResult.CONTINUE)
+        self.assertEqual(t.process(e), StageResult.ERROR)
 
 
 class TestTaggingStage(unittest.TestCase):
@@ -131,10 +128,7 @@ class TestEventPipeline(unittest.TestCase):
 
         e = PipelineEvent(event_type="IP_ADDRESS", data="  1.2.3.4  ")
         self.assertEqual(p.execute(e), StageResult.CONTINUE)
-        # TransformStage doesn't actually apply transform
-        self.assertEqual(e.data, "  1.2.3.4  ")
-
-    def test_drop_stops_pipeline(self):
+        self.assertEqual(e.data, "1.2.3.4")
         p = EventPipeline()
         p.add_stage(ValidatorStage(allowed_types={"IP_ADDRESS"}, name="v1"))
         p.add_stage(TaggingStage({"x": "tag"}, name="t1"))
