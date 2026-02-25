@@ -403,6 +403,7 @@ class SpiderFootDb:
         ['PERFORMANCE_STATS', 'Performance Statistics', 1, 'DATA'],
         ['CACHE_STATS', 'Cache Statistics', 1, 'DATA'],
         ['RESOURCE_USAGE', 'Resource Usage', 1, 'DATA'],
+        ['OPTIMIZATION_SUGGESTION', 'Optimization Suggestion', 1, 'DATA'],
     ]
 
     def __init__(self, *args, **kwargs) -> None:
