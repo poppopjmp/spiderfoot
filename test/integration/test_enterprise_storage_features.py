@@ -329,17 +329,21 @@ class TestEnterpriseStorageFeatures(TestModuleBase):
         
         # Test data size limits
         db_module = sfp__stor_db()
-        db_module.setup(self.sf, {
-            '_store': True,
-            'maxstorage': 100  # Small limit
-        })
+        with patch('modules.sfp__stor_db.psycopg2.connect'):
+            db_module.setup(self.sf, {
+                '_store': True,
+                'maxstorage': 100  # Small limit
+            })
+        # Use _store_default path (sf.dbh) by clearing pg_conn
+        db_module.pg_conn = None
+        db_module.errorState = False
         db_module.getScanId = MagicMock(return_value=self.test_scan_id)
-        
+
         # Test with oversized data
         large_data = "x" * 1000  # 1000 characters
         large_event = self.create_test_event("LARGE_DATA", large_data)
         db_module.handleEvent(large_event)
-        
+
         # Should call with size limit
         call_args = self.mock_dbh.scanEventStore.call_args
         self.assertEqual(call_args[0][2], 100)  # maxstorage parameter
@@ -481,9 +485,12 @@ class TestEnterpriseStorageFeatures(TestModuleBase):
         
         # Set up multiple storage modules
         db_module = sfp__stor_db()
-        db_module.setup(self.sf, {'_store': True, 'db_type': 'postgresql'})
+        with patch('modules.sfp__stor_db.psycopg2.connect'):
+            db_module.setup(self.sf, {'_store': True, 'db_type': 'postgresql'})
+        # Use _store_default path (sf.dbh) by clearing pg_conn
+        db_module.pg_conn = None
+        db_module.errorState = False
         db_module.getScanId = MagicMock(return_value=self.test_scan_id)
-        
         with patch('modules.sfp__stor_elasticsearch.Elasticsearch') as mock_es_class, \
              patch('elasticsearch.helpers.bulk') as mock_bulk:
             mock_es = MagicMock()

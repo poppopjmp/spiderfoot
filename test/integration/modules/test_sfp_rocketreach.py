@@ -81,9 +81,18 @@ class TestSFPRrocketreach(TestModuleBase):
 
     def test_query_api_key_invalid(self):
         """Test the query method with an invalid API key."""
+        import unittest.mock as mock
+        import requests as _requests
         module = sfp_rocketreach()
         module.opts['api_key'] = 'ABCDEFG'
-        result = module.query('example.com', 'domain')
+        module.opts['_fetchtimeout'] = 30
+        module.opts['max_results'] = 10
+        with mock.patch('modules.sfp_rocketreach.requests.get') as mock_get:
+            mock_response = mock.Mock()
+            mock_response.status_code = 401
+            mock_response.raise_for_status.return_value = None
+            mock_get.return_value = mock_response
+            result = module.query('example.com', 'domain')
         self.assertIsNone(result)
         self.assertTrue(module.errorState)
 

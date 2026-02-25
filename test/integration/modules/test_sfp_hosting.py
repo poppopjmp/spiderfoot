@@ -25,8 +25,7 @@ class TestModuleIntegrationHosting(TestModuleBase):
         sf = SpiderFoot(self.default_options)
 
         module = sfp_hosting()
-        module.setup(sf, dict())
-
+        module.setup(sf, dict(self.default_options))
         target_value = 'van1shland.io'
         target_type = 'INTERNET_NAME'
         target = SpiderFootTarget(target_value, target_type)

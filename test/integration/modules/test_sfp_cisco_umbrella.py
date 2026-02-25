@@ -59,21 +59,23 @@ class TestSFPCiscoUmbrella(TestModuleBase):
         result = module.query('example.com')
         self.assertIsNone(result)
 
-    @patch('spiderfoot.sflib.SpiderFoot.fetchUrl')
-    def test_query_domain_not_found(self, mock_fetch):
+    def test_query_domain_not_found(self):
         module = sfp_cisco_umbrella()
         module.sf = self.sf
         module.opts['api_key'] = 'API_KEY'
-        mock_fetch.return_value = {'code': 200, 'content': '{"domain": "thisdomaindoesnotexist.com", "data": null}'}
+        module.opts['_fetchtimeout'] = 30
+        module.opts['delay'] = 0
+        module.sf.fetchUrl = lambda *a, **kw: {'code': 200, 'content': '{"domain": "thisdomaindoesnotexist.com", "data": null}'}
         result = module.query('thisdomaindoesnotexist.com')
         self.assertEqual(result, {'domain': 'thisdomaindoesnotexist.com', 'data': None})
 
-    @patch('spiderfoot.sflib.SpiderFoot.fetchUrl')
-    def test_query_domain_found(self, mock_fetch):
+    def test_query_domain_found(self):
         module = sfp_cisco_umbrella()
         module.sf = self.sf
         module.opts['api_key'] = 'API_KEY'
-        mock_fetch.return_value = {'code': 200, 'content': '{"domain": "google.com", "data": [{"categories": ["Search Engine"], "cohosted_sites": ["site1.com"], "geos": ["US"], "ips": ["8.8.8.8"], "registrar": "Registrar Inc.", "whois": "whois data"}] }'}
+        module.opts['_fetchtimeout'] = 30
+        module.opts['delay'] = 0
+        module.sf.fetchUrl = lambda *a, **kw: {'code': 200, 'content': '{"domain": "google.com", "data": [{"categories": ["Search Engine"], "cohosted_sites": ["site1.com"], "geos": ["US"], "ips": ["8.8.8.8"], "registrar": "Registrar Inc.", "whois": "whois data"}] }'}
         result = module.query('google.com')
         self.assertIsInstance(result, dict)
         self.assertEqual(result.get('domain'), 'google.com')
@@ -123,10 +125,11 @@ class TestSFPCiscoUmbrella(TestModuleBase):
     def test_handleEvent_domain_found(self, mock_fetch):
         module = sfp_cisco_umbrella()
         module.__name__ = "sfp_cisco_umbrella"
-        module.setup(self.sf, {'api_key': 'API_KEY', '_fetchtimeout': 30})
+        module.setup(self.__class__.sf, {'api_key': 'API_KEY', '_fetchtimeout': 30})
         evt = SpiderFootEvent("DOMAIN_NAME", "google.com",
                               self.__class__.__name__, None)
         mock_fetch.return_value = {'code': 200, 'content': '{"domain": "google.com", "data": [{"categories": ["Search Engine"], "cohosted_sites": ["site1.com"], "geos": ["US"], "ips": ["8.8.8.8"], "registrar": "Registrar Inc.", "whois": "whois data"}] }'}
+        module.opts['delay'] = 0
         # Patch notifyListeners to avoid side effects
         module.notifyListeners = MagicMock()
         # Set the target to avoid TypeError

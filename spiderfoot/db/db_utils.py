@@ -26,12 +26,16 @@ def normalize_db_type(db_type: str) -> str:
     db_type = db_type.lower()
     if db_type in ('postgresql', 'postgres', 'psycopg2'):
         return 'postgresql'
+    if db_type in ('sqlite', 'sqlite3'):
+        return 'sqlite'
     raise ValueError(f"Unsupported db_type: {db_type}")
 
 
 def get_placeholder(db_type: str) -> str:
     """Return the correct SQL placeholder for the given DB type."""
-    normalize_db_type(db_type)
+    normalized = normalize_db_type(db_type)
+    if normalized == 'sqlite':
+        return '?'
     return '%s'
 
 

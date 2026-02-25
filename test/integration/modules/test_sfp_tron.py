@@ -20,9 +20,9 @@ def test_handle_event_stub(plugin):
     assert plugin.handleEvent(event) is None
 
 def test_setup_requires_api_key(plugin):
-    with pytest.raises(Exception):
-        plugin.setup(None, {"api_key": "", "addresses": "T123", "max_transactions": 10, "output_format": "summary"})
+    plugin.setup(None, {"api_key": "", "addresses": "T123", "max_transactions": 10, "output_format": "summary"})
+    assert plugin.errorState is True
 
 def test_setup_requires_addresses(plugin):
-    with pytest.raises(Exception):
-        plugin.setup(None, {"api_key": "key", "addresses": "", "max_transactions": 10, "output_format": "summary"})
+    plugin.setup(None, {"api_key": "key", "addresses": "", "max_transactions": 10, "output_format": "summary"})
+    assert plugin.errorState is True

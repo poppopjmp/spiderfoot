@@ -377,6 +377,7 @@ class TestEndToEndScanWorkflow(unittest.TestCase):
             )
 
         # 6. Advance orchestrator
+        orch.advance_phase()  # INIT -> DISCOVERY
         orch.advance_phase()  # DISCOVERY -> ENUMERATION
         self.assertEqual(orch.current_phase, ScanPhase.ENUMERATION)
 

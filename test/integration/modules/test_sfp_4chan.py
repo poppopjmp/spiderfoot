@@ -10,6 +10,7 @@ from spiderfoot import SpiderFootEvent
 
 class TestSfp4chanIntegration(TestModuleBase):
     def setUp(self):
+        super().setUp()
         self.plugin = sfp_4chan()
         self.plugin.setup(MagicMock(), {
             'boards': 'testboard',
@@ -49,6 +50,6 @@ class TestSfp4chanIntegration(TestModuleBase):
     @patch('modules.sfp_4chan.requests.get')
     def test_integration_network_error(self, mock_get):
         mock_get.side_effect = Exception('Network error')
-        self.plugin.sf.error = MagicMock()
+        self.plugin._log = MagicMock()
         self.plugin.handleEvent(self.event)
-        self.plugin.sf.error.assert_called()
+        self.plugin._log.error.assert_called()

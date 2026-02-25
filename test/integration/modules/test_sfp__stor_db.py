@@ -60,6 +60,7 @@ class TestModuleIntegration_stor_db(BaseTestModuleIntegration):
 
         # Ensure errorState is not set due to setup issues
         module.errorState = False
+        module.pg_conn = MagicMock()
         self.assertFalse(module.errorState, "Module errorState should be False after setup")
 
         target_value = 'example target value'
@@ -71,7 +72,8 @@ class TestModuleIntegration_stor_db(BaseTestModuleIntegration):
 
         module.setTarget(target)
         # Patch _store_postgresql to verify call
-        with patch.object(module, '_store_postgresql') as mock_pg:
+        with patch.object(module, '_check_postgresql_connection', return_value=True), \
+             patch.object(module, '_store_postgresql') as mock_pg:
             module.handleEvent(evt)
             # Should call _store_postgresql for postgresql config
             mock_pg.assert_called_once_with(evt)

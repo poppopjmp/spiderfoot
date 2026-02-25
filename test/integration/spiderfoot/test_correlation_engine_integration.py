@@ -2,29 +2,43 @@ from __future__ import annotations
 
 """Tests for correlation_engine_integration module."""
 
+import sqlite3
 import pytest
-from spiderfoot import SpiderFootDb
 from spiderfoot.correlation.rule_executor import RuleExecutor
 import yaml
 
+
+class _SqliteDbh:
+    """Lightweight SQLite-backed mock that mimics SpiderFootDb for correlation tests."""
+
+    db_type = 'sqlite'
+
+    def __init__(self):
+        self.conn = sqlite3.connect(':memory:')
+        self.dbh = self.conn.cursor()
+
+    def correlationResultCreate(self, **kwargs):
+        rule_id = kwargs.get('ruleId', 'unknown')
+        return f'corr_{rule_id}'
+
+
 @pytest.fixture
 def dbh():
-    config = {'__database': ':memory:'}
-    dbh = SpiderFootDb(config, init=True)
+    mock_dbh = _SqliteDbh()
     scan_id = 'integration_scan'
     # Ensure table is dropped and created fresh
-    dbh.dbh.execute("DROP TABLE IF EXISTS tbl_scan_results")
-    dbh.dbh.execute("""
+    mock_dbh.dbh.execute("DROP TABLE IF EXISTS tbl_scan_results")
+    mock_dbh.dbh.execute("""
         CREATE TABLE tbl_scan_results (
             scan_id TEXT, type TEXT, data TEXT
         )
     """)
-    dbh.dbh.execute(
+    mock_dbh.dbh.execute(
         "INSERT INTO tbl_scan_results (scan_id, type, data) VALUES (?, ?, ?)",
         (scan_id, 'EMAILADDR', 'integration@example.com')
     )
-    dbh.conn.commit()
-    return dbh, scan_id
+    mock_dbh.conn.commit()
+    return mock_dbh, scan_id
 
 def test_correlation_engine_integration(dbh):
     dbh, scan_id = dbh

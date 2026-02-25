@@ -20,5 +20,5 @@ def test_handle_event_stub(plugin):
     assert plugin.handleEvent(event) is None
 
 def test_setup_requires_search_term(plugin):
-    with pytest.raises(ValueError):
-        plugin.setup(None, {'search_term': '', 'max_results': 10})
+    plugin.setup(None, {'search_term': '', 'max_results': 10})
+    assert plugin.errorState is True
