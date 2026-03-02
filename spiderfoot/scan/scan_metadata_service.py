@@ -119,7 +119,7 @@ class ScanMetadataService:
         if not scan_info:
             return {"status": "ERROR", "message": f"Scan not found: {scan_id}"}
 
-        if scan_info[5] not in (DB_STATUS_ABORTED, DB_STATUS_FINISHED, DB_STATUS_ERROR_FAILED):
+        if scan_info[6] not in (DB_STATUS_ABORTED, DB_STATUS_FINISHED, DB_STATUS_ERROR_FAILED):
             return {
                 "status": "WARNING",
                 "message": "Scan must be in a finished state when setting False Positives.",
@@ -208,18 +208,18 @@ class ScanMetadataService:
         import time as _time
 
         started = (
-            _time.strftime("%Y-%m-%d %H:%M:%S", _time.localtime(meta[3]))
-            if meta[3] != 0
-            else "Not yet"
-        )
-        finished = (
             _time.strftime("%Y-%m-%d %H:%M:%S", _time.localtime(meta[4]))
             if meta[4] != 0
             else "Not yet"
         )
+        finished = (
+            _time.strftime("%Y-%m-%d %H:%M:%S", _time.localtime(meta[5]))
+            if meta[5] != 0
+            else "Not yet"
+        )
 
         ret: dict[str, Any] = {
-            "meta": [meta[0], meta[1], meta[2], started, finished, meta[5]],
+            "meta": [meta[1], meta[2], meta[3], started, finished, meta[6]],
             "config": dbh.scanConfigGet(scan_id),
             "configdesc": {},
         }

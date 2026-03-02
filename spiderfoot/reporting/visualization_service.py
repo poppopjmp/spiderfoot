@@ -52,8 +52,8 @@ class VisualizationService:
             if not row:
                 raise VisualizationServiceError(f"Scan not found: {scan_id}")
             return {
-                "name": row[0], "target": row[1],
-                "status": row[5] if len(row) > 5 else "Unknown",
+                "name": row[1], "target": row[2],
+                "status": row[6] if len(row) > 6 else "Unknown",
             }
         raise VisualizationServiceError("No data source configured")
 

@@ -572,7 +572,7 @@ class SpiderFootScanner():
                 psMod.notifyListeners(firstEvent)
 
             scanstatus = self.__dbh.scanInstanceGet(self.__scanId)
-            if scanstatus and scanstatus[5] == DB_STATUS_ABORT_REQUESTED:
+            if scanstatus and scanstatus[6] == DB_STATUS_ABORT_REQUESTED:
                 raise AssertionError(DB_STATUS_ABORT_REQUESTED)
 
             self.waitForThreads()
@@ -648,7 +648,7 @@ class SpiderFootScanner():
 
                 if log_status:
                     scanstatus = self.__dbh.scanInstanceGet(self.__scanId)
-                    if scanstatus and scanstatus[5] == DB_STATUS_ABORT_REQUESTED:
+                    if scanstatus and scanstatus[6] == DB_STATUS_ABORT_REQUESTED:
                         raise AssertionError(DB_STATUS_ABORT_REQUESTED)
 
                 try:

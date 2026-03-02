@@ -318,7 +318,7 @@ class TestSpiderFootPlugin(TestModuleBase):
         self.plugin.__scanId__ = "test_scan"
         self.plugin.__sfdb__ = MagicMock()
         self.plugin.__sfdb__.scanInstanceGet.return_value = [
-            None, None, None, None, None, "ABORT-REQUESTED"]
+            None, None, None, None, None, None, "ABORT-REQUESTED"]
         self.assertTrue(self.plugin.checkForStop())
 
     def test_checkForStop_without_scanId(self):
@@ -329,7 +329,7 @@ class TestSpiderFootPlugin(TestModuleBase):
         self.plugin.__scanId__ = "test_scan"
         self.plugin.__sfdb__ = MagicMock()
         self.plugin.__sfdb__.scanInstanceGet.return_value = [
-            None, None, None, None, None, "RUNNING"]
+            None, None, None, None, None, None, "RUNNING"]
         self.assertFalse(self.plugin.checkForStop())
 
     def test_checkForStop_with_no_scan_status(self):

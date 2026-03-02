@@ -93,7 +93,7 @@ def run_scan(
         _guard_db.close()
         if _existing:
             db_status = _existing.get("status", "") if isinstance(_existing, dict) else (
-                _existing[5] if isinstance(_existing, (list, tuple)) and len(_existing) > 5 else ""
+                _existing[6] if isinstance(_existing, (list, tuple)) and len(_existing) > 6 else ""
             )
             _terminal = {"FINISHED", "COMPLETED", "ERROR-FAILED", "ABORTED",
                          "ABORT-REQUESTED", "FAILED"}

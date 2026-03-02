@@ -508,7 +508,7 @@ class SpiderFootPlugin:
         if not scanstatus:
             return False
 
-        if scanstatus[5] == DB_STATUS_ABORT_REQUESTED:
+        if scanstatus[6] == DB_STATUS_ABORT_REQUESTED:
             self._stopScanning = True
             return True
 
