@@ -20,6 +20,7 @@ const UsersPage = lazy(() => import('./pages/Users'));
 const SSOSettingsPage = lazy(() => import('./pages/SSOSettings'));
 const ApiKeysPage = lazy(() => import('./pages/ApiKeys'));
 const SchedulesPage = lazy(() => import('./pages/Schedules'));
+const AgentsPage = lazy(() => import('./pages/Agents'));
 
 function LazyFallback() {
   return (
@@ -110,6 +111,9 @@ export default function App() {
 
         {/* Schedules — recurring scan management */}
         <Route path="schedules" element={<Suspense fallback={<LazyFallback />}><SchedulesPage /></Suspense>} />
+
+        {/* AI Agents — agent status and metrics */}
+        <Route path="agents" element={<Suspense fallback={<LazyFallback />}><AgentsPage /></Suspense>} />
 
         {/* User Management (admin only) */}
         <Route path="users" element={<RequirePermission permission="user:read"><Suspense fallback={<LazyFallback />}><UsersPage /></Suspense></RequirePermission>} />

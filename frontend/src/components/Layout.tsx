@@ -45,6 +45,7 @@ const navItems: NavItem[] = [
   { name: 'Scans', to: '/scans', icon: Radar },
   { name: 'Schedules', to: '/schedules', icon: Calendar },
   { name: 'Modules', to: '/modules', icon: Cpu },
+  { name: 'Agents', to: '/agents', icon: Bot },
   { name: 'Workspaces', to: '/workspaces', icon: Briefcase },
   { name: 'Documentation', to: '/documentation', icon: BookOpen },
   { name: 'Settings', to: '/settings', icon: Settings },

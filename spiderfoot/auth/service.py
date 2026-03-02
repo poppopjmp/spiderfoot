@@ -21,7 +21,40 @@ import uuid
 from typing import Any, Optional
 
 import jwt
-from passlib.hash import bcrypt
+
+# ── Passlib 1.7.4 / bcrypt >= 4.0 compatibility fix ──────────────────────────
+# passlib 1.7.4 is incompatible with bcrypt >= 4.0.0.  In detect_wrap_bug() it
+# passes a 255-byte secret to bcrypt.hashpw(), which bcrypt 4.0+ rejects with
+# ValueError.  Bypass passlib's bcrypt handler entirely and call the bcrypt
+# package directly so we inherit its proper 4.x behaviour.
+import bcrypt as _bcrypt_pkg
+
+
+class _BcryptCompat:
+    """Drop-in for ``passlib.hash.bcrypt`` that works with bcrypt >= 4.0."""
+
+    @staticmethod
+    def hash(password: str) -> str:  # noqa: A003
+        raw = password.encode("utf-8") if isinstance(password, str) else password
+        return _bcrypt_pkg.hashpw(raw[:72], _bcrypt_pkg.gensalt()).decode("utf-8")
+
+    @staticmethod
+    def verify(password: str, password_hash: str) -> bool:
+        try:
+            raw = password.encode("utf-8") if isinstance(password, str) else password
+            hashed = (
+                password_hash.encode("utf-8")
+                if isinstance(password_hash, str)
+                else password_hash
+            )
+            return _bcrypt_pkg.checkpw(raw[:72], hashed)
+        except Exception:
+            return False
+
+
+bcrypt = _BcryptCompat()
+# ─────────────────────────────────────────────────────────────────────────────
+
 
 from spiderfoot.auth.models import (
     AccountStatus,

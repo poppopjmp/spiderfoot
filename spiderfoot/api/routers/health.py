@@ -236,15 +236,22 @@ def _check_postgresql() -> dict[str, Any]:
         cur = conn.cursor()
         cur.execute("SELECT version()")
         version = cur.fetchone()[0]
-        cur.execute("SELECT count(*) FROM tbl_scan_instance")
-        scan_count = cur.fetchone()[0]
+        # Try to get scan count — table may not exist yet (lazy init)
+        scan_count = None
+        try:
+            cur.execute("SELECT count(*) FROM tbl_scan_instance")
+            scan_count = cur.fetchone()[0]
+        except Exception:
+            conn.rollback()  # clear the error state
         cur.close()
         conn.close()
-        return {
+        result = {
             "status": "up",
             "version": version.split(",")[0] if version else "unknown",
-            "scan_count": scan_count,
         }
+        if scan_count is not None:
+            result["scan_count"] = scan_count
+        return result
     except ImportError:
         return {"status": "unknown", "message": "psycopg2 not installed"}
     except Exception as e:
@@ -275,15 +282,23 @@ _startup_complete = False
 # Core subsystems whose failure should affect overall status.
 # Optional/auxiliary subsystems report individual status but
 # do not drag the overall health to "down".
-_CORE_SUBSYSTEMS = {
-    "postgresql", "redis", "celery", "minio", "vector",
-}
+# minio/vector are only core if their endpoints are actually configured.
+def _get_core_subsystems() -> set[str]:
+    """Return the set of core subsystems based on current configuration."""
+    import os
+    core = {"postgresql", "redis", "celery"}
+    if os.environ.get("SF_MINIO_ENDPOINT", "").strip():
+        core.add("minio")
+    if os.environ.get("SF_QDRANT_HOST", "").strip() or os.environ.get("SF_VECTOR_URL", "").strip():
+        core.add("vector")
+    return core
 
 
 def run_all_checks() -> dict[str, Any]:
     """Execute all registered subsystem checks and aggregate."""
     components: dict[str, Any] = {}
     overall = "up"
+    core_subsystems = _get_core_subsystems()
 
     for name, check_fn in _SUBSYSTEM_CHECKS.items():
         t0 = time.monotonic()
@@ -297,7 +312,7 @@ def run_all_checks() -> dict[str, Any]:
         components[name] = result
 
         # Only core subsystems affect the overall status
-        if name not in _CORE_SUBSYSTEMS:
+        if name not in core_subsystems:
             continue
 
         status = result.get("status", "unknown")

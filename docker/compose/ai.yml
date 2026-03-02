@@ -21,7 +21,8 @@ services:
     - "traefik.http.routers.agents.entrypoints=websecure"
     - "traefik.http.routers.agents.tls=true"
     - "traefik.http.routers.agents.priority=110"
-    - "traefik.http.middlewares.agents-strip.stripprefix.prefixes=/api"
+    - "traefik.http.routers.agents.service=agents"
+    - "traefik.http.middlewares.agents-strip.stripprefix.prefixes=/api/agents"
     - "traefik.http.routers.agents.middlewares=agents-strip,rate-limit-api@file,security-headers@file,body-limit@file"
     - "traefik.http.services.agents.loadbalancer.server.port=8100"
     environment:
@@ -63,8 +64,10 @@ services:
         condition: service_healthy
       litellm:
         condition: service_started
+        required: false     # agents start with mock LLM if litellm is not active
       qdrant:
         condition: service_started
+        required: false     # agents start without RAG if qdrant is not active
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8100/health')"]
       interval: 30s

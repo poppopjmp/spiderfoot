@@ -81,6 +81,17 @@ async def _lifespan(application: FastAPI):
     except Exception as e:
         _log.warning("Auth service init failed (non-fatal): %s", e)
 
+    # Initialize core SpiderFoot DB schema (creates tbl_scan_instance etc.)
+    try:
+        import os
+        from spiderfoot.db import SpiderFootDb
+        dsn = os.environ.get("SF_POSTGRES_DSN")
+        if dsn:
+            db = SpiderFootDb({"__database": dsn, "__dbtype": "postgresql"})
+            _log.info("SpiderFootDb schema initialized")
+    except Exception as e:
+        _log.warning("SpiderFootDb init failed (non-fatal): %s", e)
+
     yield
     # On shutdown, run all registered cleanup callbacks
     results = mgr.shutdown(reason="fastapi_lifespan")

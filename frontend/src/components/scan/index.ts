@@ -8,3 +8,4 @@ export { default as SettingsTab } from './SettingsTab';
 export { default as LogTab } from './LogTab';
 export { default as ExportDropdown } from './ExportDropdown';
 export { default as MiniStat } from './MiniStat';
+export { default as IaCTab } from './IaCTab';

@@ -599,10 +599,147 @@ export const aiConfigApi = {
     api.get<{ modules: Array<Record<string, unknown>>; total: number }>('/api/ai-config/modules', { params, signal }).then((r) => r.data),
 };
 
+// ── Agents Service API ────────────────────────────────────────
+// The agents run as a separate container (sf-agents:8100).
+// Traefik routes /api/agents/* → agents service (strips /api/agents prefix).
+// nginx.conf proxies /api/agents/* → ${SF_AGENTS_URL} for direct port-3000 access.
+export interface AgentMetrics {
+  name: string;
+  processed_total: number;
+  errors_total: number;
+  avg_processing_time_ms: number;
+  last_processed?: string | null;
+}
+
+export interface AgentStatusResponse {
+  agents: Record<string, AgentMetrics>;
+  total_agents: number;
+}
+
+export const agentApi = {
+  /** Status and metrics for all loaded agents. */
+  status: (signal?: AbortSignal) =>
+    api.get<AgentStatusResponse>('/api/agents/status', { signal }).then((r) => r.data),
+
+  /** Health check of the agents sub-service. */
+  health: (signal?: AbortSignal) =>
+    api.get<{ status: string; service: string; agents: number }>('/api/agents/health', { signal }).then((r) => r.data),
+
+  /** Submit events for agent analysis. */
+  process: (data: {
+    events: Array<Record<string, unknown>>;
+    scan_id?: string;
+    agent_name?: string;
+  }, signal?: AbortSignal) =>
+    api.post<{ results: Array<Record<string, unknown>>; total: number }>('/api/agents/process', data, { signal }).then((r) => r.data),
+
+  /** Generate an AI-powered scan report. */
+  generateReport: (data: {
+    scan_id: string;
+    target: string;
+    scan_name?: string;
+    findings?: Array<Record<string, unknown>>;
+    correlations?: Array<Record<string, unknown>>;
+    stats?: Record<string, unknown>;
+  }, signal?: AbortSignal) =>
+    api.post('/api/agents/report', data, { signal }).then((r) => r.data),
+
+  /** Analyze a document or text content. */
+  analyzeDocument: (data: {
+    content: string;
+    filename?: string;
+    content_type?: string;
+    target?: string;
+    scan_id?: string;
+  }, signal?: AbortSignal) =>
+    api.post('/api/agents/analyze', data, { signal }).then((r) => r.data),
+};
+
 // ── Agents Report API (used by ReportTab & WorkspaceReportCard) ──
 export const agentsApi = {
   report: (data: { scan_id?: string; scan_ids?: string[]; target: string; scan_name?: string; findings?: Array<Record<string, unknown>>; correlations?: Array<Record<string, unknown>>; stats?: Record<string, unknown>; agent_results?: Array<Record<string, unknown>>; geo_data?: Record<string, unknown> }, signal?: AbortSignal) =>
-    api.post('/agents/report', data, { signal }).then((r) => r.data),
+    api.post('/api/agents/report', data, { signal }).then((r) => r.data),
+};
+
+// ── IaC Generation API ────────────────────────────────────────
+
+export interface IaCRequest {
+  provider?: 'aws' | 'azure' | 'gcp' | 'digitalocean' | 'vmware';
+  include_terraform?: boolean;
+  include_ansible?: boolean;
+  include_docker?: boolean;
+  include_packer?: boolean;
+  validate?: boolean;
+}
+
+export interface IaCValidationResult {
+  artifact_type: string;
+  file_name: string;
+  valid: boolean;
+  errors: string[];
+  warnings: string[];
+}
+
+export interface IaCResponse {
+  scan_id: string;
+  provider: string;
+  profile_summary: {
+    ip_count: number;
+    port_count: number;
+    service_count: number;
+    web_server: string | null;
+    os_detected: string | null;
+  };
+  /** Map of category → list of file names */
+  files: Record<string, string[]>;
+  /** Map of category → map of filename → file content string */
+  bundle: Record<string, Record<string, string>>;
+  validation: IaCValidationResult[];
+  all_valid: boolean;
+  message?: string;
+}
+
+export interface IaCReviewIssue {
+  severity: 'critical' | 'high' | 'medium' | 'low' | 'info';
+  category: 'security' | 'best_practice' | 'hardening' | 'optimisation';
+  file: string;
+  description: string;
+  fix: string;
+}
+
+export interface IaCReviewData {
+  security_score: number;
+  review_status: 'approved' | 'needs_changes' | 'rejected';
+  summary: string;
+  issues: IaCReviewIssue[];
+  positive_findings: string[];
+  compliance_notes: string;
+  raw_response?: string;
+}
+
+export interface IaCReviewResponse {
+  agent: string;
+  result_type: string;
+  data: IaCReviewData;
+  confidence: number;
+  processing_time_ms: number;
+  error: string | null;
+}
+
+export const iacApi = {
+  /** Generate IaC artifacts (Terraform, Ansible, Docker Compose, Packer) from a finished scan. */
+  generate: (scanId: string, data: IaCRequest = {}, signal?: AbortSignal) =>
+    api.post<IaCResponse>(`/api/scans/${scanId}/iac`, data, { signal }).then((r) => r.data),
+
+  /** Ask the IaC Advisor agent to review a generated bundle for security / best-practice issues. */
+  review: (data: {
+    scan_id?: string;
+    target?: string;
+    provider?: string;
+    bundle: IaCResponse['bundle'];
+    files: IaCResponse['files'];
+  }, signal?: AbortSignal) =>
+    api.post<IaCReviewResponse>('/api/agents/iac/review', data, { signal }).then((r) => r.data),
 };
 
 // ── Helpers ───────────────────────────────────────────────────

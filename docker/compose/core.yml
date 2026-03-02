@@ -3,6 +3,7 @@ services:
     image: redis:7-alpine
     container_name: sf-redis
     restart: unless-stopped
+    user: "999:999"  # Run directly as redis user — avoids setuid with cap_drop:ALL
     security_opt:
     - "no-new-privileges:true"
     read_only: true
@@ -85,12 +86,15 @@ services:
     - "traefik.http.routers.api.rule=PathPrefix(`/api`)"
     - "traefik.http.routers.api.entrypoints=websecure"
     - "traefik.http.routers.api.tls=true"
+    - "traefik.http.routers.api.service=api"
     - "traefik.http.routers.api.middlewares=rate-limit-api@file,security-headers@file,gzip-compress@file,body-limit@file"
     - "traefik.http.services.api.loadbalancer.server.port=8001"
-      # WebSocket for real-time updates
+      # WebSocket for real-time updates (higher priority — more specific prefix)
     - "traefik.http.routers.api-ws.rule=PathPrefix(`/api/ws`)"
     - "traefik.http.routers.api-ws.entrypoints=websecure"
     - "traefik.http.routers.api-ws.tls=true"
+    - "traefik.http.routers.api-ws.service=api-ws"
+    - "traefik.http.routers.api-ws.priority=10"
     - "traefik.http.services.api-ws.loadbalancer.server.port=8001"
     environment:
       SF_SERVICE_ROLE: api
@@ -196,10 +200,16 @@ services:
     read_only: true
     cap_drop:
     - ALL
+    cap_add:
+    - CHOWN         # nginx master sets ownership on temp dirs at startup
+    - SETUID        # nginx master drops to nginx user for workers
+    - SETGID        # nginx master drops to nginx group for workers
     tmpfs:
     - /tmp
     - /var/cache/nginx
     - /var/run
+    - /etc/nginx/conf.d   # envsubst writes nginx config here at startup
+    - /var/log/nginx      # nginx access/error logs
     networks:
     - sf-frontend
     ports:
@@ -217,6 +227,7 @@ services:
       # Nginx reverse-proxy targets (envsubst'd into nginx.conf at startup)
       SF_API_URL: "http://api:8001"
       SF_WS_URL: "http://api:8001"
+      SF_AGENTS_URL: "http://sf-agents:8100"  # agents service for direct /api/agents/ proxy
     depends_on:
       api:
         condition: service_healthy

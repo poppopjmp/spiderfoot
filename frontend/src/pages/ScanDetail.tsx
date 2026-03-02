@@ -5,18 +5,18 @@ import { scanApi, formatEpoch, formatDuration, type Scan } from '../lib/api';
 import {
   ArrowLeft, StopCircle, RotateCcw,
   BarChart3, List, Settings, ScrollText,
-  Shield, Network, Loader2, MapPin, Brain, PartyPopper,
+  Shield, Network, Loader2, MapPin, Brain, PartyPopper, Server,
 } from 'lucide-react';
 import { Tabs, StatusBadge, CopyButton, Skeleton, Toast, ProgressBar, Tooltip, type ToastType } from '../components/ui';
 import {
   SummaryTab, BrowseTab, CorrelationsTab, GraphTab,
-  GeoMapTab, ReportTab, SettingsTab, LogTab, ExportDropdown,
+  GeoMapTab, ReportTab, SettingsTab, LogTab, ExportDropdown, IaCTab,
 } from '../components/scan';
 import { useScanProgress } from '../hooks/useScanProgress';
 import { useNotificationStore } from '../lib/notifications';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
-type DetailTab = 'summary' | 'browse' | 'correlations' | 'graph' | 'geomap' | 'report' | 'settings' | 'log';
+type DetailTab = 'summary' | 'browse' | 'correlations' | 'graph' | 'geomap' | 'report' | 'iac' | 'settings' | 'log';
 
 export default function ScanDetailPage() {
   const { scanId } = useParams<{ scanId: string }>();
@@ -86,6 +86,7 @@ export default function ScanDetailPage() {
     { key: 'graph' as const, label: 'Graph', icon: Network },
     { key: 'geomap' as const, label: 'GeoMap', icon: MapPin },
     { key: 'report' as const, label: 'AI Report', icon: Brain },
+    { key: 'iac' as const, label: 'IaC', icon: Server },
     { key: 'settings' as const, label: 'Scan Settings', icon: Settings },
     { key: 'log' as const, label: 'Log', icon: ScrollText },
   ];
@@ -187,6 +188,7 @@ export default function ScanDetailPage() {
         {activeTab === 'graph' && <GraphTab scanId={scanId} />}
         {activeTab === 'geomap' && <GeoMapTab scanId={scanId} />}
         {activeTab === 'report' && <ReportTab scanId={scanId} scan={scan} />}
+        {activeTab === 'iac' && <IaCTab scanId={scanId} scanTarget={scan?.target} />}
         {activeTab === 'settings' && <SettingsTab scanId={scanId} scan={scan} />}
         {activeTab === 'log' && <LogTab scanId={scanId} />}
       </div>
