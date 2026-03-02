@@ -124,6 +124,9 @@ class DnsService:
             return None
 
         if HAS_CACHETOOLS and isinstance(self._cache, TTLCache):
+            # Honour dynamic TTL changes (e.g. cache_ttl=0 in tests)
+            if self.config.cache_ttl <= 0:
+                return None
             value = self._cache.get(key)
             if value is not None:
                 self._cache_hits += 1
@@ -135,7 +138,8 @@ class DnsService:
             return None
 
         cached_time, value = entry
-        if time.time() - cached_time > self.config.cache_ttl:
+        ttl = self.config.cache_ttl
+        if ttl <= 0 or (time.time() - cached_time) >= ttl:
             del self._cache[key]
             return None
 

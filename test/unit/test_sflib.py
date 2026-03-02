@@ -834,10 +834,14 @@ class TestSpiderFootComprehensive(TestModuleBase):
         """Test getSession without SOCKS proxy."""
         mock_session_obj = Mock()
         mock_session.return_value = mock_session_obj
-        
+
+        # Reset thread-local so the mock is always called
+        from spiderfoot.sflib import network as _net_mod
+        _net_mod._session_local.session = None
+
         self.sf.socksProxy = None
         result = self.sf.getSession()
-        
+
         mock_session.assert_called_once()
         self.assertEqual(result, mock_session_obj)
 
@@ -846,11 +850,15 @@ class TestSpiderFootComprehensive(TestModuleBase):
         """Test getSession with SOCKS proxy."""
         mock_session_obj = Mock()
         mock_session.return_value = mock_session_obj
-        
+
+        # Reset thread-local so the mock is always called
+        from spiderfoot.sflib import network as _net_mod
+        _net_mod._session_local.session = None
+
         test_proxy = 'socks5://127.0.0.1:9050'
         self.sf.socksProxy = test_proxy
         result = self.sf.getSession()
-        
+
         mock_session.assert_called_once()
         expected_proxies = {'http': test_proxy, 'https': test_proxy}
         mock_session_obj.proxies = expected_proxies

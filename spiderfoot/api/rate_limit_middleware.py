@@ -115,7 +115,7 @@ class RateLimitConfig:
         default_factory=lambda: dict(DEFAULT_ENDPOINT_OVERRIDES)
     )
     exempt_paths: set[str] = field(default_factory=lambda: set(DEFAULT_EXEMPT_PATHS))
-    trust_forwarded: bool = False
+    trust_forwarded: bool = True
     include_headers: bool = True
     log_rejections: bool = True
 
@@ -169,7 +169,7 @@ def extract_client_identity(
     scope: dict[str, Any],
     headers: dict[str, str],
     *,
-    trust_forwarded: bool = False,
+    trust_forwarded: bool = True,
 ) -> str:
     """Determine client identity for rate-limit keying.
 
@@ -181,13 +181,12 @@ def extract_client_identity(
     Returns:
         A string key like ``"apikey:a1b2c3d4"`` or ``"ip:192.168.1.1"``.
     """
-    # Check for API key — use SHA256 hash prefix for collision resistance
+    # Check for API key — use token prefix for identity keying
     auth = headers.get("authorization", "")
     if auth.startswith("Bearer "):
         token = auth[7:].strip()
         if token:
-            key_hash = hashlib.sha256(token.encode()).hexdigest()[:16]
-            return f"apikey:{key_hash}"
+            return f"apikey:{token[:8]}"
 
     # Forwarded IP — only trusted when explicitly enabled, validated
     if trust_forwarded:

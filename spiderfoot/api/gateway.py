@@ -410,7 +410,7 @@ def create_gateway_router() -> Any:
             result = gateway.route(service, method, body, client_id)
             return JSONResponse(content=result)
         except GatewayError as e:
-            raise HTTPException(status_code=e.status, detail=str(e)) from e
+            raise HTTPException(status_code=e.status, detail="Request processing failed") from e
 
     @router.get("/status")
     async def system_status() -> dict:

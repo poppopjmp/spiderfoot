@@ -333,3 +333,35 @@ class ScanResultAggregator:
 
 # Alias used by scanner.py and correlation engine tests
 ResultAggregator = ScanResultAggregator
+
+
+class ResultAggregator:
+    """Simple aggregator for correlation result sets.
+
+    Used by the correlation engine to count or summarise rule results.
+
+    Example::
+
+        agg = ResultAggregator()
+        count = agg.aggregate(results, method='count')
+    """
+
+    def aggregate(self, results: list, method: str = "count") -> int:
+        """Aggregate *results* using the given *method*.
+
+        Currently supported methods:
+          * ``'count'`` – return ``len(results)``
+
+        Args:
+            results: List of result dicts (or any items) to aggregate.
+            method:  Aggregation method name.
+
+        Returns:
+            Integer aggregate value.
+
+        Raises:
+            ValueError: If *method* is unrecognised.
+        """
+        if method == "count":
+            return len(results)
+        raise ValueError(f"Unknown aggregation method: {method!r}")

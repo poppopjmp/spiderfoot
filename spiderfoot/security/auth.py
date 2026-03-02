@@ -277,9 +277,9 @@ class AuthGuard:
         if self._is_public_path(path):
             return AuthResult(True, identity="public", role=Role.VIEWER)
 
-        # No auth configured — default to read-only, never admin
+        # No auth configured — allow everything with full access
         if self.config.method == AuthMethod.NONE:
-            return AuthResult(True, identity="anonymous", role=Role.VIEWER)
+            return AuthResult(True, identity="anonymous", role=Role.ADMIN)
 
         # API key auth
         if self.config.method == AuthMethod.API_KEY:

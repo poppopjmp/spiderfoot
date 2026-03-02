@@ -22,7 +22,9 @@ class TestPasswordHashing(unittest.TestCase):
     def test_hash_deterministic(self):
         h1 = _hash_password("secret")
         h2 = _hash_password("secret")
-        self.assertEqual(h1, h2)
+        # bcrypt uses a random salt so raw hashes differ; verify both are valid
+        self.assertTrue(_verify_password("secret", h1))
+        self.assertTrue(_verify_password("secret", h2))
 
     def test_verify_correct(self):
         h = _hash_password("mypassword")

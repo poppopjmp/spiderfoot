@@ -199,9 +199,9 @@ class AuthConfig:
     jwt_refresh_expiry_days: int = int(os.environ.get("SF_JWT_REFRESH_EXPIRY_DAYS", "30"))
 
     # RBAC enforcement — enabled by default; set SF_RBAC_ENFORCE=false explicitly to disable
-    rbac_enforce: bool = os.environ.get(
+    rbac_enforce: bool = field(default_factory=lambda: os.environ.get(
         "SF_RBAC_ENFORCE", "true"
-    ).lower() in ("true", "1", "yes")
+    ).lower() in ("true", "1", "yes"))
 
     # Password policy
     min_password_length: int = int(os.environ.get("SF_MIN_PASSWORD_LENGTH", "8"))
@@ -217,9 +217,9 @@ class AuthConfig:
     default_admin_email: str = os.environ.get("SF_ADMIN_EMAIL", "admin@spiderfoot.local")
 
     # Auth mode — enabled by default; set SF_AUTH_REQUIRED=false explicitly to disable
-    auth_required: bool = os.environ.get(
+    auth_required: bool = field(default_factory=lambda: os.environ.get(
         "SF_AUTH_REQUIRED", "true"
-    ).lower() in ("true", "1", "yes")
+    ).lower() in ("true", "1", "yes"))
 
     def to_dict(self) -> dict[str, Any]:
         return {

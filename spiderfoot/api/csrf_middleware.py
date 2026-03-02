@@ -54,7 +54,7 @@ class CSRFConfig:
 
     enabled: bool = True
     protected_paths: list[str] = field(
-        default_factory=lambda: ["/api/"],
+        default_factory=lambda: ["/api/graphql"],
     )
     exempt_paths: set[str] = field(
         default_factory=lambda: {

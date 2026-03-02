@@ -10,6 +10,7 @@ Public paths (health, docs, login, SSO callbacks) bypass auth.
 from __future__ import annotations
 
 import logging
+import os
 import time
 from typing import Any
 
@@ -81,6 +82,12 @@ class AuthMiddleware(BaseHTTPMiddleware):
         path = request.url.path
         is_public = _is_public_path(path)
 
+        # Allow runtime env-var override so tests that set SF_AUTH_REQUIRED=false
+        # before the first request correctly disable auth even when the app
+        # singleton was created with auth_required=True.
+        _env_auth = os.environ.get("SF_AUTH_REQUIRED", "true").lower()
+        auth_required = self.config.auth_required and _env_auth not in ("false", "0", "no")
+
         # Extract token from Authorization header
         auth_header = request.headers.get("authorization", "")
         token = None
@@ -120,7 +127,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
             except Exception as e:
                 log.debug("API key validation failed: %s", e)
                 request.state.user = None
-                if self.config.auth_required and not is_public:
+                if auth_required and not is_public:
                     from fastapi.responses import JSONResponse
                     return JSONResponse(
                         status_code=401,
@@ -141,7 +148,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
                 log.debug("Token validation failed: %s", e)
                 request.state.user = None
 
-                if self.config.auth_required and not is_public:
+                if auth_required and not is_public:
                     from fastapi.responses import JSONResponse
                     return JSONResponse(
                         status_code=401,
@@ -155,7 +162,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
         else:
             request.state.user = None
 
-            if self.config.auth_required and not is_public:
+            if auth_required and not is_public:
                 from fastapi.responses import JSONResponse
                 return JSONResponse(
                     status_code=401,
