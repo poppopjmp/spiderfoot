@@ -164,9 +164,9 @@ jobs:
         if: always()
         run: docker rm -f sf-api || true
 
-  # ─── Job 3: Go CLI build + health check against running API ─────────────────
+  # ─── Job 3: Python CLI integration test against running API ──────────────────
   cli-integration:
-    name: Go CLI Integration
+    name: CLI Integration
     runs-on: ubuntu-latest
     needs: build-image
     services:
@@ -191,15 +191,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          go-version: "1.22"
-          cache-dependency-path: cli/go.sum
+          python-version: "3.11"
+          cache: pip
 
-      - name: Build CLI
-        working-directory: cli
-        run: go build -trimpath -o ../sf .
+      - name: Install SpiderFoot
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -e .
 
       - name: Download image
         uses: actions/download-artifact@v4
@@ -237,17 +239,17 @@ jobs:
           docker logs sf-api
           exit 1
 
-      - name: CLI health check
-        run: ./sf health --server http://localhost:8001
-
       - name: CLI version
-        run: ./sf version
+        run: sf version
 
-      - name: CLI module list
-        run: ./sf modules --server http://localhost:8001 -o json | head -20
+      - name: CLI status
+        run: sf status --json || true
 
-      - name: CLI scan list
-        run: ./sf scan list --server http://localhost:8001 || true
+      - name: CLI modules
+        run: sf modules --json | head -20
+
+      - name: CLI stealth levels
+        run: sf stealth levels --json
 
       - name: Cleanup
         if: always()

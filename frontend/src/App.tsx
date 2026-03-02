@@ -16,7 +16,6 @@ const SettingsPage = lazy(() => import('./pages/Settings'));
 const WorkspacesPage = lazy(() => import('./pages/Workspaces'));
 const ModulesPage = lazy(() => import('./pages/Modules'));
 const DocumentationPage = lazy(() => import('./pages/Documentation'));
-const AgentsPage = lazy(() => import('./pages/Agents'));
 const UsersPage = lazy(() => import('./pages/Users'));
 const SSOSettingsPage = lazy(() => import('./pages/SSOSettings'));
 const ApiKeysPage = lazy(() => import('./pages/ApiKeys'));
@@ -108,9 +107,6 @@ export default function App() {
 
         {/* Settings — matches CherryPy: /opts */}
         <Route path="settings" element={<Suspense fallback={<LazyFallback />}><SettingsPage /></Suspense>} />
-
-        {/* Agents — matches CherryPy: /agents (from Services) */}
-        <Route path="agents" element={<Suspense fallback={<LazyFallback />}><AgentsPage /></Suspense>} />
 
         {/* Schedules — recurring scan management */}
         <Route path="schedules" element={<Suspense fallback={<LazyFallback />}><SchedulesPage /></Suspense>} />

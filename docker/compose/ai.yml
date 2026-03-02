@@ -8,6 +8,8 @@ services:
     security_opt:
     - "no-new-privileges:true"
     read_only: true
+    cap_drop:
+    - ALL
     tmpfs:
     - /tmp
     networks:
@@ -95,6 +97,8 @@ services:
     security_opt:
     - "no-new-privileges:true"
     read_only: true
+    cap_drop:
+    - ALL
     tmpfs:
     - /tmp
     networks:

@@ -14,7 +14,7 @@ These models are designed to be used with the OpenAI ``response_format``
 parameter (``json_schema`` mode) so the LLM is forced to return valid,
 schema-conformant JSON instead of free-form Markdown.
 
-Each model can be passed to :meth:`~spiderfoot.llm_client.LLMClient.chat_structured`
+Each model can be passed to :meth:`~spiderfoot.ai.llm_client.LLMClient.chat_structured`
 or :meth:`~spiderfoot.agents.base.BaseAgent.call_llm_structured` to get a
 typed, validated response object back.
 

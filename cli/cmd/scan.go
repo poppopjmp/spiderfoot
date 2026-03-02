@@ -215,6 +215,98 @@ var scanDeleteCmd = &cobra.Command{
 	},
 }
 
+var scanEventsCmd = &cobra.Command{
+	Use:   "events [scan-id]",
+	Short: "List events collected in a scan",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if err := validateSafeID(args[0], "scan ID"); err != nil {
+			return err
+		}
+		c := client.New()
+		eventType, _ := cmd.Flags().GetString("type")
+		limit, _ := cmd.Flags().GetInt("limit")
+
+		path := fmt.Sprintf("/api/scans/%s/events?limit=%d", args[0], limit)
+		if eventType != "" {
+			path += "&type=" + eventType
+		}
+
+		var resp interface{}
+		if err := c.Get(path, &resp); err != nil {
+			return err
+		}
+
+		switch output.Current() {
+		case output.JSON:
+			output.PrintJSON(resp)
+		default:
+			if items, ok := resp.([]interface{}); ok {
+				header := []string{"Type", "Module", "Data", "Source"}
+				rows := make([][]string, 0, len(items))
+				for _, item := range items {
+					if m, ok := item.(map[string]interface{}); ok {
+						data := fmt.Sprintf("%v", m["data"])
+						if len(data) > 60 {
+							data = data[:57] + "..."
+						}
+						rows = append(rows, []string{
+							fmt.Sprintf("%v", m["type"]),
+							fmt.Sprintf("%v", m["module"]),
+							data,
+							fmt.Sprintf("%v", m["source"]),
+						})
+					}
+				}
+				output.PrintTable(header, rows)
+			} else {
+				printGenericResponse(resp)
+			}
+		}
+		return nil
+	},
+}
+
+var scanCorrelationsCmd = &cobra.Command{
+	Use:   "correlations [scan-id]",
+	Short: "Show correlations found in a scan",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if err := validateSafeID(args[0], "scan ID"); err != nil {
+			return err
+		}
+		c := client.New()
+		var resp interface{}
+		if err := c.Get(fmt.Sprintf("/api/scans/%s/correlations", args[0]), &resp); err != nil {
+			return err
+		}
+
+		switch output.Current() {
+		case output.JSON:
+			output.PrintJSON(resp)
+		default:
+			if items, ok := resp.([]interface{}); ok {
+				header := []string{"Rule", "Severity", "Title", "Entities"}
+				rows := make([][]string, 0, len(items))
+				for _, item := range items {
+					if m, ok := item.(map[string]interface{}); ok {
+						rows = append(rows, []string{
+							fmt.Sprintf("%v", m["rule_id"]),
+							fmt.Sprintf("%v", m["severity"]),
+							fmt.Sprintf("%v", m["title"]),
+							fmt.Sprintf("%v", m["entity_count"]),
+						})
+					}
+				}
+				output.PrintTable(header, rows)
+			} else {
+				printGenericResponse(resp)
+			}
+		}
+		return nil
+	},
+}
+
 // --- Helpers ---
 
 func colorStatus(s string) string {
@@ -245,16 +337,293 @@ func formatEpoch(epoch float64) string {
 	return t.Local().Format("2006-01-02 15:04")
 }
 
+// --- Additional scan subcommands matching real API ---
+
+var scanSearchCmd = &cobra.Command{
+	Use:   "search",
+	Short: "Search scans with filters",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		c := client.New()
+		target, _ := cmd.Flags().GetString("target")
+		status, _ := cmd.Flags().GetString("status")
+		tag, _ := cmd.Flags().GetString("tag")
+		limit, _ := cmd.Flags().GetInt("limit")
+
+		path := fmt.Sprintf("/api/scans/search?limit=%d", limit)
+		if target != "" {
+			path += "&target=" + target
+		}
+		if status != "" {
+			path += "&status=" + status
+		}
+		if tag != "" {
+			path += "&tag=" + tag
+		}
+
+		var resp interface{}
+		if err := c.Get(path, &resp); err != nil {
+			return err
+		}
+		switch output.Current() {
+		case output.JSON:
+			output.PrintJSON(resp)
+		default:
+			printGenericResponse(resp)
+		}
+		return nil
+	},
+}
+
+var scanSummaryCmd = &cobra.Command{
+	Use:   "summary [scan-id]",
+	Short: "Show scan summary grouped by type, module, or entity",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if err := validateSafeID(args[0], "scan ID"); err != nil {
+			return err
+		}
+		c := client.New()
+		by, _ := cmd.Flags().GetString("by")
+		path := fmt.Sprintf("/api/scans/%s/summary?by=%s", args[0], by)
+
+		var resp interface{}
+		if err := c.Get(path, &resp); err != nil {
+			return err
+		}
+		switch output.Current() {
+		case output.JSON:
+			output.PrintJSON(resp)
+		default:
+			printGenericResponse(resp)
+		}
+		return nil
+	},
+}
+
+var scanLogsCmd = &cobra.Command{
+	Use:   "logs [scan-id]",
+	Short: "Show scan logs",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if err := validateSafeID(args[0], "scan ID"); err != nil {
+			return err
+		}
+		c := client.New()
+		var resp interface{}
+		if err := c.Get(fmt.Sprintf("/api/scans/%s/logs", args[0]), &resp); err != nil {
+			return err
+		}
+		switch output.Current() {
+		case output.JSON:
+			output.PrintJSON(resp)
+		default:
+			if items, ok := resp.([]interface{}); ok {
+				for _, item := range items {
+					if m, ok := item.(map[string]interface{}); ok {
+						fmt.Printf("[%v] %v: %v\n", m["timestamp"], m["level"], m["message"])
+					}
+				}
+			} else {
+				printGenericResponse(resp)
+			}
+		}
+		return nil
+	},
+}
+
+var scanProfilesCmd = &cobra.Command{
+	Use:   "profiles",
+	Short: "List scan profiles",
+	RunE:  simpleGet("/api/scan-profiles"),
+}
+
+var scanRerunCmd = &cobra.Command{
+	Use:   "rerun [scan-id]",
+	Short: "Rerun a completed scan",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if err := validateSafeID(args[0], "scan ID"); err != nil {
+			return err
+		}
+		c := client.New()
+		var resp map[string]interface{}
+		if err := c.Post(fmt.Sprintf("/api/scans/%s/rerun", args[0]), nil, &resp); err != nil {
+			return err
+		}
+		switch output.Current() {
+		case output.JSON:
+			output.PrintJSON(resp)
+		default:
+			output.Success("Scan rerun started: %v", resp["scan_id"])
+		}
+		return nil
+	},
+}
+
+var scanCloneCmd = &cobra.Command{
+	Use:   "clone [scan-id]",
+	Short: "Clone a scan configuration",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if err := validateSafeID(args[0], "scan ID"); err != nil {
+			return err
+		}
+		c := client.New()
+		var resp map[string]interface{}
+		if err := c.Post(fmt.Sprintf("/api/scans/%s/clone", args[0]), nil, &resp); err != nil {
+			return err
+		}
+		switch output.Current() {
+		case output.JSON:
+			output.PrintJSON(resp)
+		default:
+			output.Success("Scan cloned: %v", resp["scan_id"])
+		}
+		return nil
+	},
+}
+
+var scanRetryCmd = &cobra.Command{
+	Use:   "retry [scan-id]",
+	Short: "Retry a failed scan",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if err := validateSafeID(args[0], "scan ID"); err != nil {
+			return err
+		}
+		c := client.New()
+		var resp map[string]interface{}
+		if err := c.Post(fmt.Sprintf("/api/scans/%s/retry", args[0]), nil, &resp); err != nil {
+			return err
+		}
+		switch output.Current() {
+		case output.JSON:
+			output.PrintJSON(resp)
+		default:
+			output.Success("Scan retry started")
+		}
+		return nil
+	},
+}
+
+var scanArchiveCmd = &cobra.Command{
+	Use:   "archive [scan-id]",
+	Short: "Archive a scan",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if err := validateSafeID(args[0], "scan ID"); err != nil {
+			return err
+		}
+		c := client.New()
+		if err := c.Post(fmt.Sprintf("/api/scans/%s/archive", args[0]), nil, nil); err != nil {
+			return err
+		}
+		output.Success("Scan %s archived", args[0])
+		return nil
+	},
+}
+
+var scanUnarchiveCmd = &cobra.Command{
+	Use:   "unarchive [scan-id]",
+	Short: "Unarchive a scan",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if err := validateSafeID(args[0], "scan ID"); err != nil {
+			return err
+		}
+		c := client.New()
+		if err := c.Post(fmt.Sprintf("/api/scans/%s/unarchive", args[0]), nil, nil); err != nil {
+			return err
+		}
+		output.Success("Scan %s unarchived", args[0])
+		return nil
+	},
+}
+
+var scanCompareCmd = &cobra.Command{
+	Use:   "compare",
+	Short: "Compare two scans",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		scanA, _ := cmd.Flags().GetString("scan-a")
+		scanB, _ := cmd.Flags().GetString("scan-b")
+		if scanA == "" || scanB == "" {
+			return fmt.Errorf("--scan-a and --scan-b are required")
+		}
+		c := client.New()
+		path := fmt.Sprintf("/api/scans/compare?scan_a=%s&scan_b=%s", scanA, scanB)
+		var resp interface{}
+		if err := c.Get(path, &resp); err != nil {
+			return err
+		}
+		switch output.Current() {
+		case output.JSON:
+			output.PrintJSON(resp)
+		default:
+			printGenericResponse(resp)
+		}
+		return nil
+	},
+}
+
+var scanHistoryCmd = &cobra.Command{
+	Use:   "history [scan-id]",
+	Short: "Show scan execution history",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if err := validateSafeID(args[0], "scan ID"); err != nil {
+			return err
+		}
+		c := client.New()
+		var resp interface{}
+		if err := c.Get(fmt.Sprintf("/api/scans/%s/history", args[0]), &resp); err != nil {
+			return err
+		}
+		switch output.Current() {
+		case output.JSON:
+			output.PrintJSON(resp)
+		default:
+			printGenericResponse(resp)
+		}
+		return nil
+	},
+}
+
 func init() {
 	scanStartCmd.Flags().StringP("target", "t", "", "Scan target (required)")
 	scanStartCmd.Flags().StringP("name", "n", "", "Scan name")
 	scanStartCmd.Flags().String("type", "all", "Scan type: all, passive, investigate, footprint")
 	scanStartCmd.Flags().String("modules", "", "Comma-separated list of modules to use")
 
+	scanEventsCmd.Flags().String("type", "", "Filter by event type")
+	scanEventsCmd.Flags().Int("limit", 100, "Maximum events to return")
+
+	scanSearchCmd.Flags().String("target", "", "Filter by target")
+	scanSearchCmd.Flags().String("status", "", "Filter by status")
+	scanSearchCmd.Flags().String("tag", "", "Filter by tag")
+	scanSearchCmd.Flags().Int("limit", 50, "Maximum results")
+
+	scanSummaryCmd.Flags().String("by", "type", "Group by: type, module, entity")
+
+	scanCompareCmd.Flags().String("scan-a", "", "First scan ID (required)")
+	scanCompareCmd.Flags().String("scan-b", "", "Second scan ID (required)")
+
 	scanCmd.AddCommand(scanListCmd)
 	scanCmd.AddCommand(scanGetCmd)
 	scanCmd.AddCommand(scanStartCmd)
 	scanCmd.AddCommand(scanStopCmd)
 	scanCmd.AddCommand(scanDeleteCmd)
+	scanCmd.AddCommand(scanEventsCmd)
+	scanCmd.AddCommand(scanCorrelationsCmd)
+	scanCmd.AddCommand(scanSearchCmd)
+	scanCmd.AddCommand(scanSummaryCmd)
+	scanCmd.AddCommand(scanLogsCmd)
+	scanCmd.AddCommand(scanProfilesCmd)
+	scanCmd.AddCommand(scanRerunCmd)
+	scanCmd.AddCommand(scanCloneCmd)
+	scanCmd.AddCommand(scanRetryCmd)
+	scanCmd.AddCommand(scanArchiveCmd)
+	scanCmd.AddCommand(scanUnarchiveCmd)
+	scanCmd.AddCommand(scanCompareCmd)
+	scanCmd.AddCommand(scanHistoryCmd)
 	rootCmd.AddCommand(scanCmd)
 }

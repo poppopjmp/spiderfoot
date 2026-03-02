@@ -32,10 +32,12 @@ spec:
           command:
             - celery
             - -A
-            - spiderfoot.celery_app
+            - spiderfoot.celery_app:celery_app
             - worker
             - --loglevel={{ .Values.config.logLevel | lower }}
             - --concurrency={{ .Values.celery.worker.concurrency }}
+            - --without-heartbeat
+            - --without-mingle
             - -Q
             - {{ .Values.celery.worker.queues }}
           env:

@@ -24,7 +24,7 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { clsx } from 'clsx';
-import api from '../lib/api';
+import { authApi } from '../lib/api';
 import { getErrorMessage } from '../lib/errors';
 import { ModalShell } from '../components/ui';
 import { useAuthStore } from '../lib/auth';
@@ -93,7 +93,7 @@ export default function UsersPage() {
   const { data, isLoading: loading, error: fetchError } = useQuery({
     queryKey: ['users'],
     queryFn: ({ signal }) =>
-      api.get('/api/auth/users', { params: { limit: 200, offset: 0 }, signal }).then(r => r.data),
+      authApi.users(signal),
   });
 
   const users: UserRecord[] = data?.items || [];
@@ -369,7 +369,7 @@ function CreateUserModal({
 
   const createMutation = useMutation({
     mutationFn: (data: Record<string, unknown>) =>
-      api.post('/api/auth/users', data).then(r => r.data),
+      authApi.createUser(data),
     onSuccess: () => onCreated(),
     onError: (err: unknown) => setError(getErrorMessage(err, 'Failed to create user')),
   });
@@ -494,7 +494,7 @@ function EditUserModal({
 
   const updateMutation = useMutation({
     mutationFn: (data: Record<string, unknown>) =>
-      api.patch(`/api/auth/users/${user.id}`, data).then(r => r.data),
+      authApi.updateUser(user.id, data),
     onSuccess: () => onUpdated(),
     onError: (err: unknown) => setError(getErrorMessage(err, 'Failed to update user')),
   });
@@ -608,7 +608,7 @@ function ChangePasswordModal({
 
   const passwordMutation = useMutation({
     mutationFn: (data: { new_password: string }) =>
-      api.post(`/api/auth/users/${user.id}/password`, data).then(r => r.data),
+      authApi.setPassword(user.id, data),
     onSuccess: () => onChanged(),
     onError: (err: unknown) => setError(getErrorMessage(err, 'Failed to change password')),
   });
@@ -691,7 +691,7 @@ function DeleteUserModal({
   onDeleted: () => void;
 }) {
   const deleteMutation = useMutation({
-    mutationFn: () => api.delete(`/api/auth/users/${user.id}`),
+    mutationFn: () => authApi.deleteUser(user.id),
     onSuccess: () => onDeleted(),
     onError: () => {},
   });

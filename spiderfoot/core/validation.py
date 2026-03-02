@@ -7,6 +7,7 @@ CLI, API, and WebUI components.
 
 from __future__ import annotations
 
+import ipaddress
 import os
 import sys
 import logging
@@ -160,6 +161,166 @@ class ValidationUtils:
             raise ValueError("Target too long (max 500 characters)")
 
         return sanitized
+
+    # Valid target types accepted by SpiderFootTarget
+    _VALID_TARGET_TYPES = frozenset({
+        "IP_ADDRESS", "IPV6_ADDRESS", "NETBLOCK_OWNER", "NETBLOCKV6_OWNER",
+        "INTERNET_NAME", "EMAILADDR", "HUMAN_NAME", "BGP_AS_OWNER",
+        "PHONE_NUMBER", "USERNAME", "BITCOIN_ADDRESS",
+    })
+
+    @classmethod
+    def validate_target_type(cls, target_type: str) -> str:
+        """
+        Validate that target_type is one of the accepted scan target types.
+
+        Args:
+            target_type: Target type string
+
+        Returns:
+            Validated target type
+
+        Raises:
+            ValueError: If target type is invalid
+        """
+        if not target_type or not isinstance(target_type, str):
+            raise ValueError("Target type cannot be empty")
+
+        target_type = target_type.strip()
+
+        if target_type not in cls._VALID_TARGET_TYPES:
+            raise ValueError(
+                f"Invalid target type '{target_type}'. "
+                f"Valid types: {sorted(cls._VALID_TARGET_TYPES)}"
+            )
+
+        return target_type
+
+    @staticmethod
+    def validate_target_value(target_value: str, target_type: str) -> str:
+        """
+        Validate that a target value is well-formed for its declared type.
+
+        Prevents malformed or dangerous inputs from reaching the module system.
+
+        Args:
+            target_value: The target value to validate
+            target_type: The declared target type
+
+        Returns:
+            Sanitized target value
+
+        Raises:
+            ValueError: If target value doesn't match the expected format
+        """
+        import ipaddress
+
+        if not target_value or not isinstance(target_value, str):
+            raise ValueError("Target value cannot be empty")
+
+        value = target_value.strip()
+
+        # Block null bytes and shell metacharacters in ALL target types
+        if '\x00' in value:
+            raise ValueError("Target value contains null bytes")
+        if any(c in value for c in ['|', ';', '`', '$', '{', '}']):
+            raise ValueError("Target value contains disallowed shell metacharacters")
+
+        if target_type == "IP_ADDRESS":
+            try:
+                ip = ipaddress.ip_address(value)
+                if isinstance(ip, ipaddress.IPv6Address):
+                    raise ValueError(
+                        f"Value '{value}' is an IPv6 address, use target type IPV6_ADDRESS"
+                    )
+            except ValueError as e:
+                if "IPv6" in str(e):
+                    raise
+                raise ValueError(f"Invalid IP address: '{value}'") from None
+
+        elif target_type == "IPV6_ADDRESS":
+            try:
+                ip = ipaddress.ip_address(value)
+                if not isinstance(ip, ipaddress.IPv6Address):
+                    raise ValueError(
+                        f"Value '{value}' is not an IPv6 address"
+                    )
+            except ValueError as e:
+                if "not an IPv6" in str(e):
+                    raise
+                raise ValueError(f"Invalid IPv6 address: '{value}'") from None
+
+        elif target_type == "NETBLOCK_OWNER":
+            try:
+                net = ipaddress.ip_network(value, strict=False)
+            except ValueError:
+                raise ValueError(f"Invalid network block: '{value}'") from None
+            if isinstance(net, ipaddress.IPv6Network):
+                raise ValueError(
+                    f"Value '{value}' is an IPv6 network, use target type NETBLOCKV6_OWNER"
+                )
+
+        elif target_type == "NETBLOCKV6_OWNER":
+            try:
+                net = ipaddress.ip_network(value, strict=False)
+            except ValueError:
+                raise ValueError(f"Invalid IPv6 network: '{value}'") from None
+            if not isinstance(net, ipaddress.IPv6Network):
+                raise ValueError(
+                    f"Value '{value}' is not an IPv6 network"
+                )
+
+        elif target_type == "INTERNET_NAME":
+            # Domain name / hostname validation (RFC 1035)
+            stripped = value.strip('"\'')
+            if len(stripped) > 253:
+                raise ValueError("Domain name too long (max 253 characters)")
+            if not re.match(
+                r'^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?'
+                r'(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$',
+                stripped,
+            ):
+                raise ValueError(f"Invalid domain/hostname: '{stripped}'")
+
+        elif target_type == "EMAILADDR":
+            if not re.match(
+                r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$',
+                value,
+            ):
+                raise ValueError(f"Invalid email address: '{value}'")
+
+        elif target_type == "PHONE_NUMBER":
+            if not re.match(r'^\+?[\d\s\-\(\)]{7,15}$', value):
+                raise ValueError(f"Invalid phone number: '{value}'")
+
+        elif target_type == "BGP_AS_OWNER":
+            stripped = value.strip()
+            if not re.match(r'^\d+$', stripped) or len(stripped) > 10:
+                raise ValueError(f"Invalid BGP AS number: '{value}'")
+
+        elif target_type == "BITCOIN_ADDRESS":
+            if not re.match(
+                r'^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$|^bc1[a-z0-9]{39,59}$',
+                value,
+            ):
+                raise ValueError(f"Invalid Bitcoin address: '{value}'")
+
+        elif target_type == "USERNAME":
+            # Usernames: alphanumeric, underscores, dots, at-sign; no paths
+            stripped = value.strip('"\'@')
+            if not stripped:
+                raise ValueError("Username cannot be empty")
+            if '/' in stripped or '\\' in stripped:
+                raise ValueError(f"Username contains path separators: '{value}'")
+
+        elif target_type == "HUMAN_NAME":
+            stripped = value.strip('"\'')
+            if not stripped:
+                raise ValueError("Human name cannot be empty")
+            if not re.match(r'^[a-zA-Z\s\.\-\']+$', stripped):
+                raise ValueError(f"Invalid human name: '{value}'")
+
+        return value
 
     @staticmethod
     def validate_module_list(modules: str | list[str]) -> list[str]:
@@ -327,12 +488,111 @@ class ValidationUtils:
             except (ValueError, TypeError):
                 return False
 
-        elif key.startswith('_') and 'port' in key:
-            try:
-                port_val = int(value)
-                if port_val < 1 or port_val > 65535:
-                    return False
-            except (ValueError, TypeError):
-                return False
-
         return True
+
+    # ── SSRF-safe URL validation ─────────────────────────────────────
+
+    # Private / link-local / loopback networks that must never be targets
+    _PRIVATE_NETWORKS = [
+        ipaddress.ip_network("10.0.0.0/8"),
+        ipaddress.ip_network("172.16.0.0/12"),
+        ipaddress.ip_network("192.168.0.0/16"),
+        ipaddress.ip_network("127.0.0.0/8"),
+        ipaddress.ip_network("169.254.0.0/16"),       # link-local
+        ipaddress.ip_network("0.0.0.0/8"),             # "this" network
+        ipaddress.ip_network("::1/128"),               # IPv6 loopback
+        ipaddress.ip_network("fc00::/7"),               # IPv6 ULA
+        ipaddress.ip_network("fe80::/10"),             # IPv6 link-local
+    ]
+
+    # Allowed URL schemes for outbound webhooks
+    _ALLOWED_SCHEMES = {"https", "http"}
+
+    @classmethod
+    def validate_url_no_ssrf(
+        cls,
+        url: str,
+        *,
+        allow_private: bool = False,
+        allowed_schemes: set[str] | None = None,
+    ) -> str:
+        """
+        Validate a URL for safe outbound use (webhooks, callbacks).
+
+        Prevents SSRF by:
+        - Restricting to http/https schemes
+        - Blocking private/loopback/link-local IP addresses
+        - Blocking hostnames that resolve to private IPs
+        - Rejecting URLs with credentials embedded
+        - Rejecting URLs targeting common cloud metadata endpoints
+
+        Args:
+            url: The URL to validate
+            allow_private: If True, skip the private-IP check (for testing)
+            allowed_schemes: Override the default set of allowed schemes
+
+        Returns:
+            The validated URL
+
+        Raises:
+            ValueError: If the URL is unsafe
+        """
+        from urllib.parse import urlparse
+
+        if not url or not isinstance(url, str):
+            raise ValueError("URL cannot be empty")
+
+        url = url.strip()
+
+        try:
+            parsed = urlparse(url)
+        except Exception:
+            raise ValueError(f"Malformed URL: '{url}'") from None
+
+        # --- Scheme check ---
+        schemes = allowed_schemes or cls._ALLOWED_SCHEMES
+        if parsed.scheme not in schemes:
+            raise ValueError(
+                f"URL scheme '{parsed.scheme}' not allowed. "
+                f"Use one of: {sorted(schemes)}"
+            )
+
+        # --- Hostname required ---
+        hostname = parsed.hostname
+        if not hostname:
+            raise ValueError("URL must include a hostname")
+
+        # --- Block embedded credentials ---
+        if parsed.username or parsed.password:
+            raise ValueError("URL must not contain embedded credentials")
+
+        # --- Block cloud metadata endpoints ---
+        _metadata_hosts = {"169.254.169.254", "metadata.google.internal"}
+        if hostname.lower() in _metadata_hosts:
+            raise ValueError("URL must not target cloud metadata endpoints")
+
+        # --- Resolve hostname and check for private IPs ---
+        if not allow_private:
+            try:
+                ip = ipaddress.ip_address(hostname)
+            except ValueError:
+                # It's a hostname, not an IP literal — resolve it
+                import socket
+                try:
+                    results = socket.getaddrinfo(hostname, None)
+                    ips = {ipaddress.ip_address(r[4][0]) for r in results}
+                except (socket.gaierror, OSError):
+                    # Cannot resolve — let it through (will fail at connect time)
+                    ips = set()
+                for ip in ips:
+                    if any(ip in net for net in cls._PRIVATE_NETWORKS):
+                        raise ValueError(
+                            f"URL hostname '{hostname}' resolves to a private IP address"
+                        )
+            else:
+                if any(ip in net for net in cls._PRIVATE_NETWORKS):
+                    raise ValueError(
+                        f"URL must not target private/loopback address '{hostname}'"
+                    )
+
+        return url

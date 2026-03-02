@@ -51,7 +51,6 @@ const navItems: NavItem[] = [
 ];
 
 const SERVICE_LINKS = [
-  { name: 'AI Agents', url: '/agents', internal: true, desc: 'AI agent orchestrator' },
   { name: 'Grafana', url: '/grafana/', internal: false, desc: 'Metrics & dashboards' },
   { name: 'Jaeger', url: '/jaeger/', internal: false, desc: 'Distributed tracing' },
   { name: 'Prometheus', url: '/prometheus/', internal: false, desc: 'Metrics collection' },

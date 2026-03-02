@@ -5,7 +5,7 @@ from __future__ import annotations
 import unittest
 from test.unit.utils.test_module_base import TestModuleBase
 import inspect
-import spiderfoot.mcp_integration as mcp
+import spiderfoot.ai.mcp_client as mcp
 
 class TestMCPIntegrationSmoke(TestModuleBase):
 

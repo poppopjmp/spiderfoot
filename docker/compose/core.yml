@@ -6,6 +6,8 @@ services:
     security_opt:
     - "no-new-privileges:true"
     read_only: true
+    cap_drop:
+    - ALL
     tmpfs:
     - /tmp
     networks:
@@ -27,6 +29,20 @@ services:
     image: postgres:15-alpine
     container_name: sf-postgres
     restart: unless-stopped
+    read_only: true
+    security_opt:
+    - "no-new-privileges:true"
+    cap_drop:
+    - ALL
+    cap_add:
+    - CHOWN
+    - DAC_OVERRIDE
+    - SETGID
+    - SETUID
+    - FOWNER
+    tmpfs:
+    - /tmp:noexec,nosuid,size=64M
+    - /run/postgresql:noexec,nosuid,size=8M
     networks:
     - sf-backend
     environment:
@@ -56,6 +72,8 @@ services:
     security_opt:
     - no-new-privileges:true
     read_only: true
+    cap_drop:
+    - ALL
     tmpfs:
     - /tmp:size=256M
     networks:
@@ -125,7 +143,7 @@ services:
       SF_MINIO_ENDPOINT: "${SF_MINIO_ENDPOINT:-}"
       SF_MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-}
       SF_MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-}
-      SF_MINIO_SECURE: "false"
+      SF_MINIO_SECURE: "${SF_MINIO_SECURE:-true}"
       SF_MINIO_REPORTS_BUCKET: ${SF_MINIO_REPORTS_BUCKET:-sf-reports}
       SF_MINIO_DATA_BUCKET: ${SF_MINIO_DATA_BUCKET:-sf-data}
       SF_MINIO_LOGS_BUCKET: ${SF_MINIO_LOGS_BUCKET:-sf-logs}
@@ -176,6 +194,8 @@ services:
     security_opt:
     - "no-new-privileges:true"
     read_only: true
+    cap_drop:
+    - ALL
     tmpfs:
     - /tmp
     - /var/cache/nginx
@@ -228,6 +248,8 @@ services:
     security_opt:
     - no-new-privileges:true
     read_only: true
+    cap_drop:
+    - ALL
     tmpfs:
     - /tmp:size=256M
     networks:
@@ -243,7 +265,7 @@ services:
       SF_MINIO_ENDPOINT: "${SF_MINIO_ENDPOINT:-}"
       SF_MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-}
       SF_MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-}
-      SF_MINIO_SECURE: "false"
+      SF_MINIO_SECURE: "${SF_MINIO_SECURE:-true}"
       SF_MINIO_REPORTS_BUCKET: ${SF_MINIO_REPORTS_BUCKET:-sf-reports}
       SF_MINIO_DATA_BUCKET: ${SF_MINIO_DATA_BUCKET:-sf-data}
       SF_LLM_PROVIDER: ${SF_LLM_PROVIDER:-mock}

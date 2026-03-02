@@ -18,7 +18,16 @@ schema migrations, and retry logic for PostgreSQL operations.
 
 from __future__ import annotations
 
-__all__ = ["SpiderFootDb", "get_schema_queries"]
+__all__ = ["SpiderFootDb", "get_schema_queries",
+           # Diagnostics
+           "ExplainResult", "QueryDiagnostics",
+           # Notify
+           "PgNotifyService",
+           # Performance
+           "PartitionManager", "ReadReplicaRouter", "ScanStatsCache", "VacuumAnalyze",
+           # Migration
+           "MigrationManager", "MigrationPlan", "DbAdapter",
+           ]
 
 from pathlib import Path
 import logging
@@ -113,7 +122,27 @@ def get_schema_queries(db_type: str) -> list[str]:
             "CREATE INDEX IF NOT EXISTS idx_scan_results_srchash ON tbl_scan_results (scan_instance_id, source_event_hash)",
             "CREATE INDEX IF NOT EXISTS idx_scan_logs ON tbl_scan_log (scan_instance_id)",
             "CREATE INDEX IF NOT EXISTS idx_scan_correlation ON tbl_scan_correlation_results (scan_instance_id, id)",
-            "CREATE INDEX IF NOT EXISTS idx_scan_correlation_events ON tbl_scan_correlation_results_events (correlation_id)"
+            "CREATE INDEX IF NOT EXISTS idx_scan_correlation_events ON tbl_scan_correlation_results_events (correlation_id)",
+            # Cycle 72: partial index for false-positive filtering
+            "CREATE INDEX IF NOT EXISTS idx_scan_results_fp ON tbl_scan_results (false_positive) WHERE false_positive = 1",
+            # Cycle 72: type+time descending for time-ordered queries
+            "CREATE INDEX IF NOT EXISTS idx_scan_results_type_time ON tbl_scan_results (scan_instance_id, type, generated DESC)",
+            # Cycle 78: unique constraint for ON CONFLICT deduplication
+            "DO $$ BEGIN "
+            "IF NOT EXISTS ("
+            "  SELECT 1 FROM pg_constraint WHERE conname = 'uq_scan_results_hash'"
+            ") THEN "
+            "  ALTER TABLE tbl_scan_results "
+            "    ADD CONSTRAINT uq_scan_results_hash "
+            "    UNIQUE (scan_instance_id, hash); "
+            "END IF; "
+            "END $$",
+        ]
+        # Cycle 73: GIN trigram index for substring search on event data.
+        # pg_trgm extension must be available. Failure is non-fatal.
+        trigram_queries = [
+            "CREATE EXTENSION IF NOT EXISTS pg_trgm",
+            "CREATE INDEX IF NOT EXISTS idx_scan_results_data_trgm ON tbl_scan_results USING gin(data gin_trgm_ops)",
         ]
     else:
         raise ValueError(f"Unsupported database type: {db_type}")
@@ -910,3 +939,18 @@ class SpiderFootDb:
                 'source_event_hash': event[9]  # source_event_hash
             })
         return children
+
+
+# ---------------------------------------------------------------------------
+# Sub-module re-exports (diagnostics, notify, performance, migration)
+# ---------------------------------------------------------------------------
+
+from .db_diagnostics import ExplainResult, QueryDiagnostics  # noqa: E402
+from .db_notify import PgNotifyService  # noqa: E402
+from .db_performance import (  # noqa: E402
+    PartitionManager,
+    ReadReplicaRouter,
+    ScanStatsCache,
+    VacuumAnalyze,
+)
+from .migrate import DbAdapter, MigrationManager, MigrationPlan  # noqa: E402

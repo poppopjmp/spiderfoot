@@ -81,7 +81,7 @@ class GrpcDataService(DataService):
         """Build gRPC metadata with request ID for distributed tracing."""
         metadata = []
         try:
-            from spiderfoot.request_tracing import get_request_id
+            from spiderfoot.observability.request_tracing import get_request_id
             rid = get_request_id()
             if rid:
                 metadata.append(("x-request-id", rid))

@@ -456,6 +456,8 @@ class HttpService:
         """
         context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
         context.check_hostname = False
+        # CERT_NONE is intentional: this is for scanning external targets
+        # that may present invalid/self-signed certificates.
         context.verify_mode = ssl.CERT_NONE
         context.minimum_version = ssl.TLSVersion.TLSv1_2
 

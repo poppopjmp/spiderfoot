@@ -16,10 +16,11 @@ from .routers import (
     visualization, correlations, rag_correlation, reports,
     health, scan_progress, tasks, webhooks, export, storage,
     engines, schedules, rate_limits, rbac, keys, audit, monitor,
-    stix, sarif, scan_metrics, asm, tenants, rbac_enhanced,
+    stix, sarif, scan_metrics, asm, tenants, rbac_roles,
     ai_scan_config, marketplace, webhook_delivery,
     data_retention, scan_comparison, distributed_scan,
-    sso, report_templates, tag_group, notification_rules,
+    report_templates, tag_group, notification_rules,
+    frontend_data, sso,
 )
 from spiderfoot import __version__
 
@@ -32,7 +33,7 @@ from spiderfoot.auth.models import AuthConfig as AuthCfg
 from spiderfoot.security.security_middleware import install_fastapi_security
 
 # Request tracing
-from spiderfoot.request_tracing import install_tracing_middleware
+from spiderfoot.observability.request_tracing import install_tracing_middleware
 
 # Rate limiting
 from spiderfoot.api.rate_limit_middleware import install_rate_limiting
@@ -52,11 +53,14 @@ from spiderfoot.api.cors_config import install_cors
 # Response compression
 from spiderfoot.api.compression_middleware import install_compression
 
+# CSRF protection
+from spiderfoot.api.csrf_middleware import install_csrf_protection
+
 # API versioning
 from spiderfoot.api.versioning import mount_versioned_routers, install_api_versioning
 
 # Graceful shutdown
-from spiderfoot.graceful_shutdown import get_shutdown_coordinator
+from spiderfoot.ops.graceful_shutdown import get_shutdown_coordinator
 
 _log = logging.getLogger("spiderfoot.api")
 
@@ -159,18 +163,19 @@ _VERSIONED_ROUTERS = [
     (scan_metrics.router,     "/api", ["metrics"]),
     (asm.router,              "/api", ["asm"]),
     (tenants.router,          "/api", ["tenants"]),
-    (rbac_enhanced.router,    "/api", ["rbac-v2"]),
+    (rbac_roles.router,       "/api", ["rbac-v2"]),
     (ai_scan_config.router,   "/api", ["ai-config"]),
     (marketplace.router,      "/api", ["marketplace"]),
     (webhook_delivery.router, "/api", ["webhook-delivery"]),
     (data_retention.router,   "/api", ["data-retention"]),
     (scan_comparison.router,  "/api", ["scan-comparison"]),
     (distributed_scan.router, "/api", ["distributed-scan"]),
-    (sso.router,              "/api", ["sso"]),
     (auth_router,             "/api", ["authentication"]),
     (report_templates.router, "/api", ["report-templates"]),
     (tag_group.router,        "/api", ["tags-groups"]),
     (notification_rules.router, "/api", ["notification-rules"]),
+    (frontend_data.router,   "/api", ["frontend-data"]),
+    (sso.router,             "/api", ["sso"]),
     (websocket.router,        "/ws",  ["websockets"]),
 ]
 
@@ -205,6 +210,9 @@ install_body_limits(app)
 # Install rate limiting middleware (after tracing so 429s get request IDs)
 install_rate_limiting(app)
 
+# Install CSRF protection (after rate limiting; before error handlers)
+install_csrf_protection(app)
+
 # Install structured error handlers (after all middleware so errors get request IDs)
 install_error_handlers(app)
 
@@ -219,3 +227,26 @@ install_auth_middleware(app, AuthCfg())
 
 # Install CORS (must be last middleware added — runs first in ASGI onion)
 install_cors(app)
+
+# ── Mount microservice sub-applications ──────────────────────────────
+# These are standalone FastAPI apps that can also run independently.
+try:
+    from spiderfoot.agents.service import app as agents_app
+    app.mount("/agents", agents_app)
+    _log.info("Agents service mounted at /agents")
+except Exception as e:
+    _log.warning("Agents service not mounted: %s", e)
+
+try:
+    from spiderfoot.enrichment.service import app as enrichment_app
+    app.mount("/enrichment", enrichment_app)
+    _log.info("Enrichment service mounted at /enrichment")
+except Exception as e:
+    _log.warning("Enrichment service not mounted: %s", e)
+
+try:
+    from spiderfoot.user_input.service import app as user_input_app
+    app.mount("/user-input", user_input_app)
+    _log.info("User input service mounted at /user-input")
+except Exception as e:
+    _log.warning("User input service not mounted: %s", e)

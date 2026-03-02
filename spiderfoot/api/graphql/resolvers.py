@@ -27,6 +27,7 @@ from .types import (
     MutationResult, ScanCreateResult, FalsePositiveResult,
     VectorSearchHit, VectorSearchResult, VectorCollectionInfo,
 )
+from .dataloaders import create_dataloaders
 
 _log = logging.getLogger("spiderfoot.api.graphql")
 
@@ -557,7 +558,7 @@ class Query:
         in the configured Qdrant vector store.
         """
         try:
-            from spiderfoot.qdrant_client import get_qdrant_client, Filter
+            from spiderfoot.ai.qdrant_client import get_qdrant_client, Filter
             from spiderfoot.services.embedding_service import EmbeddingService
 
             embed_svc = EmbeddingService()
@@ -614,7 +615,7 @@ class Query:
     def vector_collections(self) -> list[VectorCollectionInfo]:
         """Return all vector collections and their statistics."""
         try:
-            from spiderfoot.qdrant_client import get_qdrant_client
+            from spiderfoot.ai.qdrant_client import get_qdrant_client
             qdrant = get_qdrant_client()
             names = qdrant.list_collections()
             result = []

@@ -27,34 +27,34 @@ spec:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
         - name: webui
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          image: "{{ .Values.webui.image.repository | default .Values.image.repository }}:{{ .Values.webui.image.tag | default .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          command: ["python", "-m", "spiderfoot.service_runner", "--service", "webui"]
           ports:
             - name: http
               containerPort: {{ .Values.webui.port }}
               protocol: TCP
           env:
-            {{- include "spiderfoot.env" . | nindent 12 }}
             - name: SF_SERVICE_ROLE
               value: "webui"
+            - name: SPIDERFOOT_API_URL
+              value: "http://{{ include "spiderfoot.fullname" . }}-api:{{ .Values.api.port }}"
             {{- with .Values.webui.env }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
           livenessProbe:
             httpGet:
-              path: {{ .Values.healthCheck.liveness.path }}
+              path: /
               port: http
-            initialDelaySeconds: {{ .Values.healthCheck.liveness.initialDelaySeconds }}
-            periodSeconds: {{ .Values.healthCheck.liveness.periodSeconds }}
-            failureThreshold: {{ .Values.healthCheck.liveness.failureThreshold }}
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: {{ .Values.healthCheck.readiness.path }}
+              path: /
               port: http
-            initialDelaySeconds: {{ .Values.healthCheck.readiness.initialDelaySeconds }}
-            periodSeconds: {{ .Values.healthCheck.readiness.periodSeconds }}
-            failureThreshold: {{ .Values.healthCheck.readiness.failureThreshold }}
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 3
           resources:
             {{- toYaml .Values.webui.resources | nindent 12 }}
           securityContext:

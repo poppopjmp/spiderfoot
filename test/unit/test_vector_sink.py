@@ -6,7 +6,7 @@ import logging
 import pytest
 from unittest.mock import patch, MagicMock
 
-from spiderfoot.vector_sink import VectorConfig, VectorSink, VectorLogHandler
+from spiderfoot.observability.vector_sink import VectorConfig, VectorSink, VectorLogHandler
 
 
 class TestVectorConfig:

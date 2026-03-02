@@ -12,7 +12,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from ..dependencies import get_api_key, SafeId
 from pydantic import BaseModel
 
-from spiderfoot.multi_tenancy import TenantManager, TenantPlan
+from spiderfoot.auth.tenancy import TenantManager, TenantPlan
 
 logger = logging.getLogger("spiderfoot.api.tenants")
 
@@ -130,7 +130,7 @@ async def tenant_usage(tenant_id: SafeId):
 @router.get("/tenants/plans/info", tags=["tenants"])
 async def plan_info():
     """Get available plans and their default quotas."""
-    from spiderfoot.multi_tenancy import _PLAN_QUOTAS
+    from spiderfoot.auth.tenancy import _PLAN_QUOTAS
     return {
         "plans": [
             {

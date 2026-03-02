@@ -12,7 +12,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from typing import Any
 
-from spiderfoot.distributed_scan import (
+from spiderfoot.scan.distributed import (
     DistributedScanManager,
     BalancingStrategy,
     WorkerStatus,

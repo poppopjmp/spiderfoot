@@ -10,7 +10,7 @@ from ..dependencies import get_api_key
 from pydantic import BaseModel, Field
 from typing import Any
 
-from spiderfoot.notification_rules import NotificationRulesEngine
+from spiderfoot.notifications.rules import NotificationRulesEngine
 
 router = APIRouter(dependencies=[Depends(get_api_key)])
 

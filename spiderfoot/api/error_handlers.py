@@ -36,6 +36,37 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 log = logging.getLogger(__name__)
 
 
+# ── Error codes ──────────────────────────────────────────────────────
+
+class ErrorCode:
+    """Well-known error codes used across the API."""
+
+    # Generic
+    INTERNAL_ERROR = "INTERNAL_ERROR"
+    VALIDATION_ERROR = "VALIDATION_ERROR"
+    NOT_FOUND = "NOT_FOUND"
+    FORBIDDEN = "FORBIDDEN"
+    UNAUTHORIZED = "UNAUTHORIZED"
+    RATE_LIMITED = "RATE_LIMITED"
+    CONFLICT = "CONFLICT"
+    BAD_REQUEST = "BAD_REQUEST"
+    METHOD_NOT_ALLOWED = "METHOD_NOT_ALLOWED"
+    NOT_IMPLEMENTED = "NOT_IMPLEMENTED"
+    BAD_GATEWAY = "BAD_GATEWAY"
+    SERVICE_UNAVAILABLE = "SERVICE_UNAVAILABLE"
+    GATEWAY_TIMEOUT = "GATEWAY_TIMEOUT"
+
+    # Domain-specific
+    SCAN_NOT_FOUND = "SCAN_NOT_FOUND"
+    SCAN_ALREADY_RUNNING = "SCAN_ALREADY_RUNNING"
+    MODULE_NOT_FOUND = "MODULE_NOT_FOUND"
+    CORRELATION_NOT_FOUND = "CORRELATION_NOT_FOUND"
+    WORKSPACE_NOT_FOUND = "WORKSPACE_NOT_FOUND"
+    INVALID_TARGET = "INVALID_TARGET"
+    UPLOAD_TOO_LARGE = "UPLOAD_TOO_LARGE"
+    UPLOAD_INVALID_TYPE = "UPLOAD_INVALID_TYPE"
+
+
 # ── Error response schema ────────────────────────────────────────────
 
 class ErrorDetail(BaseModel):
@@ -168,3 +199,53 @@ def install_error_handlers(app: FastAPI) -> None:
     app.add_exception_handler(RequestValidationError, _validation_exception_handler)
     app.add_exception_handler(Exception, _unhandled_exception_handler)
     log.info("Structured API error handlers installed")
+
+
+# Alias for backward compat with error_handling.py
+register_error_handlers = install_error_handlers
+
+
+# ── Convenience helpers ──────────────────────────────────────────────
+
+def error_response(
+    status: int,
+    code: str,
+    message: str,
+    *,
+    request_id: str | None = None,
+    details: dict[str, Any] | None = None,
+) -> JSONResponse:
+    """Build a standardised error JSONResponse without a Request object.
+
+    Useful for raising errors in service layers that don't have
+    access to the incoming ``Request``.
+    """
+    body: dict[str, Any] = {
+        "error": {
+            "code": code,
+            "message": message,
+            "status": status,
+        }
+    }
+    if request_id:
+        body["error"]["request_id"] = request_id
+    if details:
+        body["error"]["details"] = details
+    return JSONResponse(status_code=status, content=body)
+
+
+def api_error(
+    status: int,
+    code: str,
+    message: str,
+) -> StarletteHTTPException:
+    """Create an HTTPException with structured detail.
+
+    The ``detail`` field carries the structured error info so the
+    registered handler can render it in the standard envelope.
+    """
+    return StarletteHTTPException(
+        status_code=status,
+        detail={"code": code, "message": message},
+    )
+

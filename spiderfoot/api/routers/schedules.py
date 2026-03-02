@@ -30,7 +30,7 @@ from ..dependencies import get_api_key, SafeId
 
 log = logging.getLogger("spiderfoot.api.schedules")
 
-router = APIRouter(prefix="/api/schedules", tags=["schedules"])
+router = APIRouter(prefix="/schedules", tags=["schedules"])
 
 api_key_dep = Depends(get_api_key)
 

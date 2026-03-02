@@ -10,7 +10,7 @@ from ..dependencies import get_api_key, SafeId
 from pydantic import BaseModel, Field
 from typing import Any
 
-from spiderfoot.tag_group import TagGroupManager, TagColor
+from spiderfoot.core.tag_group import TagGroupManager, TagColor
 
 router = APIRouter(dependencies=[Depends(get_api_key)])
 

@@ -22,7 +22,7 @@ from ..dependencies import get_api_key
 
 log = logging.getLogger("spiderfoot.api.keys")
 
-router = APIRouter(prefix="/api/keys", tags=["api-keys"])
+router = APIRouter(prefix="/keys", tags=["api-keys"])
 
 api_key_dep = Depends(get_api_key)
 
@@ -84,7 +84,7 @@ async def list_keys(
     api_key: str = api_key_dep,
 ) -> KeyListResponse:
     """List all API keys (hashes are never exposed)."""
-    from spiderfoot.api_keys import get_api_key_manager
+    from spiderfoot.auth.api_keys import get_api_key_manager
     mgr = get_api_key_manager()
     records = mgr.list_keys()
     return KeyListResponse(
@@ -103,7 +103,7 @@ async def create_key(
     The full key is returned ONLY in this response.
     Store it securely — it cannot be retrieved again.
     """
-    from spiderfoot.api_keys import get_api_key_manager
+    from spiderfoot.auth.api_keys import get_api_key_manager
     mgr = get_api_key_manager()
     try:
         key_id, full_key = mgr.create_key(
@@ -131,7 +131,7 @@ async def get_key(
     api_key: str = api_key_dep,
 ) -> KeyDetailResponse:
     """Get API key details (hash is never exposed)."""
-    from spiderfoot.api_keys import get_api_key_manager
+    from spiderfoot.auth.api_keys import get_api_key_manager
     mgr = get_api_key_manager()
     record = mgr.get_key(key_id)
     if not record:
@@ -146,7 +146,7 @@ async def update_key(
     api_key: str = api_key_dep,
 ) -> KeyDetailResponse:
     """Update an API key's metadata (role, name, scopes, etc.)."""
-    from spiderfoot.api_keys import get_api_key_manager
+    from spiderfoot.auth.api_keys import get_api_key_manager
     mgr = get_api_key_manager()
     try:
         record = mgr.update_key(
@@ -172,7 +172,7 @@ async def delete_key(
     api_key: str = api_key_dep,
 ) -> None:
     """Permanently delete an API key."""
-    from spiderfoot.api_keys import get_api_key_manager
+    from spiderfoot.auth.api_keys import get_api_key_manager
     mgr = get_api_key_manager()
     if not mgr.delete_key(key_id):
         raise HTTPException(status_code=404, detail="API key not found")
@@ -184,7 +184,7 @@ async def revoke_key(
     api_key: str = api_key_dep,
 ) -> dict:
     """Revoke (disable) an API key without deleting it."""
-    from spiderfoot.api_keys import get_api_key_manager
+    from spiderfoot.auth.api_keys import get_api_key_manager
     mgr = get_api_key_manager()
     if not mgr.revoke_key(key_id):
         raise HTTPException(status_code=404, detail="API key not found")

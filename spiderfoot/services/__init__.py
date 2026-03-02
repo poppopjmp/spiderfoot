@@ -23,15 +23,6 @@ from .cache_service import (
     RedisCache,
 )
 
-# CLI service
-from .cli_service import (
-    cmd_config_get,
-    cmd_config_set,
-    cmd_metrics,
-    cmd_status,
-    cmd_version,
-)
-
 # Config service
 from .config_service import (
     ConfigService,

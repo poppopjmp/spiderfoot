@@ -23,7 +23,7 @@ from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel, Field
 
 from spiderfoot import SpiderFootHelpers
-from spiderfoot.scan_service.scanner import startSpiderFootScanner
+from spiderfoot.scan.scanner import startSpiderFootScanner
 from spiderfoot.scan.scan_service_facade import ScanService, ScanServiceError
 from spiderfoot.sflib.core import SpiderFoot
 
@@ -67,6 +67,10 @@ class ScanRequest(BaseModel):
     type_filter: list[str] | None = Field(None, description="List of event types to include")
     engine: str | None = Field(None, description="Scan engine profile name (from /api/engines)")
     profile: str | None = Field(None, description="Scan profile name (e.g. 'tools-only', 'quick-recon')")
+    stealth_level: str | None = Field(
+        None,
+        description="Stealth level: none, low, medium, high, maximum (maps to paranoid)",
+    )
 
 
 class ScheduleCreateRequest(BaseModel):
@@ -156,6 +160,7 @@ def start_scan_background(
     modules: list,
     type_filter: list,
     config: dict,
+    stealth_level: str | None = None,
 ) -> None:
     """Launch a SpiderFoot scan in the background for the given target and modules.
 
@@ -170,19 +175,22 @@ def start_scan_background(
         from spiderfoot.celery_app import is_celery_available
         if is_celery_available():
             from spiderfoot.tasks.scan import run_scan
+            kwargs = {
+                "scan_name": scan_name,
+                "scan_id": scan_id,
+                "target_value": target,
+                "target_type": target_type,
+                "module_list": modules,
+                "global_opts": config,
+            }
+            if stealth_level:
+                kwargs["stealth_level"] = stealth_level
             run_scan.apply_async(
-                kwargs={
-                    "scan_name": scan_name,
-                    "scan_id": scan_id,
-                    "target_value": target,
-                    "target_type": target_type,
-                    "module_list": modules,
-                    "global_opts": config,
-                },
+                kwargs=kwargs,
                 task_id=scan_id,
                 queue="scan",
             )
-            log.info("Scan %s dispatched to Celery worker", scan_id)
+            log.info("Scan %s dispatched to Celery worker (stealth=%s)", scan_id, stealth_level or "none")
             return
     except Exception as e:
         log.warning("Celery dispatch failed for scan %s, falling back to in-process: %s", scan_id, e)
@@ -190,6 +198,11 @@ def start_scan_background(
     # Fallback: run in-process via multiprocessing
     import multiprocessing as mp
     from spiderfoot.observability.logger import logListenerSetup
+
+    # Inject stealth level into config so the scanner can pick it up
+    if stealth_level:
+        config = {**config, "_stealth_level": stealth_level}
+
     try:
         logging_queue = mp.Queue()
         logListenerSetup(logging_queue, config)
@@ -503,7 +516,7 @@ async def bulk_archive_scans(
 async def list_schedules(api_key: str = optional_auth_dep) -> dict:
     """List all recurring scan schedules."""
     try:
-        from spiderfoot.recurring_schedule import get_recurring_scheduler
+        from spiderfoot.scan.recurring_schedule import get_recurring_scheduler
         scheduler = get_recurring_scheduler()
         schedules = scheduler.list_all()
         return {
@@ -528,7 +541,7 @@ async def create_schedule(
             detail="Either interval_minutes (>0) or run_at must be provided",
         )
     try:
-        from spiderfoot.recurring_schedule import get_recurring_scheduler
+        from spiderfoot.scan.recurring_schedule import get_recurring_scheduler
         scheduler = get_recurring_scheduler()
         schedule = scheduler.add_schedule(
             name=body.name,
@@ -554,7 +567,7 @@ async def create_schedule(
 @router.get("/scans/schedules/{schedule_id}")
 async def get_schedule(schedule_id: str, api_key: str = optional_auth_dep) -> dict:
     """Get details of a specific scan schedule."""
-    from spiderfoot.recurring_schedule import get_recurring_scheduler
+    from spiderfoot.scan.recurring_schedule import get_recurring_scheduler
     scheduler = get_recurring_scheduler()
     s = scheduler.get(schedule_id)
     if s is None:
@@ -565,7 +578,7 @@ async def get_schedule(schedule_id: str, api_key: str = optional_auth_dep) -> di
 @router.delete("/scans/schedules/{schedule_id}")
 async def delete_schedule(schedule_id: str, api_key: str = api_key_dep) -> dict:
     """Delete a scan schedule."""
-    from spiderfoot.recurring_schedule import get_recurring_scheduler
+    from spiderfoot.scan.recurring_schedule import get_recurring_scheduler
     scheduler = get_recurring_scheduler()
     if not scheduler.remove(schedule_id):
         raise HTTPException(status_code=404, detail="Schedule not found")
@@ -575,7 +588,7 @@ async def delete_schedule(schedule_id: str, api_key: str = api_key_dep) -> dict:
 @router.post("/scans/schedules/{schedule_id}/pause")
 async def pause_schedule(schedule_id: str, api_key: str = api_key_dep) -> dict:
     """Pause a recurring scan schedule."""
-    from spiderfoot.recurring_schedule import get_recurring_scheduler
+    from spiderfoot.scan.recurring_schedule import get_recurring_scheduler
     scheduler = get_recurring_scheduler()
     if not scheduler.pause(schedule_id):
         raise HTTPException(status_code=404, detail="Schedule not found or not active")
@@ -585,7 +598,7 @@ async def pause_schedule(schedule_id: str, api_key: str = api_key_dep) -> dict:
 @router.post("/scans/schedules/{schedule_id}/resume")
 async def resume_schedule(schedule_id: str, api_key: str = api_key_dep) -> dict:
     """Resume a paused scan schedule."""
-    from spiderfoot.recurring_schedule import get_recurring_scheduler
+    from spiderfoot.scan.recurring_schedule import get_recurring_scheduler
     scheduler = get_recurring_scheduler()
     if not scheduler.resume(schedule_id):
         raise HTTPException(status_code=404, detail="Schedule not found or not paused")
@@ -746,7 +759,7 @@ async def create_scan(
         # If an engine profile is specified, load it and merge settings
         if scan_request.engine:
             try:
-                from spiderfoot.scan_engine import ScanEngineLoader
+                from spiderfoot.scan.scan_engine import ScanEngineLoader
                 loader = ScanEngineLoader()
                 engine = loader.load(scan_request.engine)
                 modules = engine.get_enabled_modules()
@@ -808,6 +821,7 @@ async def create_scan(
             modules,
             scan_request.type_filter,
             sf_config,
+            stealth_level=scan_request.stealth_level,
         )
         return ScanCreateResponse(
             id=scan_id,
@@ -1114,6 +1128,137 @@ async def run_scan_correlations(
     except Exception as e:
         log.error("Correlation run failed for %s: %s", scan_id, e, exc_info=True)
         raise HTTPException(status_code=500, detail="Correlation analysis failed") from e
+
+
+# -----------------------------------------------------------------------
+# IaC generation endpoint (Phase 2 — Steps 75-76)
+# -----------------------------------------------------------------------
+
+class IaCRequest(BaseModel):
+    """Request body for IaC generation."""
+    provider: str = Field("aws", description="Cloud provider: aws, azure, gcp, digitalocean, vmware")
+    include_terraform: bool = Field(True, description="Include Terraform configs")
+    include_ansible: bool = Field(True, description="Include Ansible playbook")
+    include_docker: bool = Field(True, description="Include Docker Compose")
+    include_packer: bool = Field(False, description="Include Packer configs")
+    validate: bool = Field(True, description="Run schema validation on output")
+
+
+@router.post("/scans/{scan_id}/iac")
+async def generate_iac(
+    scan_id: SafeId,
+    request: IaCRequest = Body(default=IaCRequest()),
+    api_key: str = optional_auth_dep,
+    svc: ScanService = Depends(get_scan_service),
+) -> dict:
+    """Generate Infrastructure as Code from scan results.
+
+    Extracts discovered services, ports, and infrastructure from scan events,
+    then generates validated Terraform, Ansible, and Docker Compose configs
+    that replicate the target's infrastructure.
+    """
+    record = svc.get_scan(scan_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Scan not found")
+
+    try:
+        from spiderfoot.iac.target_replication import (
+            CloudProvider,
+            TargetProfileExtractor,
+            TargetReplicator,
+        )
+        from spiderfoot.iac.schema_validation import validate_iac_bundle
+
+        # Map string to CloudProvider enum
+        provider_map = {p.value.lower(): p for p in CloudProvider}
+        provider_str = request.provider.lower()
+        if provider_str not in provider_map:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unknown provider '{request.provider}'. "
+                       f"Supported: {', '.join(provider_map.keys())}",
+            )
+        provider = provider_map[provider_str]
+
+        # Get scan events
+        events = svc.get_events(scan_id)
+        if not events:
+            return {
+                "scan_id": scan_id,
+                "message": "No events found — run a scan first",
+                "bundle": {},
+                "validation": [],
+            }
+
+        # Convert DB rows to dicts for the extractor
+        event_dicts = []
+        for ev in events:
+            if isinstance(ev, dict):
+                event_dicts.append(ev)
+            elif isinstance(ev, (list, tuple)) and len(ev) >= 5:
+                event_dicts.append({
+                    "type": ev[4] if len(ev) > 4 else "",
+                    "data": ev[1] if len(ev) > 1 else "",
+                    "module": ev[2] if len(ev) > 2 else "",
+                    "source": ev[5] if len(ev) > 5 else "",
+                })
+
+        # Extract target profile from events
+        extractor = TargetProfileExtractor()
+        for ev in event_dicts:
+            extractor.ingest(ev)
+        profile = extractor.build()
+
+        # Generate IaC bundle
+        replicator = TargetReplicator(profile, provider=provider)
+        bundle = replicator.generate()
+
+        # Filter bundle by request flags
+        filtered = {}
+        if request.include_terraform and "terraform" in bundle:
+            filtered["terraform"] = bundle["terraform"]
+        if request.include_ansible and "ansible" in bundle:
+            filtered["ansible"] = bundle["ansible"]
+        if request.include_docker and "docker" in bundle:
+            filtered["docker"] = bundle["docker"]
+        if request.include_packer and "packer" in bundle:
+            filtered["packer"] = bundle["packer"]
+        if "docs" in bundle:
+            filtered["docs"] = bundle["docs"]
+
+        # Validate if requested
+        validation_results = []
+        if request.validate:
+            raw_results = validate_iac_bundle(filtered)
+            validation_results = [r.to_dict() for r in raw_results]
+
+        all_valid = all(v.get("valid", True) for v in validation_results)
+
+        return {
+            "scan_id": scan_id,
+            "provider": request.provider,
+            "profile_summary": {
+                "ip_count": len(profile.ip_addresses),
+                "port_count": len(profile.open_ports),
+                "service_count": len(profile.services),
+                "web_server": profile.web_server,
+                "os_detected": profile.operating_system,
+            },
+            "files": {
+                category: list(files.keys())
+                for category, files in filtered.items()
+                if isinstance(files, dict)
+            },
+            "validation": validation_results,
+            "all_valid": all_valid,
+            "bundle": filtered,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        log.error("IaC generation failed for %s: %s", scan_id, e, exc_info=True)
+        raise HTTPException(status_code=500, detail="IaC generation failed") from e
 
 
 @router.delete("/scans/{scan_id}", response_model=ScanDeleteResponse)
@@ -2305,3 +2450,63 @@ async def compare_scans(
     except Exception as e:
         log.error("Failed to compare scans %s vs %s: %s", scan_a, scan_b, e)
         raise HTTPException(status_code=500, detail="Scan comparison failed") from e
+
+
+# ---------------------------------------------------------------------------
+# Stealth stats endpoints (wires stealth_integration.py into the API)
+# ---------------------------------------------------------------------------
+
+
+@router.get(
+    "/scans/{scan_id}/stealth-stats",
+    summary="Get stealth statistics for a scan",
+    tags=["stealth"],
+)
+async def get_scan_stealth_stats(
+    scan_id: SafeId,
+    _auth=Depends(optional_auth),
+):
+    """Return stealth metrics for a running or recently completed scan.
+
+    Provides detection events, request counts per domain, proxy chain
+    health, and overall stealth effectiveness metrics collected by the
+    :class:`StealthFetchMiddleware` during the scan.
+    """
+    try:
+        from spiderfoot.recon.stealth_integration import get_scan_context
+        ctx = get_scan_context(scan_id)
+        if ctx is None:
+            raise HTTPException(
+                status_code=404,
+                detail="No stealth context found for this scan — "
+                       "the scan may not be running, may have completed, "
+                       "or was started without stealth enabled.",
+            )
+        return {"scan_id": scan_id, "stealth": ctx.get_stats()}
+    except HTTPException:
+        raise
+    except Exception as e:
+        log.error("Failed to get stealth stats for %s: %s", scan_id, e)
+        raise HTTPException(status_code=500, detail="Failed to retrieve stealth stats") from e
+
+
+@router.get(
+    "/stealth-stats",
+    summary="Get stealth statistics for all active scans",
+    tags=["stealth"],
+)
+async def get_all_stealth_stats(
+    _auth=Depends(optional_auth),
+):
+    """Return stealth metrics for all currently running scans.
+
+    Useful for the operations dashboard to monitor stealth effectiveness
+    across all active scans.
+    """
+    try:
+        from spiderfoot.recon.stealth_integration import get_all_scan_stats
+        stats = get_all_scan_stats()
+        return {"active_scans": len(stats), "scans": stats}
+    except Exception as e:
+        log.error("Failed to get all stealth stats: %s", e)
+        raise HTTPException(status_code=500, detail="Failed to retrieve stealth stats") from e

@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from spiderfoot.llm_client import (
+from spiderfoot.ai.llm_client import (
     LLMAuthError,
     LLMClient,
     LLMConfig,

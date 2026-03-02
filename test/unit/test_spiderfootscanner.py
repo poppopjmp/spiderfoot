@@ -7,7 +7,7 @@ import pytest
 import unittest
 import uuid
 
-from spiderfoot.scan_service.scanner import SpiderFootScanner
+from spiderfoot.scan.scanner import SpiderFootScanner
 from test.unit.utils.test_scanner_base import TestScannerBase
 
 # Import shared thread pool cleanup

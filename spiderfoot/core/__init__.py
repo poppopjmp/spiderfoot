@@ -5,10 +5,13 @@ This package contains shared functionality used by CLI, API, and WebUI.
 
 from __future__ import annotations
 
+from .modules import ModuleManager
+from .validation import ValidationUtils
+
 __all__ = [
     'ConfigManager',
     'ModuleManager',
     'ScanManager',
     'ServerManager',
-    'ValidationUtils'
+    'ValidationUtils',
 ]

@@ -59,6 +59,22 @@ from .structured_logging import (
     StructuredLogHandler,
 )
 
+# Error telemetry
+from .error_telemetry import (
+    ErrorClass,
+    ErrorRecord,
+    ErrorTelemetry,
+    classify_error,
+    get_error_telemetry,
+)
+
+# Tracing
+from .tracing import (
+    get_tracer,
+    trace_span,
+    shutdown as shutdown_tracer,
+)
+
 __all__ = [
     # Audit logging
     "AuditBackend",
@@ -93,5 +109,15 @@ __all__ = [
     "setup_structured_logging",
     "StructuredFormatter",
     "StructuredLogHandler",
+    # Error telemetry
+    "ErrorClass",
+    "ErrorRecord",
+    "ErrorTelemetry",
+    "classify_error",
+    "get_error_telemetry",
+    # Tracing
+    "get_tracer",
+    "trace_span",
+    "shutdown_tracer",
 ]
 

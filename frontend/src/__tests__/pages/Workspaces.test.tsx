@@ -29,9 +29,6 @@ vi.mock('../../lib/api', async () => {
     scanApi: {
       list: vi.fn().mockResolvedValue({ scans: [], total: 0 }),
     },
-    agentsApi: {
-      status: vi.fn().mockResolvedValue({ agents: [], total: 0 }),
-    },
   };
 });
 

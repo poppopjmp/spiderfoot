@@ -8,6 +8,8 @@ services:
     networks:
     - sf-backend
     - sf-frontend
+    cap_drop:
+    - ALL
     cap_add:
     - NET_RAW            # nmap SYN scans, naabu raw sockets
     - NET_ADMIN          # nmap OS detection, advanced scans
@@ -27,7 +29,7 @@ services:
       SF_MINIO_ENDPOINT: "${SF_MINIO_ENDPOINT:-}"
       SF_MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-}
       SF_MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-}
-      SF_MINIO_SECURE: "false"
+      SF_MINIO_SECURE: "${SF_MINIO_SECURE:-true}"
       SF_MINIO_REPORTS_BUCKET: ${SF_MINIO_REPORTS_BUCKET:-sf-reports}
       SF_MINIO_DATA_BUCKET: ${SF_MINIO_DATA_BUCKET:-sf-data}
       SF_LLM_PROVIDER: ${SF_LLM_PROVIDER:-mock}

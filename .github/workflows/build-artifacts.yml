@@ -10,6 +10,62 @@ permissions:
   id-token: write
 
 jobs:
+  cli-binaries:
+    name: Build CLI (${{ matrix.goos }}/${{ matrix.goarch }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+            ext: ""
+          - goos: linux
+            goarch: arm64
+            ext: ""
+          - goos: darwin
+            goarch: amd64
+            ext: ""
+          - goos: darwin
+            goarch: arm64
+            ext: ""
+          - goos: windows
+            goarch: amd64
+            ext: ".exe"
+          - goos: windows
+            goarch: arm64
+            ext: ".exe"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache-dependency-path: cli/go.sum
+
+      - name: Read version
+        id: get_version
+        run: echo "version=$(cat VERSION)" >> $GITHUB_OUTPUT
+
+      - name: Build CLI binary
+        working-directory: cli
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: "0"
+        run: |
+          go build -trimpath \
+            -ldflags "-s -w -X github.com/spiderfoot/spiderfoot-cli/cmd.version=${{ steps.get_version.outputs.version }}" \
+            -o ../dist/sf-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }} .
+
+      - name: Upload CLI binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: sf-${{ matrix.goos }}-${{ matrix.goarch }}-${{ steps.get_version.outputs.version }}
+          path: dist/sf-*
+
   build:
     name: Build and Upload Artifacts
     runs-on: ${{ matrix.os }}

@@ -17,7 +17,7 @@ from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 
 from spiderfoot.auth.models import AuthConfig
-from spiderfoot.rbac import Role, UserContext, parse_role
+from spiderfoot.auth.rbac import Role, UserContext, parse_role
 
 log = logging.getLogger("spiderfoot.auth.middleware")
 

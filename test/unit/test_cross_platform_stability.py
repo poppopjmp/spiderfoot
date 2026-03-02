@@ -33,7 +33,7 @@ import io
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from spiderfoot.security.security_logging import SecurityLogger, SecurityEventType
-from spiderfoot.scan_service.scanner import SpiderFootScanner
+from spiderfoot.scan.scanner import SpiderFootScanner
 
 
 class TestCrossPlatformStability(TestModuleBase):

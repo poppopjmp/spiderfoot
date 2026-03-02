@@ -304,7 +304,7 @@ class EventIndexer:
             self.metrics.errors += len(batch)
             return 0
 
-        from spiderfoot.vector_correlation import OSINTEvent
+        from spiderfoot.correlation.vector import OSINTEvent
 
         osint_events: list[OSINTEvent] = []
         for env in batch:
@@ -351,7 +351,7 @@ class EventIndexer:
         if self._vector_engine is not None:
             return self._vector_engine
         try:
-            from spiderfoot.vector_correlation import VectorCorrelationEngine
+            from spiderfoot.correlation.vector import VectorCorrelationEngine
             self._vector_engine = VectorCorrelationEngine()
             return self._vector_engine
         except Exception as exc:

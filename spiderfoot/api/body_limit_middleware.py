@@ -23,6 +23,11 @@ from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoin
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
+try:
+    from fastapi import HTTPException
+except ImportError:
+    from starlette.exceptions import HTTPException  # type: ignore[assignment]
+
 log = logging.getLogger("spiderfoot.api.body_limit")
 
 # Default limits
@@ -78,8 +83,34 @@ class BodySizeLimitMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         content_length = request.headers.get("content-length")
+
+        # Determine limit based on path
+        path = request.url.path
+        is_upload = any(path.endswith(p) or p in path for p in _UPLOAD_PATHS)
+        limit = self._max_upload if is_upload else self._max_body
+
         if content_length is None:
-            # No Content-Length header — let it through (chunked encoding handled by server)
+            # No Content-Length header (chunked encoding) — wrap body stream
+            # with a size-limited reader to prevent unbounded memory usage
+            received = 0
+
+            async def limited_body_iterator():
+                nonlocal received
+                async for chunk in request.stream():
+                    received += len(chunk)
+                    if received > limit:
+                        raise HTTPException(
+                            status_code=413,
+                            detail={
+                                "code": "PAYLOAD_TOO_LARGE",
+                                "message": f"Chunked request body exceeds {limit / (1024 * 1024):.1f} MB limit",
+                                "limit_bytes": limit,
+                            },
+                        )
+                    yield chunk
+
+            # Starlette allows overriding the body receive — inject limiter
+            request._receive = limited_body_iterator  # type: ignore[assignment]
             return await call_next(request)
 
         try:

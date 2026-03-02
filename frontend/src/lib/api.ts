@@ -1,7 +1,12 @@
 /**
- * @deprecated Prefer importing from `@/api` (src/api/index.ts) which uses the
- * auto-generated OpenAPI TypeScript client.  This file is kept for backward
- * compatibility.  After all consumers migrate, it will be removed.
+ * SpiderFoot Frontend API Client
+ *
+ * Hand-written Axios-based helpers for the backend API.
+ * Covers all major router endpoints for scans, config, data, workspaces,
+ * reports, auth, schedules, STIX, ASM, monitoring and more.
+ *
+ * Generated OpenAPI SDK is available at `@/api` (sdk.gen.ts) but
+ * this file remains the primary client used by all page components.
  *
  * Regenerate the SDK:  npm run generate:api
  */
@@ -9,7 +14,10 @@ import axios from 'axios';
 
 const api = axios.create({
   baseURL: '',
-  headers: { 'Content-Type': 'application/json' },
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Requested-With': 'XMLHttpRequest',
+  },
   timeout: 30_000,
 });
 
@@ -27,7 +35,9 @@ api.interceptors.request.use((config) => {
  * Returns an object with Authorization and/or X-API-Key if set.
  */
 export function getAuthHeaders(): Record<string, string> {
-  const headers: Record<string, string> = {};
+  const headers: Record<string, string> = {
+    'X-Requested-With': 'XMLHttpRequest',
+  };
   try {
     const jwt = localStorage.getItem('sf_access_token');
     const apiKey = localStorage.getItem('sf_api_key');
@@ -37,15 +47,33 @@ export function getAuthHeaders(): Record<string, string> {
   return headers;
 }
 
-// Response interceptor — handle 401 with token refresh
+// Response interceptor — handle 401 with token refresh, 429 with retry-after
 // Use a shared promise to deduplicate concurrent refresh attempts:
 // the first 401 triggers a refresh; subsequent 401s await the same promise.
 let refreshPromise: Promise<string> | null = null;
+
+/** Maximum auto-retries for rate-limited (429) responses. */
+const MAX_429_RETRIES = 2;
 
 api.interceptors.response.use(
   (r) => r,
   async (error) => {
     const originalRequest = error.config;
+
+    // ── 429 Retry-After handling ──
+    if (
+      error.response?.status === 429 &&
+      (originalRequest._retryCount ?? 0) < MAX_429_RETRIES
+    ) {
+      originalRequest._retryCount = (originalRequest._retryCount ?? 0) + 1;
+      const retryAfter = error.response.headers?.['retry-after'];
+      // Respect Retry-After header (seconds), default 2s, cap at 30s
+      const delaySec = retryAfter ? Math.min(Number(retryAfter) || 2, 30) : 2;
+      await new Promise((r) => setTimeout(r, delaySec * 1000));
+      return api(originalRequest);
+    }
+
+    // ── 401 Token refresh ──
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&
@@ -78,6 +106,10 @@ api.interceptors.response.use(
             localStorage.removeItem('sf_refresh_token');
             localStorage.removeItem('sf_api_key');
           } catch { /* ignore storage errors on clear */ }
+          // Redirect to login after refresh failure (avoid redirect loops)
+          if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
+            window.location.href = '/login';
+          }
         } finally {
           refreshPromise = null;
         }
@@ -123,7 +155,11 @@ export interface ScanCreateRequest {
   type_filter?: string[];
   engine?: string;
   profile?: string;
+  stealth_level?: StealthLevelName;
 }
+
+/** Stealth level names accepted by the scan-creation endpoint. */
+export type StealthLevelName = 'none' | 'low' | 'medium' | 'high' | 'maximum';
 
 export interface ScanCreateResponse {
   id: string;
@@ -563,22 +599,10 @@ export const aiConfigApi = {
     api.get<{ modules: Array<Record<string, unknown>>; total: number }>('/api/ai-config/modules', { params, signal }).then((r) => r.data),
 };
 
-// ── Agents Service API ────────────────────────────────────
+// ── Agents Report API (used by ReportTab & WorkspaceReportCard) ──
 export const agentsApi = {
-  status: (signal?: AbortSignal) =>
-    api.get<{
-      agents: Record<string, { agent_name: string; status: string; processed_total: number; errors_total: number; avg_processing_time_ms: number }>;
-      total_agents: number;
-    }>('/api/agents/status', { signal }).then((r) => r.data),
-
-  process: (data: { events: Array<Record<string, unknown>>; agent_name?: string }, signal?: AbortSignal) =>
-    api.post('/api/agents/process', data, { signal }).then((r) => r.data),
-
-  analyze: (data: { filename: string; content: string; content_type?: string; target?: string; scan_id?: string }, signal?: AbortSignal) =>
-    api.post('/api/agents/analyze', data, { signal }).then((r) => r.data),
-
   report: (data: { scan_id?: string; scan_ids?: string[]; target: string; scan_name?: string; findings?: Array<Record<string, unknown>>; correlations?: Array<Record<string, unknown>>; stats?: Record<string, unknown>; agent_results?: Array<Record<string, unknown>>; geo_data?: Record<string, unknown> }, signal?: AbortSignal) =>
-    api.post('/api/agents/report', data, { signal }).then((r) => r.data),
+    api.post('/agents/report', data, { signal }).then((r) => r.data),
 };
 
 // ── Helpers ───────────────────────────────────────────────────
@@ -692,4 +716,667 @@ export const scheduleApi = {
 export const stixApi = {
   exportBundle: (scanId: string, _eventTypes?: string[], signal?: AbortSignal) =>
     api.get(`/api/scans/${scanId}/export/stix`, { signal }).then((r) => r.data),
+
+  exportBundlePost: (data: { scan_id: string; event_types?: string[]; stix_version?: string }, signal?: AbortSignal) =>
+    api.post('/api/stix/export', data, { signal }).then((r) => r.data),
+
+  eventTypes: (signal?: AbortSignal) =>
+    api.get<{ event_types: string[] }>('/api/stix/event-types', { signal }).then((r) => r.data),
+};
+
+/* ── Reports API ───────────────────────────────────────────── */
+
+export interface Report {
+  report_id: string;
+  scan_id: string;
+  format: string;
+  status: string;
+  created_at: number;
+  completed_at?: number;
+  download_url?: string;
+}
+
+export const reportApi = {
+  generate: (data: { scan_id: string; format?: string; template_id?: string; include_raw?: boolean }, signal?: AbortSignal) =>
+    api.post<{ report_id: string; status: string }>('/api/reports/generate', data, { signal }).then((r) => r.data),
+
+  get: (id: string, signal?: AbortSignal) =>
+    api.get<Report>(`/api/reports/${id}`, { signal }).then((r) => r.data),
+
+  status: (id: string, signal?: AbortSignal) =>
+    api.get<{ status: string; progress?: number }>(`/api/reports/${id}/status`, { signal }).then((r) => r.data),
+
+  preview: (id: string, signal?: AbortSignal) =>
+    api.get(`/api/reports/${id}/preview`, { signal }).then((r) => r.data),
+
+  exportReport: (id: string, format?: string, signal?: AbortSignal) =>
+    api.get(`/api/reports/${id}/export`, { params: { format }, responseType: 'blob' as const, signal }),
+
+  list: (params?: { page?: number; page_size?: number; scan_id?: string }, signal?: AbortSignal) =>
+    api.get<PaginatedResponse<Report>>('/api/reports', { params, signal }).then((r) => r.data),
+
+  delete: (id: string, signal?: AbortSignal) =>
+    api.delete(`/api/reports/${id}`, { signal }).then((r) => r.data),
+
+  pdf: (id: string, signal?: AbortSignal) =>
+    api.get(`/api/reports/${id}/pdf`, { responseType: 'blob' as const, signal }),
+};
+
+/* ── Report Templates API ─────────────────────────────────── */
+
+export const reportTemplateApi = {
+  list: (params?: { page?: number; page_size?: number; category?: string }, signal?: AbortSignal) =>
+    api.get('/api/report-templates', { params, signal }).then((r) => r.data),
+
+  get: (id: string, signal?: AbortSignal) =>
+    api.get(`/api/report-templates/${id}`, { signal }).then((r) => r.data),
+
+  create: (data: Record<string, unknown>, signal?: AbortSignal) =>
+    api.post('/api/report-templates', data, { signal }).then((r) => r.data),
+
+  update: (id: string, data: Record<string, unknown>, signal?: AbortSignal) =>
+    api.put(`/api/report-templates/${id}`, data, { signal }).then((r) => r.data),
+
+  delete: (id: string, signal?: AbortSignal) =>
+    api.delete(`/api/report-templates/${id}`, { signal }).then((r) => r.data),
+
+  clone: (id: string, signal?: AbortSignal) =>
+    api.post(`/api/report-templates/${id}/clone`, null, { signal }).then((r) => r.data),
+
+  render: (id: string, data: Record<string, unknown>, signal?: AbortSignal) =>
+    api.post(`/api/report-templates/${id}/render`, data, { signal }).then((r) => r.data),
+
+  variables: (signal?: AbortSignal) =>
+    api.get('/api/report-templates/variables', { signal }).then((r) => r.data),
+
+  categories: (signal?: AbortSignal) =>
+    api.get('/api/report-templates/categories', { signal }).then((r) => r.data),
+
+  formats: (signal?: AbortSignal) =>
+    api.get('/api/report-templates/formats', { signal }).then((r) => r.data),
+};
+
+/* ── Audit API ─────────────────────────────────────────────── */
+
+export interface AuditEntry {
+  id: string;
+  action: string;
+  user: string;
+  resource: string;
+  resource_id?: string;
+  timestamp: number;
+  details?: Record<string, unknown>;
+  ip_address?: string;
+}
+
+export const auditApi = {
+  list: (params?: {
+    page?: number; page_size?: number; action?: string;
+    user?: string; resource?: string; start_date?: string; end_date?: string;
+  }, signal?: AbortSignal) =>
+    api.get<PaginatedResponse<AuditEntry>>('/api/audit', { params, signal }).then((r) => r.data),
+
+  actions: (signal?: AbortSignal) =>
+    api.get<{ actions: string[] }>('/api/audit/actions', { signal }).then((r) => r.data),
+
+  stats: (signal?: AbortSignal) =>
+    api.get('/api/audit/stats', { signal }).then((r) => r.data),
+};
+
+/* ── API Keys API ──────────────────────────────────────────── */
+
+export interface ApiKey {
+  key_id: string;
+  name: string;
+  prefix: string;
+  created_at: number;
+  expires_at?: number;
+  last_used_at?: number;
+  scopes?: string[];
+  revoked: boolean;
+}
+
+export const keysApi = {
+  list: (signal?: AbortSignal) =>
+    api.get<{ keys: ApiKey[]; total: number }>('/api/keys', { signal }).then((r) => r.data),
+
+  create: (data: { name: string; expires_days?: number; scopes?: string[] }, signal?: AbortSignal) =>
+    api.post<{ key_id: string; key: string }>('/api/keys', data, { signal }).then((r) => r.data),
+
+  get: (id: string, signal?: AbortSignal) =>
+    api.get<ApiKey>(`/api/keys/${id}`, { signal }).then((r) => r.data),
+
+  delete: (id: string, signal?: AbortSignal) =>
+    api.delete(`/api/keys/${id}`, { signal }).then((r) => r.data),
+
+  revoke: (id: string, signal?: AbortSignal) =>
+    api.post(`/api/keys/${id}/revoke`, null, { signal }).then((r) => r.data),
+};
+
+/* ── Tasks API ─────────────────────────────────────────────── */
+
+export interface Task {
+  task_id: string;
+  name: string;
+  status: string;
+  progress?: number;
+  created_at: number;
+  started_at?: number;
+  completed_at?: number;
+  result?: unknown;
+  error?: string;
+}
+
+export const tasksApi = {
+  list: (params?: { status?: string; page?: number; page_size?: number }, signal?: AbortSignal) =>
+    api.get<PaginatedResponse<Task>>('/api/tasks', { params, signal }).then((r) => r.data),
+
+  active: (signal?: AbortSignal) =>
+    api.get<{ tasks: Task[]; total: number }>('/api/tasks/active', { signal }).then((r) => r.data),
+
+  get: (id: string, signal?: AbortSignal) =>
+    api.get<Task>(`/api/tasks/${id}`, { signal }).then((r) => r.data),
+
+  submit: (data: Record<string, unknown>, signal?: AbortSignal) =>
+    api.post('/api/tasks', data, { signal }).then((r) => r.data),
+
+  deleteCompleted: (signal?: AbortSignal) =>
+    api.delete('/api/tasks/completed', { signal }).then((r) => r.data),
+
+  cancel: (id: string, signal?: AbortSignal) =>
+    api.delete(`/api/tasks/${id}`, { signal }).then((r) => r.data),
+};
+
+/* ── Webhooks API ──────────────────────────────────────────── */
+
+export interface Webhook {
+  webhook_id: string;
+  name: string;
+  url: string;
+  events: string[];
+  enabled: boolean;
+  created_at: number;
+  last_triggered_at?: number;
+  secret?: string;
+}
+
+export const webhookApi = {
+  list: (signal?: AbortSignal) =>
+    api.get<{ webhooks: Webhook[]; total: number }>('/api/webhooks', { signal }).then((r) => r.data),
+
+  create: (data: { name: string; url: string; events: string[]; secret?: string }, signal?: AbortSignal) =>
+    api.post<Webhook>('/api/webhooks', data, { signal }).then((r) => r.data),
+
+  get: (id: string, signal?: AbortSignal) =>
+    api.get<Webhook>(`/api/webhooks/${id}`, { signal }).then((r) => r.data),
+
+  update: (id: string, data: Partial<Webhook>, signal?: AbortSignal) =>
+    api.put<Webhook>(`/api/webhooks/${id}`, data, { signal }).then((r) => r.data),
+
+  delete: (id: string, signal?: AbortSignal) =>
+    api.delete(`/api/webhooks/${id}`, { signal }).then((r) => r.data),
+
+  stats: (signal?: AbortSignal) =>
+    api.get('/api/webhooks/stats', { signal }).then((r) => r.data),
+
+  eventTypes: (signal?: AbortSignal) =>
+    api.get<{ event_types: string[] }>('/api/webhooks/event-types', { signal }).then((r) => r.data),
+
+  test: (id: string, signal?: AbortSignal) =>
+    api.post(`/api/webhooks/${id}/test`, null, { signal }).then((r) => r.data),
+
+  history: (id: string, params?: { page?: number; page_size?: number }, signal?: AbortSignal) =>
+    api.get(`/api/webhooks/${id}/history`, { params, signal }).then((r) => r.data),
+
+  eventFilter: (id: string, signal?: AbortSignal) =>
+    api.get(`/api/webhooks/${id}/event-filter`, { signal }).then((r) => r.data),
+};
+
+/* ── Tags & Groups API ─────────────────────────────────────── */
+
+export interface Tag {
+  tag_id: string;
+  name: string;
+  color?: string;
+  parent_id?: string;
+  created_at: number;
+  item_count?: number;
+}
+
+export interface TagGroup {
+  group_id: string;
+  name: string;
+  description?: string;
+  tag_ids: string[];
+  created_at: number;
+}
+
+export const tagApi = {
+  list: (params?: { page?: number; page_size?: number }, signal?: AbortSignal) =>
+    api.get<PaginatedResponse<Tag>>('/api/tags', { params, signal }).then((r) => r.data),
+
+  tree: (signal?: AbortSignal) =>
+    api.get('/api/tags/tree', { signal }).then((r) => r.data),
+
+  create: (data: { name: string; color?: string; parent_id?: string }, signal?: AbortSignal) =>
+    api.post<Tag>('/api/tags', data, { signal }).then((r) => r.data),
+
+  get: (id: string, signal?: AbortSignal) =>
+    api.get<Tag>(`/api/tags/${id}`, { signal }).then((r) => r.data),
+
+  update: (id: string, data: Partial<Tag>, signal?: AbortSignal) =>
+    api.put<Tag>(`/api/tags/${id}`, data, { signal }).then((r) => r.data),
+
+  delete: (id: string, signal?: AbortSignal) =>
+    api.delete(`/api/tags/${id}`, { signal }).then((r) => r.data),
+
+  stats: (signal?: AbortSignal) =>
+    api.get('/api/tags/stats', { signal }).then((r) => r.data),
+
+  colors: (signal?: AbortSignal) =>
+    api.get<{ colors: string[] }>('/api/tags/colors', { signal }).then((r) => r.data),
+
+  assign: (tagId: string, data: { resource_type: string; resource_id: string }, signal?: AbortSignal) =>
+    api.post(`/api/tags/${tagId}/assign`, data, { signal }).then((r) => r.data),
+
+  unassign: (tagId: string, data: { resource_type: string; resource_id: string }, signal?: AbortSignal) =>
+    api.post(`/api/tags/${tagId}/unassign`, data, { signal }).then((r) => r.data),
+
+  // Groups
+  groups: (signal?: AbortSignal) =>
+    api.get<{ groups: TagGroup[]; total: number }>('/api/groups', { signal }).then((r) => r.data),
+
+  createGroup: (data: { name: string; description?: string; tag_ids?: string[] }, signal?: AbortSignal) =>
+    api.post<TagGroup>('/api/groups', data, { signal }).then((r) => r.data),
+
+  getGroup: (id: string, signal?: AbortSignal) =>
+    api.get<TagGroup>(`/api/groups/${id}`, { signal }).then((r) => r.data),
+
+  updateGroup: (id: string, data: Partial<TagGroup>, signal?: AbortSignal) =>
+    api.put<TagGroup>(`/api/groups/${id}`, data, { signal }).then((r) => r.data),
+
+  deleteGroup: (id: string, signal?: AbortSignal) =>
+    api.delete(`/api/groups/${id}`, { signal }).then((r) => r.data),
+};
+
+/* ── Monitor API ───────────────────────────────────────────── */
+
+export interface MonitoredDomain {
+  domain_id: string;
+  domain: string;
+  enabled: boolean;
+  check_interval_hours: number;
+  last_checked_at?: number;
+  change_count: number;
+  created_at: number;
+}
+
+export const monitorApi = {
+  list: (params?: { page?: number; page_size?: number }, signal?: AbortSignal) =>
+    api.get<PaginatedResponse<MonitoredDomain>>('/api/monitor/domains', { params, signal }).then((r) => r.data),
+
+  get: (id: string, signal?: AbortSignal) =>
+    api.get<MonitoredDomain>(`/api/monitor/domains/${id}`, { signal }).then((r) => r.data),
+
+  create: (data: { domain: string; check_interval_hours?: number }, signal?: AbortSignal) =>
+    api.post<MonitoredDomain>('/api/monitor/domains', data, { signal }).then((r) => r.data),
+
+  update: (id: string, data: Partial<MonitoredDomain>, signal?: AbortSignal) =>
+    api.put<MonitoredDomain>(`/api/monitor/domains/${id}`, data, { signal }).then((r) => r.data),
+
+  delete: (id: string, signal?: AbortSignal) =>
+    api.delete(`/api/monitor/domains/${id}`, { signal }).then((r) => r.data),
+
+  changes: (id: string, params?: { page?: number; page_size?: number }, signal?: AbortSignal) =>
+    api.get(`/api/monitor/domains/${id}/changes`, { params, signal }).then((r) => r.data),
+
+  check: (id: string, signal?: AbortSignal) =>
+    api.post(`/api/monitor/domains/${id}/check`, null, { signal }).then((r) => r.data),
+};
+
+/* ── ASM (Attack Surface Management) API ───────────────────── */
+
+export interface AsmAsset {
+  asset_id: string;
+  type: string;
+  value: string;
+  risk_level?: string;
+  first_seen: number;
+  last_seen: number;
+  tags?: string[];
+  metadata?: Record<string, unknown>;
+}
+
+export const asmApi = {
+  assets: (params?: {
+    page?: number; page_size?: number; type?: string;
+    risk_level?: string; search?: string;
+  }, signal?: AbortSignal) =>
+    api.get<PaginatedResponse<AsmAsset>>('/api/asm/assets', { params, signal }).then((r) => r.data),
+
+  getAsset: (id: string, signal?: AbortSignal) =>
+    api.get<AsmAsset>(`/api/asm/assets/${id}`, { signal }).then((r) => r.data),
+
+  summary: (signal?: AbortSignal) =>
+    api.get('/api/asm/summary', { signal }).then((r) => r.data),
+
+  types: (signal?: AbortSignal) =>
+    api.get<{ types: string[] }>('/api/asm/types', { signal }).then((r) => r.data),
+
+  risks: (signal?: AbortSignal) =>
+    api.get('/api/asm/risks', { signal }).then((r) => r.data),
+
+  ingest: (data: { assets: Array<{ type: string; value: string; metadata?: Record<string, unknown> }> }, signal?: AbortSignal) =>
+    api.post('/api/asm/assets/ingest', data, { signal }).then((r) => r.data),
+
+  addTags: (assetId: string, tags: string[], signal?: AbortSignal) =>
+    api.post(`/api/asm/assets/${assetId}/tags`, { tags }, { signal }).then((r) => r.data),
+
+  link: (sourceId: string, targetId: string, signal?: AbortSignal) =>
+    api.post(`/api/asm/assets/${sourceId}/link/${targetId}`, null, { signal }).then((r) => r.data),
+};
+
+/* ── Notification Rules API ────────────────────────────────── */
+
+export const notificationApi = {
+  list: (params?: { page?: number; page_size?: number }, signal?: AbortSignal) =>
+    api.get('/api/notification-rules', { params, signal }).then((r) => r.data),
+
+  get: (id: string, signal?: AbortSignal) =>
+    api.get(`/api/notification-rules/${id}`, { signal }).then((r) => r.data),
+
+  create: (data: Record<string, unknown>, signal?: AbortSignal) =>
+    api.post('/api/notification-rules', data, { signal }).then((r) => r.data),
+
+  update: (id: string, data: Record<string, unknown>, signal?: AbortSignal) =>
+    api.put(`/api/notification-rules/${id}`, data, { signal }).then((r) => r.data),
+
+  delete: (id: string, signal?: AbortSignal) =>
+    api.delete(`/api/notification-rules/${id}`, { signal }).then((r) => r.data),
+
+  evaluate: (id: string, signal?: AbortSignal) =>
+    api.post(`/api/notification-rules/${id}/evaluate`, null, { signal }).then((r) => r.data),
+
+  history: (id: string, params?: { page?: number; page_size?: number }, signal?: AbortSignal) =>
+    api.get(`/api/notification-rules/${id}/history`, { params, signal }).then((r) => r.data),
+
+  stats: (signal?: AbortSignal) =>
+    api.get('/api/notification-rules/stats', { signal }).then((r) => r.data),
+
+  operators: (signal?: AbortSignal) =>
+    api.get('/api/notification-rules/operators', { signal }).then((r) => r.data),
+
+  channels: (signal?: AbortSignal) =>
+    api.get('/api/notification-rules/channels', { signal }).then((r) => r.data),
+};
+
+/* ── Data Retention API ────────────────────────────────────── */
+
+export const retentionApi = {
+  list: (signal?: AbortSignal) =>
+    api.get('/api/retention/rules', { signal }).then((r) => r.data),
+
+  get: (id: string, signal?: AbortSignal) =>
+    api.get(`/api/retention/rules/${id}`, { signal }).then((r) => r.data),
+
+  create: (data: Record<string, unknown>, signal?: AbortSignal) =>
+    api.post('/api/retention/rules', data, { signal }).then((r) => r.data),
+
+  update: (id: string, data: Record<string, unknown>, signal?: AbortSignal) =>
+    api.put(`/api/retention/rules/${id}`, data, { signal }).then((r) => r.data),
+
+  delete: (id: string, signal?: AbortSignal) =>
+    api.delete(`/api/retention/rules/${id}`, { signal }).then((r) => r.data),
+
+  preview: (id: string, signal?: AbortSignal) =>
+    api.get(`/api/retention/rules/${id}/preview`, { signal }).then((r) => r.data),
+
+  enforce: (id: string, signal?: AbortSignal) =>
+    api.post(`/api/retention/rules/${id}/enforce`, null, { signal }).then((r) => r.data),
+
+  history: (signal?: AbortSignal) =>
+    api.get('/api/retention/history', { signal }).then((r) => r.data),
+
+  stats: (signal?: AbortSignal) =>
+    api.get('/api/retention/stats', { signal }).then((r) => r.data),
+};
+
+/* ── Scan Metrics API ──────────────────────────────────────── */
+
+export const metricsApi = {
+  prometheus: (signal?: AbortSignal) =>
+    api.get('/metrics', { signal, responseType: 'text' as const }),
+
+  dashboard: (signal?: AbortSignal) =>
+    api.get('/api/scan-metrics', { signal }).then((r) => r.data),
+
+  reset: (signal?: AbortSignal) =>
+    api.post('/api/scan-metrics/reset', null, { signal }).then((r) => r.data),
+};
+
+/* ── Correlation Rules API ─────────────────────────────────── */
+
+export const correlationRuleApi = {
+  list: (params?: { page?: number; page_size?: number }, signal?: AbortSignal) =>
+    api.get('/api/correlation-rules', { params, signal }).then((r) => r.data),
+
+  get: (id: string, signal?: AbortSignal) =>
+    api.get(`/api/correlation-rules/${id}`, { signal }).then((r) => r.data),
+
+  create: (data: Record<string, unknown>, signal?: AbortSignal) =>
+    api.post('/api/correlation-rules', data, { signal }).then((r) => r.data),
+
+  update: (id: string, data: Record<string, unknown>, signal?: AbortSignal) =>
+    api.put(`/api/correlation-rules/${id}`, data, { signal }).then((r) => r.data),
+
+  delete: (id: string, signal?: AbortSignal) =>
+    api.delete(`/api/correlation-rules/${id}`, { signal }).then((r) => r.data),
+
+  test: (data: { rule: Record<string, unknown>; scan_id: string }, signal?: AbortSignal) =>
+    api.post('/api/correlation-rules/test', data, { signal }).then((r) => r.data),
+};
+
+/* ── Visualization API ─────────────────────────────────────── */
+
+export const vizApi = {
+  graph: (scanId: string, signal?: AbortSignal) =>
+    api.get(`/api/visualization/graph/${scanId}`, { signal }).then((r) => r.data),
+
+  graphMulti: (scanIds: string[], signal?: AbortSignal) =>
+    api.post('/api/visualization/graph/multi', { scan_ids: scanIds }, { signal }).then((r) => r.data),
+
+  summary: (scanId: string, signal?: AbortSignal) =>
+    api.get(`/api/visualization/summary/${scanId}`, { signal }).then((r) => r.data),
+
+  timeline: (scanId: string, signal?: AbortSignal) =>
+    api.get(`/api/visualization/timeline/${scanId}`, { signal }).then((r) => r.data),
+
+  heatmap: (scanId: string, signal?: AbortSignal) =>
+    api.get(`/api/visualization/heatmap/${scanId}`, { signal }).then((r) => r.data),
+};
+
+/* ── Scan Comparison API ───────────────────────────────────── */
+
+export const scanCompareApi = {
+  compare: (scanA: string, scanB: string, signal?: AbortSignal) =>
+    api.post('/api/scan-comparison/compare', { scan_a: scanA, scan_b: scanB }, { signal }).then((r) => r.data),
+
+  quick: (scanA: string, scanB: string, signal?: AbortSignal) =>
+    api.get('/api/scan-comparison/quick', { params: { scan_a: scanA, scan_b: scanB }, signal }).then((r) => r.data),
+
+  history: (signal?: AbortSignal) =>
+    api.get('/api/scan-comparison/history', { signal }).then((r) => r.data),
+
+  get: (id: string, signal?: AbortSignal) =>
+    api.get(`/api/scan-comparison/${id}`, { signal }).then((r) => r.data),
+
+  categories: (signal?: AbortSignal) =>
+    api.get('/api/scan-comparison/categories', { signal }).then((r) => r.data),
+
+  severityLevels: (signal?: AbortSignal) =>
+    api.get('/api/scan-comparison/severity-levels', { signal }).then((r) => r.data),
+};
+
+/* ── Auth / User Management API ────────────────────────────── */
+
+export const authApi = {
+  login: (data: { username: string; password: string }, signal?: AbortSignal) =>
+    api.post('/api/auth/login', data, { signal }).then((r) => r.data),
+
+  ldapLogin: (data: { username: string; password: string }, signal?: AbortSignal) =>
+    api.post('/api/auth/ldap/login', data, { signal }).then((r) => r.data),
+
+  refresh: (refreshToken: string, signal?: AbortSignal) =>
+    api.post('/api/auth/refresh', { refresh_token: refreshToken }, { signal }).then((r) => r.data),
+
+  logout: (signal?: AbortSignal) =>
+    api.post('/api/auth/logout', null, { signal }).then((r) => r.data),
+
+  me: (signal?: AbortSignal) =>
+    api.get('/api/auth/me', { signal }).then((r) => r.data),
+
+  status: (signal?: AbortSignal) =>
+    api.get('/api/auth/status', { signal }).then((r) => r.data),
+
+  // User management
+  users: (signal?: AbortSignal) =>
+    api.get('/api/auth/users', { signal }).then((r) => r.data),
+
+  createUser: (data: Record<string, unknown>, signal?: AbortSignal) =>
+    api.post('/api/auth/users', data, { signal }).then((r) => r.data),
+
+  updateUser: (id: string, data: Record<string, unknown>, signal?: AbortSignal) =>
+    api.patch(`/api/auth/users/${id}`, data, { signal }).then((r) => r.data),
+
+  deleteUser: (id: string, signal?: AbortSignal) =>
+    api.delete(`/api/auth/users/${id}`, { signal }).then((r) => r.data),
+
+  setPassword: (id: string, data: Record<string, unknown>, signal?: AbortSignal) =>
+    api.post(`/api/auth/users/${id}/password`, data, { signal }).then((r) => r.data),
+
+  // Auth API keys (different from /api/keys)
+  authApiKeys: (signal?: AbortSignal) =>
+    api.get('/api/auth/api-keys', { signal }).then((r) => r.data),
+
+  authApiKeysMine: (signal?: AbortSignal) =>
+    api.get('/api/auth/api-keys/mine', { signal }).then((r) => r.data),
+
+  createAuthApiKey: (data: Record<string, unknown>, signal?: AbortSignal) =>
+    api.post('/api/auth/api-keys', data, { signal }).then((r) => r.data),
+
+  revokeAuthApiKey: (id: string, signal?: AbortSignal) =>
+    api.post(`/api/auth/api-keys/${id}/revoke`, null, { signal }).then((r) => r.data),
+
+  deleteAuthApiKey: (id: string, signal?: AbortSignal) =>
+    api.delete(`/api/auth/api-keys/${id}`, { signal }).then((r) => r.data),
+
+  // SSO providers
+  ssoProviders: (signal?: AbortSignal) =>
+    api.get('/api/auth/sso/providers/all', { signal }).then((r) => r.data),
+
+  createSsoProvider: (data: Record<string, unknown>, signal?: AbortSignal) =>
+    api.post('/api/auth/sso/providers', data, { signal }).then((r) => r.data),
+
+  updateSsoProvider: (id: string, data: Record<string, unknown>, signal?: AbortSignal) =>
+    api.patch(`/api/auth/sso/providers/${id}`, data, { signal }).then((r) => r.data),
+
+  deleteSsoProvider: (id: string, signal?: AbortSignal) =>
+    api.delete(`/api/auth/sso/providers/${id}`, { signal }).then((r) => r.data),
+};
+
+/* ── Distributed Scan API ──────────────────────────────────── */
+
+export const distributedApi = {
+  workers: (signal?: AbortSignal) =>
+    api.get('/api/distributed/workers', { signal }).then((r) => r.data),
+
+  worker: (id: string, signal?: AbortSignal) =>
+    api.get(`/api/distributed/workers/${id}`, { signal }).then((r) => r.data),
+
+  registerWorker: (data: Record<string, unknown>, signal?: AbortSignal) =>
+    api.post('/api/distributed/workers', data, { signal }).then((r) => r.data),
+
+  removeWorker: (id: string, signal?: AbortSignal) =>
+    api.delete(`/api/distributed/workers/${id}`, { signal }).then((r) => r.data),
+
+  drainWorker: (id: string, signal?: AbortSignal) =>
+    api.post(`/api/distributed/workers/${id}/drain`, null, { signal }).then((r) => r.data),
+
+  heartbeat: (id: string, data: Record<string, unknown>, signal?: AbortSignal) =>
+    api.post(`/api/distributed/workers/${id}/heartbeat`, data, { signal }).then((r) => r.data),
+
+  scans: (signal?: AbortSignal) =>
+    api.get('/api/distributed/scans', { signal }).then((r) => r.data),
+
+  poolStats: (signal?: AbortSignal) =>
+    api.get('/api/distributed/pool/stats', { signal }).then((r) => r.data),
+
+  strategies: (signal?: AbortSignal) =>
+    api.get('/api/distributed/strategies', { signal }).then((r) => r.data),
+};
+
+/* ── Marketplace API ───────────────────────────────────────── */
+
+export const marketplaceApi = {
+  plugins: (params?: { page?: number; page_size?: number; category?: string; search?: string }, signal?: AbortSignal) =>
+    api.get('/api/marketplace/plugins', { params, signal }).then((r) => r.data),
+
+  featured: (signal?: AbortSignal) =>
+    api.get('/api/marketplace/plugins/featured', { signal }).then((r) => r.data),
+
+  plugin: (id: string, signal?: AbortSignal) =>
+    api.get(`/api/marketplace/plugins/${id}`, { signal }).then((r) => r.data),
+
+  install: (id: string, signal?: AbortSignal) =>
+    api.post(`/api/marketplace/plugins/${id}/install`, null, { signal }).then((r) => r.data),
+
+  uninstall: (id: string, signal?: AbortSignal) =>
+    api.post(`/api/marketplace/plugins/${id}/uninstall`, null, { signal }).then((r) => r.data),
+
+  categories: (signal?: AbortSignal) =>
+    api.get('/api/marketplace/categories', { signal }).then((r) => r.data),
+
+  stats: (signal?: AbortSignal) =>
+    api.get('/api/marketplace/stats', { signal }).then((r) => r.data),
+};
+
+/* ── Frontend Data API (aggregated dashboard endpoints) ────── */
+
+export const frontendDataApi = {
+  moduleHealth: (signal?: AbortSignal) =>
+    api.get('/api/frontend-data/module-health', { signal }).then((r) => r.data),
+
+  timeline: (signal?: AbortSignal) =>
+    api.get('/api/frontend-data/timeline', { signal }).then((r) => r.data),
+
+  resultsFilter: (params: Record<string, unknown>, signal?: AbortSignal) =>
+    api.get('/api/frontend-data/results/filter', { params, signal }).then((r) => r.data),
+
+  threatMap: (signal?: AbortSignal) =>
+    api.get('/api/frontend-data/threat-map', { signal }).then((r) => r.data),
+
+  scanDiff: (scanA: string, scanB: string, signal?: AbortSignal) =>
+    api.get('/api/frontend-data/scan-diff', { params: { scan_a: scanA, scan_b: scanB }, signal }).then((r) => r.data),
+
+  facets: (params?: Record<string, unknown>, signal?: AbortSignal) =>
+    api.get('/api/frontend-data/facets', { params, signal }).then((r) => r.data),
+};
+
+/* ── Rate Limits API ───────────────────────────────────────── */
+
+export const rateLimitApi = {
+  list: (signal?: AbortSignal) =>
+    api.get('/api/rate-limits', { signal }).then((r) => r.data),
+
+  stats: (signal?: AbortSignal) =>
+    api.get('/api/rate-limits/stats', { signal }).then((r) => r.data),
+
+  tiers: (signal?: AbortSignal) =>
+    api.get('/api/rate-limits/tiers', { signal }).then((r) => r.data),
+
+  endpointOverrides: (signal?: AbortSignal) =>
+    api.get('/api/rate-limits/endpoint-overrides', { signal }).then((r) => r.data),
+
+  reset: (signal?: AbortSignal) =>
+    api.post('/api/rate-limits/reset', null, { signal }).then((r) => r.data),
 };

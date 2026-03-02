@@ -22,7 +22,7 @@ from spiderfoot.reporting.report_generator import (
     _RECOMMENDATIONS_PROMPT,
     _SECTION_PROMPTS,
 )
-from spiderfoot.llm_client import LLMConfig, LLMProvider, LLMResponse, LLMUsage
+from spiderfoot.ai.llm_client import LLMConfig, LLMProvider, LLMResponse, LLMUsage
 
 
 # ---------------------------------------------------------------------------

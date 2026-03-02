@@ -18,7 +18,7 @@ from copy import deepcopy
 
 from spiderfoot import SpiderFootDb, SpiderFootHelpers
 from spiderfoot.sflib import SpiderFoot
-from spiderfoot.scan_service.scanner import startSpiderFootScanner
+from spiderfoot.scan.scanner import startSpiderFootScanner
 
 from spiderfoot.scan.scan_state_map import (
     DB_STATUS_ABORTED,

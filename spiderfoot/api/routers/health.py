@@ -43,7 +43,7 @@ except ImportError:
 def _check_vector() -> dict[str, Any]:
     """Vector.dev log pipeline health."""
     try:
-        from spiderfoot.vector_bootstrap import VectorBootstrap, VectorBootstrapConfig
+        from spiderfoot.observability.vector_bootstrap import VectorBootstrap, VectorBootstrapConfig
         # Use VECTOR_API_URL env or Docker service name 'vector' on API port 8687
         api_url = os.environ.get("VECTOR_API_URL", "http://vector:8687")
         cfg = VectorBootstrapConfig(
@@ -477,7 +477,7 @@ else:
     )
     async def shutdown_status() -> dict[str, Any]:
         """Return shutdown manager status and registered services."""
-        from spiderfoot.graceful_shutdown import get_shutdown_coordinator
+        from spiderfoot.ops.graceful_shutdown import get_shutdown_coordinator
         mgr = get_shutdown_coordinator()
         return mgr.status()
 

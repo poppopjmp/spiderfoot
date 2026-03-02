@@ -2,8 +2,8 @@ apiVersion: v2
 name: spiderfoot
 description: SpiderFoot OSINT automation platform - Helm chart for Kubernetes deployment
 type: application
-version: 0.2.0
-appVersion: "5.6.5"
+version: 0.3.0
+appVersion: "6.0.0"
 keywords:
   - osint
   - security
@@ -13,7 +13,7 @@ keywords:
   - celery
   - microservices
 maintainers:
-  - name: SpiderFoot Team
+  - name: Van1sh 
 home: https://github.com/poppopjmp/spiderfoot
 sources:
   - https://github.com/poppopjmp/spiderfoot

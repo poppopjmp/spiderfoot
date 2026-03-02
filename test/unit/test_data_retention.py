@@ -1,4 +1,4 @@
-"""Tests for spiderfoot.data_retention."""
+"""Tests for spiderfoot.ops.data_retention."""
 from __future__ import annotations
 
 import os
@@ -6,7 +6,7 @@ import time
 
 import pytest
 
-from spiderfoot.data_retention import (
+from spiderfoot.ops.data_retention import (
     FileResourceAdapter,
     InMemoryResourceAdapter,
     RetentionAction,

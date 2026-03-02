@@ -57,7 +57,7 @@ All schemas are in `spiderfoot/ai/schemas.py`:
 ### With `LLMClient`
 
 ```python
-from spiderfoot.llm_client import LLMClient
+from spiderfoot.ai.llm_client import LLMClient
 from spiderfoot.ai.schemas import RiskAssessmentOutput
 
 client = LLMClient(config)

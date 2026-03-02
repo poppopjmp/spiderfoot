@@ -1,9 +1,13 @@
 """Tests for spiderfoot.api.routers.rag_correlation — REST endpoints."""
 from __future__ import annotations
 
+import os
 import pytest
 from unittest.mock import patch, MagicMock
 from fastapi.testclient import TestClient
+
+# Disable auth for these functional tests
+os.environ.setdefault("SF_AUTH_REQUIRED", "false")
 
 # Reset singletons before importing
 import spiderfoot.api.routers.rag_correlation as rag_mod
@@ -12,7 +16,7 @@ rag_mod._multidim_analyzer = None
 
 from spiderfoot.api.main import app
 
-client = TestClient(app, raise_server_exceptions=False)
+client = TestClient(app, raise_server_exceptions=False, headers={"X-Requested-With": "XMLHttpRequest"})
 
 API = "/api/rag"
 
@@ -52,7 +56,7 @@ def _mock_engine():
 
 def _mock_multidim():
     """Return a mock MultiDimAnalyzer."""
-    from spiderfoot.multidim_correlation import (
+    from spiderfoot.correlation.multidim import (
         CorrelationPair, DimensionScore, Dimension, MultiDimResult,
     )
     analyzer = MagicMock()
@@ -176,7 +180,7 @@ class TestStats:
 
 class TestSearch:
     @patch("spiderfoot.services.embedding_service.get_embedding_service")
-    @patch("spiderfoot.qdrant_client.get_qdrant_client")
+    @patch("spiderfoot.ai.qdrant_client.get_qdrant_client")
     def test_search_success(self, mock_qd_fn, mock_emb_fn):
         from types import SimpleNamespace
 
@@ -207,7 +211,7 @@ class TestSearch:
 
 class TestDeleteCollection:
     def test_delete_success(self):
-        with patch("spiderfoot.qdrant_client.get_qdrant_client") as mock_fn:
+        with patch("spiderfoot.ai.qdrant_client.get_qdrant_client") as mock_fn:
             mock_qd = MagicMock()
             mock_fn.return_value = mock_qd
             resp = client.delete(f"{API}/collection",

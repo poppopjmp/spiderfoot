@@ -55,6 +55,7 @@ def run_scan(
     global_opts: dict[str, Any],
     *,
     engine_name: str | None = None,
+    stealth_level: str | None = None,
 ) -> dict[str, Any]:
     """Run a SpiderFoot scan inside a Celery worker.
 
@@ -69,6 +70,7 @@ def run_scan(
         module_list:  List of module names to activate.
         global_opts:  SpiderFoot configuration dict.
         engine_name:  Optional scan engine profile name (logged).
+        stealth_level: Optional stealth level name (none/low/medium/high/maximum).
 
     Returns:
         dict with scan_id, status, duration, and event count.
@@ -168,7 +170,7 @@ def run_scan(
 
     try:
         # Import here to avoid circular imports at module load time
-        from spiderfoot.scan_service.scanner import startSpiderFootScanner
+        from spiderfoot.scan.scanner import startSpiderFootScanner
 
         # Ensure the scan instance exists in the database BEFORE the scanner
         # init.  The API layer creates the record in PostgreSQL, but if the
@@ -192,6 +194,41 @@ def run_scan(
         # Ensure logging is enabled so modules actually write to the DB
         global_opts.setdefault('__logging', True)
         global_opts.setdefault('_debug', False)
+
+        # Inject stealth level into config so fetchUrl can create a
+        # StealthEngine when modules call SpiderFoot.fetchUrl()
+        if stealth_level:
+            # Map frontend "maximum" → backend "paranoid"
+            _level_map = {"maximum": "paranoid"}
+            global_opts["_stealth_level"] = _level_map.get(stealth_level, stealth_level)
+            logger.info(
+                "scan.stealth_enabled scan_id=%s level=%s",
+                scan_id, global_opts["_stealth_level"],
+            )
+
+        # ── Stealth context registry ──────────────────────────────────
+        # Pre-create and register a StealthScanContext so that:
+        # 1) SpiderFoot.fetchUrl() uses the full middleware (throttling,
+        #    proxy chains, detection, metrics) instead of just StealthEngine
+        # 2) The stealth stats API can query per-scan metrics
+        _stealth_ctx = None
+        if global_opts.get("_stealth_level") and global_opts["_stealth_level"] != "none":
+            try:
+                from spiderfoot.recon.stealth_integration import (
+                    create_stealth_context,
+                    register_scan_context,
+                )
+                _stealth_ctx = create_stealth_context(sf_options=global_opts)
+                register_scan_context(scan_id, _stealth_ctx)
+                logger.info(
+                    "scan.stealth_context_registered scan_id=%s", scan_id,
+                )
+            except Exception as stealth_err:
+                logger.debug(
+                    "Stealth context registration failed for %s: %s",
+                    scan_id, stealth_err,
+                )
+        # ──────────────────────────────────────────────────────────────
 
         # Create a logging queue for the scanner subprocess
         log_queue = mp.Queue()
@@ -218,9 +255,25 @@ def run_scan(
         except Exception:
             pass
 
+        # ── Unregister stealth context ─────────────────────────────────
+        if _stealth_ctx is not None:
+            try:
+                from spiderfoot.recon.stealth_integration import unregister_scan_context
+                unregister_scan_context(scan_id)
+            except Exception:
+                pass
+        # ───────────────────────────────────────────────────────────────
+
         duration = time.time() - start_time
 
-        # Collect final stats
+        # Collect final stats (include stealth metrics when available)
+        stealth_stats = None
+        if _stealth_ctx is not None:
+            try:
+                stealth_stats = _stealth_ctx.get_stats()
+            except Exception:
+                pass
+
         result = {
             "scan_id": scan_id,
             "scan_name": scan_name,
@@ -230,6 +283,8 @@ def run_scan(
             "engine": engine_name,
             "celery_task_id": self.request.id,
         }
+        if stealth_stats:
+            result["stealth_stats"] = stealth_stats
 
         logger.info(
             "scan.completed",
@@ -241,7 +296,7 @@ def run_scan(
 
         # Send completion notification
         try:
-            from spiderfoot.notifications import notify, NotificationEvent
+            from spiderfoot.notifications.channels import notify, NotificationEvent
             notify(
                 event=NotificationEvent.SCAN_COMPLETED,
                 title=f"Scan Complete: {scan_name}",
@@ -261,6 +316,13 @@ def run_scan(
         )
         # Try to gracefully stop the scan via DB status update
         _abort_scan_in_db(scan_id, global_opts)
+        # Unregister stealth context
+        if _stealth_ctx is not None:
+            try:
+                from spiderfoot.recon.stealth_integration import unregister_scan_context
+                unregister_scan_context(scan_id)
+            except Exception:
+                pass
         # Flush remaining log messages
         try:
             log_listener.stop()
@@ -290,6 +352,14 @@ def run_scan(
         # Mark failed in DB
         _update_scan_status(scan_id, global_opts, "ERROR-FAILED", error_msg)
 
+        # Unregister stealth context
+        if _stealth_ctx is not None:
+            try:
+                from spiderfoot.recon.stealth_integration import unregister_scan_context
+                unregister_scan_context(scan_id)
+            except Exception:
+                pass
+
         # Flush remaining log messages
         try:
             log_listener.stop()
@@ -298,7 +368,7 @@ def run_scan(
 
         # Send failure notification
         try:
-            from spiderfoot.notifications import notify, NotificationEvent
+            from spiderfoot.notifications.channels import notify, NotificationEvent
             notify(
                 event=NotificationEvent.SCAN_FAILED,
                 title=f"Scan Failed: {scan_name}",

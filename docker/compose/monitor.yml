@@ -6,6 +6,8 @@ services:
     security_opt:
     - "no-new-privileges:true"
     read_only: true
+    cap_drop:
+    - ALL
     tmpfs:
     - /tmp
     networks:
@@ -65,6 +67,13 @@ services:
     image: grafana/loki:3.3.2
     container_name: sf-loki
     restart: unless-stopped
+    security_opt:
+    - "no-new-privileges:true"
+    read_only: true
+    cap_drop:
+    - ALL
+    tmpfs:
+    - /tmp
     networks:
     - sf-backend
     volumes:
@@ -102,6 +111,13 @@ services:
     image: grafana/grafana:11.4.0
     container_name: sf-grafana
     restart: unless-stopped
+    read_only: true
+    security_opt:
+    - "no-new-privileges:true"
+    cap_drop:
+    - ALL
+    tmpfs:
+    - /tmp:noexec,nosuid,size=64M
     networks:
     - sf-frontend
     - sf-backend
@@ -117,9 +133,14 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD}
       GF_SERVER_ROOT_URL: ${GF_SERVER_ROOT_URL:-https://localhost/grafana/}
       GF_SERVER_SERVE_FROM_SUB_PATH: "true"
-      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
       GF_AUTH_ANONYMOUS_ORG_ROLE: "Viewer"
       GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SECURITY_COOKIE_SECURE: "true"
+      GF_SECURITY_COOKIE_SAMESITE: "strict"
+      GF_SECURITY_STRICT_TRANSPORT_SECURITY: "true"
+      GF_SECURITY_CONTENT_TYPE_NOSNIFF: "true"
+      GF_SECURITY_X_CONTENT_TYPE_OPTIONS: "true"
       GF_INSTALL_PLUGINS: "grafana-piechart-panel"
       # Database connection for PostgreSQL datasource
       SF_POSTGRES_DSN: 
@@ -160,6 +181,13 @@ services:
     image: prom/prometheus:v2.54.1
     container_name: sf-prometheus
     restart: unless-stopped
+    security_opt:
+    - "no-new-privileges:true"
+    read_only: true
+    cap_drop:
+    - ALL
+    tmpfs:
+    - /tmp
     networks:
     - sf-frontend
     - sf-backend
@@ -208,6 +236,13 @@ services:
     image: jaegertracing/jaeger:2.4.0
     container_name: sf-jaeger
     restart: unless-stopped
+    security_opt:
+    - "no-new-privileges:true"
+    read_only: true
+    cap_drop:
+    - ALL
+    tmpfs:
+    - /tmp
     networks:
     - sf-frontend
     - sf-backend

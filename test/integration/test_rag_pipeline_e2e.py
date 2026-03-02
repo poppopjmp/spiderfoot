@@ -11,7 +11,7 @@ import time
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
-from spiderfoot.qdrant_client import (
+from spiderfoot.ai.qdrant_client import (
     QdrantBackend, QdrantClient, QdrantConfig,
 )
 from spiderfoot.services.embedding_service import (
@@ -20,18 +20,15 @@ from spiderfoot.services.embedding_service import (
 from spiderfoot.services.reranker_service import (
     MockRerankerBackend, RerankerConfig, RerankerProvider, RerankerService,
 )
-from spiderfoot.rag_pipeline import (
+from spiderfoot.ai.rag_pipeline import (
     MockLLMBackend, MockRetriever, RAGConfig, RAGPipeline,
 )
-from spiderfoot.vector_correlation import (
+from spiderfoot.correlation.vector import (
     CorrelationStrategy, OSINTEvent, VectorCorrelationConfig,
     VectorCorrelationEngine,
 )
-from spiderfoot.multidim_correlation import (
+from spiderfoot.correlation.multidim import (
     Dimension, EventData, MultiDimAnalyzer,
-)
-from spiderfoot.hybrid_correlation import (
-    CorrelationSource, HybridConfig, HybridCorrelator,
 )
 from spiderfoot.events.event_indexer import (
     BatchWriter, EventIndexer, IndexerConfig, IndexerMetrics,
@@ -225,79 +222,6 @@ class TestMultiDimIntegration:
         # Should find some pairs even across types
         assert result.total_events == 3
         assert len(result.pairs) >= 0  # may or may not find pairs
-
-
-# ---------------------------------------------------------------------------
-# Hybrid correlation integration
-# ---------------------------------------------------------------------------
-
-class TestHybridIntegration:
-    """Hybrid engine: rules + vector + multidim together."""
-
-    def test_all_engines_combined(self, vector_engine, sample_events):
-        """Run all three engines and merge results."""
-        # Index events first
-        vector_engine.index_events(sample_events)
-
-        # Setup rule engine mock
-        rule_factory = MagicMock(return_value={
-            "r1": {
-                "rule_id": "r1",
-                "headline": "IP in multiple scans",
-                "risk": "MEDIUM",
-                "matched": True,
-                "groups": [{
-                    "event_ids": ["ev1", "ev5"],
-                    "count": 2,
-                    "key": "10.0.0.1",
-                }],
-            },
-        })
-
-        # Setup multidim
-        multidim = MultiDimAnalyzer(min_score=0.1)
-
-        def event_loader(scan_id):
-            return [
-                EventData(event_id=e.event_id, event_type=e.event_type,
-                          data=e.data, scan_id=e.scan_id,
-                          timestamp=e.timestamp)
-                for e in sample_events
-            ]
-
-        hc = HybridCorrelator(
-            config=HybridConfig(
-                parallel=False,  # sequential for determinism
-                min_confidence=0.1,
-            ),
-            rule_executor_factory=rule_factory,
-            vector_engine=vector_engine,
-            multidim_analyzer=multidim,
-            event_loader=event_loader,
-        )
-
-        result = hc.correlate("scan1", query="10.0.0.1")
-        assert result.scan_id == "scan1"
-        assert result.total_findings >= 1
-        assert "rules" in result.engine_stats
-        assert "vector" in result.engine_stats
-        assert "multidim" in result.engine_stats
-
-    def test_callback_receives_findings(self, vector_engine, sample_events):
-        """Verify on_finding callback fires for each finding."""
-        vector_engine.index_events(sample_events)
-        received = []
-
-        hc = HybridCorrelator(
-            config=HybridConfig(
-                enable_rules=False, enable_multidim=False,
-                min_confidence=0.0,
-            ),
-            vector_engine=vector_engine,
-        )
-        hc.on_finding(lambda f: received.append(f))
-        hc.correlate("scan1", query="10.0.0.1")
-        assert len(received) >= 0  # may be 0 if no hits above threshold
 
 
 # ---------------------------------------------------------------------------

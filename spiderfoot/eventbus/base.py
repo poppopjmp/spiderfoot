@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import threading
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
@@ -162,12 +163,43 @@ class EventBus(ABC):
         prefix = self.config.channel_prefix
         return f"{prefix}.{scan_id}.{event_type}"
 
+    # --- Background event loop for sync wrappers ---
+    _bg_loop: asyncio.AbstractEventLoop | None = None
+    _bg_thread: "threading.Thread | None" = None
+    _bg_lock: threading.Lock = threading.Lock()
+
+    @classmethod
+    def _get_bg_loop(cls) -> asyncio.AbstractEventLoop:
+        """Return a persistent background event loop (created once, reused).
+
+        This avoids spawning a new ThreadPoolExecutor on every sync call,
+        which would cause thread exhaustion under load.
+        """
+        with cls._bg_lock:
+            if cls._bg_loop is None or cls._bg_loop.is_closed():
+                cls._bg_loop = asyncio.new_event_loop()
+
+                def _run_loop(loop: asyncio.AbstractEventLoop) -> None:
+                    asyncio.set_event_loop(loop)
+                    loop.run_forever()
+
+                cls._bg_thread = threading.Thread(
+                    target=_run_loop,
+                    args=(cls._bg_loop,),
+                    daemon=True,
+                    name="eventbus-bg-loop",
+                )
+                cls._bg_thread.start()
+
+        return cls._bg_loop
+
     # --- Synchronous convenience wrappers ---
 
     def publish_sync(self, envelope: EventEnvelope) -> bool:
         """Synchronous wrapper around publish() for legacy code.
 
-        Creates an event loop if needed. For new code, prefer the async API.
+        Uses a persistent background event loop instead of creating a new
+        ThreadPoolExecutor on every call. For new code, prefer the async API.
         """
         try:
             loop = asyncio.get_running_loop()
@@ -175,11 +207,11 @@ class EventBus(ABC):
             loop = None
 
         if loop and loop.is_running():
-            # We're inside an async context — schedule as a task
-            import concurrent.futures
-            with concurrent.futures.ThreadPoolExecutor() as pool:
-                future = pool.submit(asyncio.run, self.publish(envelope))
-                return future.result(timeout=10)
+            # Schedule on the shared background loop
+            future = asyncio.run_coroutine_threadsafe(
+                self.publish(envelope), self._get_bg_loop()
+            )
+            return future.result(timeout=10)
         else:
             return asyncio.run(self.publish(envelope))
 
@@ -191,9 +223,9 @@ class EventBus(ABC):
             loop = None
 
         if loop and loop.is_running():
-            import concurrent.futures
-            with concurrent.futures.ThreadPoolExecutor() as pool:
-                future = pool.submit(asyncio.run, self.subscribe(topic, callback))
-                return future.result(timeout=10)
+            future = asyncio.run_coroutine_threadsafe(
+                self.subscribe(topic, callback), self._get_bg_loop()
+            )
+            return future.result(timeout=10)
         else:
             return asyncio.run(self.subscribe(topic, callback))

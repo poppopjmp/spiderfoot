@@ -3,7 +3,7 @@
 # Name:         sfp__stor_jsonl
 # Purpose:      SpiderFoot plug-in for writing events to a JSONL file.
 #
-# Author:       SpiderFoot Team
+# Author:       Van1sh 
 #
 # Created:      2026
 # Licence:      MIT

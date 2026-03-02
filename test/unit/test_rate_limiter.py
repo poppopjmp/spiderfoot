@@ -1,4 +1,4 @@
-"""Tests for spiderfoot.rate_limiter."""
+"""Tests for spiderfoot.security.rate_limiter."""
 from __future__ import annotations
 
 import time
@@ -6,7 +6,7 @@ import threading
 
 import pytest
 
-from spiderfoot.rate_limiter import (
+from spiderfoot.security.rate_limiter import (
     Algorithm,
     RateLimit,
     RateLimiterService,
@@ -293,7 +293,7 @@ class TestRateLimiterService:
 
 class TestSingleton:
     def test_get_rate_limiter(self):
-        import spiderfoot.rate_limiter as mod
+        import spiderfoot.security.rate_limiter as mod
         mod._limiter_instance = None
         rl1 = get_rate_limiter()
         rl2 = get_rate_limiter()

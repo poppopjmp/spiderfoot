@@ -8,10 +8,11 @@ permissions:
   contents: write
 
 jobs:
-  go-cli-build:
-    name: Build Go CLI (${{ matrix.goos }}-${{ matrix.goarch }})
+  build-cli:
+    name: Build CLI (${{ matrix.goos }}/${{ matrix.goarch }})
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         include:
           - goos: linux
@@ -32,6 +33,7 @@ jobs:
           - goos: windows
             goarch: arm64
             ext: ".exe"
+
     steps:
       - uses: actions/checkout@v4
 
@@ -45,7 +47,7 @@ jobs:
         id: version
         run: echo "version=$(cat VERSION)" >> $GITHUB_OUTPUT
 
-      - name: Build
+      - name: Build CLI binary
         working-directory: cli
         env:
           GOOS: ${{ matrix.goos }}
@@ -54,22 +56,29 @@ jobs:
         run: |
           go build -trimpath \
             -ldflags "-s -w -X github.com/spiderfoot/spiderfoot-cli/cmd.version=${{ steps.version.outputs.version }}" \
-            -o ../sf-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }} .
+            -o ../dist/sf-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }} .
 
-      - name: Upload artifact
+      - name: Upload CLI artifact
         uses: actions/upload-artifact@v4
         with:
           name: sf-${{ matrix.goos }}-${{ matrix.goarch }}
-          path: sf-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}
+          path: dist/sf-*
 
   release:
     name: Create Release
     runs-on: ubuntu-latest
-    needs: [go-cli-build]
+    needs: [build-cli]
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Download CLI binaries
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          pattern: sf-*
+          merge-multiple: true
 
       - name: Read version
         id: version
@@ -88,25 +97,49 @@ jobs:
           echo "$CHANGELOG" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Download CLI binaries
-        uses: actions/download-artifact@v4
-        with:
-          path: cli-binaries
-          pattern: sf-*
-          merge-multiple: true
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           name: SpiderFoot v${{ steps.version.outputs.version }}
+          files: dist/sf-*
           body: |
             ## SpiderFoot v${{ steps.version.outputs.version }}
 
             ### Changes
             ${{ steps.changelog.outputs.changelog }}
 
-            ### CLI Binaries
-            Pre-built `sf` CLI binaries for all platforms are attached below.
+            ### Install CLI
+
+            Download the binary for your platform from the assets below, or build from source:
+            ```bash
+            cd cli && make build
+            ```
+
+            #### Linux (amd64)
+            ```bash
+            curl -L -o sf https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sf-linux-amd64
+            chmod +x sf && sudo mv sf /usr/local/bin/
+            ```
+
+            #### macOS (Apple Silicon)
+            ```bash
+            curl -L -o sf https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sf-darwin-arm64
+            chmod +x sf && mv sf /usr/local/bin/
+            ```
+
+            #### Usage
+            ```bash
+            sf version
+            sf scan start --target example.com
+            sf stealth levels
+            sf health
+            ```
+
+            ### Python API Server
+            ```bash
+            pip install spiderfoot
+            spiderfoot-api
+            ```
 
             ### Docker Images
             ```bash
@@ -119,7 +152,6 @@ jobs:
             ```bash
             helm install spiderfoot oci://ghcr.io/${{ github.repository_owner }}/charts/spiderfoot
             ```
-          files: cli-binaries/*
           draft: false
           prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc') }}
           generate_release_notes: true

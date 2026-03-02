@@ -17,9 +17,9 @@ in the module selection list.
 # Purpose:      Process user-uploaded documents through the enrichment pipeline
 #               and produce OSINT events from extracted entities.
 #
-# Author:       SpiderFoot Team
+# Author:       Van1sh 
 # Created:      2026-02-13
-# Copyright:    (c) SpiderFoot Team 2026
+# Copyright:    (c) Van1sh  2026
 # Licence:      MIT
 # -------------------------------------------------------------------------------
 

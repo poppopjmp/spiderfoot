@@ -14,7 +14,7 @@ from ..dependencies import get_api_key, SafeId
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-from spiderfoot.stix_export import STIXExporter, TAXIIServer
+from spiderfoot.export.stix_export import STIXExporter, TAXIIServer
 
 logger = logging.getLogger("spiderfoot.api.stix")
 
@@ -93,7 +93,7 @@ async def export_stix_bundle(request: STIXExportRequest):
 @router.get("/stix/event-types", tags=["stix"])
 async def list_supported_event_types():
     """List SpiderFoot event types that can be converted to STIX."""
-    from spiderfoot.stix_export import _EVENT_TYPE_MAP
+    from spiderfoot.export.stix_export import _EVENT_TYPE_MAP
     return {
         "supported_event_types": {
             k: v for k, v in sorted(_EVENT_TYPE_MAP.items())

@@ -3,11 +3,11 @@ Agents Service Runner
 ======================
 FastAPI service that hosts all SpiderFoot AI agents.
 
-Exposes:
-  - POST /agents/process       — Submit events for agent processing
-  - POST /agents/analyze       — Analyze uploaded documents
-  - POST /agents/report        — Generate scan report
-  - GET  /agents/status        — Agent status and metrics
+Exposes (mounted at /agents):
+  - POST /process              — Submit events for agent processing
+  - POST /analyze              — Analyze uploaded documents
+  - POST /report               — Generate scan report
+  - GET  /status               — Agent status and metrics
   - GET  /metrics              — Prometheus metrics endpoint
   - GET  /health               — Health check
 
@@ -169,7 +169,7 @@ class ReportRequest(BaseModel):
     geo_data: Dict[str, Any] = {}
 
 
-@app.post("/agents/process")
+@app.post("/process")
 async def process_events(request: ProcessRequest):
     """Submit events for agent processing."""
     results = []
@@ -196,7 +196,7 @@ async def process_events(request: ProcessRequest):
     return {"results": results, "total": len(results)}
 
 
-@app.post("/agents/analyze")
+@app.post("/analyze")
 async def analyze_document(request: DocumentRequest):
     """Analyze an uploaded document."""
     if "document_analyzer" not in _agents:
@@ -227,7 +227,7 @@ async def analyze_document(request: DocumentRequest):
     }
 
 
-@app.post("/agents/report")
+@app.post("/report")
 async def generate_report(request: ReportRequest):
     """Generate a scan report."""
     if "report_generator" not in _agents:
@@ -262,7 +262,7 @@ async def generate_report(request: ReportRequest):
     }
 
 
-@app.get("/agents/status")
+@app.get("/status")
 async def agent_status():
     """Return status and metrics for all agents."""
     return {

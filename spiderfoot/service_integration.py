@@ -9,9 +9,9 @@
 #               Call `integrate_services()` once during application startup.
 #               Call `wire_scan_services()` at the start of each scan.
 #
-# Author:       SpiderFoot Team
+# Author:       Van1sh 
 # Created:      2025-07-08
-# Copyright:    (c) SpiderFoot Team 2025
+# Copyright:    (c) Van1sh  2025
 # Licence:      MIT
 # -------------------------------------------------------------------------------
 
@@ -64,6 +64,32 @@ def integrate_services(sf_config: dict[str, Any]) -> bool:
         log.info("Service registry initialized with %d services: %s",
                  len(services), ", ".join(services))
 
+        # ── Startup security checks ────────────────────────────────
+        try:
+            from spiderfoot.security.startup_check import check_startup_secrets
+            warnings = check_startup_secrets(fail_in_production=True)
+            if warnings:
+                log.warning("Startup secret check: %d warning(s)", len(warnings))
+        except SystemExit:
+            raise  # Let production fail-fast propagate
+        except Exception as e:
+            log.debug("Startup secret check skipped: %s", e)
+
+        # ── Error telemetry ────────────────────────────────────────
+        try:
+            from spiderfoot.observability.error_telemetry import get_error_telemetry
+            get_error_telemetry()  # initialise singleton
+            log.debug("Error telemetry initialized")
+        except Exception as e:
+            log.debug("Error telemetry not available: %s", e)
+
+        # ── OpenTelemetry tracing ──────────────────────────────────
+        try:
+            from spiderfoot.observability.tracing import get_tracer
+            get_tracer("spiderfoot")  # triggers lazy init
+        except Exception as e:
+            log.debug("Tracing not available: %s", e)
+
         return True
 
     except ImportError as e:
@@ -92,6 +118,8 @@ def wire_scan_services(scanner: Any, scan_id: str) -> None:
         _wire_scan_event_bridge(scanner, scan_id)
         _wire_module_loader(scanner)
         _wire_repository_factory(scanner)
+        _wire_result_cache(scanner, scan_id)
+        _wire_scheduler(scanner, scan_id)
         log.debug("Services wired for scan %s", scan_id)
     except Exception as e:
         log.warning("Partial service wiring for scan %s: %s", scan_id, e)
@@ -212,7 +240,7 @@ def _index_scan_events_to_qdrant(scan_id: str) -> None:
 
     try:
         from spiderfoot.correlations.vector_collection_manager import get_collection_manager
-        from spiderfoot.qdrant_client import VectorPoint
+        from spiderfoot.ai.qdrant_client import VectorPoint
 
         mgr = get_collection_manager()
         mgr.create_scan_collection(scan_id)
@@ -492,3 +520,37 @@ def _archive_scan_summary_to_minio(scan_id: str, duration: float = 0.0) -> None:
         log.debug("MinIO storage not available — scan summary archival skipped")
     except Exception as e:
         log.debug("Failed to archive scan summary to MinIO for %s: %s", scan_id, e)
+
+
+# ---------------------------------------------------------------------------
+# Result cache wiring (per-scan HTTP response cache)
+# ---------------------------------------------------------------------------
+
+def _wire_result_cache(scanner: Any, scan_id: str) -> None:
+    """Attach a per-scan result cache from the service registry."""
+    try:
+        from spiderfoot.service_registry import get_registry, SERVICE_RESULT_CACHE
+        registry = get_registry()
+        if registry.has(SERVICE_RESULT_CACHE):
+            cache = registry.get(SERVICE_RESULT_CACHE)
+            scanner._result_cache = cache
+            log.debug("ResultCache attached to scanner for scan %s", scan_id)
+    except Exception as e:
+        log.debug("ResultCache not available: %s", e)
+
+
+# ---------------------------------------------------------------------------
+# Work-stealing scheduler wiring (scan concurrency)
+# ---------------------------------------------------------------------------
+
+def _wire_scheduler(scanner: Any, scan_id: str) -> None:
+    """Attach the work-stealing scheduler from the service registry."""
+    try:
+        from spiderfoot.service_registry import get_registry, SERVICE_SCHEDULER
+        registry = get_registry()
+        if registry.has(SERVICE_SCHEDULER):
+            scheduler = registry.get(SERVICE_SCHEDULER)
+            scanner._scheduler = scheduler
+            log.debug("WorkStealingScheduler attached to scanner for scan %s", scan_id)
+    except Exception as e:
+        log.debug("WorkStealingScheduler not available: %s", e)

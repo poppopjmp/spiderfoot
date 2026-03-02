@@ -27,7 +27,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { clsx } from 'clsx';
-import api from '../lib/api';
+import { authApi } from '../lib/api';
 import { getErrorMessage } from '../lib/errors';
 import { ModalShell } from '../components/ui';
 
@@ -119,12 +119,12 @@ export default function SSOSettingsPage() {
 
   const { data: providers = [], isLoading: loading, error: queryError } = useQuery<SSOProviderRecord[]>({
     queryKey: ['sso-providers'],
-    queryFn: ({ signal }) => api.get('/api/auth/sso/providers/all', { signal }).then(r => r.data.items || []),
+    queryFn: ({ signal }) => authApi.ssoProviders(signal).then(r => r.items || []),
   });
 
   // Toggle enabled state
   const toggleMutation = useMutation({
-    mutationFn: (p: SSOProviderRecord) => api.patch(`/api/auth/sso/providers/${p.id}`, { enabled: !p.enabled }),
+    mutationFn: (p: SSOProviderRecord) => authApi.updateSsoProvider(p.id, { enabled: !p.enabled }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['sso-providers'] }),
   });
 
@@ -407,9 +407,9 @@ function ProviderFormModal({
   const saveMutation = useMutation({
     mutationFn: (body: Record<string, unknown>) => {
       if (isEdit) {
-        return api.patch(`/api/auth/sso/providers/${provider!.id}`, body).then(r => r.data);
+        return authApi.updateSsoProvider(provider!.id, body);
       }
-      return api.post('/api/auth/sso/providers', body).then(r => r.data);
+      return authApi.createSsoProvider(body);
     },
     onSuccess: () => onSaved(),
     onError: (err: unknown) => setError(getErrorMessage(err, 'Failed to save provider')),
@@ -706,7 +706,7 @@ function DeleteProviderModal({
   onDeleted: () => void;
 }) {
   const deleteMutation = useMutation({
-    mutationFn: () => api.delete(`/api/auth/sso/providers/${provider.id}`),
+    mutationFn: () => authApi.deleteSsoProvider(provider.id),
     onSuccess: () => onDeleted(),
   });
 

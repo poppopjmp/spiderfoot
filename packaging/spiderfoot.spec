@@ -47,5 +47,5 @@ cp sfapi.py %{buildroot}%{python3_sitelib}/
 
 
 %changelog
-* Tue Jun 24 2025 SpiderFoot Team <info@van1shland.io> - %{version}-1
+* Tue Jun 24 2025 Van1sh  <info@van1shland.io> - %{version}-1
 - Initial RPM release

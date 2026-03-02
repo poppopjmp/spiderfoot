@@ -356,6 +356,8 @@ class PostgreSQLBackend:
         offset: int = 0,
     ) -> list[dict[str, Any]]:
         """List reports with optional filters."""
+        limit = min(max(limit, 1), 1000)
+        offset = max(offset, 0)
         conn = self._get_conn()
         query = "SELECT * FROM reports"
         params: list[Any] = []

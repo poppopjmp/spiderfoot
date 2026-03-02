@@ -760,7 +760,7 @@ class SpiderFootWorkspace:
         Returns:
             Generated CTI report
         """
-        from spiderfoot.mcp_integration import SpiderFootMCPClient
+        from spiderfoot.ai.mcp_client import SpiderFootMCPClient
 
         mcp_client = SpiderFootMCPClient(self.config)
         return await mcp_client.generate_cti_report(self, report_type, custom_prompt)

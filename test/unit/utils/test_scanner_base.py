@@ -118,7 +118,7 @@ class TestScannerBase(unittest.TestCase):
         self._mock_db = MagicMock()
         self._mock_db.scanInstanceGet.return_value = None  # simulate new scan
         self._sfdb_patcher = patch(
-            'spiderfoot.scan_service.scanner.SpiderFootDb',
+            'spiderfoot.scan.scanner.SpiderFootDb',
             return_value=self._mock_db,
         )
         self._sfdb_patcher.start()

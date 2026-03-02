@@ -11,7 +11,7 @@ import (
 
 var exportCmd = &cobra.Command{
 	Use:   "export",
-	Short: "Export scan data",
+	Short: "Export scan data in various formats",
 }
 
 var exportJSONCmd = &cobra.Command{
@@ -41,21 +41,32 @@ var exportSTIXCmd = &cobra.Command{
 	},
 }
 
-var exportExcelCmd = &cobra.Command{
-	Use:   "excel [scan-id]",
-	Short: "Export scan results as Excel (.xlsx)",
+var exportSARIFCmd = &cobra.Command{
+	Use:   "sarif [scan-id]",
+	Short: "Export scan results as SARIF",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return doExport(args[0], "xlsx", "xlsx")
+		return doExport(args[0], "sarif", "sarif.json")
 	},
 }
 
+// doExport fetches scan data in the specified format using the real API endpoint:
+// GET /api/scans/{scan_id}/export?format=json|csv|stix|sarif
 func doExport(scanID, format, ext string) error {
 	if err := validateSafeID(scanID, "scan ID"); err != nil {
 		return err
 	}
 	c := client.New()
-	path := fmt.Sprintf("/api/scans/%s/export/%s", scanID, format)
+	includeRaw, _ := exportCmd.PersistentFlags().GetBool("include-raw")
+	maxEvents, _ := exportCmd.PersistentFlags().GetInt("max-events")
+
+	path := fmt.Sprintf("/api/scans/%s/export?format=%s", scanID, format)
+	if includeRaw {
+		path += "&include_raw=true"
+	}
+	if maxEvents > 0 {
+		path += fmt.Sprintf("&max_events=%d", maxEvents)
+	}
 
 	data, _, err := c.GetRaw(path)
 	if err != nil {
@@ -76,10 +87,12 @@ func doExport(scanID, format, ext string) error {
 
 func init() {
 	exportCmd.PersistentFlags().StringP("file", "f", "", "Output filename (auto-generated if omitted)")
+	exportCmd.PersistentFlags().Bool("include-raw", false, "Include raw event data")
+	exportCmd.PersistentFlags().Int("max-events", 0, "Maximum events to export (0 = all)")
 
 	exportCmd.AddCommand(exportJSONCmd)
 	exportCmd.AddCommand(exportCSVCmd)
 	exportCmd.AddCommand(exportSTIXCmd)
-	exportCmd.AddCommand(exportExcelCmd)
+	exportCmd.AddCommand(exportSARIFCmd)
 	rootCmd.AddCommand(exportCmd)
 }

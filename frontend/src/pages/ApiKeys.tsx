@@ -25,7 +25,7 @@ import {
   Ban,
 } from 'lucide-react';
 import { clsx } from 'clsx';
-import api from '../lib/api';
+import { authApi } from '../lib/api';
 import { getErrorMessage } from '../lib/errors';
 import { ModalShell } from '../components/ui';
 import { useAuthStore } from '../lib/auth';
@@ -110,15 +110,15 @@ export default function ApiKeysPage() {
   const { data: keys = [], isLoading: loading, error: queryError } = useQuery<ApiKeyRecord[]>({
     queryKey: ['api-keys', isAdmin],
     queryFn: ({ signal }) => {
-      const url = isAdmin ? '/api/auth/api-keys' : '/api/auth/api-keys/mine';
-      return api.get(url, { signal }).then(r => r.data.items || []);
+      return (isAdmin ? authApi.authApiKeys(signal) : authApi.authApiKeysMine(signal))
+        .then(r => r.items || []);
     },
   });
 
   // ── Revoke handler ─────────────────────────────────────
 
   const revokeMutation = useMutation({
-    mutationFn: (k: ApiKeyRecord) => api.post(`/api/auth/api-keys/${k.id}/revoke`),
+    mutationFn: (k: ApiKeyRecord) => authApi.revokeAuthApiKey(k.id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['api-keys'] });
       setRevokeKey(null);
@@ -128,7 +128,7 @@ export default function ApiKeysPage() {
   // ── Delete handler ─────────────────────────────────────
 
   const deleteMutation = useMutation({
-    mutationFn: (k: ApiKeyRecord) => api.delete(`/api/auth/api-keys/${k.id}`),
+    mutationFn: (k: ApiKeyRecord) => authApi.deleteAuthApiKey(k.id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['api-keys'] });
       setDeleteKey(null);
@@ -417,7 +417,7 @@ function CreateKeyModal({
 
   const createMutation = useMutation({
     mutationFn: (data: Record<string, unknown>) =>
-      api.post('/api/auth/api-keys', data).then(r => r.data),
+      authApi.createAuthApiKey(data),
     onSuccess: (result: ApiKeyRecord) => onCreated(result),
     onError: (err: unknown) => setError(getErrorMessage(err, 'Failed to create API key')),
   });

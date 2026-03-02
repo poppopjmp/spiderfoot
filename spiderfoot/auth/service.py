@@ -32,7 +32,7 @@ from spiderfoot.auth.models import (
     SSOProvider,
     User,
 )
-from spiderfoot.rbac import Role, UserContext, has_permission, parse_role
+from spiderfoot.auth.rbac import Role, UserContext, has_permission, parse_role
 
 log = logging.getLogger("spiderfoot.auth")
 
@@ -215,7 +215,32 @@ class AuthService:
 
         now = time.time()
         admin_id = str(uuid.uuid4())
-        password = self.config.default_admin_password or "admin"
+        password = self.config.default_admin_password
+        if not password:
+            import secrets as _sec
+            password = _sec.token_urlsafe(24)
+            # Write to a file with restrictive permissions instead of logging
+            _pw_file = os.path.join(
+                os.environ.get("SF_DATA_DIR", "/var/lib/spiderfoot"),
+                ".admin_password",
+            )
+            try:
+                os.makedirs(os.path.dirname(_pw_file), exist_ok=True)
+                with open(_pw_file, "w") as f:
+                    f.write(password)
+                os.chmod(_pw_file, 0o600)
+                log.warning(
+                    "SF_ADMIN_PASSWORD not set — generated random admin "
+                    "password written to %s  (set SF_ADMIN_PASSWORD to suppress this)",
+                    _pw_file,
+                )
+            except OSError:
+                # Fallback: log only first 4 chars
+                log.warning(
+                    "SF_ADMIN_PASSWORD not set — generated random admin "
+                    "password starting with: %s****  (set SF_ADMIN_PASSWORD)",
+                    password[:4],
+                )
         pw_hash = bcrypt.hash(password)
 
         try:
@@ -239,9 +264,8 @@ class AuthService:
             )
             conn.commit()
             log.info(
-                "Created default admin user: %s (password: %s)",
+                "Created default admin user: %s",
                 self.config.default_admin_username,
-                "****" if self.config.default_admin_password else "admin",
             )
         except Exception:
             # Another worker may have already seeded the admin
@@ -412,6 +436,9 @@ class AuthService:
 
     def list_users(self, limit: int = 100, offset: int = 0) -> list[User]:
         """List all users."""
+        # Cap limit to prevent unbounded queries
+        limit = min(max(limit, 1), 1000)
+        offset = max(offset, 0)
         conn = self._get_conn()
         cur = conn.cursor()
         cur.execute(
@@ -1112,8 +1139,20 @@ class AuthService:
                 "Install with: pip install ldap3"
             )
 
-        # Build user filter
-        user_filter = provider.ldap_user_filter.replace("{username}", username)
+        # Build user filter — escape LDAP special characters to prevent injection
+        def _ldap_escape(s: str) -> str:
+            """Escape LDAP filter special characters (RFC 4515)."""
+            return (
+                s.replace("\\", "\\5c")
+                .replace("*", "\\2a")
+                .replace("(", "\\28")
+                .replace(")", "\\29")
+                .replace("\x00", "\\00")
+            )
+
+        user_filter = provider.ldap_user_filter.replace(
+            "{username}", _ldap_escape(username)
+        )
 
         server = ldap3.Server(
             provider.ldap_url,

@@ -122,7 +122,7 @@ class StructuredFormatter(logging.Formatter):
         else:
             # Fallback: read directly from contextvar
             try:
-                from spiderfoot.request_tracing import get_request_id
+                from spiderfoot.observability.request_tracing import get_request_id
                 rid = get_request_id()
                 if rid:
                     log_entry["request_id"] = rid

@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   Search, LayoutDashboard, Radar, PlusCircle, Settings,
-  Briefcase, BookOpen, Cpu, Users, Key, Lock, Bot,
+  Briefcase, BookOpen, Cpu, Users, Key, Lock,
   ArrowRight, Command,
 } from 'lucide-react';
 import { clsx } from 'clsx';
@@ -34,7 +34,6 @@ const staticItems: PaletteItem[] = [
   { id: 'workspaces', label: 'Workspaces', icon: Briefcase, href: '/workspaces', section: 'Pages' },
   { id: 'documentation', label: 'Documentation', icon: BookOpen, href: '/documentation', section: 'Pages' },
   { id: 'settings', label: 'Settings', icon: Settings, href: '/settings', section: 'Pages' },
-  { id: 'agents', label: 'AI Agents', icon: Bot, href: '/agents', section: 'Pages' },
 ];
 
 const adminItems: PaletteItem[] = [

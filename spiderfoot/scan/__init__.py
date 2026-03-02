@@ -155,6 +155,22 @@ from .scan_workflow import (
     WorkflowStep,
 )
 
+# Concurrency & scheduling
+from .concurrency import (
+    BackpressureController,
+    EventDeduplicator,
+    ModulePreloader,
+    ModulePriorityScheduler,
+    ModuleTimeoutEnforcer,
+    ScanSplitter,
+    WorkStealingScheduler,
+    WorkerAutoScaler,
+)
+
+# Scanner (merged from scan_service)
+# NOT eagerly imported to avoid circular dependency (scanner.py → spiderfoot → scan)
+# Use: from spiderfoot.scan.scanner import SpiderFootScanner, startSpiderFootScanner
+
 __all__ = [
     # Scan state
     "InvalidTransitionError",
@@ -258,4 +274,16 @@ __all__ = [
     "StepStatus",
     "StepType",
     "WorkflowStep",
+    # Concurrency & scheduling
+    "BackpressureController",
+    "EventDeduplicator",
+    "ModulePreloader",
+    "ModulePriorityScheduler",
+    "ModuleTimeoutEnforcer",
+    "ScanSplitter",
+    "WorkStealingScheduler",
+    "WorkerAutoScaler",
+    # Scanner
+    "SpiderFootScanner",
+    "startSpiderFootScanner",
 ]

@@ -28,7 +28,7 @@ class sfp_example(SpiderFootPlugin):
     ...
 
 # AFTER
-from spiderfoot.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
 
 class sfp_example(SpiderFootModernPlugin):
     ...

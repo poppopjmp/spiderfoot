@@ -28,7 +28,7 @@ try:
 except ImportError:
     HAS_FASTAPI = False
 
-from spiderfoot.task_queue import (
+from spiderfoot.ops.task_queue import (
     TaskManager,
     TaskRecord,
     TaskState,

@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from spiderfoot.vector_bootstrap import (
+from spiderfoot.observability.vector_bootstrap import (
     VectorBootstrap,
     VectorBootstrapConfig,
     VectorHealthStatus,
@@ -102,7 +102,7 @@ class TestVectorBootstrapHealth:
     """Tests for health checking."""
 
     def test_health_no_httpx(self):
-        with patch("spiderfoot.vector_bootstrap.HTTPX_AVAILABLE", False):
+        with patch("spiderfoot.observability.vector_bootstrap.HTTPX_AVAILABLE", False):
             bootstrap = VectorBootstrap()
             status = bootstrap.check_health()
             assert status.reachable is False
@@ -119,8 +119,8 @@ class TestVectorBootstrapHealth:
         mock_client.__exit__ = MagicMock(return_value=False)
         mock_client.get.return_value = mock_response
 
-        with patch("spiderfoot.vector_bootstrap.HTTPX_AVAILABLE", True), \
-             patch("spiderfoot.vector_bootstrap.httpx") as mock_httpx:
+        with patch("spiderfoot.observability.vector_bootstrap.HTTPX_AVAILABLE", True), \
+             patch("spiderfoot.observability.vector_bootstrap.httpx") as mock_httpx:
             mock_httpx.Client.return_value = mock_client
             bootstrap = VectorBootstrap()
             status = bootstrap.check_health()
@@ -128,8 +128,8 @@ class TestVectorBootstrapHealth:
             assert status.version == "0.35.0"
 
     def test_health_connection_error(self):
-        with patch("spiderfoot.vector_bootstrap.HTTPX_AVAILABLE", True), \
-             patch("spiderfoot.vector_bootstrap.httpx") as mock_httpx:
+        with patch("spiderfoot.observability.vector_bootstrap.HTTPX_AVAILABLE", True), \
+             patch("spiderfoot.observability.vector_bootstrap.httpx") as mock_httpx:
             mock_client = MagicMock()
             mock_client.__enter__ = MagicMock(return_value=mock_client)
             mock_client.__exit__ = MagicMock(return_value=False)
@@ -142,8 +142,8 @@ class TestVectorBootstrapHealth:
             assert "refused" in status.error
 
     def test_health_caches_result(self):
-        with patch("spiderfoot.vector_bootstrap.HTTPX_AVAILABLE", True), \
-             patch("spiderfoot.vector_bootstrap.httpx") as mock_httpx:
+        with patch("spiderfoot.observability.vector_bootstrap.HTTPX_AVAILABLE", True), \
+             patch("spiderfoot.observability.vector_bootstrap.httpx") as mock_httpx:
             mock_client = MagicMock()
             mock_client.__enter__ = MagicMock(return_value=mock_client)
             mock_client.__exit__ = MagicMock(return_value=False)
@@ -296,7 +296,7 @@ class TestVectorBootstrapStatusSummary:
     """Tests for status summary aggregation."""
 
     def test_status_summary_structure(self):
-        with patch("spiderfoot.vector_bootstrap.HTTPX_AVAILABLE", False):
+        with patch("spiderfoot.observability.vector_bootstrap.HTTPX_AVAILABLE", False):
             bootstrap = VectorBootstrap(VectorBootstrapConfig(
                 config_path="config/vector.toml"
             ))

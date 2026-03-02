@@ -20,7 +20,7 @@ from ..dependencies import get_api_key
 
 log = logging.getLogger("spiderfoot.api.audit")
 
-router = APIRouter(prefix="/api/audit", tags=["audit"])
+router = APIRouter(prefix="/audit", tags=["audit"])
 
 api_key_dep = Depends(get_api_key)
 
@@ -73,7 +73,7 @@ async def query_audit(
     api_key: str = api_key_dep,
 ) -> AuditQueryResponse:
     """Query audit events with filters."""
-    from spiderfoot.audit_log import query_audit_events
+    from spiderfoot.observability.audit_events import query_audit_events
 
     since = time.time() - (since_hours * 3600) if since_hours > 0 else 0
 
@@ -105,7 +105,7 @@ async def list_audit_actions(
     api_key: str = api_key_dep,
 ) -> dict:
     """List all available audit action constants."""
-    from spiderfoot.audit_log import Actions
+    from spiderfoot.observability.audit_events import Actions
     actions = {}
     for attr in dir(Actions):
         if not attr.startswith("_"):
@@ -124,7 +124,7 @@ async def audit_stats(
     api_key: str = api_key_dep,
 ) -> AuditStatsResponse:
     """Get audit event statistics."""
-    from spiderfoot.audit_log import query_audit_events
+    from spiderfoot.observability.audit_events import query_audit_events
 
     since = time.time() - (since_hours * 3600) if since_hours > 0 else 0
     events = query_audit_events(since=since, limit=10000)

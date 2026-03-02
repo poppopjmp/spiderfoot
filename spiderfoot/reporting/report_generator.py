@@ -26,12 +26,12 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Callable
 
-from spiderfoot.context_window import (
+from spiderfoot.ai.context_window import (
     ContextWindow,
     ContextWindowManager,
     WindowConfig,
 )
-from spiderfoot.llm_client import LLMClient, LLMConfig, LLMProvider
+from spiderfoot.ai.llm_client import LLMClient, LLMConfig, LLMProvider
 from spiderfoot.reporting.report_preprocessor import (
     PreprocessorConfig,
     ReportContext,

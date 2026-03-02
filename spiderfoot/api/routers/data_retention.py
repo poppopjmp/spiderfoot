@@ -12,7 +12,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from typing import Any
 
-from spiderfoot.data_retention import (
+from spiderfoot.ops.data_retention import (
     RetentionManager,
     RetentionRule,
     RetentionAction,

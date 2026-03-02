@@ -9,7 +9,7 @@ PRIORITY_FILES = [
     'spiderfoot/sflib/core.py',
     'spiderfoot/helpers.py',
     'spiderfoot/db/db.py',
-    'spiderfoot/scan_service/scanner.py',
+    'spiderfoot/scan/scanner.py',
     'spiderfoot/correlation/rule_executor.py',
     'spiderfoot/correlation/rule_loader.py',
     'spiderfoot/correlation/result_aggregator.py',

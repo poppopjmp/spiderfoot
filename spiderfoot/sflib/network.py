@@ -28,20 +28,38 @@ from collections.abc import Callable
 from cryptography.hazmat.backends.openssl import backend
 from .helpers import validIP, validIP6
 
+try:
+    import httpx
+    HAS_HTTPX = True
+except ImportError:
+    HAS_HTTPX = False
+
 import logging
 log = logging.getLogger("spiderfoot.sflib.network")
 from datetime import datetime, timezone
 
 def resolveHost(host: str) -> list:
-    """Return a normalised IPv4 resolution of a hostname."""
+    """Return a normalised IPv4 resolution of a hostname.
+
+    Uses dnspython (``dns.resolver``) for reliable, non-blocking-friendly
+    DNS resolution.  Falls back to ``socket.gethostbyname_ex`` only when
+    dnspython is unavailable.
+    """
     import socket
     from .helpers import normalizeDNS
     if not host:
         return []
     try:
-        # Use gethostbyname_ex for patching/mocking compatibility in tests
-        addrs = normalizeDNS(socket.gethostbyname_ex(host))
-    except (socket.gaierror, socket.herror, OSError):
+        import dns.resolver
+        answers = dns.resolver.resolve(host, "A")
+        addrs = [rdata.address for rdata in answers]
+    except ImportError:
+        # dnspython not installed — fall back to socket
+        try:
+            addrs = normalizeDNS(socket.gethostbyname_ex(host))
+        except (socket.gaierror, socket.herror, OSError):
+            return []
+    except Exception:
         return []
     if not addrs:
         return []
@@ -155,10 +173,171 @@ def parseCert(rawcert: str, fqdn: str | None = None, expiringdays: int = 30) -> 
             ret['mismatch'] = True
     return ret
 
+import threading
+from requests.adapters import HTTPAdapter
+
+_session_local = threading.local()
+
+
 def getSession() -> 'requests.sessions.Session':
-    """Create and return a new HTTP requests session."""
-    session = requests.session()
-    return session
+    """Return a thread-local HTTP session with connection pooling.
+
+    Reuses TCP connections across multiple fetchUrl() calls within the
+    same thread, avoiding the overhead of a fresh session + TCP handshake
+    per request.
+    """
+    if not hasattr(_session_local, 'session') or _session_local.session is None:
+        session = requests.session()
+        adapter = HTTPAdapter(
+            pool_connections=10,
+            pool_maxsize=20,
+            max_retries=0,  # retries handled by caller
+        )
+        session.mount('http://', adapter)
+        session.mount('https://', adapter)
+        _session_local.session = session
+    return _session_local.session
+
+
+def closeSession() -> None:
+    """Close and discard the thread-local HTTP session.
+
+    Should be called when a worker thread is about to exit so that the
+    underlying TCP connection pool is released instead of leaking until
+    the thread object is garbage-collected.
+    """
+    session = getattr(_session_local, 'session', None)
+    if session is not None:
+        try:
+            session.close()
+        except Exception:
+            pass
+        _session_local.session = None
+
+
+# ---------------------------------------------------------------------------
+# httpx-based internal HTTP client (Cycles 54-55)
+# ---------------------------------------------------------------------------
+
+_httpx_client: httpx.Client | None = None
+_httpx_client_lock = __import__("threading").Lock()
+
+
+def get_internal_http_client(
+    *,
+    max_connections: int = 100,
+    max_keepalive_connections: int = 20,
+    connect_timeout: float = 10.0,
+    total_timeout: float = 30.0,
+) -> "httpx.Client":
+    """Return a process-scoped ``httpx.Client`` with connection pooling.
+
+    Intended for **internal service calls** (Redis, MinIO, Keycloak, etc.)
+    — NOT for scan-time URL fetching which still uses ``requests`` for
+    module compatibility.
+
+    The client is created once and reused across all threads.
+
+    Raises:
+        ImportError: If ``httpx`` is not installed.
+    """
+    global _httpx_client
+    if not HAS_HTTPX:
+        raise ImportError("httpx is required for internal HTTP client")
+
+    if _httpx_client is not None and not _httpx_client.is_closed:
+        return _httpx_client
+
+    with _httpx_client_lock:
+        # Double-check after acquiring lock
+        if _httpx_client is not None and not _httpx_client.is_closed:
+            return _httpx_client
+
+        limits = httpx.Limits(
+            max_connections=max_connections,
+            max_keepalive_connections=max_keepalive_connections,
+        )
+        timeout = httpx.Timeout(
+            connect=connect_timeout,
+            read=total_timeout,
+            write=total_timeout,
+            pool=total_timeout,
+        )
+        _httpx_client = httpx.Client(
+            limits=limits,
+            timeout=timeout,
+            follow_redirects=True,
+            headers={"User-Agent": "SpiderFoot-Internal/1.0"},
+        )
+        return _httpx_client
+
+
+def close_internal_http_client() -> None:
+    """Close the process-scoped httpx client."""
+    global _httpx_client
+    with _httpx_client_lock:
+        if _httpx_client is not None:
+            try:
+                _httpx_client.close()
+            except Exception:
+                pass
+            _httpx_client = None
+
+
+def internal_fetch(
+    url: str,
+    *,
+    method: str = "GET",
+    headers: dict | None = None,
+    json: dict | None = None,
+    data: str | bytes | None = None,
+    timeout: float | None = None,
+) -> dict:
+    """Fetch using httpx for internal service calls (Cycle 55).
+
+    Returns a dict matching the ``fetchUrl`` return shape::
+
+        {"code": "200", "status": "OK", "content": "...",
+         "headers": {...}, "realurl": "..."}
+    """
+    result = {
+        "code": None,
+        "status": None,
+        "content": None,
+        "headers": None,
+        "realurl": url,
+    }
+    if not url:
+        return result
+
+    try:
+        client = get_internal_http_client()
+    except ImportError:
+        log.warning("httpx not available, falling back to requests for %s", url)
+        return fetchUrl(url, timeout=int(timeout or 30), headers=headers)
+
+    req_kwargs: dict = {}
+    if headers:
+        req_kwargs["headers"] = headers
+    if json is not None:
+        req_kwargs["json"] = json
+    elif data is not None:
+        req_kwargs["content"] = data
+    if timeout is not None:
+        req_kwargs["timeout"] = timeout
+
+    try:
+        resp = client.request(method.upper(), url, **req_kwargs)
+        result["code"] = str(resp.status_code)
+        result["status"] = resp.reason_phrase
+        result["content"] = resp.text
+        result["headers"] = dict(resp.headers)
+        result["realurl"] = str(resp.url)
+    except Exception as exc:
+        log.debug("Internal HTTP request failed for %s: %s", url, exc)
+
+    return result
+
 
 def useProxyForUrl(
     url: str,
@@ -202,8 +381,16 @@ def fetchUrl(
     disableContentEncoding: bool = False,
     sizeLimit: int | None = None, headOnly: bool = False,
     verify: bool = True,
+    stealth_engine: object | None = None,
 ) -> dict:
-    """Fetch content from a URL and return response details."""
+    """Fetch content from a URL and return response details.
+
+    Args:
+        stealth_engine: Optional :class:`~spiderfoot.recon.stealth_engine.StealthEngine`
+            instance.  When provided, the engine applies request jitter,
+            randomised headers, and proxy rotation transparently before
+            the outbound HTTP call.
+    """
     if not isinstance(url, str):
         return None
     if not url or not url.strip():
@@ -229,14 +416,45 @@ def fetchUrl(
         return result
     if parsed_url.scheme not in ['http', 'https']:
         return result
+
+    # ── Stealth pre-request hook ──────────────────────────────────────
+    proxies = None
+    if stealth_engine is not None:
+        try:
+            # 1) Timing jitter — slows the request rate to look human
+            stealth_engine.apply_jitter()
+
+            # 2) Stealth-enhanced headers (UA rotation + randomised extras)
+            stealth_headers = stealth_engine.prepare_headers(
+                target_url=url,
+                extra_headers=headers,
+            )
+            # Override caller-supplied headers with the stealth set
+            headers = stealth_headers
+
+            # 3) Proxy rotation (returns requests-compatible dict or None)
+            proxies = stealth_engine.get_proxy()
+
+            # 4) Track request count for circuit renewal / stats
+            stealth_engine.increment_request_counter()
+        except Exception as exc:
+            log.warning("Stealth engine pre-request hook failed: %s", exc)
+            # Fall through — make the request without stealth rather
+            # than silently aborting the fetch.
+    # ──────────────────────────────────────────────────────────────────
+
     session = getSession()
     try:
+        kwargs: dict = dict(timeout=timeout, headers=headers, verify=verify)
+        if proxies:
+            kwargs["proxies"] = proxies
+
         if headOnly:
-            resp = session.head(url, timeout=timeout, headers=headers, verify=verify)
+            resp = session.head(url, **kwargs)
         elif postData:
-            resp = session.post(url, data=postData, timeout=timeout, headers=headers, verify=verify)
+            resp = session.post(url, data=postData, **kwargs)
         else:
-            resp = session.get(url, timeout=timeout, headers=headers, verify=verify)
+            resp = session.get(url, **kwargs)
         result['code'] = str(resp.status_code)
         result['status'] = resp.reason
         result['content'] = resp.content.decode('utf-8', errors='replace')
@@ -247,12 +465,22 @@ def fetchUrl(
     return result
 
 
+# Per-process wildcard cache (Cycle 57)
+_wildcard_cache: dict[str, bool] = {}
+
+
 def checkDnsWildcard(target: str) -> bool:
-    """Check if a domain has a DNS wildcard entry."""
+    """Check if a domain has a DNS wildcard entry.
+
+    Results are cached per-domain within the process to avoid
+    redundant live DNS queries.
+    """
     if not target:
         return False
+    if target in _wildcard_cache:
+        return _wildcard_cache[target]
     randpool = 'bcdfghjklmnpqrstvwxyz3456789'
     randhost = ''.join([random.SystemRandom().choice(randpool) for _ in range(10)])
-    if not resolveHost(randhost + "." + target):
-        return False
-    return True
+    result = bool(resolveHost(randhost + "." + target))
+    _wildcard_cache[target] = result
+    return result

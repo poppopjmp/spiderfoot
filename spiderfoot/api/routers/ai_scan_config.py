@@ -14,7 +14,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from ..dependencies import get_api_key
 from pydantic import BaseModel, Field
 
-from spiderfoot.ai_scan_config import (
+from spiderfoot.ai.scan_config import (
     AIScanConfigurator,
     ScanObjective,
     TargetType,

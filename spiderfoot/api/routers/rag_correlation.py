@@ -237,10 +237,10 @@ def _get_vector_engine():
     global _vector_engine
     if _vector_engine is None:
         try:
-            from spiderfoot.vector_correlation import (
+            from spiderfoot.correlation.vector import (
                 VectorCorrelationConfig, VectorCorrelationEngine,
             )
-            from spiderfoot.qdrant_client import get_qdrant_client
+            from spiderfoot.ai.qdrant_client import get_qdrant_client
             from spiderfoot.services.embedding_service import get_embedding_service
             from spiderfoot.services.reranker_service import RerankerConfig, RerankerService
 
@@ -259,7 +259,7 @@ def _get_vector_engine():
             # RAG pipeline (optional — graceful degradation)
             rag = None
             try:
-                from spiderfoot.rag_pipeline import RAGConfig, RAGPipeline
+                from spiderfoot.ai.rag_pipeline import RAGConfig, RAGPipeline
                 rag_cfg = RAGConfig.from_env()
                 if rag_cfg.llm_provider.value != "mock":
                     rag = RAGPipeline(config=rag_cfg)
@@ -297,7 +297,7 @@ def _get_multidim():
     global _multidim_analyzer
     if _multidim_analyzer is None:
         try:
-            from spiderfoot.multidim_correlation import MultiDimAnalyzer
+            from spiderfoot.correlation.multidim import MultiDimAnalyzer
             _multidim_analyzer = MultiDimAnalyzer()
             log.info("Multi-dimensional analyzer initialised")
         except Exception as exc:
@@ -355,7 +355,7 @@ async def index_events(req: IndexRequest,
     engine = _get_vector_engine()
     t0 = time.perf_counter()
 
-    from spiderfoot.vector_correlation import OSINTEvent
+    from spiderfoot.correlation.vector import OSINTEvent
     osint_events = [
         OSINTEvent(
             event_id=e.event_id,
@@ -392,7 +392,7 @@ async def correlate(req: CorrelateRequest,
     engine = _get_vector_engine()
     t0 = time.perf_counter()
 
-    from spiderfoot.vector_correlation import CorrelationStrategy
+    from spiderfoot.correlation.vector import CorrelationStrategy
     try:
         strategy = CorrelationStrategy(req.strategy)
     except ValueError:
@@ -444,7 +444,7 @@ async def multidim_analyze(req: MultiDimRequest,
     analyzer = _get_multidim()
     t0 = time.perf_counter()
 
-    from spiderfoot.multidim_correlation import Dimension, EventData
+    from spiderfoot.correlation.multidim import Dimension, EventData
 
     dims = None
     if req.dimensions:
@@ -544,7 +544,7 @@ async def semantic_search(req: SearchRequest,
                 for p in points
             ]
         else:
-            from spiderfoot.qdrant_client import get_qdrant_client, Filter
+            from spiderfoot.ai.qdrant_client import get_qdrant_client, Filter
 
             payload_filter = None
             conditions: dict[str, Any] = {}
@@ -597,7 +597,7 @@ async def stats(_auth: str = optional_auth_dep) -> StatsResponse:
     extra: dict[str, Any] = {}
 
     try:
-        from spiderfoot.qdrant_client import get_qdrant_client
+        from spiderfoot.ai.qdrant_client import get_qdrant_client
         qd = get_qdrant_client()
         info = qd.collection_stats("osint_events")
         total_vectors = info.get("point_count", 0)
@@ -639,7 +639,7 @@ async def delete_collection(
 ) -> dict:
     """Delete and re-create the vector collection."""
     try:
-        from spiderfoot.qdrant_client import get_qdrant_client
+        from spiderfoot.ai.qdrant_client import get_qdrant_client
         qd = get_qdrant_client()
         qd.delete_collection(collection)
         return {"deleted": collection, "status": "ok"}
@@ -662,7 +662,7 @@ async def list_collections(
     """List all SpiderFoot-managed Qdrant collections with stats."""
     mgr = _get_collection_manager()
     try:
-        from spiderfoot.qdrant_client import get_qdrant_client
+        from spiderfoot.ai.qdrant_client import get_qdrant_client
         qd = get_qdrant_client()
         all_cols = qd.list_collections()
     except Exception as exc:
@@ -820,7 +820,7 @@ async def collection_stats(
 ) -> dict:
     """Get detailed statistics for a named Qdrant collection."""
     try:
-        from spiderfoot.qdrant_client import get_qdrant_client
+        from spiderfoot.ai.qdrant_client import get_qdrant_client
         qd = get_qdrant_client()
         if not qd.collection_exists(collection_name):
             return {"exists": False, "collection": collection_name}

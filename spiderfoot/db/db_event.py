@@ -16,6 +16,7 @@ from __future__ import annotations
 from threading import RLock
 import logging
 import time
+import threading
 import psycopg2
 from typing import Any
 from ..events.event import SpiderFootEvent
@@ -361,7 +362,13 @@ class EventManager:
         # Always store generated as int (ms)
         generated_ms = int(sfEvent.generated * 1000)
         ph = self._ph
-        qry = f"INSERT INTO tbl_scan_results (scan_instance_id, hash, type, generated, confidence, visibility, risk, module, data, source_event_hash) VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph})"
+        # Cycle 78: Use ON CONFLICT DO NOTHING for deduplication
+        qry = (
+            f"INSERT INTO tbl_scan_results "
+            f"(scan_instance_id, hash, type, generated, confidence, visibility, risk, module, data, source_event_hash) "
+            f"VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}) "
+            f"ON CONFLICT (scan_instance_id, hash) DO NOTHING"
+        )
         qvals = [
             instanceId, sfEvent.hash, sfEvent.eventType, generated_ms,
             sfEvent.confidence, sfEvent.visibility, sfEvent.risk,
@@ -377,6 +384,74 @@ class EventManager:
                 except Exception:
                     pass
                 raise OSError(f"SQL error encountered when storing event data ({self.dbh})") from e
+
+    # ------------------------------------------------------------------ #
+    # Cycle 74: Bulk event insert with batching                          #
+    # ------------------------------------------------------------------ #
+
+    def scanEventStoreBulk(self, instanceId: str, events: list, truncateSize: int = 0) -> int:
+        """Store multiple scan events in a single transaction (bulk INSERT).
+
+        This is substantially faster than calling scanEventStore() in a loop
+        because it batches inserts into a single ``executemany`` call and one
+        ``COMMIT``.
+
+        Args:
+            instanceId: Scan instance GUID.
+            events: List of SpiderFootEvent objects.
+            truncateSize: If > 0, truncate event data to this length.
+
+        Returns:
+            Number of events successfully inserted.
+
+        Raises:
+            TypeError: If inputs are of wrong type.
+            OSError: Database error during insert.
+        """
+        if not isinstance(instanceId, str) or not instanceId:
+            raise TypeError("instanceId must be a non-empty string")
+        if not isinstance(events, list):
+            raise TypeError("events must be a list")
+        if not events:
+            return 0
+
+        rows: list[tuple] = []
+        for sfEvent in events:
+            if not isinstance(sfEvent, SpiderFootEvent):
+                continue
+            storeData = sfEvent.data
+            if isinstance(truncateSize, int) and truncateSize > 0:
+                storeData = storeData[:truncateSize]
+            generated_ms = int(sfEvent.generated * 1000)
+            rows.append((
+                instanceId, sfEvent.hash, sfEvent.eventType, generated_ms,
+                sfEvent.confidence, sfEvent.visibility, sfEvent.risk,
+                sfEvent.module, storeData, sfEvent.sourceEventHash,
+            ))
+
+        if not rows:
+            return 0
+
+        ph = self._ph
+        # Cycle 78: Use ON CONFLICT DO NOTHING for bulk deduplication
+        qry = (
+            f"INSERT INTO tbl_scan_results "
+            f"(scan_instance_id, hash, type, generated, confidence, visibility, risk, module, data, source_event_hash) "
+            f"VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}) "
+            f"ON CONFLICT (scan_instance_id, hash) DO NOTHING"
+        )
+
+        with self.dbhLock:
+            try:
+                self.dbh.executemany(qry, rows)
+                self.conn.commit()
+                return len(rows)
+            except psycopg2.Error as e:
+                try:
+                    self.conn.rollback()
+                except Exception:
+                    pass
+                raise OSError("SQL error encountered during bulk event insert") from e
 
     def scanElementSourcesDirect(self, instanceId: str, elementIdList: list) -> list:
         """Retrieve the direct source events for the given element hashes."""
@@ -632,3 +707,113 @@ class EventManager:
             except Exception as e:
                 log.debug("Cleanup failed: %s", e)
             self.conn = None
+
+
+class EventBatchWriter:
+    """Accumulates events and flushes them in bulk.
+
+    Cycle 74 — flushes every ``flush_interval`` seconds or every
+    ``batch_size`` events, whichever comes first.
+
+    Usage::
+
+        writer = EventBatchWriter(event_manager, instance_id)
+        writer.start()
+        # ... during scan ...
+        writer.add(event)       # non-blocking
+        # ... at scan end ...
+        writer.stop()           # flushes remaining
+
+    Thread-safe.
+    """
+
+    def __init__(
+        self,
+        event_manager: EventManager,
+        instance_id: str,
+        batch_size: int = 100,
+        flush_interval: float = 0.5,
+        truncate_size: int = 0,
+    ) -> None:
+        self._em = event_manager
+        self._instance_id = instance_id
+        self._batch_size = max(1, batch_size)
+        self._flush_interval = max(0.05, flush_interval)
+        self._truncate_size = truncate_size
+
+        self._buffer: list = []
+        self._lock = threading.Lock()
+        self._stop_event = threading.Event()
+        self._flush_thread: threading.Thread | None = None
+        self._total_flushed = 0
+        self._flush_count = 0
+
+    # -- public API ---------------------------------------------------- #
+
+    def start(self) -> None:
+        """Start the background flush timer."""
+        if self._flush_thread is not None:
+            return
+        self._stop_event.clear()
+        self._flush_thread = threading.Thread(
+            target=self._flush_loop, daemon=True, name="event-batch-writer"
+        )
+        self._flush_thread.start()
+
+    def stop(self) -> None:
+        """Stop the writer and flush remaining events."""
+        self._stop_event.set()
+        if self._flush_thread is not None:
+            self._flush_thread.join(timeout=5.0)
+            self._flush_thread = None
+        self._flush()
+
+    def add(self, event: SpiderFootEvent) -> None:
+        """Add an event to the buffer. Flushes immediately if batch is full."""
+        flush_batch = None
+        with self._lock:
+            self._buffer.append(event)
+            if len(self._buffer) >= self._batch_size:
+                flush_batch = list(self._buffer)
+                self._buffer.clear()
+        if flush_batch is not None:
+            self._do_flush(flush_batch)
+
+    @property
+    def stats(self) -> dict:
+        """Return flush statistics."""
+        return {
+            "total_flushed": self._total_flushed,
+            "flush_count": self._flush_count,
+            "buffer_size": len(self._buffer),
+        }
+
+    # -- internals ----------------------------------------------------- #
+
+    def _flush_loop(self) -> None:
+        """Background loop that flushes on interval."""
+        while not self._stop_event.is_set():
+            self._stop_event.wait(timeout=self._flush_interval)
+            self._flush()
+
+    def _flush(self) -> None:
+        """Flush the current buffer."""
+        with self._lock:
+            if not self._buffer:
+                return
+            batch = list(self._buffer)
+            self._buffer.clear()
+        self._do_flush(batch)
+
+    def _do_flush(self, batch: list) -> None:
+        """Perform the actual bulk insert."""
+        if not batch:
+            return
+        try:
+            count = self._em.scanEventStoreBulk(
+                self._instance_id, batch, self._truncate_size
+            )
+            self._total_flushed += count
+            self._flush_count += 1
+        except Exception as e:
+            log.error("[EventBatchWriter] Bulk flush failed (%d events): %s", len(batch), e)

@@ -20,7 +20,7 @@ from queue import Empty, Queue
 from threading import Thread
 
 from spiderfoot import SpiderFootDb, SpiderFootHelpers
-from spiderfoot.logging_config import LOG_FORMAT_DEBUG, LOG_FORMAT_TEXT
+from spiderfoot.observability.logging_config import LOG_FORMAT_DEBUG, LOG_FORMAT_TEXT
 
 
 class SpiderFootDbLogHandler(logging.Handler):

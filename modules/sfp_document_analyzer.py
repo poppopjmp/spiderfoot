@@ -35,9 +35,9 @@ or by workspace-level correlation rules that reference document data.
 # Name:         sfp_document_analyzer
 # Purpose:      Tika-powered document analysis integrated into the scan pipeline.
 #
-# Author:       SpiderFoot Team
+# Author:       Van1sh 
 # Created:      2026-02-18
-# Copyright:    (c) SpiderFoot Team 2026
+# Copyright:    (c) Van1sh  2026
 # Licence:      MIT
 # -------------------------------------------------------------------------------
 

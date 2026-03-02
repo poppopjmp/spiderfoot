@@ -1,4 +1,4 @@
-"""Tests for spiderfoot.openapi_spec."""
+"""Tests for spiderfoot.api.openapi_spec."""
 from __future__ import annotations
 
 import json
@@ -6,7 +6,7 @@ import os
 import tempfile
 import unittest
 
-from spiderfoot.openapi_spec import OpenAPIGenerator
+from spiderfoot.api.openapi_spec import OpenAPIGenerator
 
 
 class TestOpenAPIGenerator(unittest.TestCase):

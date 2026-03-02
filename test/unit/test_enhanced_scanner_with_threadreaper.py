@@ -19,7 +19,7 @@ import uuid
 import threading
 import time
 
-from spiderfoot.scan_service.scanner import SpiderFootScanner
+from spiderfoot.scan.scanner import SpiderFootScanner
 
 # Import the new infrastructure
 from test.unit.utils.test_scanner_base import TestScannerBase, scanner_test

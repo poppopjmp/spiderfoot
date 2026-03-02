@@ -34,10 +34,10 @@ spec:
           command:
             - celery
             - -A
-            - spiderfoot.celery_app
+            - spiderfoot.celery_app:celery_app
             - beat
             - --loglevel={{ .Values.config.logLevel | lower }}
-            - --schedule=/var/lib/spiderfoot/celerybeat-schedule
+            - --schedule=/tmp/celerybeat-schedule
           env:
             {{- include "spiderfoot.env" . | nindent 12 }}
             - name: SF_SERVICE_ROLE

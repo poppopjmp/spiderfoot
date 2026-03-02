@@ -15,6 +15,9 @@ client.setConfig({
 
 // ── Request interceptor — attach JWT / API-key ─────────────────────
 client.interceptors.request.use((request, _options) => {
+  // CSRF protection — match expected header for CSRFMiddleware
+  request.headers.set('X-Requested-With', 'XMLHttpRequest');
+
   const token =
     localStorage.getItem('sf_access_token') ||
     localStorage.getItem('sf_api_key');
@@ -40,7 +43,10 @@ client.interceptors.error.use(async (error, response, request, _options) => {
         if (!refreshPromise) {
           refreshPromise = fetch('/api/auth/refresh', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest',
+            },
             body: JSON.stringify({ refresh_token: refreshToken }),
           })
             .then((res) => res.json())
@@ -63,6 +69,10 @@ client.interceptors.error.use(async (error, response, request, _options) => {
         } catch {
           /* ignore storage errors on clear */
         }
+        // Redirect to login after refresh failure (avoid redirect loops)
+        if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
+          window.location.href = '/login';
+        }
       } finally {
         refreshPromise = null;
       }
@@ -75,7 +85,9 @@ client.interceptors.error.use(async (error, response, request, _options) => {
  * Retrieve auth headers for non-SDK consumers (e.g. EventSource, raw fetch).
  */
 export function getAuthHeaders(): Record<string, string> {
-  const headers: Record<string, string> = {};
+  const headers: Record<string, string> = {
+    'X-Requested-With': 'XMLHttpRequest',
+  };
   try {
     const jwt = localStorage.getItem('sf_access_token');
     const apiKey = localStorage.getItem('sf_api_key');

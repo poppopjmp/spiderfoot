@@ -14,7 +14,7 @@ from enum import Enum
 from datetime import datetime, timezone
 from pathlib import Path
 
-from spiderfoot.logging_config import (
+from spiderfoot.observability.logging_config import (
     LOG_FORMAT_NAMED,
     LOG_FORMAT_SECURITY,
     LOG_FORMAT_SECURITY_CONSOLE,

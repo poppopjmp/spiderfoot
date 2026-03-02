@@ -11,6 +11,7 @@ permissions:
 
 env:
   PYTHON_VERSION: "3.11"
+  GO_VERSION: "1.22"
 
 jobs:
   lint:
@@ -46,6 +47,46 @@ jobs:
         with:
           name: bandit-report
           path: bandit-report.json
+
+  cli:
+    name: CLI (Go ${{ matrix.go-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        go-version: ["1.22", "1.23"]
+    defaults:
+      run:
+        working-directory: cli
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go ${{ matrix.go-version }}
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+          cache-dependency-path: cli/go.sum
+
+      - name: Verify dependencies
+        run: go mod verify
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Run tests
+        run: go test -v -race ./...
+
+      - name: Build CLI binary
+        run: go build -trimpath -o build/sf .
+
+      - name: Verify binary runs
+        run: ./build/sf version
+
+      - name: Cross-compile smoke test
+        run: |
+          GOOS=windows GOARCH=amd64 go build -trimpath -o /dev/null .
+          GOOS=darwin GOARCH=arm64 go build -trimpath -o /dev/null .
 
   test:
     name: Test (Python ${{ matrix.python-version }})
@@ -119,41 +160,10 @@ jobs:
       - name: Run tests with coverage
         run: npx vitest run --coverage --reporter=json --outputFile=test-results.json || true
 
-  go-cli:
-    name: Go CLI Lint & Test
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: cli
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: "1.22"
-          cache-dependency-path: cli/go.sum
-
-      - name: Download dependencies
-        run: |
-          # Ensure go.mod/go.sum are synchronized; tidy will populate missing go.sum entries
-          go mod tidy
-          go mod download
-
-      - name: Vet
-        run: go vet ./...
-
-      - name: Run tests
-        run: go test -v -race -count=1 ./...
-
-      - name: Build (smoke test)
-        run: go build -trimpath -o sf .
-
   integration-test:
     name: Integration Tests
     runs-on: ubuntu-latest
-    needs: [test, frontend, go-cli]
+    needs: [test, frontend]
     services:
       redis:
         image: redis:7-alpine

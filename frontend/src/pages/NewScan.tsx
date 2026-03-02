@@ -5,9 +5,10 @@ import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import {
   dataApi, scanApi, type Module, type ScanCreateRequest, type ScanProfile,
 } from '../lib/api';
+import type { StealthLevelName } from '../lib/api';
 import {
   Radar, Lock, Unlock, Zap,
-  ShieldCheck, FileText, Loader2, Layers,
+  ShieldCheck, FileText, Loader2, Layers, Shield,
 } from 'lucide-react';
 import { PageHeader, Tabs, SearchInput, Toast, type ToastType } from '../components/ui';
 
@@ -43,6 +44,7 @@ export default function NewScanPage() {
   const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set());
   const [moduleSearch, setModuleSearch] = useState('');
   const [toast, setToast] = useState<{ type: ToastType; message: string } | null>(null);
+  const [stealthLevel, setStealthLevel] = useState<StealthLevelName>('none');
 
   /* Data queries */
   const { data: modulesData } = useQuery({
@@ -164,6 +166,9 @@ export default function NewScanPage() {
       payload.modules = effectiveModules;
     }
     // When useCase === 'all' or no selection, send no modules/type_filter → server uses all modules
+    if (stealthLevel !== 'none') {
+      payload.stealth_level = stealthLevel;
+    }
     createMut.mutate(payload);
   };
 
@@ -224,6 +229,40 @@ export default function NewScanPage() {
             onChange={(e) => setScanName(e.target.value)}
           />
         </div>
+      </div>
+
+      {/* Stealth Level */}
+      <div className="card animate-fade-in-up" style={{ animationDelay: '120ms' }}>
+        <label className="section-label mb-3 block flex items-center gap-2">
+          <Shield className="h-4 w-4 text-spider-400" /> Stealth Level
+        </label>
+        <div className="grid grid-cols-5 gap-1">
+          {(['none', 'low', 'medium', 'high', 'maximum'] as const).map((lvl) => (
+            <button
+              key={lvl}
+              onClick={() => setStealthLevel(lvl)}
+              className={`px-2 py-2 rounded-md text-xs font-medium transition-all text-center ${
+                stealthLevel === lvl
+                  ? lvl === 'none' ? 'bg-dark-700 text-dark-300 ring-1 ring-dark-500'
+                  : lvl === 'low' ? 'bg-blue-900/30 text-blue-400 ring-1 ring-blue-700'
+                  : lvl === 'medium' ? 'bg-yellow-900/30 text-yellow-400 ring-1 ring-yellow-700'
+                  : lvl === 'high' ? 'bg-orange-900/30 text-orange-400 ring-1 ring-orange-700'
+                  : 'bg-red-900/30 text-red-400 ring-1 ring-red-700'
+                  : 'bg-dark-700/50 text-dark-500 hover:text-dark-300'
+              }`}
+            >
+              {lvl.toUpperCase()}
+            </button>
+          ))}
+        </div>
+        {stealthLevel !== 'none' && (
+          <p className="text-xs text-dark-400 mt-2">
+            {stealthLevel === 'low' && 'Basic evasion: UA rotation, minimal delay'}
+            {stealthLevel === 'medium' && 'Balanced: TLS fingerprinting, WAF detection, adaptive feedback'}
+            {stealthLevel === 'high' && 'Aggressive: Proxy rotation, session simulation, domain throttling'}
+            {stealthLevel === 'maximum' && 'Maximum stealth: All evasion features active, slowest scan speed'}
+          </p>
+        )}
       </div>
 
       {/* Launch Button (also in left column) */}

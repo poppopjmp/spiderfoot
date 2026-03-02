@@ -33,8 +33,8 @@ try:
 except ImportError:
     HAS_FASTAPI = False
 
-from spiderfoot.notification_manager import get_notification_manager
-from spiderfoot.webhook_dispatcher import WebhookConfig
+from spiderfoot.notifications.manager import get_notification_manager
+from spiderfoot.webhooks.dispatcher import WebhookConfig
 
 # ── SSRF protection ──────────────────────────────────────────────
 

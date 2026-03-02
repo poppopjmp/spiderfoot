@@ -1,10 +1,10 @@
-"""Tests for spiderfoot.qdrant_client — Qdrant vector store client."""
+"""Tests for spiderfoot.ai.qdrant_client — Qdrant vector store client."""
 
 from __future__ import annotations
 
 import pytest
 import time
-from spiderfoot.qdrant_client import (
+from spiderfoot.ai.qdrant_client import (
     CollectionInfo,
     DistanceMetric,
     Filter,

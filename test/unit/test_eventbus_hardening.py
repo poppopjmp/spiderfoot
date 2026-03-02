@@ -1,4 +1,4 @@
-"""Tests for spiderfoot.eventbus_hardening — Cycle 11."""
+"""Tests for spiderfoot.eventbus.hardening — Cycle 11."""
 from __future__ import annotations
 
 import asyncio
@@ -14,7 +14,7 @@ if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
 from spiderfoot.eventbus.base import EventBus, EventBusConfig, EventEnvelope
-from spiderfoot.eventbus_hardening import (
+from spiderfoot.eventbus.hardening import (
     AsyncCircuitBreaker,
     AsyncDeadLetterQueue,
     CircuitState,

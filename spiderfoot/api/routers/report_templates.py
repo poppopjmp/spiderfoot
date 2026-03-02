@@ -10,7 +10,7 @@ from ..dependencies import get_api_key
 from pydantic import BaseModel, Field
 from typing import Any
 
-from spiderfoot.report_templates import ReportTemplateManager, TemplateCategory, TemplateFormat
+from spiderfoot.reporting.templates import ReportTemplateManager, TemplateCategory, TemplateFormat
 
 router = APIRouter(dependencies=[Depends(get_api_key)])
 

@@ -13,7 +13,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
-from spiderfoot.plugin_marketplace import PluginMarketplace
+from spiderfoot.plugins.marketplace import PluginMarketplace
 from ..dependencies import get_api_key
 
 _log = logging.getLogger("spiderfoot.api.marketplace")

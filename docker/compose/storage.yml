@@ -3,6 +3,13 @@ services:
     image: minio/minio:RELEASE.2024-11-07T00-52-20Z
     container_name: sf-minio
     restart: unless-stopped
+    read_only: true
+    security_opt:
+    - "no-new-privileges:true"
+    cap_drop:
+    - ALL
+    tmpfs:
+    - /tmp:noexec,nosuid,size=128M
     networks:
     - sf-frontend
     - sf-backend
@@ -52,6 +59,13 @@ services:
   minio-init:
     image: minio/mc:RELEASE.2024-11-17T19-35-25Z
     container_name: sf-minio-init
+    read_only: true
+    security_opt:
+    - "no-new-privileges:true"
+    cap_drop:
+    - ALL
+    tmpfs:
+    - /tmp:noexec,nosuid,size=32M
     networks:
     - sf-backend
     depends_on:
@@ -72,7 +86,6 @@ services:
         mc mb --ignore-existing sfminio/sf-data;
         mc mb --ignore-existing sfminio/sf-loki-data;
         mc mb --ignore-existing sfminio/sf-loki-ruler;
-        mc anonymous set download sfminio/sf-reports;
         cp /usr/bin/mc /opt/mc-share/mc && chmod +x /opt/mc-share/mc;
         echo 'MinIO buckets initialized + mc binary shared';
       "
@@ -87,6 +100,8 @@ services:
     security_opt:
     - "no-new-privileges:true"
     read_only: true
+    cap_drop:
+    - ALL
     tmpfs:
     - /tmp
     networks:
@@ -138,6 +153,8 @@ services:
     security_opt:
     - "no-new-privileges:true"
     read_only: true
+    cap_drop:
+    - ALL
     tmpfs:
     - /tmp
     networks:
@@ -179,6 +196,8 @@ services:
     security_opt:
     - "no-new-privileges:true"
     read_only: true
+    cap_drop:
+    - ALL
     tmpfs:
     - /tmp
     networks:

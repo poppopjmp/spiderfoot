@@ -332,3 +332,55 @@ async def async_check_dns_wildcard(target: str) -> bool:
     randhost = "".join(random.SystemRandom().choice(randpool) for _ in range(10))
     addrs = await async_resolve_host(f"{randhost}.{target}")
     return len(addrs) > 0
+
+
+async def async_bulk_resolve(
+    hostnames: list[str],
+    rdtype: str = "A",
+    batch_size: int = 50,
+) -> dict[str, list[str]]:
+    """Resolve multiple hostnames in parallel batches (Cycle 58).
+
+    Uses ``asyncio.gather`` to resolve up to *batch_size* hostnames
+    concurrently, dramatically reducing wall-clock time for subdomain
+    enumeration and similar module workloads.
+
+    Args:
+        hostnames: Hostnames to resolve.
+        rdtype: ``"A"`` or ``"AAAA"``.
+        batch_size: Max concurrent resolutions per batch.
+
+    Returns:
+        Dict mapping hostname → list of resolved addresses.
+    """
+    if not hostnames:
+        return {}
+
+    resolve_fn = async_resolve_host if rdtype == "A" else async_resolve_host6
+    results: dict[str, list[str]] = {}
+
+    # Process in batches
+    for i in range(0, len(hostnames), batch_size):
+        batch = [h for h in hostnames[i : i + batch_size] if h]
+        if not batch:
+            continue
+        batch_results = await asyncio.gather(
+            *(resolve_fn(h) for h in batch),
+            return_exceptions=True,
+        )
+        for hostname, addrs in zip(batch, batch_results):
+            if isinstance(addrs, Exception):
+                results[hostname] = []
+            else:
+                results[hostname] = addrs
+
+    return results
+
+
+async def async_prefetch(hostnames: list[str]) -> None:
+    """Pre-resolve a batch of hostnames concurrently (Cycle 53).
+
+    Call this when a module discovers new domains so later modules
+    benefit from the resolution already being cached by the OS/resolver.
+    """
+    await async_bulk_resolve(hostnames, rdtype="A", batch_size=50)

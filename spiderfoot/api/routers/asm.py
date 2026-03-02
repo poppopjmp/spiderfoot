@@ -12,7 +12,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
-from spiderfoot.asm import (
+from spiderfoot.scan.asm import (
     AssetInventory,
     AssetType,
     AssetRisk,

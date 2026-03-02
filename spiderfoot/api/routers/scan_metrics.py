@@ -12,7 +12,7 @@ from fastapi import APIRouter, Depends
 from ..dependencies import get_api_key
 from fastapi.responses import PlainTextResponse
 
-from spiderfoot.scan_metrics import (
+from spiderfoot.observability.scan_metrics import (
     get_metrics,
     get_prometheus_text,
     reset_metrics,

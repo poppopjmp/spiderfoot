@@ -1,4 +1,4 @@
-"""Tests for spiderfoot.db_migrate."""
+"""Tests for spiderfoot.db.migrate."""
 from __future__ import annotations
 
 import os
@@ -9,7 +9,7 @@ if not os.environ.get('SF_POSTGRES_DSN'):
 import tempfile
 import unittest
 
-from spiderfoot.db_migrate import (
+from spiderfoot.db.migrate import (
     AppliedMigration,
     DbDialect,
     InMemoryDbAdapter,

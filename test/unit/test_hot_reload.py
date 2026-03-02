@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Tests for spiderfoot.hot_reload."""
+"""Tests for spiderfoot.ops.hot_reload."""
 from __future__ import annotations
 
 import os
@@ -8,7 +8,7 @@ import tempfile
 import time
 import unittest
 
-from spiderfoot.hot_reload import ModuleWatcher, ModuleState, ReloadEvent
+from spiderfoot.ops.hot_reload import ModuleWatcher, ModuleState, ReloadEvent
 
 
 class TestModuleState(unittest.TestCase):

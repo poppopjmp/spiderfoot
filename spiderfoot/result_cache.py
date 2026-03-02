@@ -2,6 +2,8 @@
 
 Provides configurable TTL-based caching with eviction policies, size limits,
 and statistics tracking. Supports both in-memory and serializable caches.
+
+Also includes HttpResponseCache for scan-scoped HTTP response caching.
 """
 
 from __future__ import annotations
@@ -14,6 +16,12 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 from collections.abc import Callable
+
+try:
+    from cachetools import TTLCache
+    HAS_CACHETOOLS = True
+except ImportError:
+    HAS_CACHETOOLS = False
 
 
 class EvictionPolicy(Enum):
@@ -343,3 +351,148 @@ class ScanResultCache:
             "type": "ScanResultCache",
             **self._cache.to_dict(),
         }
+
+
+# ── Scan-Scoped HTTP Response Cache ──────────────────────────────────
+
+
+class HttpResponseCache:
+    """Thread-safe HTTP response cache with TTL expiry.
+
+    Designed for scan-scoped caching of idempotent HTTP requests
+    (WHOIS lookups, certificate checks, API queries that don't
+    change within a scan's lifetime).
+
+    Attributes:
+        ttl: Time-to-live in seconds for cached responses.
+        maxsize: Maximum number of cached responses.
+    """
+
+    def __init__(
+        self,
+        ttl: int = 600,
+        maxsize: int = 2048,
+    ) -> None:
+        self._lock = threading.Lock()
+        self._hits = 0
+        self._misses = 0
+        self.ttl = ttl
+        self.maxsize = maxsize
+
+        if HAS_CACHETOOLS:
+            self._cache_store: TTLCache | dict = TTLCache(maxsize=maxsize, ttl=ttl)
+        else:
+            self._cache_store = {}
+            self._timestamps: dict[str, float] = {}
+
+    @staticmethod
+    def _make_key(
+        url: str,
+        method: str = "GET",
+        extra: str | None = None,
+    ) -> str:
+        """Create a deterministic cache key from URL + method + extra data."""
+        raw = f"{method.upper()}:{url}"
+        if extra:
+            raw += f":{extra}"
+        return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+    def get(
+        self,
+        url: str,
+        method: str = "GET",
+        extra: str | None = None,
+    ) -> dict[str, Any] | None:
+        """Retrieve a cached HTTP response.
+
+        Args:
+            url: Request URL.
+            method: HTTP method (only GET/HEAD responses should be cached).
+            extra: Optional extra key material (e.g. request body hash).
+
+        Returns:
+            Cached response dict or None on miss.
+        """
+        key = self._make_key(url, method, extra)
+        with self._lock:
+            if HAS_CACHETOOLS:
+                value = self._cache_store.get(key)
+            else:
+                entry = self._cache_store.get(key)
+                if entry is None:
+                    value = None
+                else:
+                    ts = self._timestamps.get(key, 0)
+                    if time.time() - ts > self.ttl:
+                        del self._cache_store[key]
+                        del self._timestamps[key]
+                        value = None
+                    else:
+                        value = entry
+
+            if value is not None:
+                self._hits += 1
+            else:
+                self._misses += 1
+            return value
+
+    def put(
+        self,
+        url: str,
+        response: dict[str, Any],
+        method: str = "GET",
+        extra: str | None = None,
+    ) -> None:
+        """Store an HTTP response in the cache.
+
+        Args:
+            url: Request URL.
+            response: Response dict (code, content, headers, etc.).
+            method: HTTP method.
+            extra: Optional extra key material.
+        """
+        if not response:
+            return
+        code = response.get("code")
+        if code and str(code).startswith(("4", "5")):
+            return
+
+        key = self._make_key(url, method, extra)
+        with self._lock:
+            self._cache_store[key] = response
+            if not HAS_CACHETOOLS:
+                self._timestamps[key] = time.time()
+
+    def invalidate(self, url: str, method: str = "GET", extra: str | None = None) -> None:
+        """Remove a specific entry from the cache."""
+        key = self._make_key(url, method, extra)
+        with self._lock:
+            self._cache_store.pop(key, None)
+            if not HAS_CACHETOOLS and hasattr(self, "_timestamps"):
+                self._timestamps.pop(key, None)
+
+    def clear(self) -> None:
+        """Clear all cached responses."""
+        with self._lock:
+            self._cache_store.clear()
+            if not HAS_CACHETOOLS and hasattr(self, "_timestamps"):
+                self._timestamps.clear()
+
+    @property
+    def size(self) -> int:
+        """Number of currently cached responses."""
+        with self._lock:
+            return len(self._cache_store)
+
+    def stats(self) -> dict[str, Any]:
+        """Cache statistics."""
+        with self._lock:
+            total = self._hits + self._misses
+            return {
+                "hits": self._hits,
+                "misses": self._misses,
+                "hit_rate": self._hits / total if total > 0 else 0.0,
+                "size": len(self._cache_store),
+                "maxsize": self.maxsize,
+                "ttl": self.ttl,
+            }

@@ -1,0 +1,27 @@
+# -------------------------------------------------------------------------------
+# Dependency vulnerability scanning configuration
+# -------------------------------------------------------------------------------
+# Run: pip-audit --requirement requirements.txt --config pyproject.toml
+#
+# pip-audit options are configured in pyproject.toml [tool.pip-audit].
+# This file documents the scanning approach.
+#
+# Recommended CI integration:
+#   pip install pip-audit
+#   pip-audit -r requirements.txt -r requirements-dev.txt --strict
+#
+# See also: scripts/audit-deps.sh
+
+[tool.pip-audit]
+# Use the OSV database (default, no API key needed)
+vulnerability-service = "osv"
+
+# Strict mode: non-zero exit on any vulnerability
+strict = true
+
+# Output format for CI
+output = "json"
+
+# Skip packages that don't have published vulnerability data
+# (prevents false positives from private packages)
+skip-editable = true

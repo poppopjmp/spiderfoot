@@ -15,7 +15,7 @@ from ..dependencies import get_api_key, SafeId
 from pydantic import BaseModel, Field, field_validator
 from .webhooks import _validate_webhook_url
 
-from spiderfoot.webhook_delivery import WebhookDeliveryManager, RetryPolicy
+from spiderfoot.webhooks.delivery import WebhookDeliveryManager, RetryPolicy
 
 _log = logging.getLogger("spiderfoot.api.webhook_delivery")
 

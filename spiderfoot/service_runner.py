@@ -4,9 +4,9 @@
 # Purpose:      Unified entry point for running SpiderFoot as individual
 #               microservices (scanner, api) or as a monolith.
 #
-# Author:       SpiderFoot Team
+# Author:       Van1sh 
 # Created:      2025-07-08
-# Copyright:    (c) SpiderFoot Team 2025
+# Copyright:    (c) Van1sh  2025
 # Licence:      MIT
 # -------------------------------------------------------------------------------
 
@@ -38,7 +38,7 @@ import threading
 import time
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
-from spiderfoot.logging_config import LOG_FORMAT_TEXT
+from spiderfoot.observability.logging_config import LOG_FORMAT_TEXT
 
 # Ensure project root is on path
 _project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -161,7 +161,7 @@ def _run_scanner(port: int, config: dict) -> None:
     _health.service_name = "scanner"
 
     from spiderfoot.scan.scan_scheduler import ScanScheduler, SchedulerConfig
-    from spiderfoot.worker_pool import WorkerPool, WorkerPoolConfig
+    from spiderfoot.scan.worker_pool import WorkerPool, WorkerPoolConfig
     from spiderfoot.service_registry import initialize_services
 
     initialize_services(config)

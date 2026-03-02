@@ -1,5 +1,5 @@
 """
-Tests for spiderfoot.task_queue and spiderfoot.api.routers.tasks.
+Tests for spiderfoot.ops.task_queue and spiderfoot.api.routers.tasks.
 
 Covers: TaskManager lifecycle, submit/get/list/cancel/progress,
 callbacks, history pruning, singleton accessor, and all REST endpoints.
@@ -12,7 +12,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from spiderfoot.task_queue import (
+from spiderfoot.ops.task_queue import (
     TaskManager,
     TaskRecord,
     TaskState,

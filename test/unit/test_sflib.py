@@ -701,21 +701,23 @@ class TestSpiderFootComprehensive(TestModuleBase):
         # Skip this test due to netaddr API compatibility issues
         self.skipTest("Skipping due to netaddr API compatibility issues")    # ===== DNS RESOLUTION =====
 
-    @patch('socket.gethostbyname_ex')
-    def test_resolveHost_valid_hostname(self, mock_gethostbyname_ex):
+    @patch('dns.resolver.resolve')
+    def test_resolveHost_valid_hostname(self, mock_resolve):
         """Test resolveHost with valid hostname."""
-        mock_gethostbyname_ex.return_value = ('example.com', [], ['93.184.216.34'])
-        
-        result = self.sf.resolveHost('example.com')
-        # normalizeDNS processes all parts of the response, so we get both hostname and IP
-        self.assertIn('93.184.216.34', result)
-        self.assertIn('example.com', result)
+        # dns.resolver.resolve returns an iterable of rdata with .address
+        rdata = MagicMock()
+        rdata.address = '93.184.216.34'
+        mock_resolve.return_value = [rdata]
 
-    @patch('socket.gethostbyname_ex')
-    def test_resolveHost_resolution_error(self, mock_gethostbyname_ex):
+        result = self.sf.resolveHost('example.com')
+        self.assertIn('93.184.216.34', result)
+
+    @patch('dns.resolver.resolve')
+    def test_resolveHost_resolution_error(self, mock_resolve):
         """Test resolveHost with resolution error."""
-        mock_gethostbyname_ex.side_effect = socket.gaierror("Name resolution failed")
-        
+        import dns.resolver
+        mock_resolve.side_effect = dns.resolver.NXDOMAIN()
+
         result = self.sf.resolveHost('nonexistent.example.com')
         self.assertEqual(result, [])
 

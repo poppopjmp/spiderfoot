@@ -80,6 +80,19 @@ RUN mkdir -p /home/spiderfoot/data /home/spiderfoot/logs \
     touch /home/spiderfoot/__init__.py /home/spiderfoot/modules/__init__.py && \
     chown -R spiderfoot:spiderfoot /home/spiderfoot
 
+# ── Security hardening ────────────────────────────────────────────────────
+# Remove SUID/SGID binaries to prevent privilege escalation
+RUN find / -perm -4000 -type f -exec chmod u-s {} + 2>/dev/null || true && \
+    find / -perm -2000 -type f -exec chmod g-s {} + 2>/dev/null || true
+
+# Remove package managers so attackers cannot install tools
+RUN apt-get purge -y --auto-remove apt 2>/dev/null || true && \
+    rm -rf /var/lib/apt /var/cache/apt /var/lib/dpkg 2>/dev/null || true && \
+    rm -f /usr/bin/apt* /usr/bin/dpkg* 2>/dev/null || true
+
+# Remove unnecessary network utilities
+RUN rm -f /usr/bin/wget /usr/bin/nc /usr/bin/ncat 2>/dev/null || true
+
 USER spiderfoot
 
 EXPOSE 8001

@@ -134,7 +134,7 @@ class TestVectorCheck:
         mock_vb.check_health.return_value = mock_health
 
         with patch(
-            "spiderfoot.vector_bootstrap.VectorBootstrap",
+            "spiderfoot.observability.vector_bootstrap.VectorBootstrap",
             return_value=mock_vb,
         ):
             result = _check_vector()
@@ -149,7 +149,7 @@ class TestVectorCheck:
         mock_vb.check_health.return_value = mock_health
 
         with patch(
-            "spiderfoot.vector_bootstrap.VectorBootstrap",
+            "spiderfoot.observability.vector_bootstrap.VectorBootstrap",
             return_value=mock_vb,
         ):
             result = _check_vector()
@@ -157,7 +157,7 @@ class TestVectorCheck:
         assert "refused" in result.get("message", "")
 
     def test_vector_import_error(self):
-        with patch.dict("sys.modules", {"spiderfoot.vector_bootstrap": None}):
+        with patch.dict("sys.modules", {"spiderfoot.observability.vector_bootstrap": None}):
             result = _check_vector()
         assert result["status"] in ("down", "unknown")
 

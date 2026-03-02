@@ -46,7 +46,21 @@ COPY nginx.conf /etc/nginx/templates/default.conf.template
 ENV SF_API_URL=http://api:8001
 ENV SF_WS_URL=http://api:8001
 
-# Expose HTTP
+# ── Security hardening ────────────────────────────────────────────────────
+# Remove apk and other package managers to prevent in-container installs
+RUN apk --no-cache del apk-tools 2>/dev/null || true
+
+# Create non-root nginx user directories and fix ownership
+RUN mkdir -p /var/cache/nginx /var/run /var/log/nginx && \
+    chown -R nginx:nginx /var/cache/nginx /var/run /var/log/nginx && \
+    chown -R nginx:nginx /usr/share/nginx/html && \
+    chown -R nginx:nginx /etc/nginx/conf.d && \
+    chown -R nginx:nginx /etc/nginx/templates
+
+# Nginx must listen on unprivileged port as non-root
+# The compose/Traefik config maps host port → container port
+USER nginx
+
 EXPOSE 80
 
 # Nginx (PID 1) — template processing happens automatically via

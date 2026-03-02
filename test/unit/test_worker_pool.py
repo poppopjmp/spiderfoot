@@ -8,7 +8,7 @@ import time
 import unittest
 from unittest.mock import MagicMock, patch
 
-from spiderfoot.worker_pool import (
+from spiderfoot.scan.worker_pool import (
     WorkerPool,
     WorkerPoolConfig,
     ModuleWorker,

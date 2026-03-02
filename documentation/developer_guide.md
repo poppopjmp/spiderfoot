@@ -59,7 +59,7 @@ logger.log_login_attempt("username", success=True, ip_address="192.168.1.1")
 
 **3. Rate Limiting Integration**
 ```python
-from spiderfoot.rate_limiter import RateLimiter
+from spiderfoot.security.rate_limiter import RateLimiter
 
 rate_limiter = RateLimiter()
 

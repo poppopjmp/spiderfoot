@@ -14,7 +14,7 @@ from ..dependencies import get_api_key
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-from spiderfoot.sarif_export import SARIFExporter, _SARIF_RULE_MAP
+from spiderfoot.export.sarif_export import SARIFExporter, _SARIF_RULE_MAP
 
 logger = logging.getLogger("spiderfoot.api.sarif")
 

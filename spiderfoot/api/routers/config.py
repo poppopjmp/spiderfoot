@@ -925,10 +925,11 @@ async def validate_current_config(api_key: str = optional_auth_dep) -> dict[str,
                 "message": "All 11 typed config sections valid",
             })
     except Exception as e:
+        log.error("Config validation failed: %s", e, exc_info=True)
         results.append({
             "severity": "error",
             "category": "app_config",
-            "message": f"Config validation failed: {e}",
+            "message": "Config validation failed due to an internal error",
         })
 
     # 2. Check critical environment variables
