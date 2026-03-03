@@ -225,10 +225,15 @@
 
   /* ── Tabs ────────────────────────────────────────────────── */
   .tab-bar {
-    @apply flex gap-1 bg-dark-800/50 rounded-lg p-1 w-fit;
+    @apply flex gap-1 bg-dark-800/50 rounded-lg p-1 overflow-x-auto;
+    /* overflow-x-auto + no w-fit: bar scrolls on narrow screens so all tabs stay reachable */
+    scrollbar-width: none;            /* Firefox */
+  }
+  .tab-bar::-webkit-scrollbar {
+    display: none;                    /* Chrome/Safari */
   }
   .tab-button {
-    @apply flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md
+    @apply flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md flex-shrink-0
            transition-all duration-200 text-dark-400
            hover:text-dark-200 hover:bg-dark-700/50;
   }

@@ -82,13 +82,20 @@ async def _lifespan(application: FastAPI):
         _log.warning("Auth service init failed (non-fatal): %s", e)
 
     # Initialize core SpiderFoot DB schema (creates tbl_scan_instance etc.)
+    # Also warm up the global RepositoryFactory singleton so every request
+    # reuses the same ThreadedConnectionPool instead of creating a new one.
     try:
         import os
         from spiderfoot.db import SpiderFootDb
+        from spiderfoot.db.repositories import init_repository_factory
         dsn = os.environ.get("SF_POSTGRES_DSN")
         if dsn:
-            db = SpiderFootDb({"__database": dsn, "__dbtype": "postgresql"})
+            db_cfg = {"__database": dsn, "__dbtype": "postgresql"}
+            db = SpiderFootDb(db_cfg)
             _log.info("SpiderFootDb schema initialized")
+            db.close()  # Return connection to pool immediately after schema init
+            init_repository_factory(db_cfg)
+            _log.info("RepositoryFactory singleton initialized")
     except Exception as e:
         _log.warning("SpiderFootDb init failed (non-fatal): %s", e)
 

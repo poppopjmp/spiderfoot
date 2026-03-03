@@ -190,7 +190,7 @@ export default function ScanDetailPage() {
         {activeTab === 'report' && <ReportTab scanId={scanId} scan={scan} />}
         {activeTab === 'iac' && <IaCTab scanId={scanId} scanTarget={scan?.target} />}
         {activeTab === 'settings' && <SettingsTab scanId={scanId} scan={scan} />}
-        {activeTab === 'log' && <LogTab scanId={scanId} />}
+        {activeTab === 'log' && <LogTab scanId={scanId} isRunning={isRunning(scan)} />}
       </div>
 
       {toast && <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />}

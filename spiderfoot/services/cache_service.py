@@ -272,10 +272,28 @@ class FileCache(CacheService):
     def __init__(self, config: CacheConfig | None = None) -> None:
         """Initialize the FileCache."""
         super().__init__(config)
-        self._cache_dir = self.config.cache_dir or os.path.join(
-            os.path.expanduser("~"), ".spiderfoot", "cache"
-        )
+        default_cache = self._writable_default_cache_dir()
+        self._cache_dir = self.config.cache_dir or default_cache
         os.makedirs(self._cache_dir, exist_ok=True)
+
+    @staticmethod
+    def _writable_default_cache_dir() -> str:
+        """Return a writable default cache directory."""
+        candidates = [
+            os.path.join(os.path.expanduser("~"), ".spiderfoot", "cache"),
+            os.path.join(os.environ.get('TMPDIR', '/tmp'), 'spiderfoot-cache'),
+        ]
+        for d in candidates:
+            try:
+                os.makedirs(d, exist_ok=True)
+                probe = os.path.join(d, '.write_probe')
+                with open(probe, 'w') as _f:
+                    pass
+                os.unlink(probe)
+                return d
+            except (OSError, PermissionError):
+                continue
+        return os.environ.get('TMPDIR', '/tmp')
 
     def _file_path(self, key: str) -> str:
         """Get file path for a cache key."""

@@ -85,33 +85,45 @@ class SpiderFootHelpers():
 
     @staticmethod
     def cachePath() -> str:
-        """Return cache path and validate it exists."""
-        try:
-            cache_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'cache'))
-            if not os.path.exists(cache_dir):
+        """Return a writable cache directory, falling back to /tmp/spiderfoot-cache."""
+        candidates = [
+            os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'cache')),
+            os.path.abspath(os.path.join(os.getcwd(), 'cache')),
+            os.path.join(os.environ.get('TMPDIR', '/tmp'), 'spiderfoot-cache'),
+        ]
+        for cache_dir in candidates:
+            try:
                 os.makedirs(cache_dir, exist_ok=True)
-            return cache_dir
-        except Exception as e:
-            # Fallback to current directory
-            fallback_dir = os.path.abspath(os.path.join(os.getcwd(), 'cache'))
-            if not os.path.exists(fallback_dir):
-                os.makedirs(fallback_dir, exist_ok=True)
-            return fallback_dir
+                probe = os.path.join(cache_dir, '.write_probe')
+                with open(probe, 'w') as _f:
+                    pass
+                os.unlink(probe)
+                return cache_dir
+            except (OSError, PermissionError):
+                continue
+        return os.environ.get('TMPDIR', '/tmp')
 
     @staticmethod
     def logPath() -> str:
-        """Return log path and validate it exists."""
-        try:
-            log_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'logs'))
-            if not os.path.exists(log_dir):
+        """Return a writable log directory, falling back to /tmp/spiderfoot-logs."""
+        candidates = [
+            os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'logs')),
+            os.path.abspath(os.path.join(os.getcwd(), 'logs')),
+            os.path.join(os.environ.get('TMPDIR', '/tmp'), 'spiderfoot-logs'),
+        ]
+        for log_dir in candidates:
+            try:
                 os.makedirs(log_dir, exist_ok=True)
-            return log_dir
-        except Exception as e:
-            # Fallback to current directory
-            fallback_dir = os.path.abspath(os.path.join(os.getcwd(), 'logs'))
-            if not os.path.exists(fallback_dir):
-                os.makedirs(fallback_dir, exist_ok=True)
-            return fallback_dir
+                # Verify the directory is actually writable by this process
+                probe = os.path.join(log_dir, '.write_probe')
+                with open(probe, 'w') as _f:
+                    pass
+                os.unlink(probe)
+                return log_dir
+            except (OSError, PermissionError):
+                continue
+        # Last resort: system temp dir itself
+        return os.environ.get('TMPDIR', '/tmp')
 
     @staticmethod
     def genScanInstanceId() -> str:

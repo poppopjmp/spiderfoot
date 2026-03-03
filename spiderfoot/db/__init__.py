@@ -576,6 +576,10 @@ class SpiderFootDb:
     def close(self) -> None:
         """
         Close the database connection and release all resources.
+
+        When using the connection pool, the connection is returned via
+        ``DbCore._pool.putconn()`` rather than being physically closed, so
+        the pool slot stays available for the next request.
         """
         import gc
         try:
@@ -589,7 +593,15 @@ class SpiderFootDb:
                             log.debug("Cleanup failed: %s", e)
                     self.managers[key] = None
                 self.managers = None
-            # Dereference all manager attributes
+            # Delegate connection teardown to _core so it can do pool.putconn()
+            # instead of physically closing the connection.  Must happen BEFORE
+            # _core is nullified.
+            if hasattr(self, '_core') and self._core is not None:
+                try:
+                    self._core.close()
+                except Exception as e:
+                    log.debug("_core.close() failed: %s", e)
+            # Dereference all manager attributes (connection already handled above)
             for attr in ['_event', '_scan', '_config', '_correlation', '_core']:
                 if hasattr(self, attr):
                     setattr(self, attr, None)
@@ -599,12 +611,8 @@ class SpiderFootDb:
                 except Exception as e:
                     log.debug("Cleanup failed: %s", e)
                 self.cursor = None
-            if hasattr(self, 'conn') and self.conn:
-                try:
-                    self.conn.close()
-                except Exception as e:
-                    log.debug("Cleanup failed: %s", e)
-                self.conn = None
+            # self.conn was returned to the pool by _core.close(); just null it out.
+            self.conn = None
         except Exception as e:
             log.debug("Cleanup failed: %s", e)
         gc.collect()

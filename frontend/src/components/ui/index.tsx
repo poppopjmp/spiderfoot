@@ -479,7 +479,7 @@ export function DropdownMenu({
         <div
           role="menu"
           className={clsx(
-            'absolute z-40 mt-1 min-w-[180px] bg-dark-800 border border-dark-700 rounded-xl shadow-2xl py-1 animate-fade-in',
+            'absolute z-[60] mt-1 min-w-[180px] bg-dark-800 border border-dark-700 rounded-xl shadow-2xl py-1 animate-fade-in',
             align === 'right' ? 'right-0' : 'left-0',
           )}
           onClick={() => setOpen(false)}

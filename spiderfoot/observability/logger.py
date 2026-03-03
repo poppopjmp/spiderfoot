@@ -140,6 +140,16 @@ class SpiderFootDbLogHandler(logging.Handler):
                 with open(self.log_file, 'w', encoding='utf-8'):
                     pass
 
+    def stop(self) -> None:
+        """Signal the background logging thread to exit cleanly."""
+        self.shutdown_hook = True  # prevent new atexit registration
+        # Flush anything remaining before stopping
+        try:
+            self.logBatch()
+            self.process_log_batch()
+        except Exception:
+            pass
+
     def filter(self, record: 'logging.LogRecord') -> bool:
         """Filter log records based on log levels.
 
@@ -203,37 +213,47 @@ def logListenerSetup(loggingQueue: Any, opts: dict = None) -> 'logging.handlers.
     # Log to terminal
     console_handler = logging.StreamHandler(sys.stderr)
 
-    # Log debug messages to file
-    log_dir = SpiderFootHelpers.logPath()
-    debug_handler = logging.handlers.TimedRotatingFileHandler(
-        f"{log_dir}/spiderfoot.debug.log",
-        when="d",
-        interval=1,
-        backupCount=30
-    )
-
-    # Log error messages to file
-    error_handler = logging.handlers.TimedRotatingFileHandler(
-        f"{log_dir}/spiderfoot.error.log",
-        when="d",
-        interval=1,
-        backupCount=30
-    )
-
-    # Filter by log level
-    console_handler.addFilter(lambda x: x.levelno >= logLevel)
-    debug_handler.addFilter(lambda x: x.levelno >= logging.DEBUG)
-    error_handler.addFilter(lambda x: x.levelno >= logging.WARN)
-
-    # Set log format
+    # Log format
     log_format = logging.Formatter(LOG_FORMAT_TEXT)
     debug_format = logging.Formatter(LOG_FORMAT_DEBUG)
+    console_handler.addFilter(lambda x: x.levelno >= logLevel)
     console_handler.setFormatter(log_format)
-    debug_handler.setFormatter(debug_format)
-    error_handler.setFormatter(debug_format)
+
+    # Attempt file handlers — may fail on read-only container filesystems
+    debug_handler = None
+    error_handler = None
+    try:
+        log_dir = SpiderFootHelpers.logPath()
+        _dh = logging.handlers.TimedRotatingFileHandler(
+            f"{log_dir}/spiderfoot.debug.log",
+            when="d",
+            interval=1,
+            backupCount=30,
+        )
+        _dh.addFilter(lambda x: x.levelno >= logging.DEBUG)
+        _dh.setFormatter(debug_format)
+        debug_handler = _dh
+
+        _eh = logging.handlers.TimedRotatingFileHandler(
+            f"{log_dir}/spiderfoot.error.log",
+            when="d",
+            interval=1,
+            backupCount=30,
+        )
+        _eh.addFilter(lambda x: x.levelno >= logging.WARN)
+        _eh.setFormatter(debug_format)
+        error_handler = _eh
+    except (OSError, PermissionError) as exc:
+        # Container with read-only rootfs or missing write permission — log to
+        # stderr only; this is not fatal.
+        sys.stderr.write(f"[spiderfoot] WARNING: file logging unavailable ({exc}), using stderr only\n")
 
     if doLogging:
-        handlers = [console_handler, debug_handler, error_handler]
+        handlers = [console_handler]
+        if debug_handler is not None:
+            handlers.append(debug_handler)
+        if error_handler is not None:
+            handlers.append(error_handler)
     else:
         handlers = []
 
@@ -251,6 +271,12 @@ def logListenerSetup(loggingQueue: Any, opts: dict = None) -> 'logging.handlers.
 def logWorkerSetup(loggingQueue: Any) -> 'logging.Logger':
     """Root SpiderFoot logger.
 
+    Attaches a QueueHandler to the 'spiderfoot' logger so that all log
+    records emitted by modules and the SpiderFoot core are forwarded to
+    *loggingQueue*.  Any existing QueueHandler(s) from a previous scan
+    (Celery reuses the same worker process) are removed first so the
+    new scan's listener receives the records.
+
     Args:
         loggingQueue (Queue): Queue for logging events
 
@@ -258,11 +284,13 @@ def logWorkerSetup(loggingQueue: Any) -> 'logging.Logger':
         logging.Logger: Logger
     """
     log = logging.getLogger("spiderfoot")
-    # Don't do this more than once
-    if len(log.handlers) == 0:
-        log.setLevel(logging.DEBUG)
-        queue_handler = QueueHandler(loggingQueue)
-        log.addHandler(queue_handler)
+    log.setLevel(logging.DEBUG)
+    # Remove any stale QueueHandlers from a previous scan on this worker
+    for handler in list(log.handlers):
+        if isinstance(handler, QueueHandler):
+            log.removeHandler(handler)
+    queue_handler = QueueHandler(loggingQueue)
+    log.addHandler(queue_handler)
     return log
 
 

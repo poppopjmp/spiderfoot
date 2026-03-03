@@ -97,26 +97,45 @@ class sfp__stor_db(SpiderFootModernPlugin):
         super().setup(sfc, userOpts or {})
         self.errorState = False
         self.pg_conn = None
-        
-        # CRITICAL FIX: Properly initialize the database handle from SpiderFoot
+
+        # Mandatory: shared DB handle from the running SpiderFoot instance.
+        # This is the PRIMARY storage path and must always be available.
         if not hasattr(sfc, 'dbh') or sfc.dbh is None:
             self.error("SpiderFoot database handle not initialized - cannot store events")
             self.errorState = True
             return
-            
-        self.__sfdb__ = self.sf.dbh
-        # Validate configuration
-        if not self._validateConfig():
-            self.errorState = True
-            return
 
-        # Initialize the appropriate database connection
-        if self.opts['db_type'] == 'postgresql':
-            if not HAS_PSYCOPG2:
-                self.error("psycopg2 module is required for PostgreSQL support but not installed")
-                self.errorState = True
-                return
-            
+        self.__sfdb__ = self.sf.dbh
+
+        # Override postgresql_* opts from __database DSN when present.
+        # global_opts carries __database = SF_POSTGRES_DSN (e.g.
+        # "postgresql://spiderfoot:secret@postgres:5432/spiderfoot").
+        # The module's built-in defaults (postgresql_host='localhost') are wrong
+        # in any Docker / remote deployment, so we always prefer the DSN.
+        dsn = self.opts.get('__database', '')
+        if dsn and (dsn.startswith('postgresql://') or dsn.startswith('postgres://')):
+            try:
+                from urllib.parse import urlparse
+                _p = urlparse(dsn)
+                if _p.hostname:
+                    self.opts['postgresql_host'] = _p.hostname
+                if _p.port:
+                    self.opts['postgresql_port'] = _p.port
+                if _p.path and _p.path != '/':
+                    self.opts['postgresql_database'] = _p.path.lstrip('/')
+                if _p.username:
+                    self.opts['postgresql_username'] = _p.username
+                if _p.password:
+                    self.opts['postgresql_password'] = _p.password
+                self.debug(f"Populated postgresql opts from __database DSN (host={self.opts['postgresql_host']})")
+            except Exception as _e:
+                self.debug(f"Could not parse __database DSN: {_e}")
+
+        # Optionally open a dedicated direct connection for _store_postgresql.
+        # If this fails we fall back to _store_default (self.__sfdb__) which
+        # uses the pooled connection already established by SpiderFoot.
+        # A failure here must NOT set errorState — events must still be stored.
+        if self.opts['db_type'] == 'postgresql' and HAS_PSYCOPG2:
             self._connect_postgresql()
 
     def _validateConfig(self):
@@ -147,7 +166,12 @@ class sfp__stor_db(SpiderFootModernPlugin):
         return True
 
     def _connect_postgresql(self):
-        """Establish PostgreSQL connection."""
+        """Establish a dedicated PostgreSQL connection for direct storage.
+
+        Failure leaves self.pg_conn = None which causes handleEvent to fall back
+        to _store_default (self.__sfdb__).  We never set errorState here because
+        the shared DB handle is always the authoritative storage path.
+        """
         try:
             self.pg_conn = psycopg2.connect(
                 host=self.opts['postgresql_host'],
@@ -157,12 +181,10 @@ class sfp__stor_db(SpiderFootModernPlugin):
                 password=self.opts['postgresql_password'],
                 connect_timeout=self.opts['postgresql_timeout']
             )
-            self.debug("Connected to PostgreSQL database")
+            self.debug("Connected to PostgreSQL database (direct)")
         except Exception as e:
-            self.error(f"Could not connect to PostgreSQL database: {e}")
-            # Only set error state if auto recovery is disabled
-            if not self.opts.get('enable_auto_recovery', False):
-                self.errorState = True
+            self.error(f"Direct PostgreSQL connection failed ({e}); will use shared DB handle instead")
+            self.pg_conn = None  # fall back to _store_default — do NOT errorState
 
     def _check_postgresql_connection(self):
         """Check if PostgreSQL connection is healthy.
@@ -203,18 +225,16 @@ class sfp__stor_db(SpiderFootModernPlugin):
         if self.errorState:
             return
 
-        # Choose storage method based on database type
-        if self.opts['db_type'] == 'postgresql' and self.pg_conn:
-            # Check connection health and reconnect if needed
+        # Prefer the dedicated direct pg connection when available and healthy;
+        # fall back to the shared pooled handle (_store_default) otherwise.
+        if self.pg_conn:
             if not self._check_postgresql_connection():
-                self.debug("PostgreSQL connection lost, attempting to reconnect...")
+                self.debug("Direct PostgreSQL connection lost, reconnecting...")
                 self._connect_postgresql()
-                
-            if not self.errorState and self.pg_conn:
+            if self.pg_conn:
                 self._store_postgresql(sfEvent)
-            else:            self._store_default(sfEvent)
-        else:
-            self._store_default(sfEvent)
+                return
+        self._store_default(sfEvent)
 
     def _store_default(self, sfEvent):
         """Store the event in the default database.

@@ -4,13 +4,15 @@ import { scanApi, formatEpoch, type ScanLogEntry } from '../../lib/api';
 import { ScrollText, Download } from 'lucide-react';
 import { SearchInput, EmptyState, TableSkeleton } from '../ui';
 
-function LogTab({ scanId }: { scanId: string }) {
+function LogTab({ scanId, isRunning = false }: { scanId: string; isRunning?: boolean }) {
   const [logFilter, setLogFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
 
   const { data, isLoading } = useQuery({
     queryKey: ['scan-logs', scanId],
-    queryFn: ({ signal }) => scanApi.logs(scanId, { limit: 1000 }, signal),
+    queryFn: ({ signal }) => scanApi.logs(scanId, { limit: 5000 }, signal),
+    // Auto-refresh every 5s while the scan is running so new log lines appear live
+    refetchInterval: isRunning ? 5000 : false,
   });
 
   const logs: ScanLogEntry[] = data?.logs ?? [];

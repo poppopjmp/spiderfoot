@@ -316,7 +316,7 @@ services:
     - "spiderfoot.celery_app:celery_app"
     - "worker"
     - "--loglevel=info"
-    - "--queues=default,report,export,agents,monitor"
+    - "--queues=scan,default,report,export,agents,monitor"
     - "--concurrency=${CELERY_WORKER_CONCURRENCY:-4}"
     - "--hostname=worker@%h"
     - "--without-heartbeat"
