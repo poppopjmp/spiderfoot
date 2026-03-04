@@ -32,6 +32,12 @@
 # Global ARG — must be before the first FROM so it's available in all stages
 ARG BASE_IMAGE=spiderfoot-base:latest
 
+# ── Stage 0: Name the SpiderFoot base image ──────────────────────────────────
+# The hardened base image removes /var/lib/dpkg as a security measure, so
+# child images cannot run apt-get.  We reference it here only as a named
+# alias so later stages can COPY the Python venv and application source.
+FROM ${BASE_IMAGE} AS spiderfoot-base
+
 # ── Stage 1: Compile Go recon tools ─────────────────────────────────────────
 FROM golang:1.24-bookworm AS go-builder
 
@@ -144,22 +150,43 @@ RUN git clone --depth 1 https://github.com/sullo/nikto.git /tools/nikto && \
     rm -rf /tools/nikto/.git
 
 
-# ── Stage 5: Runtime — extend base image ────────────────────────────────────
-ARG BASE_IMAGE
-FROM ${BASE_IMAGE}
+# ── Stage 5: Runtime — clean Debian + SpiderFoot app imported from base ──────
+# The hardened spiderfoot-base image deletes /var/lib/dpkg, so apt-get is
+# not available in derived images.  We start from a clean debian:bookworm-slim,
+# install all OS packages, then COPY the Python venv and application source
+# from the `spiderfoot-base` alias defined at the top of this file.
+FROM debian:bookworm-slim
 
 LABEL org.opencontainers.image.title="SpiderFoot Active Scanner" \
       org.opencontainers.image.description="Celery worker for active scanning with full recon toolkit"
 
-USER root
-
-# System recon tools (apt)
+# System dependencies: base-image runtime libs + active-scanner tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    libxml2 libxslt1.1 libjpeg62-turbo zlib1g dnsutils ca-certificates curl \
     nmap nbtscan onesixtyone whatweb sslscan bsdmainutils \
     libpcap0.8 libcap2-bin \
     chromium git \
     perl libnet-ssleay-perl libwhisker2-perl libjson-perl libxml-writer-perl \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Recreate the non-root spiderfoot user (must match the base image)
+RUN addgroup --system spiderfoot && \
+    adduser --system --ingroup spiderfoot --home /home/spiderfoot \
+            --shell /usr/sbin/nologin --gecos "SpiderFoot" spiderfoot
+
+# Import Python venv + application source + entrypoint from the base image
+COPY --from=spiderfoot-base /opt/venv                           /opt/venv
+COPY --from=spiderfoot-base /home/spiderfoot                    /home/spiderfoot
+COPY --from=spiderfoot-base /usr/local/bin/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh && \
+    chown -R spiderfoot:spiderfoot /home/spiderfoot
+
+ENV PATH="/opt/venv/bin:$PATH" \
+    VIRTUAL_ENV="/opt/venv" \
+    PYTHONPATH="/home/spiderfoot" \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /home/spiderfoot
 
 # Python recon tools (in existing venv)
 RUN /opt/venv/bin/pip install --no-cache-dir \
@@ -202,7 +229,7 @@ RUN setcap cap_net_raw,cap_net_admin=eip /usr/bin/nmap           2>/dev/null || 
     setcap cap_net_raw,cap_net_admin=eip /tools/bin/massdns      2>/dev/null || true && \
     setcap cap_net_raw,cap_net_admin=eip /tools/bin/masscan      2>/dev/null || true
 
-# Add tools to PATH
+# Add tools to PATH and set service environment
 ENV PATH="/tools/bin:$PATH" \
     SF_SERVICE_ROLE=active-scanner \
     SF_WORDLISTS_PATH=/tools/wordlists \
@@ -212,6 +239,9 @@ USER spiderfoot
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD python -m celery -A spiderfoot.celery_app:celery_app inspect ping --timeout 5 || exit 1
+
+# Entrypoint must be explicit — not inherited when using debian:bookworm-slim base
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 
 # Celery worker — scan queue only
 CMD ["python", "-m", "celery", \
