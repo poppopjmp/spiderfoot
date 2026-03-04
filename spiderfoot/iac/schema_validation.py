@@ -617,20 +617,16 @@ def validate_iac_bundle(bundle: dict[str, Any]) -> list[SchemaValidationResult]:
             if fname.endswith(".tf.json") or fname == "main.tf.json":
                 results.append(validate_terraform_json(content, fname))
             elif fname.endswith(".tf") and isinstance(content, str):
-                # HCL text — do basic syntax check
+                # HCL text — delegate to the full HCL validator
+                from spiderfoot.iac.hcl_validator import validate_hcl as _validate_hcl
+                hcl_res = _validate_hcl(fname, content)
+                # Wrap into SchemaValidationResult so callers see a uniform type
                 r = SchemaValidationResult(
                     artifact_type="terraform_hcl", file_name=fname
                 )
-                if not content.strip():
-                    r.warnings.append("Empty Terraform file")
-                # Check for unmatched braces
-                opens = content.count("{")
-                closes = content.count("}")
-                if opens != closes:
-                    r.errors.append(
-                        f"Unmatched braces: {opens} opening, {closes} closing"
-                    )
-                    r.valid = False
+                r.valid = hcl_res.valid
+                r.errors = list(hcl_res.errors)
+                r.warnings = list(hcl_res.warnings)
                 results.append(r)
 
     # Ansible

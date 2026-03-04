@@ -1142,6 +1142,8 @@ class IaCRequest(BaseModel):
     include_docker: bool = Field(True, description="Include Docker Compose")
     include_packer: bool = Field(False, description="Include Packer configs")
     validate: bool = Field(True, description="Run schema validation on output")
+    use_agent: bool = Field(False, description="Use LLM agent to validate and repair generated IaC")
+    agent_max_iterations: int = Field(3, ge=1, le=5, description="Max LLM repair iterations (1-5)")
 
 
 @router.post("/scans/{scan_id}/iac")
@@ -1233,6 +1235,42 @@ async def generate_iac(
             validation_results = [r.to_dict() for r in raw_results]
 
         all_valid = all(v.get("valid", True) for v in validation_results)
+        agent_result_dict: dict = {}
+        manual_fixes_required: dict[str, list[str]] = {}
+
+        # Run LLM agent for repair if requested
+        if request.use_agent:
+            try:
+                from spiderfoot.iac.iac_agent import IaCAgent
+                from spiderfoot.ai.llm_client import LLMClient, LLMConfig
+                llm_config = LLMConfig.from_env()
+                llm_client = LLMClient(llm_config)
+                # Hard cap at MAX_REPAIR_CYCLES; user value capped inside IaCAgent.__init__
+                agent = IaCAgent(llm_client, max_iterations=request.agent_max_iterations)
+                agent_result = agent.validate_and_repair(filtered, profile)
+                filtered = agent_result.bundle
+                agent_result_dict = agent_result.to_dict()
+                manual_fixes_required = agent_result.unresolved_errors
+                # Re-run deterministic validation on the (possibly repaired) bundle
+                if request.validate:
+                    raw_results = validate_iac_bundle(filtered)
+                    validation_results = [r.to_dict() for r in raw_results]
+                    all_valid = not manual_fixes_required and all(
+                        v.get("valid", True) for v in validation_results
+                    )
+            except Exception as agent_exc:
+                log.warning("IaC agent failed, returning unrepaired bundle: %s", agent_exc)
+                agent_result_dict = {"error": str(agent_exc)}
+
+        # Build the human-readable manual-fix advisory
+        manual_fix_advisory: list[str] = []
+        for fname, errs in manual_fixes_required.items():
+            manual_fix_advisory.append(
+                f"{fname}: {len(errs)} error(s) could not be resolved automatically "
+                f"after {request.agent_max_iterations} repair cycle(s):"
+            )
+            for e in errs:
+                manual_fix_advisory.append(f"  • {e}")
 
         return {
             "scan_id": scan_id,
@@ -1251,6 +1289,10 @@ async def generate_iac(
             },
             "validation": validation_results,
             "all_valid": all_valid,
+            "agent": agent_result_dict,
+            # Errors the agent could not fix — require human attention
+            "manual_fixes_required": manual_fixes_required,
+            "manual_fix_advisory": manual_fix_advisory,
             "bundle": filtered,
         }
 
