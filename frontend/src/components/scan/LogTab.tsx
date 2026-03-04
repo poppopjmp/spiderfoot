@@ -8,9 +8,13 @@ function LogTab({ scanId, isRunning = false }: { scanId: string; isRunning?: boo
   const [logFilter, setLogFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ['scan-logs', scanId],
     queryFn: ({ signal }) => scanApi.logs(scanId, { limit: 5000 }, signal),
+    // Always re-fetch on mount — overrides the global staleTime so switching
+    // to this tab always shows fresh log entries.
+    staleTime: 0,
+    refetchOnMount: true,
     // Auto-refresh every 5s while the scan is running so new log lines appear live
     refetchInterval: isRunning ? 5000 : false,
   });
@@ -65,6 +69,14 @@ function LogTab({ scanId, isRunning = false }: { scanId: string; isRunning?: boo
       <div className="card p-0 overflow-hidden">
         {isLoading ? (
           <div className="p-6"><TableSkeleton rows={10} cols={4} /></div>
+        ) : isError ? (
+          <div className="p-8">
+            <EmptyState
+              icon={ScrollText}
+              title="Failed to load logs"
+              description="Could not fetch log entries from the server. Check the API connection and try again."
+            />
+          </div>
         ) : filteredLogs.length > 0 ? (
           <div className="overflow-x-auto max-h-[600px]">
             <table className="w-full">

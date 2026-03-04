@@ -48,8 +48,7 @@ class ValidationResponse(BaseModel):
 
 class ModuleOptionsUpdateRequest(BaseModel):
     """Typed request for PATCH /modules/{name}/options."""
-    class Config:
-        extra = "allow"  # freeform keys are config option names
+    options: dict[str, Any] = Field(..., description="Option key/value pairs to update in the module's opts dict")
 
 
 class ScanDefaultsUpdateRequest(BaseModel):
@@ -233,7 +232,8 @@ async def update_module_options(
         if module_name not in modules:
             raise HTTPException(status_code=404, detail="Module not found")
         try:
-            modules[module_name].update(options.model_dump())
+            # Update only the nested 'opts' sub-dict, never the module metadata keys
+            modules[module_name].setdefault('opts', {}).update(options.options)
             config.save_config()
             return {"success": True, "message": f"Module {module_name} options updated"}
         except KeyError as ke:

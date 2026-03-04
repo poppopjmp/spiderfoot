@@ -29,12 +29,14 @@ def configSerialize(opts: dict, filterSystem: bool = True) -> dict:
             continue
         if opt.startswith('__') and filterSystem:
             continue
-        if isinstance(opts[opt], (int, str)):
-            storeopts[opt] = opts[opt]
         if isinstance(opts[opt], bool):
             storeopts[opt] = 1 if opts[opt] else 0
-        if isinstance(opts[opt], list):
+        elif isinstance(opts[opt], (int, str)):
+            storeopts[opt] = opts[opt]
+        elif isinstance(opts[opt], list) and opts[opt]:  # skip empty lists — serialize as nothing
             storeopts[opt] = ','.join(str(x) for x in opts[opt])
+        # dict values (scan_defaults, workspace_defaults, etc.) are not scalar;
+        # skip them — they are managed through their own endpoints.
     if '__modules__' not in opts:
         return storeopts
     if not isinstance(opts['__modules__'], dict):
@@ -50,11 +52,11 @@ def configSerialize(opts: dict, filterSystem: bool = True) -> dict:
                 continue
             mod_opt = f"{mod}:{opt}"
             mod_opt_val = mod_opts[opt]
-            if isinstance(mod_opt_val, (int, str)):
-                storeopts[mod_opt] = mod_opt_val
             if isinstance(mod_opt_val, bool):
                 storeopts[mod_opt] = 1 if mod_opt_val else 0
-            if isinstance(mod_opt_val, list):
+            elif isinstance(mod_opt_val, (int, str)):
+                storeopts[mod_opt] = mod_opt_val
+            elif isinstance(mod_opt_val, list) and mod_opt_val:  # skip empty lists
                 storeopts[mod_opt] = ','.join(str(x) for x in mod_opt_val)
     return storeopts
 
@@ -80,10 +82,12 @@ def configUnserialize(opts: dict, referencePoint: dict, filterSystem: bool = Tru
             returnOpts[opt] = int(opts[opt])
             continue
         if isinstance(referencePoint[opt], list):
+            if not referencePoint[opt]:  # empty list default — keep it empty
+                continue
             if isinstance(referencePoint[opt][0], int):
-                returnOpts[opt] = [int(x) for x in str(opts[opt]).split(",")]
+                returnOpts[opt] = [int(x) for x in str(opts[opt]).split(",") if str(opts[opt])]
             else:
-                returnOpts[opt] = str(opts[opt]).split(",")
+                returnOpts[opt] = str(opts[opt]).split(",") if opts[opt] else []
     if '__modules__' not in referencePoint:
         return returnOpts
     if not isinstance(referencePoint['__modules__'], dict):

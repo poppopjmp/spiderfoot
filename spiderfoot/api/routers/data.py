@@ -82,7 +82,8 @@ async def list_modules(
         # modules may be a dict — convert to list for pagination
         if isinstance(modules, dict):
             module_list = [
-                {"name": k, **v} if isinstance(v, dict) else {"name": k, "info": v}
+                # Spread v first so canonical sfp key always wins as 'name'
+                {**v, "name": k} if isinstance(v, dict) else {"name": k, "info": v}
                 for k, v in modules.items()
             ]
         else:

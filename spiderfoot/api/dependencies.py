@@ -166,8 +166,15 @@ class Config:
         try:
             flat = self.get_config()
             dbh = SpiderFootDb(flat)
-            dbh.configSet(flat)
-            self.log.info("Configuration saved to database")
+            # configSet only handles scalar values; configSerialize flattens the
+            # config (including __modules__.*.opts) into storable key/value pairs.
+            from spiderfoot.sflib import configSerialize
+            serialised = configSerialize(flat, filterSystem=True)
+            if serialised:
+                dbh.configSet(serialised)
+                self.log.info("Configuration saved to database (%d keys)", len(serialised))
+            else:
+                self.log.warning("save_config: serialised config is empty — nothing written")
         except Exception as exc:
             self.log.warning("Failed to save config to DB: %s", exc)
 

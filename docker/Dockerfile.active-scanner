@@ -150,12 +150,14 @@ RUN git clone --depth 1 https://github.com/sullo/nikto.git /tools/nikto && \
     rm -rf /tools/nikto/.git
 
 
-# ── Stage 5: Runtime — clean Debian + SpiderFoot app imported from base ──────
+# ── Stage 5: Runtime — clean Python + SpiderFoot app imported from base ──────
 # The hardened spiderfoot-base image deletes /var/lib/dpkg, so apt-get is
-# not available in derived images.  We start from a clean debian:bookworm-slim,
-# install all OS packages, then COPY the Python venv and application source
-# from the `spiderfoot-base` alias defined at the top of this file.
-FROM debian:bookworm-slim
+# not available in derived images.  We start from python:3.11-slim-bookworm
+# (the same image spiderfoot-base builds from) so that:
+#   1. apt-get works — dpkg database is intact
+#   2. /usr/local/bin/python3.11 exists — venv symlinks resolve correctly
+# We then COPY the pre-built venv and application source from the base alias.
+FROM python:3.11-slim-bookworm
 
 LABEL org.opencontainers.image.title="SpiderFoot Active Scanner" \
       org.opencontainers.image.description="Celery worker for active scanning with full recon toolkit"

@@ -60,7 +60,7 @@ export default function SettingsPage() {
       );
       items.push({
         key: mod.name,
-        label: mod.name.replace(/^sfp_/, ''),
+        label: (mod.meta?.['name'] as string) || mod.name.replace(/^sfp_/, ''),
         count: optKeys.length,
         hasApiKey,
       });
@@ -254,7 +254,7 @@ export default function SettingsPage() {
           {/* Module info header */}
           {activeSection !== '__global__' && activeModule && (
             <div className="card animate-fade-in">
-              <h3 className="text-sm font-semibold text-foreground">{activeModule.name}</h3>
+              <h3 className="text-sm font-semibold text-foreground">{(activeModule.meta?.['name'] as string) || activeModule.name.replace(/^sfp_/, '')}</h3>
               <p className="text-xs text-dark-400 mt-1">
                 {activeModule.descr || activeModule.description || 'No description available.'}
               </p>
