@@ -194,11 +194,17 @@ class TimingProfile:
         """
         # Check for burst mode
         if random.random() < self.burst_probability:
-            return max(self.min_delay * 0.3, random.uniform(0.1, 0.5))
+            delay = max(self.min_delay * 0.3, random.uniform(0.1, 0.5))
+            if same_domain:
+                delay = max(delay, self.domain_min_interval)
+            return delay
 
         # Check for idle period
         if random.random() < self.idle_probability:
-            return random.uniform(*self.idle_duration_range)
+            delay = random.uniform(*self.idle_duration_range)
+            if same_domain:
+                delay = max(delay, self.domain_min_interval)
+            return delay
 
         # Normal delay with log-normal distribution
         import math
