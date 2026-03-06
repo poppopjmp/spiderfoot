@@ -24,6 +24,7 @@ Usage::
 
 from __future__ import annotations
 
+import hashlib
 import logging
 import os
 import re
@@ -114,7 +115,7 @@ class RateLimitConfig:
         default_factory=lambda: dict(DEFAULT_ENDPOINT_OVERRIDES)
     )
     exempt_paths: set[str] = field(default_factory=lambda: set(DEFAULT_EXEMPT_PATHS))
-    trust_forwarded: bool = True
+    trust_forwarded: bool = False
     include_headers: bool = True
     log_rejections: bool = True
 
@@ -180,12 +181,12 @@ def extract_client_identity(
     Returns:
         A string key like ``"apikey:a1b2c3d4"`` or ``"ip:192.168.1.1"``.
     """
-    # Check for API key — use first 8 chars of token for identity keying
+    # Check for API key — use SHA256 hash for identity keying (avoids leaking raw token)
     auth = headers.get("authorization", "")
     if auth.startswith("Bearer "):
         token = auth[7:].strip()
         if token:
-            return f"apikey:{token[:8]}"
+            return f"apikey:{hashlib.sha256(token.encode()).hexdigest()[:16]}"
 
     # Forwarded IP — only trusted when explicitly enabled, validated
     if trust_forwarded:
