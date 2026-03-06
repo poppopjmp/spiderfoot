@@ -3,9 +3,9 @@ from __future__ import annotations
 """SpiderFoot plug-in module: arbitrum."""
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
-class sfp_arbitrum(SpiderFootModernPlugin):
+class sfp_arbitrum(SpiderFootAsyncPlugin):
     """Monitors Arbitrum blockchain for transactions and emits events."""
     meta = {
         'name': "Arbitrum Blockchain Monitor",
@@ -105,6 +105,9 @@ class sfp_arbitrum(SpiderFootModernPlugin):
         output_format = self.opts.get("output_format", "summary")
 
         for address in addresses:
+            if self.checkForStop():
+                return
+
             url = (
                 f"https://api.arbiscan.io/api?module=account&action=txlist&address={address}"
                 f"&startblock={start_block}&endblock={end_block if end_block > 0 else 99999999}"

@@ -20,10 +20,10 @@ import dns.query
 import dns.zone
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_dnszonexfer(SpiderFootModernPlugin):
+class sfp_dnszonexfer(SpiderFootAsyncPlugin):
     """SpiderFoot plugin for attempting a DNS zone transfer."""
     meta = {
         'name': "DNS Zone Transfer",

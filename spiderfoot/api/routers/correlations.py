@@ -13,12 +13,12 @@ from typing import Any
 import logging
 from datetime import datetime
 
-from ..dependencies import optional_auth, get_correlation_svc
+from ..dependencies import optional_auth, get_correlation_svc, get_api_key
 from ..pagination import PaginationParams, paginate
 from spiderfoot.services.correlation_service import CorrelationService, CorrelationResult
 from pydantic import BaseModel, Field
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_api_key)])
 log = logging.getLogger(__name__)
 optional_auth_dep = Depends(optional_auth)
 
@@ -84,7 +84,7 @@ async def list_correlation_rules(
         return paginate(rules, params)
     except Exception as e:
         log.error("Failed to list correlation rules: %s", e)
-        raise HTTPException(status_code=500, detail=str(e)) from e
+        raise HTTPException(status_code=500, detail="Correlation operation failed") from e
 
 
 @router.post("/correlation-rules", status_code=201)
@@ -111,7 +111,7 @@ async def create_correlation_rule(
         return {"rule": created, "message": "Correlation rule created successfully"}
     except Exception as e:
         log.error("Failed to create correlation rule: %s", e)
-        raise HTTPException(status_code=500, detail=str(e)) from e
+        raise HTTPException(status_code=500, detail="Correlation operation failed") from e
 
 
 @router.get("/correlation-rules/{rule_id}")
@@ -208,7 +208,7 @@ async def test_correlation_rule(
         }
     except Exception as e:
         log.error("Failed to test correlation rule %s: %s", rule_id, e)
-        raise HTTPException(status_code=500, detail=str(e)) from e
+        raise HTTPException(status_code=500, detail="Correlation operation failed") from e
 
 
 @router.get("/scans/{scan_id}/correlations/detailed")
@@ -256,7 +256,7 @@ async def get_detailed_scan_correlations(
         log.error(
             "Failed to get correlations for scan %s: %s", scan_id, e
         )
-        raise HTTPException(status_code=500, detail=str(e)) from e
+        raise HTTPException(status_code=500, detail="Correlation operation failed") from e
 
 
 @router.post("/correlations/analyze")
@@ -319,7 +319,7 @@ async def analyze_correlation_patterns(
         raise
     except Exception as e:
         log.error("Failed to analyze correlation patterns: %s", e)
-        raise HTTPException(status_code=500, detail=str(e)) from e
+        raise HTTPException(status_code=500, detail="Correlation operation failed") from e
 
 
 # NOTE: The /scans/{scan_id}/correlations/export endpoint is defined

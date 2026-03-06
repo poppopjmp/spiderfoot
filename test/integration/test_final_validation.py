@@ -14,7 +14,7 @@ from spiderfoot.events.event_taxonomy import EventCategory, RiskLevel, EventTaxo
 from spiderfoot.scan.scan_templates import TemplateCategory, ScanTemplate, TemplateRegistry
 from spiderfoot.result_cache import ResultCache, ScanResultCache, EvictionPolicy
 from spiderfoot.plugins.module_api_client import ModuleApiClient, RateLimiter, RequestConfig
-from spiderfoot.alert_rules import (
+from spiderfoot.notifications.alerts import (
     AlertSeverity, AlertConditionType, AlertCondition, AlertRule, AlertEngine,
 )
 from spiderfoot.scan.scan_workflow import (

@@ -22,10 +22,10 @@ from subprocess import PIPE, Popen, TimeoutExpired
 
 from spiderfoot import SpiderFootEvent
 from spiderfoot import SpiderFootHelpers
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_tool_cmseek(SpiderFootModernPlugin):
+class sfp_tool_cmseek(SpiderFootAsyncPlugin):
 
     """Identify what Content Management System (CMS) might be used."""
 

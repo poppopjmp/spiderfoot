@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { dataApi, type Module } from '../lib/api';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import {
   Cpu, Lock, Unlock, ToggleLeft, ToggleRight,
   ChevronDown, ChevronRight, Shield,
@@ -14,6 +15,7 @@ import {
 type FilterKey = 'all' | 'enabled' | 'disabled' | 'api_key';
 
 export default function ModulesPage() {
+  useDocumentTitle('Modules');
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<FilterKey>('all');
@@ -22,17 +24,17 @@ export default function ModulesPage() {
 
   const { data: modulesData, isLoading } = useQuery({
     queryKey: ['modules', { page: 1, page_size: 500 }],
-    queryFn: () => dataApi.modules({ page: 1, page_size: 500 }),
+    queryFn: ({ signal }) => dataApi.modules({ page: 1, page_size: 500 }, signal),
   });
 
   const { data: statusData } = useQuery({
     queryKey: ['modules-status'],
-    queryFn: dataApi.modulesStatus,
+    queryFn: ({ signal }) => dataApi.modulesStatus(signal),
   });
 
   const { data: catData } = useQuery({
     queryKey: ['module-categories'],
-    queryFn: dataApi.moduleCategories,
+    queryFn: ({ signal }) => dataApi.moduleCategories(signal),
   });
 
   const modules: Module[] = modulesData?.items ?? [];
@@ -45,17 +47,23 @@ export default function ModulesPage() {
   const categories = catData?.module_categories ?? [];
 
   const enableMut = useMutation({
-    mutationFn: dataApi.enableModule,
+    mutationFn: (name: string) => dataApi.enableModule(name),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['modules-status'] });
       setToast({ type: 'success', message: 'Module enabled' });
     },
+    onError: () => {
+      setToast({ type: 'error', message: 'Failed to enable module' });
+    },
   });
   const disableMut = useMutation({
-    mutationFn: dataApi.disableModule,
+    mutationFn: (name: string) => dataApi.disableModule(name),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['modules-status'] });
       setToast({ type: 'success', message: 'Module disabled' });
+    },
+    onError: () => {
+      setToast({ type: 'error', message: 'Failed to disable module' });
     },
   });
 

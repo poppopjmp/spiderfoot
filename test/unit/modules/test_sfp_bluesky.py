@@ -36,14 +36,17 @@ def test_produced_events(plugin):
 
 def test_option_validation():
     p = sfp_bluesky()
-    with pytest.raises(ValueError):
-        p.setup(None, {"access_token": "", "username": "user", "max_posts": 10, "output_format": "summary"})
-    with pytest.raises(ValueError):
-        p.setup(None, {"access_token": "token", "username": "", "max_posts": 10, "output_format": "summary"})
-    with pytest.raises(ValueError):
-        p.setup(None, {"access_token": "token", "username": "user", "max_posts": 0, "output_format": "summary"})
-    with pytest.raises(ValueError):
-        p.setup(None, {"access_token": "token", "username": "user", "max_posts": 10, "output_format": "invalid"})
+    p.setup(None, {"access_token": "", "username": "user", "max_posts": 10, "output_format": "summary"})
+    assert p.errorState
+    p = sfp_bluesky()
+    p.setup(None, {"access_token": "token", "username": "", "max_posts": 10, "output_format": "summary"})
+    assert p.errorState
+    p = sfp_bluesky()
+    p.setup(None, {"access_token": "token", "username": "user", "max_posts": 0, "output_format": "summary"})
+    assert p.errorState
+    p = sfp_bluesky()
+    p.setup(None, {"access_token": "token", "username": "user", "max_posts": 10, "output_format": "invalid"})
+    assert p.errorState
 
 @patch('modules.sfp_bluesky.requests.get')
 def test_handle_event_emits_events(mock_get, plugin):

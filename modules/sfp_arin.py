@@ -18,10 +18,10 @@ from __future__ import annotations
 import json
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_arin(SpiderFootModernPlugin):
+class sfp_arin(SpiderFootAsyncPlugin):
     """SpiderFoot plugin to query the ARIN internet registry for contact information."""
     meta = {
         "name": "ARIN",

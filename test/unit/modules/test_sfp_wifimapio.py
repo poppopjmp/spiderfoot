@@ -35,18 +35,23 @@ def test_handle_event_stub(plugin):
     event = SpiderFootEvent('ROOT', 'test', 'test', None)
     assert plugin.handleEvent(event) is None
 
-def test_setup_requires_search_term(plugin):
-    with pytest.raises(ValueError):
-        plugin.setup(None, {'search_term': ''})
+def test_setup_requires_search_term():
+    p = sfp_wifimapio()
+    p.setup(None, {'search_term': ''})
+    assert p.errorState
 
-def test_setup_invalid_max_results(plugin):
-    with pytest.raises(ValueError):
-        plugin.setup(None, {'search_term': 'cafe', 'max_results': 0})
-    with pytest.raises(ValueError):
-        plugin.setup(None, {'search_term': 'cafe', 'max_results': -1})
-    with pytest.raises(ValueError):
-        plugin.setup(None, {'search_term': 'cafe', 'max_results': 'foo'})
+def test_setup_invalid_max_results():
+    p = sfp_wifimapio()
+    p.setup(None, {'search_term': 'cafe', 'max_results': 0})
+    assert p.errorState
+    p = sfp_wifimapio()
+    p.setup(None, {'search_term': 'cafe', 'max_results': -1})
+    assert p.errorState
+    p = sfp_wifimapio()
+    p.setup(None, {'search_term': 'cafe', 'max_results': 'foo'})
+    assert p.errorState
 
-def test_setup_invalid_output_format(plugin):
-    with pytest.raises(ValueError):
-        plugin.setup(None, {'search_term': 'cafe', 'output_format': 'invalid'})
+def test_setup_invalid_output_format():
+    p = sfp_wifimapio()
+    p.setup(None, {'search_term': 'cafe', 'output_format': 'invalid'})
+    assert p.errorState

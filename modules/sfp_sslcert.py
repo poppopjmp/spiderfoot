@@ -18,10 +18,10 @@ from urllib.parse import urlparse
 
 from spiderfoot import SpiderFootEvent
 from spiderfoot import SpiderFootHelpers
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_sslcert(SpiderFootModernPlugin):
+class sfp_sslcert(SpiderFootAsyncPlugin):
 
     """Gather information about SSL certificates used by the target"""
 

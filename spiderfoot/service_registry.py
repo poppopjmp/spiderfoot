@@ -31,6 +31,15 @@ SERVICE_HTTP = "http"
 SERVICE_DNS = "dns"
 SERVICE_CACHE = "cache"
 SERVICE_VECTOR = "vector"
+SERVICE_RESULT_CACHE = "result_cache"
+SERVICE_RETRY = "retry"
+SERVICE_SCHEDULER = "scheduler"
+SERVICE_SECRETS = "secrets"
+SERVICE_ERROR_TELEMETRY = "error_telemetry"
+SERVICE_DB_DIAGNOSTICS = "db_diagnostics"
+SERVICE_DB_NOTIFY = "db_notify"
+SERVICE_MIGRATION = "migration"
+SERVICE_HOT_RELOAD = "hot_reload"
 
 
 class ServiceNotFoundError(Exception):
@@ -283,7 +292,7 @@ def initialize_services(sf_config: dict[str, Any]) -> ServiceRegistry:
 
     # --- Vector Sink ---
     def _create_vector_sink():
-        from spiderfoot.vector_sink import VectorSink, VectorConfig
+        from spiderfoot.observability.vector_sink import VectorSink, VectorConfig
         config = VectorConfig.from_sf_config(sf_config)
         if config.enabled:
             sink = VectorSink(config)
@@ -292,6 +301,82 @@ def initialize_services(sf_config: dict[str, Any]) -> ServiceRegistry:
         return None
 
     registry.register_factory(SERVICE_VECTOR, _create_vector_sink)
+
+    # --- Result Cache ---
+    def _create_result_cache():
+        from spiderfoot.result_cache import ScanResultCache
+        return ScanResultCache(
+            max_size=int(sf_config.get("_sf_result_cache_size", 10000)),
+            ttl=int(sf_config.get("_sf_result_cache_ttl", 3600)),
+        )
+
+    registry.register_factory(SERVICE_RESULT_CACHE, _create_result_cache)
+
+    # --- Retry Executor ---
+    def _create_retry_executor():
+        from spiderfoot.retry import RetryExecutor, RetryConfig
+        config = RetryConfig(
+            max_attempts=int(sf_config.get("_sf_retry_max_attempts", 3)),
+            backoff_base=float(sf_config.get("_sf_retry_backoff", 1.0)),
+        )
+        return RetryExecutor(config)
+
+    registry.register_factory(SERVICE_RETRY, _create_retry_executor)
+
+    # --- Work-Stealing Scheduler ---
+    def _create_scheduler():
+        from spiderfoot.scan.concurrency import WorkStealingScheduler
+        return WorkStealingScheduler(
+            num_workers=int(sf_config.get("_sf_scan_workers", 4)),
+        )
+
+    registry.register_factory(SERVICE_SCHEDULER, _create_scheduler)
+
+    # --- Secret Manager ---
+    def _create_secret_manager():
+        from spiderfoot.security.secrets import SecretManager
+        backend = sf_config.get("_sf_secret_backend", "env")
+        return SecretManager(backend=backend)
+
+    registry.register_factory(SERVICE_SECRETS, _create_secret_manager)
+
+    # --- Error Telemetry ---
+    def _create_error_telemetry():
+        from spiderfoot.observability.error_telemetry import ErrorTelemetry
+        return ErrorTelemetry()
+
+    registry.register_factory(SERVICE_ERROR_TELEMETRY, _create_error_telemetry)
+
+    # --- DB Diagnostics ---
+    def _create_db_diagnostics():
+        from spiderfoot.db.db_diagnostics import QueryDiagnostics
+        return QueryDiagnostics(conn=None)  # conn injected per-query
+
+    registry.register_factory(SERVICE_DB_DIAGNOSTICS, _create_db_diagnostics)
+
+    # --- DB Notify ---
+    def _create_db_notify():
+        from spiderfoot.db.db_notify import PgNotifyService
+        return PgNotifyService(conn=None)  # conn injected at connect time
+
+    registry.register_factory(SERVICE_DB_NOTIFY, _create_db_notify)
+
+    # --- Migration Manager ---
+    def _create_migration_manager():
+        from spiderfoot.db.migrate import MigrationManager
+        return MigrationManager()
+
+    registry.register_factory(SERVICE_MIGRATION, _create_migration_manager)
+
+    # --- Module Hot-Reload ---
+    def _create_hot_reload():
+        from spiderfoot.ops.hot_reload import ModuleWatcher
+        import os
+        modules_dir = sf_config.get("__modules__", os.path.join(
+            os.path.dirname(__file__), "..", "modules"))
+        return ModuleWatcher(modules_dir)
+
+    registry.register_factory(SERVICE_HOT_RELOAD, _create_hot_reload)
 
     log.info("Service registry initialized with lazy factories")
     return registry

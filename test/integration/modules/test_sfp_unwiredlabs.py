@@ -20,9 +20,9 @@ def test_handle_event_stub(plugin):
     assert plugin.handleEvent(event) is None
 
 def test_setup_requires_api_key(plugin):
-    with pytest.raises(ValueError):
-        plugin.setup(None, {'api_key': '', 'search_type': 'ip', 'search_value': '1.2.3.4'})
+    plugin.setup(None, {'api_key': '', 'search_type': 'ip', 'search_value': '1.2.3.4'})
+    assert plugin.errorState is True
 
 def test_setup_requires_search_value(plugin):
-    with pytest.raises(ValueError):
-        plugin.setup(None, {'api_key': 'key', 'search_type': 'ip', 'search_value': ''})
+    plugin.setup(None, {'api_key': 'key', 'search_type': 'ip', 'search_value': ''})
+    assert plugin.errorState is True

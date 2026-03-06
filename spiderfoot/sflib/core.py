@@ -56,12 +56,23 @@ class SpiderFoot:
         self.opts = deepcopy(options)
         self.log = logging.getLogger(f"spiderfoot.{__name__}")
 
-        # Create an unverified SSL context for scan connections only,
-        # rather than globally overriding ssl._create_default_https_context
-        # which would affect ALL HTTPS connections process-wide.
-        self._ssl_context = ssl.create_default_context()
-        self._ssl_context.check_hostname = False
-        self._ssl_context.verify_mode = ssl.CERT_NONE
+        # SSL context for SCAN connections to external targets only.
+        # Verification is intentionally disabled because scan targets often
+        # present self-signed, expired, or otherwise invalid certificates
+        # and we still need to connect to inspect them.
+        # IMPORTANT: Do NOT use this context for internal service calls
+        # (LiteLLM, MinIO, Qdrant, PostgreSQL, Redis).  Use
+        # _internal_ssl_context instead.
+        self._scan_ssl_context = ssl.create_default_context()
+        self._scan_ssl_context.check_hostname = False
+        self._scan_ssl_context.verify_mode = ssl.CERT_NONE
+
+        # SSL context for INTERNAL service calls (LiteLLM, MinIO, Qdrant,
+        # etc.) — uses default system CA bundle and enforces verification.
+        self._internal_ssl_context = ssl.create_default_context()
+
+        # Backward-compat alias (modules may reference self._ssl_context)
+        self._ssl_context = self._scan_ssl_context
 
         if self.opts.get('_dnsserver', "") != "":
             res = dns.resolver.Resolver()
@@ -220,7 +231,7 @@ class SpiderFoot:
     def safeSSLSocket(self, host: str, port: int, timeout: int) -> 'ssl.SSLSocket':
         """Create a safe SSL socket connection to a host and port."""
         return safeSSLSocket(host, port, timeout)
-    def parseCert(self, rawcert: str, fqdn: str = None, expiringdays: int = 30) -> dict:
+    def parseCert(self, rawcert: str, fqdn: str | None = None, expiringdays: int = 30) -> dict:
         """Parse an SSL certificate and return its details."""
         return parseCert(rawcert, fqdn, expiringdays)
     def getSession(self) -> 'requests.sessions.Session':
@@ -236,19 +247,123 @@ class SpiderFoot:
             isValidLocalOrLoopbackIp=self.isValidLocalOrLoopbackIp,
         )
     def fetchUrl(
-        self, url: str, cookies: str = None, timeout: int = 30,
-        useragent: str = "SpiderFoot", headers: dict = None,
-        noLog: bool = False, postData: str = None,
+        self, url: str, cookies: str | None = None, timeout: int = 30,
+        useragent: str = "SpiderFoot", headers: dict | None = None,
+        noLog: bool = False, postData: str | None = None,
         disableContentEncoding: bool = False,
-        sizeLimit: int = None, headOnly: bool = False,
+        sizeLimit: int | None = None, headOnly: bool = False,
         verify: bool = True,
+        stealth_engine: object | None = None,
     ) -> dict:
-        """Fetch the contents of a URL and return the response."""
+        """Fetch the contents of a URL and return the response.
+
+        When the scan config contains ``_stealth_level`` (set by the API
+        from the user's stealth selection), a :class:`StealthScanContext`
+        and :class:`StealthFetchMiddleware` are created lazily and cached
+        on ``self`` so all modules share the same instance.  The middleware
+        adds domain throttling, detection/block handling with automatic
+        retries, proxy chain rotation, metrics collection, and all the
+        per-request stealth features (UA rotation, header randomisation,
+        TLS diversification, jitter).
+
+        When an explicit *stealth_engine* is provided (e.g. from tests),
+        it is passed directly to the low-level ``fetchUrl`` for backward
+        compatibility.
+        """
+        # If an explicit stealth_engine was supplied, use the simple path
+        if stealth_engine is not None:
+            return fetchUrl(
+                url, cookies, timeout, useragent, headers, noLog,
+                postData, disableContentEncoding, sizeLimit,
+                headOnly, verify,
+                stealth_engine=stealth_engine,
+            )
+
+        # Auto-create the full stealth middleware from scan config
+        middleware = self._get_or_create_stealth_middleware()
+        if middleware is not None:
+            return middleware.fetch(
+                url,
+                cookies=cookies,
+                timeout=timeout,
+                useragent=useragent,
+                headers=headers,
+                noLog=noLog,
+                postData=postData,
+                disableContentEncoding=disableContentEncoding,
+                sizeLimit=sizeLimit,
+                headOnly=headOnly,
+                verify=verify,
+                _original_fetch=fetchUrl,
+            )
+
+        # No stealth — plain fetch
         return fetchUrl(
             url, cookies, timeout, useragent, headers, noLog,
             postData, disableContentEncoding, sizeLimit,
             headOnly, verify,
         )
+
+    # ── Stealth context management ────────────────────────────────────
+
+    def _get_or_create_stealth_context(self) -> object | None:
+        """Lazily create and cache a :class:`StealthScanContext`.
+
+        Uses the full integration layer (proxy chains, domain throttling,
+        metrics) rather than a bare :class:`StealthEngine`.
+        """
+        if hasattr(self, '_stealth_context') and self._stealth_context is not None:
+            return self._stealth_context
+        if not (hasattr(self, 'opts') and self.opts):
+            return None
+        level = self.opts.get("_stealth_level")
+        if not level or level == "none":
+            return None
+        try:
+            from spiderfoot.recon.stealth_integration import create_stealth_context
+            self._stealth_context = create_stealth_context(
+                sf_options=self.opts,
+            )
+            return self._stealth_context
+        except Exception:
+            return None
+
+    def _get_or_create_stealth_middleware(self) -> object | None:
+        """Lazily create and cache a :class:`StealthFetchMiddleware`."""
+        if hasattr(self, '_stealth_middleware') and self._stealth_middleware is not None:
+            return self._stealth_middleware
+        ctx = self._get_or_create_stealth_context()
+        if ctx is None:
+            return None
+        try:
+            from spiderfoot.recon.stealth_integration import StealthFetchMiddleware
+            self._stealth_middleware = StealthFetchMiddleware(ctx)
+            return self._stealth_middleware
+        except Exception:
+            return None
+
+    @property
+    def stealth_context(self) -> object | None:
+        """Public accessor for the per-scan stealth context (if active)."""
+        return getattr(self, '_stealth_context', None)
+
+    def _get_or_create_stealth_engine(self, level: str) -> object | None:
+        """Lazily create and cache a StealthEngine for the given level.
+
+        .. deprecated::
+            Prefer :meth:`_get_or_create_stealth_context` which uses the
+            full integration layer.  Kept for backward compatibility with
+            tests that pass ``stealth_engine`` explicitly.
+        """
+        if hasattr(self, '_stealth_engine') and self._stealth_engine is not None:
+            return self._stealth_engine
+        try:
+            from spiderfoot.recon.stealth_engine import StealthEngine, StealthProfileConfig
+            config = StealthProfileConfig.from_level(level)
+            self._stealth_engine = StealthEngine(config)
+            return self._stealth_engine
+        except Exception:
+            return None
     def checkDnsWildcard(self, target: str) -> bool:
         """Check if a target domain has a DNS wildcard entry."""
         return checkDnsWildcard(target)
@@ -332,7 +447,7 @@ class SpiderFoot:
             count = 0
         return baseurl.split('/')[count].lower()
 
-    def googleIterate(self, searchString: str, opts: dict = None) -> dict:
+    def googleIterate(self, searchString: str, opts: dict | None = None) -> dict:
         """Request search results from the Google API.
 
         Will return a dict:
@@ -400,7 +515,7 @@ class SpiderFoot:
             "webSearchUrl": f"https://www.google.com/search?q={search_string}&{params}"
         }
 
-    def bingIterate(self, searchString: str, opts: dict = None) -> dict:
+    def bingIterate(self, searchString: str, opts: dict | None = None) -> dict:
         """Request search results from the Bing API.
 
         Will return a dict:
@@ -465,28 +580,111 @@ class SpiderFoot:
         return None
 
     def loadModules(self) -> None:
-        """Load SpiderFoot modules from the modules directory."""
+        """Load SpiderFoot modules from the modules directory.
+
+        Discovers all sfp_*.py files, imports them via importlib,
+        introspects producedEvents/watchedEvents/meta, and registers
+        them in self.opts['__modules__'].
+        """
         import os
-        from spiderfoot import SpiderFootHelpers
+        import sys
+        import importlib
+        import importlib.util
+
+        # Modules live at the repository root under modules/
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        modpath = os.path.join(script_dir, 'modules')
+        modpath = os.path.normpath(os.path.join(script_dir, '..', '..', 'modules'))
+
         if not os.path.isdir(modpath):
             self.error(f"Modules directory not found: {modpath}")
             return
+
         self.info(f"Loading modules from: {modpath}")
+
         try:
-            module_files = [f for f in os.listdir(modpath) if f.endswith('.py') and not f.startswith('__')]
+            module_files = [
+                f for f in os.listdir(modpath)
+                if f.endswith('.py') and f.startswith('sfp_') and not f.startswith('__')
+            ]
         except OSError as e:
             self.error(f"Error reading modules directory: {e}")
             return
+
         if not module_files:
             self.info("No module files found.")
             return
+
         self.info(f"Found {len(module_files)} module files")
-        # Actual module loading logic would go here
-        # For now, just log the module names
-        for mod in module_files:
-            self.debug(f"Module found: {mod}")
+
+        # Ensure the modules directory is importable
+        if modpath not in sys.path:
+            sys.path.insert(0, modpath)
+
+        modules_dict = {}
+        loaded = 0
+        failed = 0
+
+        for mod_file in sorted(module_files):
+            mod_name = mod_file[:-3]  # strip .py
+            try:
+                spec = importlib.util.spec_from_file_location(
+                    mod_name,
+                    os.path.join(modpath, mod_file)
+                )
+                if spec is None or spec.loader is None:
+                    self.error(f"Cannot create import spec for {mod_name}")
+                    failed += 1
+                    continue
+
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+
+                # The module class has the same name as the file
+                if not hasattr(mod, mod_name):
+                    self.debug(f"Module {mod_name} has no class named {mod_name}, skipping")
+                    failed += 1
+                    continue
+
+                mod_class = getattr(mod, mod_name)
+
+                # Extract metadata by inspecting the class (not instantiating)
+                meta = getattr(mod_class, 'meta', {})
+
+                # producedEvents/watchedEvents are instance methods, so create
+                # a bare instance without calling setup() for introspection.
+                try:
+                    tmp = object.__new__(mod_class)
+                    provides = tmp.producedEvents() if hasattr(tmp, 'producedEvents') else []
+                    consumes = tmp.watchedEvents() if hasattr(tmp, 'watchedEvents') else []
+                except Exception:
+                    provides = []
+                    consumes = []
+
+                modules_dict[mod_name] = {
+                    'module': mod_class,
+                    'provides': provides,
+                    'consumes': consumes,
+                    'meta': meta,
+                    'cats': meta.get('categories', []),
+                    'group': meta.get('useCases', []),
+                    'labels': meta.get('flags', []),
+                    'descr': meta.get('summary', ''),
+                    'dataSource': meta.get('dataSource', {}),
+                }
+                loaded += 1
+                self.debug(f"Loaded module: {mod_name} "
+                           f"(provides={len(provides)}, consumes={len(consumes)})")
+
+            except Exception as e:
+                self.error(f"Failed to load module {mod_name}: {e}")
+                failed += 1
+                continue
+
+        if '__modules__' not in self.opts:
+            self.opts['__modules__'] = {}
+        self.opts['__modules__'].update(modules_dict)
+
+        self.info(f"Module loading complete: {loaded} loaded, {failed} failed")
 
     def cveInfo(self, cveId: str, sources: str = "circl,nist") -> tuple[str, str]:
         """Look up a CVE ID for more information in the first available source.
@@ -513,9 +711,67 @@ class SpiderFoot:
             if score >= 9.0:
                 return "CRITICAL"
             return None
-        for source in sources:
-            # CVE lookup not yet implemented for extracted sources
-            self.debug(f"CVE lookup for {cveId} from {source} not implemented")
+        for source in [s.strip() for s in sources]:
+            if source == "circl":
+                try:
+                    res = self.fetchUrl(
+                        f"https://cve.circl.lu/api/cve/{cveId}",
+                        timeout=self.opts.get('_fetchtimeout', 15),
+                        useragent=self.opts.get('_useragent', 'SpiderFoot')
+                    )
+                    if res and res.get('code') == '200' and res.get('content'):
+                        import json
+                        data = json.loads(res['content']) if isinstance(res['content'], str) else res['content']
+                        cvss = data.get('cvss')
+                        if cvss is None:
+                            cvss = data.get('cvss3', 'Unknown')
+                        try:
+                            score = float(cvss)
+                        except (ValueError, TypeError):
+                            score = None
+                        rating = cveRating(score) if score is not None else None
+                        if rating:
+                            eventType = f"VULNERABILITY_CVE_{rating}"
+                        summary = data.get('summary', 'No description available')
+                        return (eventType, f"{cveId}\nScore: {cvss}\nDescription: {summary}")
+                except Exception as e:
+                    self.debug(f"CIRCL CVE lookup failed for {cveId}: {e}")
+
+            elif source == "nist":
+                try:
+                    res = self.fetchUrl(
+                        f"https://services.nvd.nist.gov/rest/json/cves/2.0?cveId={cveId}",
+                        timeout=self.opts.get('_fetchtimeout', 15),
+                        useragent=self.opts.get('_useragent', 'SpiderFoot')
+                    )
+                    if res and res.get('code') == '200' and res.get('content'):
+                        import json
+                        data = json.loads(res['content']) if isinstance(res['content'], str) else res['content']
+                        vulns = data.get('vulnerabilities', [])
+                        if vulns:
+                            cve_data = vulns[0].get('cve', {})
+                            metrics = cve_data.get('metrics', {})
+                            score = None
+                            for key in ('cvssMetricV31', 'cvssMetricV30', 'cvssMetricV2'):
+                                metric_list = metrics.get(key, [])
+                                if metric_list:
+                                    score = metric_list[0].get('cvssData', {}).get('baseScore')
+                                    if score is not None:
+                                        break
+                            if score is not None:
+                                rating = cveRating(float(score))
+                                if rating:
+                                    eventType = f"VULNERABILITY_CVE_{rating}"
+                            descriptions = cve_data.get('descriptions', [])
+                            summary = next((d['value'] for d in descriptions if d.get('lang') == 'en'), 'No description')
+                            return (eventType, f"{cveId}\nScore: {score or 'Unknown'}\nDescription: {summary}")
+                except Exception as e:
+                    self.debug(f"NIST CVE lookup failed for {cveId}: {e}")
+
+            else:
+                self.debug(f"Unknown CVE source: {source}")
+
+        # All sources failed — return generic
         return (eventType, f"{cveId}\nScore: Unknown\nDescription: Unknown")
 
     def configSerialize(self, opts: dict, filterSystem: bool = True) -> dict:

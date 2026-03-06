@@ -104,7 +104,7 @@ class DefaultRuleExecutionStrategy(RuleExecutionStrategy):
         from spiderfoot.db.db_utils import get_placeholder
 
         # Determine placeholder based on db type
-        db_type = getattr(dbh, 'db_type', 'sqlite')
+        db_type = getattr(dbh, 'db_type', 'postgresql')
         ph = get_placeholder(db_type)
 
         try:

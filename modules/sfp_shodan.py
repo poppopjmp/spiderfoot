@@ -16,17 +16,15 @@ from __future__ import annotations
 
 import json
 import time
-import urllib.error
 import urllib.parse
-import urllib.request
 
 from netaddr import IPNetwork
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_shodan(SpiderFootModernPlugin):
+class sfp_shodan(SpiderFootAsyncPlugin):
 
     """Obtain information from SHODAN about identified IP addresses."""
 

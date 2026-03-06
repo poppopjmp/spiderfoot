@@ -6,9 +6,9 @@
 #               and assert produced output without needing the full scan
 #               engine.
 #
-# Author:       SpiderFoot Team
+# Author:       Van1sh 
 # Created:      2025-07-08
-# Copyright:    (c) SpiderFoot Team 2025
+# Copyright:    (c) Van1sh  2025
 # Licence:      MIT
 # -------------------------------------------------------------------------------
 
@@ -618,7 +618,7 @@ def _default_opts() -> dict:
         "_socks6dns": True,
         "_torctlport": 9051,
         "_modulesenabled": [],
-        "__database": "sqlite:///test.db",
+        "__database": "postgresql://localhost/spiderfoot_test",
         "__webaddr": "127.0.0.1",
         "__webport": 5001,
         "__docroot": "",

@@ -83,7 +83,7 @@ class TestLocalDataService(unittest.TestCase):
     
     def test_scan_instance_get(self):
         self.mock_dbh.scanInstanceGet.return_value = [
-            ("Test Scan", "example.com", 1000, 1001, 1002, "FINISHED")
+            ("scan-1", "Test Scan", "example.com", 1000, 1001, 1002, "FINISHED", 0)
         ]
         result = self.ds.scan_instance_get("scan-1")
         self.assertIsNotNone(result)
@@ -197,14 +197,15 @@ class TestFactory(unittest.TestCase):
     def test_create_http_fallback(self):
         config = DataServiceConfig(backend=DataServiceBackend.HTTP)
         ds = create_data_service(config)
-        # Falls back to local until HTTP is implemented
-        self.assertIsInstance(ds, LocalDataService)
+        # HTTP backend is wrapped in ResilientDataService
+        from spiderfoot.data_service.resilient import ResilientDataService
+        self.assertIsInstance(ds, ResilientDataService)
     
     def test_create_from_config(self):
         sf_config = {
             "_dataservice_backend": "local",
             "__database": "test.db",
-            "__dbtype": "sqlite",
+            "__dbtype": "postgresql",
         }
         ds = create_data_service_from_config(sf_config)
         self.assertIsInstance(ds, LocalDataService)
@@ -237,7 +238,7 @@ class TestDataServiceBridge(unittest.TestCase):
     
     def test_scanInstanceGet(self):
         self.mock_dbh.scanInstanceGet.return_value = [
-            ("Test", "target.com", 100, 101, 102, "FINISHED")
+            ("id-1", "Test", "target.com", 100, 101, 102, "FINISHED", 0)
         ]
         result = self.bridge.scanInstanceGet("id-1")
         self.assertIsInstance(result, list)

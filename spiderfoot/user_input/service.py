@@ -26,6 +26,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 
+from spiderfoot.security.upload_validation import sanitize_filename, validate_upload
+
 logger = logging.getLogger("sf.user_input")
 
 # In-memory store — production would use PostgreSQL
@@ -130,15 +132,19 @@ async def upload_document(
     """
     content = await file.read()
 
-    if len(content) > 100 * 1024 * 1024:
-        raise HTTPException(status_code=413, detail="File too large (max 100MB)")
+    # Centralised upload validation (size, content-type, extension, filename)
+    safe_filename, upload_err = validate_upload(
+        file.filename, file.content_type, len(content)
+    )
+    if upload_err:
+        raise HTTPException(status_code=400, detail=upload_err)
 
     submission_id = _generate_id()
     tag_list = [t.strip() for t in tags.split(",") if t.strip()] if tags else []
 
     # Process through enrichment pipeline
     enrichment_result = await _process_through_enrichment(
-        content, file.filename or "upload", file.content_type or "", scan_id, target
+        content, safe_filename, file.content_type or "", scan_id, target
     )
 
     # Forward to document analyzer agent
@@ -148,7 +154,7 @@ async def upload_document(
             {
                 "event_type": "USER_DOCUMENT",
                 "data": enrichment_result.get("text", ""),
-                "filename": file.filename,
+                "filename": safe_filename,
                 "content_type": file.content_type,
                 "scan_id": scan_id,
                 "target": target,
@@ -161,11 +167,11 @@ async def upload_document(
         submission_id=submission_id,
         input_type=InputType.DOCUMENT,
         status="processed",
-        message=f"Document '{file.filename}' processed and queued for agent analysis",
+        message=f"Document '{safe_filename}' processed and queued for agent analysis",
         enrichment_id=enrichment_result.get("document_id", ""),
         entities_found=enrichment_result.get("total_entities", 0),
         data={
-            "filename": file.filename,
+            "filename": safe_filename,
             "size": len(content),
             "content_type": file.content_type,
             "hash": hashlib.sha256(content).hexdigest(),
@@ -358,6 +364,8 @@ async def submit_targets(request: TargetListInput):
 @app.get("/input/submissions")
 async def list_submissions(limit: int = 50, offset: int = 0):
     """List all user submissions."""
+    limit = min(max(limit, 1), 1000)
+    offset = max(offset, 0)
     all_subs = list(_submissions.values())
     return {
         "submissions": all_subs[offset : offset + limit],
@@ -472,7 +480,7 @@ async def _store_report(
 
         endpoint = os.environ.get("SF_MINIO_ENDPOINT", "minio:9000")
         access_key = os.environ.get("SF_MINIO_ACCESS_KEY", "spiderfoot")
-        secret_key = os.environ.get("SF_MINIO_SECRET_KEY", "changeme123")
+        secret_key = os.environ.get("SF_MINIO_SECRET_KEY", "")
         bucket = "sf-enrichment"
 
         client = Minio(endpoint, access_key=access_key, secret_key=secret_key, secure=False)

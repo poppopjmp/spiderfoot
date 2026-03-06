@@ -17,10 +17,10 @@ import json
 import time
 
 from spiderfoot import SpiderFootEvent, SpiderFootHelpers
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_builtwith(SpiderFootModernPlugin):
+class sfp_builtwith(SpiderFootAsyncPlugin):
     """SpiderFoot plugin to query BuiltWith.com's Domain API for information about your target's web technology stack, e-mail addresses and more."""
     meta = {
         'name': "BuiltWith",
@@ -243,6 +243,9 @@ class sfp_builtwith(SpiderFootModernPlugin):
         agelimit = int(time.time() * 1000) - (86400000 * self.opts['maxage'])
 
         for r in data:
+            if self.checkForStop():
+                return
+
             if "Domain" not in r or "Identifiers" not in r:
                 self.debug("Data returned not in the format requested.")
                 continue

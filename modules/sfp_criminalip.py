@@ -19,10 +19,10 @@ import time
 import urllib
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_criminalip(SpiderFootModernPlugin):
+class sfp_criminalip(SpiderFootAsyncPlugin):
     """SpiderFoot plugin to obtain information from CriminalIP."""
     meta = {
         "name": "CriminalIP",

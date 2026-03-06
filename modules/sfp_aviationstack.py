@@ -19,10 +19,10 @@ import json
 import time
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_aviationstack(SpiderFootModernPlugin):
+class sfp_aviationstack(SpiderFootAsyncPlugin):
 
     """Query AviationStack for flight tracking, airline, airport and aircraft intelligence."""
 
@@ -48,6 +48,11 @@ class sfp_aviationstack(SpiderFootModernPlugin):
                 "and historical flight tracking data, airport timetables, airline "
                 "routes, and aircraft registrations. Free tier: 100 requests/month."
             ),
+            'apiKeyInstructions': [
+                "Register at https://aviationstack.com/signup/free",
+                "Copy your API Access Key from the dashboard",
+                "Enter the key in the _api_key option",
+            ],
         }
     }
 

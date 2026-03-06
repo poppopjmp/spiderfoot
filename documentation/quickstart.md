@@ -17,10 +17,10 @@ This guide will help you run your first scan in minutes using either the Docker 
    # Edit .env — change passwords, uncomment profile sections as needed
 
    # Core only (5 services)
-   docker compose -f docker-compose-microservices.yml up --build -d
+   docker compose -f docker-compose.yml up --build -d
 
    # Or full stack (all services except SSO)
-   docker compose -f docker-compose-microservices.yml --profile full up --build -d
+   docker compose -f docker-compose.yml --profile full up --build -d
    ```
 
 2. **Open the Web UI:**
@@ -115,3 +115,4 @@ Organize related scans into **Workspaces** for multi-target campaigns, recurring
 ---
 
 Next: [Configuration](configuration.md) for API keys, advanced settings, and more tips.
+

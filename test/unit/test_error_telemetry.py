@@ -1,10 +1,10 @@
-"""Tests for spiderfoot.error_telemetry."""
+"""Tests for spiderfoot.observability.error_telemetry."""
 from __future__ import annotations
 
 import unittest
 import time
 
-from spiderfoot.error_telemetry import (
+from spiderfoot.observability.error_telemetry import (
     AlertEvent,
     AlertRule,
     AlertSeverity,

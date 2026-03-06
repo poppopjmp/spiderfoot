@@ -1,24 +1,26 @@
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, Link } from 'react-router-dom';
 import { lazy, Suspense, useEffect } from 'react';
 import Layout from './components/Layout';
 import { useAuthStore } from './lib/auth';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Core pages (eagerly loaded — most visited)
 import DashboardPage from './pages/Dashboard';
 import ScansPage from './pages/Scans';
-import ScanDetailPage from './pages/ScanDetail';
-import NewScanPage from './pages/NewScan';
-import SettingsPage from './pages/Settings';
 import LoginPage from './pages/Login';
 
-// Secondary pages (lazy loaded)
+// Secondary pages (lazy loaded for reduced initial bundle)
+const ScanDetailPage = lazy(() => import('./pages/ScanDetail'));
+const NewScanPage = lazy(() => import('./pages/NewScan'));
+const SettingsPage = lazy(() => import('./pages/Settings'));
 const WorkspacesPage = lazy(() => import('./pages/Workspaces'));
 const ModulesPage = lazy(() => import('./pages/Modules'));
 const DocumentationPage = lazy(() => import('./pages/Documentation'));
-const AgentsPage = lazy(() => import('./pages/Agents'));
 const UsersPage = lazy(() => import('./pages/Users'));
 const SSOSettingsPage = lazy(() => import('./pages/SSOSettings'));
 const ApiKeysPage = lazy(() => import('./pages/ApiKeys'));
+const SchedulesPage = lazy(() => import('./pages/Schedules'));
+const AgentsPage = lazy(() => import('./pages/Agents'));
 
 function LazyFallback() {
   return (
@@ -48,6 +50,21 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+/**
+ * Permission-aware route guard.  Redirects to "/" when the current user
+ * lacks the required permission.  Falls through silently when auth is
+ * not enforced (authRequired === false) so development isn't impacted.
+ */
+function RequirePermission({ permission, children }: { permission: string; children: React.ReactNode }) {
+  const { hasPermission, authRequired } = useAuthStore();
+
+  if (authRequired && !hasPermission(permission)) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
+}
+
 export default function App() {
   const { fetchAuthStatus, fetchCurrentUser, setTokensFromUrl, accessToken } = useAuthStore();
 
@@ -55,16 +72,17 @@ export default function App() {
   useEffect(() => {
     setTokensFromUrl();
     fetchAuthStatus();
-  }, []);
+  }, [setTokensFromUrl, fetchAuthStatus]);
 
   // Fetch current user when access token changes
   useEffect(() => {
     if (accessToken) {
       fetchCurrentUser();
     }
-  }, [accessToken]);
+  }, [accessToken, fetchCurrentUser]);
 
   return (
+    <ErrorBoundary>
     <Routes>
       {/* Login page — always accessible */}
       <Route path="/login" element={<LoginPage />} />
@@ -76,8 +94,8 @@ export default function App() {
 
         {/* Scans — matches CherryPy: /scanlist, /newscan, /scaninfo?id= */}
         <Route path="scans" element={<ScansPage />} />
-        <Route path="scans/new" element={<NewScanPage />} />
-        <Route path="scans/:scanId" element={<ScanDetailPage />} />
+        <Route path="scans/new" element={<Suspense fallback={<LazyFallback />}><NewScanPage /></Suspense>} />
+        <Route path="scans/:scanId" element={<Suspense fallback={<LazyFallback />}><ScanDetailPage /></Suspense>} />
 
         {/* Workspaces — matches CherryPy: /workspaces, /workspacedetails */}
         <Route path="workspaces" element={<Suspense fallback={<LazyFallback />}><WorkspacesPage /></Suspense>} />
@@ -89,19 +107,22 @@ export default function App() {
         <Route path="documentation" element={<Suspense fallback={<LazyFallback />}><DocumentationPage /></Suspense>} />
 
         {/* Settings — matches CherryPy: /opts */}
-        <Route path="settings" element={<SettingsPage />} />
+        <Route path="settings" element={<Suspense fallback={<LazyFallback />}><SettingsPage /></Suspense>} />
 
-        {/* Agents — matches CherryPy: /agents (from Services) */}
+        {/* Schedules — recurring scan management */}
+        <Route path="schedules" element={<Suspense fallback={<LazyFallback />}><SchedulesPage /></Suspense>} />
+
+        {/* AI Agents — agent status and metrics */}
         <Route path="agents" element={<Suspense fallback={<LazyFallback />}><AgentsPage /></Suspense>} />
 
         {/* User Management (admin only) */}
-        <Route path="users" element={<Suspense fallback={<LazyFallback />}><UsersPage /></Suspense>} />
+        <Route path="users" element={<RequirePermission permission="user:read"><Suspense fallback={<LazyFallback />}><UsersPage /></Suspense></RequirePermission>} />
 
         {/* SSO Settings (admin only) */}
-        <Route path="sso-settings" element={<Suspense fallback={<LazyFallback />}><SSOSettingsPage /></Suspense>} />
+        <Route path="sso-settings" element={<RequirePermission permission="system:admin"><Suspense fallback={<LazyFallback />}><SSOSettingsPage /></Suspense></RequirePermission>} />
 
-        {/* API Keys */}
-        <Route path="api-keys" element={<Suspense fallback={<LazyFallback />}><ApiKeysPage /></Suspense>} />
+        {/* API Keys (admin only) */}
+        <Route path="api-keys" element={<RequirePermission permission="system:admin"><Suspense fallback={<LazyFallback />}><ApiKeysPage /></Suspense></RequirePermission>} />
 
         {/* CherryPy URL redirects for backward compatibility */}
         <Route path="newscan" element={<Navigate to="/scans/new" replace />} />
@@ -111,11 +132,18 @@ export default function App() {
         {/* 404 catch-all */}
         <Route path="*" element={
           <div className="flex flex-col items-center justify-center h-64 text-center">
-            <p className="text-4xl font-bold text-dark-400 mb-2">404</p>
-            <p className="text-dark-500">Page not found</p>
+            <p className="text-6xl font-bold text-dark-600 mb-4">404</p>
+            <p className="text-lg text-dark-400 mb-6">Page not found</p>
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-spider-600 text-white hover:bg-spider-500 transition-colors"
+            >
+              Back to Dashboard
+            </Link>
           </div>
         } />
       </Route>
     </Routes>
+    </ErrorBoundary>
   );
 }

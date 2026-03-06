@@ -19,10 +19,10 @@ import re
 import time
 
 from spiderfoot import SpiderFootEvent, SpiderFootHelpers
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_stackoverflow(SpiderFootModernPlugin):
+class sfp_stackoverflow(SpiderFootAsyncPlugin):
 
     """Search StackOverflow for any mentions of a target domain. Returns potentially related information."""
 

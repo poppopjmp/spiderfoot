@@ -41,7 +41,7 @@ def main():
     service_role = os.environ.get("SF_SERVICE_ROLE", "api")
     if os.environ.get("SF_DEPLOYMENT_MODE") in ("microservice", "microservices"):
         try:
-            from spiderfoot.startup_sequencer import StartupSequencer
+            from spiderfoot.ops.startup_sequencer import StartupSequencer
             sequencer = StartupSequencer(role=service_role)
             result = sequencer.wait_for_ready_sync(timeout=60)
             if not result.all_ready:
@@ -51,7 +51,7 @@ def main():
 
     # ── Register shutdown handlers ──
     try:
-        from spiderfoot.graceful_shutdown import get_shutdown_coordinator
+        from spiderfoot.ops.graceful_shutdown import get_shutdown_coordinator
         coordinator = get_shutdown_coordinator()
         coordinator.install_signal_handlers()
         logger.info("Graceful shutdown coordinator active (role=%s)", service_role)

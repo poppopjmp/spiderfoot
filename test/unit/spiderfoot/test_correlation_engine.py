@@ -79,13 +79,20 @@ class TestCorrelationEngineUnit(TestModuleBase):
         self.assertIsInstance(enriched, list)
 
     def test_result_aggregator(self):
-        aggregator = ResultAggregator()
-        results = [
-            {'matched': True, 'events': [{'type': 'EMAILADDR', 'data': 'test@example.com'}]},
-            {'matched': False, 'events': []}
-        ]
-        count = aggregator.aggregate(results, method='count')
-        self.assertEqual(count, 2)
+        aggregator = ResultAggregator(scan_id="test-scan")
+        aggregator.add_event("EMAILADDR", "test@example.com", "sfp_test", confidence=90, risk=10)
+        aggregator.add_event("IP_ADDRESS", "192.168.1.1", "sfp_dns", confidence=100, risk=30)
+        aggregator.add_event("MALICIOUS_IPADDR", "192.168.1.1", "sfp_virustotal", confidence=80, risk=80)
+        self.assertEqual(aggregator.total_events, 3)
+        self.assertEqual(aggregator.unique_types, 3)
+        summary = aggregator.get_summary()
+        self.assertIn("total_events", summary)
+        self.assertEqual(summary["total_events"], 3)
+        self.assertGreater(summary["overall_risk_score"], 0)
+        # Verify risk events are tracked
+        top_risk = aggregator.get_top_risk_events(limit=2)
+        self.assertEqual(len(top_risk), 2)
+        self.assertEqual(top_risk[0]["risk"], 80)  # highest risk first
 
 if __name__ == '__main__':
     unittest.main()

@@ -317,7 +317,7 @@ class SandboxManager:
         self.default_limits = default_limits or ResourceLimits()
         self._sandboxes: dict[str, ModuleSandbox] = {}
         self._results: list[SandboxResult] = []
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()  # RLock to allow reentrant calls (e.g. summary→get_failed_modules)
 
     def get_sandbox(
         self,

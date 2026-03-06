@@ -1,4 +1,4 @@
-"""Tests for spiderfoot.secret_manager."""
+"""Tests for spiderfoot.security.secrets."""
 from __future__ import annotations
 
 import json
@@ -6,7 +6,7 @@ import os
 import tempfile
 import unittest
 
-from spiderfoot.secret_manager import (
+from spiderfoot.security.secrets import (
     EncryptedFileSecretBackend,
     EnvSecretBackend,
     FileSecretBackend,

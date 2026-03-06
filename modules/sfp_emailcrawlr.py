@@ -17,15 +17,13 @@ from __future__ import annotations
 
 import json
 import time
-import urllib.error
 import urllib.parse
-import urllib.request
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_emailcrawlr(SpiderFootModernPlugin):
+class sfp_emailcrawlr(SpiderFootAsyncPlugin):
     """EmailCrawlr plugin for searching email addresses and phone numbers associated with a domain."""
     meta = {
         'name': "EmailCrawlr",
@@ -193,6 +191,8 @@ class sfp_emailcrawlr(SpiderFootModernPlugin):
                 return
 
             for res in emails:
+                if self.checkForStop():
+                    return
                 email = res.get('email')
                 if email:
                     mail_domain = email.lower().split('@')[1]

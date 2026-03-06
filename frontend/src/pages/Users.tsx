@@ -4,7 +4,9 @@
  * Full CRUD for users: list, create, edit role/status, change password, delete.
  * Only accessible to users with user:read permission.
  */
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import {
   Users as UsersIcon,
   Plus,
@@ -22,7 +24,8 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { clsx } from 'clsx';
-import api from '../lib/api';
+import { authApi } from '../lib/api';
+import { getErrorMessage } from '../lib/errors';
 import { ModalShell } from '../components/ui';
 import { useAuthStore } from '../lib/auth';
 
@@ -69,16 +72,14 @@ function formatDate(ts: number): string {
 // ── Component ────────────────────────────────────────────
 
 export default function UsersPage() {
+  useDocumentTitle('Users');
+  const queryClient = useQueryClient();
   const { user: currentUser, hasPermission } = useAuthStore();
 
   const canCreate = hasPermission('user:create');
   const canUpdate = hasPermission('user:update');
   const canDelete = hasPermission('user:delete');
 
-  const [users, setUsers] = useState<UserRecord[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [search, setSearch] = useState('');
 
   // Modals
@@ -89,25 +90,15 @@ export default function UsersPage() {
 
   // ── Data fetching ──────────────────────────────────────
 
-  const fetchUsers = useCallback(async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const res = await api.get('/api/auth/users', {
-        params: { limit: 200, offset: 0 },
-      });
-      setUsers(res.data.items || []);
-      setTotal(res.data.total || 0);
-    } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Failed to load users');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const { data, isLoading: loading, error: fetchError } = useQuery({
+    queryKey: ['users'],
+    queryFn: ({ signal }) =>
+      authApi.users(signal),
+  });
 
-  useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
+  const users: UserRecord[] = data?.items || [];
+  const total: number = data?.total || 0;
+  const error = fetchError ? getErrorMessage(fetchError, 'Failed to load users') : '';
 
   // ── Filter ─────────────────────────────────────────────
 
@@ -290,7 +281,7 @@ export default function UsersPage() {
           onClose={() => setShowCreate(false)}
           onCreated={() => {
             setShowCreate(false);
-            fetchUsers();
+            queryClient.invalidateQueries({ queryKey: ['users'] });
           }}
         />
       )}
@@ -302,7 +293,7 @@ export default function UsersPage() {
           onClose={() => setEditUser(null)}
           onUpdated={() => {
             setEditUser(null);
-            fetchUsers();
+            queryClient.invalidateQueries({ queryKey: ['users'] });
           }}
         />
       )}
@@ -325,7 +316,7 @@ export default function UsersPage() {
           onClose={() => setDeleteUser(null)}
           onDeleted={() => {
             setDeleteUser(null);
-            fetchUsers();
+            queryClient.invalidateQueries({ queryKey: ['users'] });
           }}
         />
       )}
@@ -374,27 +365,25 @@ function CreateUserModal({
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('viewer');
   const [displayName, setDisplayName] = useState('');
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const createMutation = useMutation({
+    mutationFn: (data: Record<string, unknown>) =>
+      authApi.createUser(data),
+    onSuccess: () => onCreated(),
+    onError: (err: unknown) => setError(getErrorMessage(err, 'Failed to create user')),
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setSaving(true);
     setError('');
-    try {
-      await api.post('/api/auth/users', {
-        username,
-        email,
-        password,
-        role,
-        display_name: displayName,
-      });
-      onCreated();
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to create user');
-    } finally {
-      setSaving(false);
-    }
+    createMutation.mutate({
+      username,
+      email,
+      password,
+      role,
+      display_name: displayName,
+    });
   };
 
   return (
@@ -474,10 +463,10 @@ function CreateUserModal({
           </button>
           <button
             type="submit"
-            disabled={saving}
+            disabled={createMutation.isPending}
             className="px-4 py-2 bg-spider-600 hover:bg-spider-500 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors"
           >
-            {saving ? 'Creating...' : 'Create User'}
+            {createMutation.isPending ? 'Creating...' : 'Create User'}
           </button>
         </div>
       </form>
@@ -501,26 +490,24 @@ function EditUserModal({
   const [role, setRole] = useState(user.role);
   const [displayName, setDisplayName] = useState(user.display_name);
   const [status, setStatus] = useState(user.status);
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const updateMutation = useMutation({
+    mutationFn: (data: Record<string, unknown>) =>
+      authApi.updateUser(user.id, data),
+    onSuccess: () => onUpdated(),
+    onError: (err: unknown) => setError(getErrorMessage(err, 'Failed to update user')),
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setSaving(true);
     setError('');
-    try {
-      await api.patch(`/api/auth/users/${user.id}`, {
-        email,
-        role,
-        display_name: displayName,
-        status,
-      });
-      onUpdated();
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to update user');
-    } finally {
-      setSaving(false);
-    }
+    updateMutation.mutate({
+      email,
+      role,
+      display_name: displayName,
+      status,
+    });
   };
 
   return (
@@ -592,10 +579,10 @@ function EditUserModal({
           </button>
           <button
             type="submit"
-            disabled={saving}
+            disabled={updateMutation.isPending}
             className="px-4 py-2 bg-spider-600 hover:bg-spider-500 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors"
           >
-            {saving ? 'Saving...' : 'Save Changes'}
+            {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
           </button>
         </div>
       </form>
@@ -617,27 +604,23 @@ function ChangePasswordModal({
 }) {
   const [newPassword, setNewPassword] = useState('');
   const [confirm, setConfirm] = useState('');
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const passwordMutation = useMutation({
+    mutationFn: (data: { new_password: string }) =>
+      authApi.setPassword(user.id, data),
+    onSuccess: () => onChanged(),
+    onError: (err: unknown) => setError(getErrorMessage(err, 'Failed to change password')),
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword !== confirm) {
       setError('Passwords do not match');
       return;
     }
-    setSaving(true);
     setError('');
-    try {
-      await api.post(`/api/auth/users/${user.id}/password`, {
-        new_password: newPassword,
-      });
-      onChanged();
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to change password');
-    } finally {
-      setSaving(false);
-    }
+    passwordMutation.mutate({ new_password: newPassword });
   };
 
   return (
@@ -684,10 +667,10 @@ function ChangePasswordModal({
           </button>
           <button
             type="submit"
-            disabled={saving || newPassword.length < 8 || newPassword !== confirm}
+            disabled={passwordMutation.isPending || newPassword.length < 8 || newPassword !== confirm}
             className="px-4 py-2 bg-yellow-600 hover:bg-yellow-500 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors"
           >
-            {saving ? 'Changing...' : 'Change Password'}
+            {passwordMutation.isPending ? 'Changing...' : 'Change Password'}
           </button>
         </div>
       </form>
@@ -707,20 +690,15 @@ function DeleteUserModal({
   onClose: () => void;
   onDeleted: () => void;
 }) {
-  const [deleting, setDeleting] = useState(false);
-  const [error, setError] = useState('');
+  const deleteMutation = useMutation({
+    mutationFn: () => authApi.deleteUser(user.id),
+    onSuccess: () => onDeleted(),
+    onError: () => {},
+  });
 
-  const handleDelete = async () => {
-    setDeleting(true);
-    setError('');
-    try {
-      await api.delete(`/api/auth/users/${user.id}`);
-      onDeleted();
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to delete user');
-      setDeleting(false);
-    }
-  };
+  const error = deleteMutation.error
+    ? getErrorMessage(deleteMutation.error, 'Failed to delete user')
+    : '';
 
   return (
     <ModalShell title="Delete User" onClose={onClose}>
@@ -747,11 +725,11 @@ function DeleteUserModal({
             Cancel
           </button>
           <button
-            onClick={handleDelete}
-            disabled={deleting}
+            onClick={() => deleteMutation.mutate()}
+            disabled={deleteMutation.isPending}
             className="px-4 py-2 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors"
           >
-            {deleting ? 'Deleting...' : 'Delete User'}
+            {deleteMutation.isPending ? 'Deleting...' : 'Delete User'}
           </button>
         </div>
       </div>

@@ -21,10 +21,10 @@ import time
 import urllib.parse
 
 from spiderfoot import SpiderFootEvent, SpiderFootHelpers
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_flickr(SpiderFootModernPlugin):
+class sfp_flickr(SpiderFootAsyncPlugin):
     """SpiderFoot plugin for searching Flickr API for domains, URLs and emails related to the specified domain."""
     meta = {
         'name': "Flickr",

@@ -13,10 +13,10 @@ import os
 import subprocess
 import tempfile
 
-from spiderfoot import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_tool_sslyze(SpiderFootModernPlugin):
+class sfp_tool_sslyze(SpiderFootAsyncPlugin):
     """Deep SSL/TLS analysis via SSLyze."""
 
     meta = {
@@ -147,6 +147,9 @@ class sfp_tool_sslyze(SpiderFootModernPlugin):
 
                 # Process server scan results
                 for server_result in report.get("server_scan_results", []):
+                    if self.checkForStop():
+                        return
+
                     scan_result = server_result.get("scan_result", {})
 
                     # Certificate info

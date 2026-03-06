@@ -18,10 +18,10 @@ from __future__ import annotations
 import re
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_ethereum(SpiderFootModernPlugin):
+class sfp_ethereum(SpiderFootAsyncPlugin):
     """SpiderFoot plugin for extracting Ethereum addresses."""
     meta = {
         'name': "Ethereum Address Extractor",

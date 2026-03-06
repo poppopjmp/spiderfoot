@@ -20,10 +20,10 @@ import re
 from hashlib import sha256
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_bitcoin(SpiderFootModernPlugin):
+class sfp_bitcoin(SpiderFootAsyncPlugin):
     """SpiderFoot plugin to identify bitcoin addresses in scraped webpages."""
     meta = {
         'name': "Bitcoin Finder",

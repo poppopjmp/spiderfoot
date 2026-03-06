@@ -27,12 +27,12 @@ spec:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
         - name: flower
-          image: "{{ .Values.celery.flower.image.repository }}:{{ .Values.celery.flower.image.tag }}"
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command:
             - celery
             - -A
-            - spiderfoot.celery_app
+            - spiderfoot.celery_app:celery_app
             - flower
             - --port={{ .Values.celery.flower.port }}
             - --broker=redis://{{ include "spiderfoot.redis.host" . }}:6379/0

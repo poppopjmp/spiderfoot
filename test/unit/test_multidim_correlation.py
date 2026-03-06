@@ -1,9 +1,9 @@
-"""Tests for spiderfoot.multidim_correlation — multi-dimensional analyzer."""
+"""Tests for spiderfoot.correlation.multidim — multi-dimensional analyzer."""
 
 from __future__ import annotations
 
 import pytest
-from spiderfoot.multidim_correlation import (
+from spiderfoot.correlation.multidim import (
     CorrelationPair,
     DEFAULT_WEIGHTS,
     Dimension,

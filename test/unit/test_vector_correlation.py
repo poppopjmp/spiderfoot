@@ -1,13 +1,13 @@
-"""Tests for spiderfoot.vector_correlation — vector correlation engine."""
+"""Tests for spiderfoot.correlation.vector — vector correlation engine."""
 
 from __future__ import annotations
 
 import pytest
-from spiderfoot.qdrant_client import QdrantClient, QdrantConfig, QdrantBackend
+from spiderfoot.ai.qdrant_client import QdrantClient, QdrantConfig, QdrantBackend
 from spiderfoot.services.embedding_service import EmbeddingConfig, EmbeddingProvider, EmbeddingService
-from spiderfoot.rag_pipeline import RAGConfig, LLMProvider, RAGPipeline
+from spiderfoot.ai.rag_pipeline import RAGConfig, LLMProvider, RAGPipeline
 from spiderfoot.services.reranker_service import RerankerConfig, RerankerProvider, RerankerService
-from spiderfoot.vector_correlation import (
+from spiderfoot.correlation.vector import (
     CorrelationHit,
     CorrelationStrategy,
     OSINTEvent,

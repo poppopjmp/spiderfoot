@@ -13,7 +13,7 @@ from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, Field
 from typing import Any
 
-from spiderfoot.sso_integration import SSOManager, SSOProtocol, SSOProviderStatus
+from spiderfoot.auth.sso import SSOManager, SSOProtocol, SSOProviderStatus
 
 router = APIRouter()
 

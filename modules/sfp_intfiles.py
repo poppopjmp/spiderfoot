@@ -15,10 +15,10 @@ from __future__ import annotations
 # -------------------------------------------------------------------------------
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_intfiles(SpiderFootModernPlugin):
+class sfp_intfiles(SpiderFootAsyncPlugin):
     """Identifies potential files of interest, e.g. office documents, zip files."""
 
     __name__ = "sfp_intfiles"

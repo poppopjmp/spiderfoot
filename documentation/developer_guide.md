@@ -6,7 +6,7 @@ This guide is for developers who want to contribute to SpiderFoot, build custom 
 
 ## Contributing
 
-We welcome contributions of all kinds! Please read the [Contributing Guide](../docs/contributing.md) for information on submitting issues, feature requests, and pull requests. All contributors must follow the project's code of conduct.
+We welcome contributions of all kinds! Please read the [Contributing Guide](../CONTRIBUTING.md) for information on submitting issues, feature requests, and pull requests. All contributors must follow the project's code of conduct.
 
 ## Security Development
 
@@ -59,7 +59,7 @@ logger.log_login_attempt("username", success=True, ip_address="192.168.1.1")
 
 **3. Rate Limiting Integration**
 ```python
-from spiderfoot.rate_limiter import RateLimiter
+from spiderfoot.security.rate_limiter import RateLimiter
 
 rate_limiter = RateLimiter()
 

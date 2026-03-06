@@ -31,13 +31,13 @@ class ConfigManager:
         self.dbhLock = dbhLock
         self.db_type = db_type
 
-    def _log_db_error(self, msg, exc):
+    def _log_db_error(self, msg: str, exc: BaseException) -> None:
         log.error("[DB] %s: %s", msg, exc)
 
-    def _is_transient_error(self, exc):
+    def _is_transient_error(self, exc: BaseException) -> bool:
         return is_transient_error(exc)
 
-    def configSet(self, optMap: dict = None) -> bool:
+    def configSet(self, optMap: dict | None = None) -> bool:
         """Store global configuration options in the database."""
         if optMap is None:
             optMap = {}

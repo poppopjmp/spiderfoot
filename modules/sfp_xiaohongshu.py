@@ -3,9 +3,9 @@ from __future__ import annotations
 """SpiderFoot plug-in module: xiaohongshu."""
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
-class sfp_xiaohongshu(SpiderFootModernPlugin):
+class sfp_xiaohongshu(SpiderFootAsyncPlugin):
     """Monitors Xiaohongshu for new posts and emits events."""
 
     meta = {
@@ -65,6 +65,8 @@ class sfp_xiaohongshu(SpiderFootModernPlugin):
             self._seen_posts = set()
 
         for username in usernames:
+            if self.checkForStop():
+                return
             try:
                 # --- MOCKED API CALL ---
                 # Simulate API/network error for a specific user

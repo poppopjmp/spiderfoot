@@ -2,9 +2,9 @@ from __future__ import annotations
 
 """SpiderFoot plug-in module: example."""
 
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
-class sfp_example(SpiderFootModernPlugin):
+class sfp_example(SpiderFootAsyncPlugin):
     """Example SpiderFoot plugin."""
     meta = {
         'name': 'sfp_example',

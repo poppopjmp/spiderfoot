@@ -18,10 +18,10 @@ import json
 import urllib.parse
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_bitcoinwhoswho(SpiderFootModernPlugin):
+class sfp_bitcoinwhoswho(SpiderFootAsyncPlugin):
     """SpiderFoot plugin to check Bitcoin addresses against the Bitcoin Who's Who database of suspect/malicious addresses."""
     meta = {
         'name': "Bitcoin Who's Who",

@@ -13,10 +13,10 @@ import os
 import subprocess
 import tempfile
 
-from spiderfoot import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_tool_gitleaks(SpiderFootModernPlugin):
+class sfp_tool_gitleaks(SpiderFootAsyncPlugin):
     """Secret detection in git repositories via Gitleaks."""
 
     meta = {
@@ -167,6 +167,8 @@ class sfp_tool_gitleaks(SpiderFootModernPlugin):
 
                 if isinstance(findings, list):
                     for finding in findings:
+                        if self.checkForStop():
+                            return
                         rule_id = finding.get("RuleID", "unknown")
                         description = finding.get("Description", "Secret detected")
                         file_path = finding.get("File", "")

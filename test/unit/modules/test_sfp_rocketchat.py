@@ -35,14 +35,17 @@ def test_produced_events(plugin):
 
 def test_option_validation():
     p = sfp_rocketchat()
-    with pytest.raises(ValueError):
-        p.setup(None, {"access_token": "", "room_id": "room", "max_messages": 10, "output_format": "summary"})
-    with pytest.raises(ValueError):
-        p.setup(None, {"access_token": "token", "room_id": "", "max_messages": 10, "output_format": "summary"})
-    with pytest.raises(ValueError):
-        p.setup(None, {"access_token": "token", "room_id": "room", "max_messages": 0, "output_format": "summary"})
-    with pytest.raises(ValueError):
-        p.setup(None, {"access_token": "token", "room_id": "room", "max_messages": 10, "output_format": "invalid"})
+    p.setup(None, {"access_token": "", "room_id": "room", "max_messages": 10, "output_format": "summary"})
+    assert p.errorState
+    p = sfp_rocketchat()
+    p.setup(None, {"access_token": "token", "room_id": "", "max_messages": 10, "output_format": "summary"})
+    assert p.errorState
+    p = sfp_rocketchat()
+    p.setup(None, {"access_token": "token", "room_id": "room", "max_messages": 0, "output_format": "summary"})
+    assert p.errorState
+    p = sfp_rocketchat()
+    p.setup(None, {"access_token": "token", "room_id": "room", "max_messages": 10, "output_format": "invalid"})
+    assert p.errorState
 
 def test_handle_event_stub(plugin):
     event = SpiderFootEvent('ROOT', 'test', 'test', None)

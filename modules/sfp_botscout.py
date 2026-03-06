@@ -15,15 +15,13 @@ from __future__ import annotations
 
 """SpiderFoot plug-in module: botscout."""
 
-import urllib.error
 import urllib.parse
-import urllib.request
 
 from spiderfoot import SpiderFootEvent, SpiderFootHelpers
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_botscout(SpiderFootModernPlugin):
+class sfp_botscout(SpiderFootAsyncPlugin):
     """SpiderFoot plugin to search BotScout.com for malicious IPs and email addresses."""
     meta = {
         'name': "BotScout",

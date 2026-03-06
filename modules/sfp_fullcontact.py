@@ -18,10 +18,10 @@ import time
 from datetime import datetime
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_fullcontact(SpiderFootModernPlugin):
+class sfp_fullcontact(SpiderFootAsyncPlugin):
     """SpiderFoot plugin to gather domain and e-mail information from FullContact.com API."""
     __name__ = "sfp_fullcontact"
     meta = {

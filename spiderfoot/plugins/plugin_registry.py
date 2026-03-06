@@ -5,9 +5,9 @@
 #               Discover, install, update, and manage community modules
 #               with dependency resolution and version compatibility.
 #
-# Author:       SpiderFoot Team
+# Author:       Van1sh 
 # Created:      2025-07-08
-# Copyright:    (c) SpiderFoot Team 2025
+# Copyright:    (c) Van1sh  2025
 # Licence:      MIT
 # -------------------------------------------------------------------------------
 

@@ -17,15 +17,13 @@ from __future__ import annotations
 import base64
 import json
 import time
-import urllib.error
 import urllib.parse
-import urllib.request
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_certspotter(SpiderFootModernPlugin):
+class sfp_certspotter(SpiderFootAsyncPlugin):
     """SpiderFoot plugin to gather information about SSL certificates from SSLMate CertSpotter API."""
 
     meta = {
@@ -195,6 +193,9 @@ class sfp_certspotter(SpiderFootModernPlugin):
             self.notifyListeners(evt)
 
             for result in data:
+                if self.checkForStop():
+                    return
+
                 cert_hosts = result.get('dns_names')
 
                 if cert_hosts:

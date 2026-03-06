@@ -16,15 +16,13 @@ from __future__ import annotations
 # -------------------------------------------------------------------------------
 
 import re
-import urllib.error
 import urllib.parse
-import urllib.request
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_onionsearchengine(SpiderFootModernPlugin):
+class sfp_onionsearchengine(SpiderFootAsyncPlugin):
 
     """Search Tor onionsearchengine.com for mentions of the target domain."""
 

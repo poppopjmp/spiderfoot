@@ -59,6 +59,20 @@ from .service_auth import (
     generate_service_secret,
 )
 
+# Secret management
+from .secrets import (
+    EncryptedFileSecretBackend,
+    EnvSecretBackend,
+    FileSecretBackend,
+    MemorySecretBackend,
+    SecretBackend,
+    SecretManager,
+    get_secret_manager,
+)
+
+# Startup security checks
+from .startup_check import check_startup_secrets
+
 __all__ = [
     # Authentication
     "AuthConfig",
@@ -92,4 +106,14 @@ __all__ = [
     "ServiceTokenValidator",
     "TokenValidationResult",
     "generate_service_secret",
+    # Secret management
+    "EncryptedFileSecretBackend",
+    "EnvSecretBackend",
+    "FileSecretBackend",
+    "MemorySecretBackend",
+    "SecretBackend",
+    "SecretManager",
+    "get_secret_manager",
+    # Startup security checks
+    "check_startup_secrets",
 ]

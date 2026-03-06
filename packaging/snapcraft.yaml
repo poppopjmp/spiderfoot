@@ -10,7 +10,4 @@ parts:
       - modules/**
       - correlations/**
       - spiderfoot/**
-      - sf.py
-      - sfcli.py
       - sfapi.py
-      - sfwebui.py

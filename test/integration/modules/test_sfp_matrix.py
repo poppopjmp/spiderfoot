@@ -20,9 +20,9 @@ def test_handle_event_stub(plugin):
     assert plugin.handleEvent(event) is None
 
 def test_setup_requires_access_token(plugin):
-    with pytest.raises(Exception):
-        plugin.setup(None, {"access_token": "", "room_id": "!room:id", "max_messages": 10, "output_format": "summary"})
+    plugin.setup(None, {"access_token": "", "room_id": "!room:id", "max_messages": 10, "output_format": "summary"})
+    assert plugin.errorState is True
 
 def test_setup_requires_room_id(plugin):
-    with pytest.raises(Exception):
-        plugin.setup(None, {"access_token": "token", "room_id": "", "max_messages": 10, "output_format": "summary"})
+    plugin.setup(None, {"access_token": "token", "room_id": "", "max_messages": 10, "output_format": "summary"})
+    assert plugin.errorState is True

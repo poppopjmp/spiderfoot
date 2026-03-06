@@ -14,10 +14,10 @@ import os
 import subprocess
 import tempfile
 
-from spiderfoot import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_tool_katana(SpiderFootModernPlugin):
+class sfp_tool_katana(SpiderFootAsyncPlugin):
     """Next-gen web crawling via ProjectDiscovery katana."""
 
     meta = {

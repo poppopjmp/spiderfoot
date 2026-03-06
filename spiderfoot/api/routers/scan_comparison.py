@@ -8,13 +8,17 @@ v5.6.9
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Query
+import logging
+from fastapi import APIRouter, Depends, HTTPException, Query
+from ..dependencies import get_api_key, SafeId
 from pydantic import BaseModel, Field
 from typing import Any
 
-from spiderfoot.scan_comparison import ScanComparator
+from spiderfoot.scan.comparison import ScanComparator
 
-router = APIRouter()
+log = logging.getLogger("spiderfoot.api.scan_comparison")
+
+router = APIRouter(dependencies=[Depends(get_api_key)])
 
 _comparator = ScanComparator()
 
@@ -131,8 +135,9 @@ async def quick_compare(body: QuickCompareRequest):
                     "module": str(r[3]) if len(r) > 3 else "",
                 })
     except Exception as e:
+        log.error("Failed to load scan data: %s", e, exc_info=True)
         raise HTTPException(
-            500, f"Failed to load scan data: {e}",
+            500, "Failed to load scan data",
         )
 
     result = _comparator.compare(
@@ -163,7 +168,7 @@ async def comparison_history(
 
 
 @router.get("/scan-comparison/{comparison_id}", tags=["scan-comparison"])
-async def get_comparison(comparison_id: str):
+async def get_comparison(comparison_id: SafeId):
     """Get a specific comparison result by ID."""
     result = _comparator.get_comparison(comparison_id)
     if not result:
@@ -180,7 +185,7 @@ async def list_event_categories():
 @router.get("/scan-comparison/severity-levels", tags=["scan-comparison"])
 async def list_severity_levels():
     """List severity levels and their risk weights."""
-    from spiderfoot.scan_comparison import SeverityLevel, EVENT_SEVERITY
+    from spiderfoot.scan.comparison import SeverityLevel, EVENT_SEVERITY
     return {
         "levels": [s.value for s in SeverityLevel],
         "event_mappings": {k: v.value for k, v in EVENT_SEVERITY.items()},

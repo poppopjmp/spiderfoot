@@ -14,15 +14,13 @@ from __future__ import annotations
 # -------------------------------------------------------------------------------
 
 import json
-import urllib.error
 import urllib.parse
-import urllib.request
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_hunter(SpiderFootModernPlugin):
+class sfp_hunter(SpiderFootAsyncPlugin):
 
     """Check for e-mail addresses and names on hunter.io."""
 

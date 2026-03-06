@@ -85,7 +85,7 @@ class LocalDataService(DataService):
             if not rows:
                 return None
 
-            # scanInstanceGet returns (name, seed_target, created, started, ended, status)
+            # scanInstanceGet returns (guid, name, seed_target, created, started, ended, status, result_count)
             if isinstance(rows, list) and len(rows) > 0:
                 row = rows[0] if isinstance(rows[0], (list, tuple)) else rows
             else:
@@ -93,12 +93,12 @@ class LocalDataService(DataService):
 
             return {
                 "id": scan_id,
-                "name": row[0],
-                "target": row[1],
-                "created": row[2],
-                "started": row[3],
-                "ended": row[4],
-                "status": row[5],
+                "name": row[1],
+                "target": row[2],
+                "created": row[3],
+                "started": row[4],
+                "ended": row[5],
+                "status": row[6],
             }
         except Exception as e:
             self.log.error("scan_instance_get failed: %s", e)

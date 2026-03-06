@@ -163,7 +163,7 @@ class TestFilterRules:
 
 class TestSingleton:
     def test_get_correlation_service_creates_instance(self):
-        import spiderfoot.correlation_service as mod
+        import spiderfoot.services.correlation_service as mod
         old = mod._instance
         try:
             mod._instance = None
@@ -173,7 +173,7 @@ class TestSingleton:
             mod._instance = old
 
     def test_get_correlation_service_returns_same(self):
-        import spiderfoot.correlation_service as mod
+        import spiderfoot.services.correlation_service as mod
         old = mod._instance
         try:
             mod._instance = None
@@ -190,7 +190,7 @@ class TestSingleton:
 
 class TestDependsProvider:
     def test_get_correlation_svc_returns_service(self):
-        import spiderfoot.correlation_service as mod
+        import spiderfoot.services.correlation_service as mod
         old = mod._instance
         try:
             mod._instance = None
@@ -342,7 +342,7 @@ class TestCorrelationsRouter:
                            json={"scan_id": "s1"})
         assert resp.status_code == 200
         tr = resp.json()["test_result"]
-        assert tr["test_passed"] is True
+        assert tr["matches_found"] is False
         assert tr["match_count"] == 0
         svc.run_for_scan.assert_called_once_with("s1", rule_ids=["r1"])
 

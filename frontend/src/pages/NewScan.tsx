@@ -1,12 +1,14 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import {
   dataApi, scanApi, type Module, type ScanCreateRequest, type ScanProfile,
 } from '../lib/api';
+import type { StealthLevelName } from '../lib/api';
 import {
   Radar, Lock, Unlock, Zap,
-  ShieldCheck, FileText, Loader2, Upload, X, Layers,
+  ShieldCheck, FileText, Loader2, Layers, Shield,
 } from 'lucide-react';
 import { PageHeader, Tabs, SearchInput, Toast, type ToastType } from '../components/ui';
 
@@ -31,6 +33,7 @@ const QUICK_SCAN_MODULES = [
 ];
 
 export default function NewScanPage() {
+  useDocumentTitle('New Scan');
   const navigate = useNavigate();
   const [tab, setTab] = useState<TabKey>('usecase');
   const [target, setTarget] = useState('');
@@ -41,20 +44,20 @@ export default function NewScanPage() {
   const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set());
   const [moduleSearch, setModuleSearch] = useState('');
   const [toast, setToast] = useState<{ type: ToastType; message: string } | null>(null);
-  const [files, setFiles] = useState<File[]>([]);
+  const [stealthLevel, setStealthLevel] = useState<StealthLevelName>('none');
 
   /* Data queries */
   const { data: modulesData } = useQuery({
     queryKey: ['modules', { page: 1, page_size: 500 }],
-    queryFn: () => dataApi.modules({ page: 1, page_size: 500 }),
+    queryFn: ({ signal }) => dataApi.modules({ page: 1, page_size: 500 }, signal),
   });
   const { data: entityData } = useQuery({
     queryKey: ['entity-types'],
-    queryFn: dataApi.entityTypes,
+    queryFn: ({ signal }) => dataApi.entityTypes(signal),
   });
   const { data: profilesData } = useQuery({
     queryKey: ['scan-profiles'],
-    queryFn: () => scanApi.profiles(),
+    queryFn: ({ signal }) => scanApi.profiles(signal),
   });
 
   const profiles: ScanProfile[] = profilesData?.profiles ?? [];
@@ -163,18 +166,21 @@ export default function NewScanPage() {
       payload.modules = effectiveModules;
     }
     // When useCase === 'all' or no selection, send no modules/type_filter → server uses all modules
+    if (stealthLevel !== 'none') {
+      payload.stealth_level = stealthLevel;
+    }
     createMut.mutate(payload);
   };
 
   const toggleModule = (name: string) => {
     const next = new Set(selectedModules);
-    next.has(name) ? next.delete(name) : next.add(name);
+    if (next.has(name)) { next.delete(name); } else { next.add(name); }
     setSelectedModules(next);
   };
 
   const toggleType = (type: string) => {
     const next = new Set(selectedTypes);
-    next.has(type) ? next.delete(type) : next.add(type);
+    if (next.has(type)) { next.delete(type); } else { next.add(type); }
     setSelectedTypes(next);
   };
 
@@ -223,46 +229,40 @@ export default function NewScanPage() {
             onChange={(e) => setScanName(e.target.value)}
           />
         </div>
+      </div>
 
-        {/* Document Upload — matches CherryPy "Attach Documents" */}
-        <div className="mt-4">
-          <label className="section-label mb-2 block">Attach Documents (optional)</label>
-          <p className="text-xs text-dark-500 mb-2">Upload PDF, DOCX, XLSX, TXT and 1000+ other formats for IOC extraction via Apache Tika.</p>
-          <div
-            className="border-2 border-dashed border-dark-600 rounded-lg p-6 text-center hover:border-dark-500 transition-colors cursor-pointer"
-            onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
-            onDrop={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              const dropped = Array.from(e.dataTransfer.files);
-              setFiles((prev) => [...prev, ...dropped]);
-            }}
-            onClick={() => {
-              const input = document.createElement('input');
-              input.type = 'file';
-              input.multiple = true;
-              input.onchange = () => {
-                if (input.files) setFiles((prev) => [...prev, ...Array.from(input.files!)]);
-              };
-              input.click();
-            }}
-          >
-            <Upload className="h-6 w-6 text-dark-500 mx-auto mb-2" />
-            <p className="text-sm text-dark-400">Drag & drop files here, or click to browse</p>
-          </div>
-          {files.length > 0 && (
-            <div className="mt-2 space-y-1">
-              {files.map((f, i) => (
-                <div key={`${f.name}-${i}`} className="flex items-center justify-between px-3 py-1.5 bg-dark-700/50 rounded text-sm">
-                  <span className="text-dark-300 truncate">{f.name} <span className="text-dark-500">({(f.size / 1024).toFixed(1)} KB)</span></span>
-                  <button onClick={(e) => { e.stopPropagation(); setFiles((prev) => prev.filter((_, j) => j !== i)); }} className="text-dark-500 hover:text-red-400">
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
+      {/* Stealth Level */}
+      <div className="card animate-fade-in-up" style={{ animationDelay: '120ms' }}>
+        <label className="section-label mb-3 block flex items-center gap-2">
+          <Shield className="h-4 w-4 text-spider-400" /> Stealth Level
+        </label>
+        <div className="grid grid-cols-5 gap-1">
+          {(['none', 'low', 'medium', 'high', 'maximum'] as const).map((lvl) => (
+            <button
+              key={lvl}
+              onClick={() => setStealthLevel(lvl)}
+              className={`px-2 py-2 rounded-md text-xs font-medium transition-all text-center ${
+                stealthLevel === lvl
+                  ? lvl === 'none' ? 'bg-dark-700 text-dark-300 ring-1 ring-dark-500'
+                  : lvl === 'low' ? 'bg-blue-900/30 text-blue-400 ring-1 ring-blue-700'
+                  : lvl === 'medium' ? 'bg-yellow-900/30 text-yellow-400 ring-1 ring-yellow-700'
+                  : lvl === 'high' ? 'bg-orange-900/30 text-orange-400 ring-1 ring-orange-700'
+                  : 'bg-red-900/30 text-red-400 ring-1 ring-red-700'
+                  : 'bg-dark-700/50 text-dark-500 hover:text-dark-300'
+              }`}
+            >
+              {lvl.toUpperCase()}
+            </button>
+          ))}
         </div>
+        {stealthLevel !== 'none' && (
+          <p className="text-xs text-dark-400 mt-2">
+            {stealthLevel === 'low' && 'Basic evasion: UA rotation, minimal delay'}
+            {stealthLevel === 'medium' && 'Balanced: TLS fingerprinting, WAF detection, adaptive feedback'}
+            {stealthLevel === 'high' && 'Aggressive: Proxy rotation, session simulation, domain throttling'}
+            {stealthLevel === 'maximum' && 'Maximum stealth: All evasion features active, slowest scan speed'}
+          </p>
+        )}
       </div>
 
       {/* Launch Button (also in left column) */}

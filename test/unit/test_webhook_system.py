@@ -19,13 +19,13 @@ import time
 import unittest
 from unittest.mock import MagicMock, patch, PropertyMock
 
-from spiderfoot.webhook_dispatcher import (
+from spiderfoot.webhooks.dispatcher import (
     DeliveryRecord,
     DeliveryStatus,
     WebhookConfig,
     WebhookDispatcher,
 )
-from spiderfoot.notification_manager import (
+from spiderfoot.notifications.manager import (
     NotificationManager,
     get_notification_manager,
     reset_notification_manager,
@@ -129,8 +129,8 @@ class TestWebhookDispatcher(unittest.TestCase):
             max_retries=1,
         )
 
-    @patch("spiderfoot.webhook_dispatcher.HAS_HTTPX", True)
-    @patch("spiderfoot.webhook_dispatcher.httpx")
+    @patch("spiderfoot.webhooks.dispatcher.HAS_HTTPX", True)
+    @patch("spiderfoot.webhooks.dispatcher.httpx")
     def test_deliver_success(self, mock_httpx):
         mock_resp = MagicMock()
         mock_resp.status_code = 200
@@ -144,8 +144,8 @@ class TestWebhookDispatcher(unittest.TestCase):
         self.assertEqual(record.attempts, 1)
         mock_httpx.post.assert_called_once()
 
-    @patch("spiderfoot.webhook_dispatcher.HAS_HTTPX", True)
-    @patch("spiderfoot.webhook_dispatcher.httpx")
+    @patch("spiderfoot.webhooks.dispatcher.HAS_HTTPX", True)
+    @patch("spiderfoot.webhooks.dispatcher.httpx")
     def test_deliver_failure(self, mock_httpx):
         mock_resp = MagicMock()
         mock_resp.status_code = 500
@@ -157,8 +157,8 @@ class TestWebhookDispatcher(unittest.TestCase):
         self.assertEqual(record.status, DeliveryStatus.FAILED)
         self.assertEqual(record.status_code, 500)
 
-    @patch("spiderfoot.webhook_dispatcher.HAS_HTTPX", True)
-    @patch("spiderfoot.webhook_dispatcher.httpx")
+    @patch("spiderfoot.webhooks.dispatcher.HAS_HTTPX", True)
+    @patch("spiderfoot.webhooks.dispatcher.httpx")
     def test_deliver_exception(self, mock_httpx):
         mock_httpx.post.side_effect = ConnectionError("refused")
 
@@ -168,8 +168,8 @@ class TestWebhookDispatcher(unittest.TestCase):
         self.assertEqual(record.status, DeliveryStatus.FAILED)
         self.assertIn("refused", record.error)
 
-    @patch("spiderfoot.webhook_dispatcher.HAS_HTTPX", True)
-    @patch("spiderfoot.webhook_dispatcher.httpx")
+    @patch("spiderfoot.webhooks.dispatcher.HAS_HTTPX", True)
+    @patch("spiderfoot.webhooks.dispatcher.httpx")
     def test_deliver_retries(self, mock_httpx):
         cfg = WebhookConfig(
             webhook_id="wh-retry",
@@ -182,14 +182,14 @@ class TestWebhookDispatcher(unittest.TestCase):
         mock_resp_200.status_code = 200
         mock_httpx.post.side_effect = [mock_resp_500, mock_resp_200]
 
-        with patch("spiderfoot.webhook_dispatcher.time.sleep"):
+        with patch("spiderfoot.webhooks.dispatcher.time.sleep"):
             record = self.dispatcher.deliver(cfg, "scan.complete", {})
 
         self.assertEqual(record.status, DeliveryStatus.SUCCESS)
         self.assertEqual(record.attempts, 2)
 
-    @patch("spiderfoot.webhook_dispatcher.HAS_HTTPX", True)
-    @patch("spiderfoot.webhook_dispatcher.httpx")
+    @patch("spiderfoot.webhooks.dispatcher.HAS_HTTPX", True)
+    @patch("spiderfoot.webhooks.dispatcher.httpx")
     def test_hmac_signing(self, mock_httpx):
         cfg = WebhookConfig(
             webhook_id="wh-hmac",
@@ -215,8 +215,8 @@ class TestWebhookDispatcher(unittest.TestCase):
         ).hexdigest()
         self.assertEqual(sig_header, f"sha256={expected}")
 
-    @patch("spiderfoot.webhook_dispatcher.HAS_HTTPX", True)
-    @patch("spiderfoot.webhook_dispatcher.httpx")
+    @patch("spiderfoot.webhooks.dispatcher.HAS_HTTPX", True)
+    @patch("spiderfoot.webhooks.dispatcher.httpx")
     def test_no_hmac_without_secret(self, mock_httpx):
         mock_resp = MagicMock()
         mock_resp.status_code = 200
@@ -228,8 +228,8 @@ class TestWebhookDispatcher(unittest.TestCase):
         headers = call_kwargs.kwargs.get("headers") or call_kwargs[1].get("headers")
         self.assertNotIn("X-SpiderFoot-Signature", headers)
 
-    @patch("spiderfoot.webhook_dispatcher.HAS_HTTPX", True)
-    @patch("spiderfoot.webhook_dispatcher.httpx")
+    @patch("spiderfoot.webhooks.dispatcher.HAS_HTTPX", True)
+    @patch("spiderfoot.webhooks.dispatcher.httpx")
     def test_history(self, mock_httpx):
         mock_resp = MagicMock()
         mock_resp.status_code = 200
@@ -241,8 +241,8 @@ class TestWebhookDispatcher(unittest.TestCase):
         history = self.dispatcher.get_history()
         self.assertEqual(len(history), 2)
 
-    @patch("spiderfoot.webhook_dispatcher.HAS_HTTPX", True)
-    @patch("spiderfoot.webhook_dispatcher.httpx")
+    @patch("spiderfoot.webhooks.dispatcher.HAS_HTTPX", True)
+    @patch("spiderfoot.webhooks.dispatcher.httpx")
     def test_history_filter_by_webhook(self, mock_httpx):
         mock_resp = MagicMock()
         mock_resp.status_code = 200
@@ -256,8 +256,8 @@ class TestWebhookDispatcher(unittest.TestCase):
         self.assertEqual(len(filtered), 1)
         self.assertEqual(filtered[0].webhook_id, "other")
 
-    @patch("spiderfoot.webhook_dispatcher.HAS_HTTPX", True)
-    @patch("spiderfoot.webhook_dispatcher.httpx")
+    @patch("spiderfoot.webhooks.dispatcher.HAS_HTTPX", True)
+    @patch("spiderfoot.webhooks.dispatcher.httpx")
     def test_stats(self, mock_httpx):
         mock_resp_ok = MagicMock()
         mock_resp_ok.status_code = 200
@@ -454,10 +454,10 @@ class TestWireTaskManager(unittest.TestCase):
     def tearDown(self):
         reset_notification_manager()
 
-    @patch("spiderfoot.notification_manager.NotificationManager.notify_async")
+    @patch("spiderfoot.notifications.manager.NotificationManager.notify_async")
     def test_wire_task_manager(self, mock_async):
         """wire_task_manager registers callback on TaskManager."""
-        from spiderfoot.task_queue import get_task_manager, reset_task_manager
+        from spiderfoot.ops.task_queue import get_task_manager, reset_task_manager
         reset_task_manager()
         try:
             mgr = NotificationManager()
@@ -489,7 +489,7 @@ class TestWireAlertEngine(unittest.TestCase):
     def tearDown(self):
         reset_notification_manager()
 
-    @patch("spiderfoot.notification_manager.NotificationManager.notify_async")
+    @patch("spiderfoot.notifications.manager.NotificationManager.notify_async")
     def test_wire_alert_engine(self, mock_async):
         """wire_alert_engine registers handler on AlertEngine."""
         mgr = NotificationManager()

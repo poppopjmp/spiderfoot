@@ -10,6 +10,12 @@
 # -------------------------------------------------------------------------------
 """Base class for all SpiderFoot modules (plugins).
 
+.. deprecated:: 6.0.0
+    This class is retained for **backward compatibility only**.
+    New modules should subclass :class:`~spiderfoot.plugins.async_plugin.SpiderFootAsyncPlugin`
+    which inherits all functionality from this class (via ``SpiderFootModernPlugin``)
+    and adds native async I/O support.
+
 Provides the :class:`SpiderFootPlugin` ABC that every ``sfp_*`` module
 subclasses.  Handles event registration, listener management, thread
 coordination, error tracking, and the ``handleEvent`` / ``producedEvents``
@@ -135,6 +141,24 @@ class SpiderFootPlugin:
 
     def __init__(self) -> None:
         """Initialize the plugin."""
+        # Create instance-level copy of opts/optdescs using the original snapshot
+        # captured by __init_subclass__ (before any cross-test mutation).
+        # Falls back to current class dict if no snapshot available.
+        _opts: dict = {}
+        _optdescs: dict = {}
+        for _cls in type(self).__mro__:
+            if '_original_opts' in _cls.__dict__ and not _opts:
+                _opts = dict(_cls.__dict__['_original_opts'])
+            elif 'opts' in _cls.__dict__ and not _opts:
+                _opts = dict(_cls.__dict__['opts'])
+            if '_original_optdescs' in _cls.__dict__ and not _optdescs:
+                _optdescs = dict(_cls.__dict__['_original_optdescs'])
+            elif 'optdescs' in _cls.__dict__ and not _optdescs:
+                _optdescs = dict(_cls.__dict__['optdescs'])
+            if _opts and _optdescs:
+                break
+        self.opts = _opts
+        self.optdescs = _optdescs
         self._listeners = []
         self.errorState = False
         self._stopScanning = False
@@ -146,6 +170,20 @@ class SpiderFootPlugin:
     def __repr__(self) -> str:
         """Return a string representation of the plugin."""
         return f"SpiderFootPlugin({self._name!r})"
+
+    @classmethod
+    def __init_subclass__(cls, **kwargs: object) -> None:
+        """Capture original opts/optdescs at class definition time.
+
+        This snapshot is used by __init__ to provide each instance with
+        a clean copy of opts, preventing cross-instance/cross-test mutations
+        to the class-level dict from leaking into new instances.
+        """
+        super().__init_subclass__(**kwargs)
+        if 'opts' in cls.__dict__:
+            cls._original_opts = dict(cls.__dict__['opts'])
+        if 'optdescs' in cls.__dict__:
+            cls._original_optdescs = dict(cls.__dict__['optdescs'])
 
     def finished(self) -> None:
         """Called when the module should finish processing."""
@@ -458,7 +496,7 @@ class SpiderFootPlugin:
             return True
 
         # If threading is enabled, check the _stopScanning attribute instead.
-        # This is to prevent each thread needing its own sqlite db handle.
+        # This is to prevent each thread needing its own database handle.
         if self.outgoingEventQueue is not None and self.incomingEventQueue is not None:
             return self._stopScanning
 
@@ -470,7 +508,7 @@ class SpiderFootPlugin:
         if not scanstatus:
             return False
 
-        if scanstatus[5] == DB_STATUS_ABORT_REQUESTED:
+        if scanstatus[6] == DB_STATUS_ABORT_REQUESTED:
             self._stopScanning = True
             return True
 
@@ -573,7 +611,18 @@ class SpiderFootPlugin:
         return
 
     def threadWorker(self) -> None:
-        """Main thread loop that processes events from the incoming queue."""
+        """Main thread loop that processes events from the incoming queue.
+
+        If the module's ``handleEvent`` is a coroutine function (i.e. the
+        module subclasses :class:`SpiderFootAsyncPlugin` and declares
+        ``async def handleEvent(...)``), events are dispatched to the
+        shared asyncio event-loop instead of the thread pool.
+        """
+        import asyncio
+        import inspect
+
+        _is_async_handler = inspect.iscoroutinefunction(self.handleEvent)
+
         try:
             # create new database handle since we're in our own thread
             from spiderfoot import SpiderFootDb
@@ -603,7 +652,10 @@ class SpiderFootPlugin:
                         f"{getattr(self, '__name__', self.__class__.__name__)}"
                         f".threadWorker() got event, {sfEvent.eventType},"
                         " from incomingEventQueue.")
-                    self.poolExecute(self.handleEvent, sfEvent)
+                    if _is_async_handler:
+                        self._asyncDispatch(self.handleEvent, sfEvent)
+                    else:
+                        self.poolExecute(self.handleEvent, sfEvent)
         except KeyboardInterrupt:
             self.sf.debug(f"Interrupted module {getattr(self, '__name__', self.__class__.__name__)}.")
             self._stopScanning = True
@@ -626,6 +678,34 @@ class SpiderFootPlugin:
                 # set queue to None to prevent its use
                 # if there are leftover objects in the queue, the scan will hang.
                 self.incomingEventQueue = None
+
+    def _asyncDispatch(self, callback: Callable, *args: Any, **kwargs: Any) -> None:
+        """Dispatch an async callback to the shared event loop.
+
+        Used by :meth:`threadWorker` when the module declares
+        ``async def handleEvent(...)`` (i.e. it subclasses
+        :class:`SpiderFootAsyncPlugin`).
+
+        Args:
+            callback: async function to call
+            args: positional args (passed through)
+            kwargs: keyword args (passed through)
+        """
+        import asyncio
+        try:
+            from .async_plugin import get_event_loop
+            loop = get_event_loop()
+            future = asyncio.run_coroutine_threadsafe(
+                callback(*args, **kwargs), loop
+            )
+            # Block until the coroutine finishes (respects scan timeout)
+            future.result(timeout=300)
+        except Exception as exc:
+            self.sf.error(
+                f"Async dispatch error in"
+                f" {getattr(self, '__name__', self.__class__.__name__)}:"
+                f" {exc}"
+            )
 
     def poolExecute(self, callback: Callable, *args: Any, **kwargs: Any) -> None:
         """Execute a callback with the given args. If we're in a storage

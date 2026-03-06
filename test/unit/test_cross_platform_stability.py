@@ -11,8 +11,12 @@ This test suite specifically addresses:
 """
 from __future__ import annotations
 
-import sys
 import os
+import pytest
+if not os.environ.get('SF_POSTGRES_DSN'):
+    pytest.skip('PostgreSQL not available (SF_POSTGRES_DSN not set)', allow_module_level=True)
+
+import sys
 import unittest
 from test.unit.utils.test_module_base import TestModuleBase
 import subprocess
@@ -29,7 +33,7 @@ import io
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from spiderfoot.security.security_logging import SecurityLogger, SecurityEventType
-from spiderfoot.scan_service.scanner import SpiderFootScanner
+from spiderfoot.scan.scanner import SpiderFootScanner
 
 
 class TestCrossPlatformStability(TestModuleBase):

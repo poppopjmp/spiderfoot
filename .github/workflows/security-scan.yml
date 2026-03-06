@@ -8,6 +8,7 @@ on:
       - "Pipfile"
       - "Dockerfile"
       - "docker-compose*.yml"
+
   pull_request:
     branches: [main]
   schedule:

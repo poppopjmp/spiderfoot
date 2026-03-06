@@ -105,8 +105,11 @@ def database_vacuum(global_opts: dict[str, Any] | None = None) -> dict[str, Any]
 
     dsn = os.environ.get(
         "SF_POSTGRES_DSN",
-        "postgresql://spiderfoot:changeme@postgres:5432/spiderfoot",
+        "",
     )
+    if not dsn:
+        log.critical("SF_POSTGRES_DSN environment variable is not set.")
+        return {"status": "error", "message": "SF_POSTGRES_DSN not configured"}
 
     try:
         conn = psycopg2.connect(dsn)

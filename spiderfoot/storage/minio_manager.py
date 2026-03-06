@@ -45,6 +45,7 @@ from __future__ import annotations
 import io
 import logging
 import os
+import re as _re
 import time
 from dataclasses import dataclass, field
 from datetime import timedelta
@@ -52,18 +53,36 @@ from typing import Any, BinaryIO
 
 log = logging.getLogger("spiderfoot.storage.minio")
 
+_SAFE_NAME_RE = _re.compile(r'^[a-zA-Z0-9][a-zA-Z0-9._\-]{0,253}$')
+
+
+def _validate_safe_name(name: str, label: str = "name") -> str:
+    """Reject path-traversal and other unsafe characters in storage names.
+
+    Allows alphanumeric, dots, dashes, underscores.  Rejects ``..``, ``/``,
+    ``\\`` and non-ASCII.  Raises ``ValueError`` on invalid input.
+    """
+    if ".." in name or "/" in name or "\\" in name:
+        raise ValueError(f"Invalid {label}: path traversal characters not allowed")
+    if not _SAFE_NAME_RE.match(name):
+        raise ValueError(f"Invalid {label}: must be 1-254 alphanumeric/dash/underscore/dot characters")
+    return name
+
 
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
+
+_INSECURE_MINIO_SECRETS = frozenset({"changeme123", "changeme", "password", "minioadmin", ""})
+
 
 @dataclass
 class MinIOConfig:
     """MinIO / S3-compatible storage configuration."""
 
     endpoint: str = "localhost:9000"
-    access_key: str = "spiderfoot"
-    secret_key: str = "changeme123"
+    access_key: str = ""
+    secret_key: str = ""
     secure: bool = False
     region: str = "us-east-1"
 
@@ -77,10 +96,10 @@ class MinIOConfig:
     @classmethod
     def from_env(cls) -> MinIOConfig:
         """Build config from SF_MINIO_* environment variables."""
-        return cls(
+        cfg = cls(
             endpoint=os.environ.get("SF_MINIO_ENDPOINT", "localhost:9000").replace("http://", "").replace("https://", ""),
-            access_key=os.environ.get("SF_MINIO_ACCESS_KEY", "spiderfoot"),
-            secret_key=os.environ.get("SF_MINIO_SECRET_KEY", "changeme123"),
+            access_key=os.environ.get("SF_MINIO_ACCESS_KEY", ""),
+            secret_key=os.environ.get("SF_MINIO_SECRET_KEY", ""),
             secure=os.environ.get("SF_MINIO_SECURE", "false").lower() in ("true", "1", "yes"),
             region=os.environ.get("SF_MINIO_REGION", "us-east-1"),
             reports_bucket=os.environ.get("SF_MINIO_REPORTS_BUCKET", "sf-reports"),
@@ -89,6 +108,12 @@ class MinIOConfig:
             qdrant_snapshots_bucket=os.environ.get("SF_MINIO_QDRANT_BUCKET", "sf-qdrant-snapshots"),
             data_bucket=os.environ.get("SF_MINIO_DATA_BUCKET", "sf-data"),
         )
+        if cfg.secret_key in _INSECURE_MINIO_SECRETS:
+            log.critical(
+                "MinIO secret_key is unset or matches a known insecure default. "
+                "Set SF_MINIO_SECRET_KEY to a strong value in production."
+            )
+        return cfg
 
 
 # ---------------------------------------------------------------------------
@@ -281,6 +306,8 @@ class MinIOStorageManager:
         self, collection_name: str, snapshot_id: str, data: bytes | BinaryIO
     ) -> str:
         """Store a Qdrant collection snapshot."""
+        _validate_safe_name(collection_name, "collection_name")
+        _validate_safe_name(snapshot_id, "snapshot_id")
         key = f"collections/{collection_name}/{snapshot_id}.snapshot"
         self._put_data(
             self._config.qdrant_snapshots_bucket, key, data, "application/octet-stream"
@@ -295,6 +322,8 @@ class MinIOStorageManager:
 
     def get_qdrant_snapshot(self, collection_name: str, snapshot_id: str) -> bytes:
         """Retrieve a Qdrant snapshot."""
+        _validate_safe_name(collection_name, "collection_name")
+        _validate_safe_name(snapshot_id, "snapshot_id")
         key = f"collections/{collection_name}/{snapshot_id}.snapshot"
         return self._get_data(self._config.qdrant_snapshots_bucket, key)
 
@@ -310,12 +339,16 @@ class MinIOStorageManager:
         content_type: str = "application/octet-stream",
     ) -> str:
         """Store a generic data artefact for a scan."""
+        _validate_safe_name(scan_id, "scan_id")
+        _validate_safe_name(filename, "filename")
         key = f"scans/{scan_id}/artefacts/{filename}"
         self._put_data(self._config.data_bucket, key, data, content_type)
         return key
 
     def get_artefact(self, scan_id: str, filename: str) -> bytes:
         """Retrieve a scan artefact."""
+        _validate_safe_name(scan_id, "scan_id")
+        _validate_safe_name(filename, "filename")
         key = f"scans/{scan_id}/artefacts/{filename}"
         return self._get_data(self._config.data_bucket, key)
 

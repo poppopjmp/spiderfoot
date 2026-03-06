@@ -629,7 +629,7 @@ class TestDependsProviders:
         fake_dbh = FakeDbh()
         with patch.object(factory, "create_dbh", return_value=fake_dbh):
             with patch(
-                "spiderfoot.db.repositories.factory.get_repository_factory",
+                "spiderfoot.db.repositories.get_repository_factory",
                 return_value=factory,
             ):
                 gen = get_scan_repository()
@@ -650,7 +650,7 @@ class TestDependsProviders:
         fake_dbh = FakeDbh()
         with patch.object(factory, "create_dbh", return_value=fake_dbh):
             with patch(
-                "spiderfoot.db.repositories.factory.get_repository_factory",
+                "spiderfoot.db.repositories.get_repository_factory",
                 return_value=factory,
             ):
                 gen = get_event_repository()
@@ -670,7 +670,7 @@ class TestDependsProviders:
         fake_dbh = FakeDbh()
         with patch.object(factory, "create_dbh", return_value=fake_dbh):
             with patch(
-                "spiderfoot.db.repositories.factory.get_repository_factory",
+                "spiderfoot.db.repositories.get_repository_factory",
                 return_value=factory,
             ):
                 gen = get_config_repository()

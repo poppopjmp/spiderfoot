@@ -18,10 +18,10 @@ import re
 import time
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_haveibeenpwned(SpiderFootModernPlugin):
+class sfp_haveibeenpwned(SpiderFootAsyncPlugin):
 
     """Check HaveIBeenPwned.com for hacked e-mail addresses identified in breaches."""
 

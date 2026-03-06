@@ -1,53 +1,52 @@
 #!/bin/bash
-# SpiderFoot Docker startup script
+# SpiderFoot Docker startup script — Microservice mode (PostgreSQL only)
+#
+# Service roles (set via SF_SERVICE_ROLE env var):
+#   api              → FastAPI REST API
+#   scanner          → Celery worker (passive queues)
+#   active-scanner   → Celery worker (scan queue + recon tools)
+#   celery-beat      → Celery periodic scheduler
+#   agents           → AI analysis agents
+#
+# If SF_SERVICE_ROLE is not set, auto-detects from the command arguments.
 
-# Ensure the correct database and logs directory structure
-mkdir -p /home/spiderfoot/.spiderfoot/logs
-mkdir -p /home/spiderfoot/logs
-mkdir -p /home/spiderfoot/cache
-mkdir -p /home/spiderfoot/data
+set -e
 
-# Remove any database files from the application directory if they exist
-if [ -f "/home/spiderfoot/data/spiderfoot.db" ]; then
-    echo "Warning: Found spiderfoot.db in data directory. Removing it..."
-    rm -f /home/spiderfoot/data/spiderfoot.db
+# Ensure runtime directories exist and are writable
+for dir in logs cache data .spiderfoot/logs; do
+    mkdir -p "/home/spiderfoot/$dir"
+done
+
+# Clean stale logs on start
+rm -rf /home/spiderfoot/logs/*
+
+# Fix ownership (only if running as root — skipped in rootless containers)
+if [ "$(id -u)" = "0" ]; then
+    chown -R spiderfoot:spiderfoot /home/spiderfoot/.spiderfoot \
+        /home/spiderfoot/logs /home/spiderfoot/cache /home/spiderfoot/data
+    chmod -R 755 /home/spiderfoot/logs
 fi
 
-# Remove any database files from the application directory if they exist
-if [ -f "/home/spiderfoot/spiderfoot.db" ]; then
-    echo "Warning: Found spiderfoot.db in application directory. Removing it..."
-    rm -f /home/spiderfoot/spiderfoot.db
-fi
-
-# Ensure proper permissions
-# Clean up any existing log files that might have wrong ownership
-if [ -d "/home/spiderfoot/logs" ]; then
-    echo "Cleaning up existing log files..."
-    rm -rf /home/spiderfoot/logs/*
-fi
-
-chown -R spiderfoot:spiderfoot /home/spiderfoot/.spiderfoot
-chown -R spiderfoot:spiderfoot /home/spiderfoot/logs
-chown -R spiderfoot:spiderfoot /home/spiderfoot/cache
-chown -R spiderfoot:spiderfoot /home/spiderfoot/data
-chmod -R 755 /home/spiderfoot/logs
-
-echo "Database will be created at: /home/spiderfoot/data/spiderfoot.db"
-echo "Starting SpiderFoot..."
-
-# ── Microservice deployment support ──
-# Auto-detect service role from SF_SERVICE_ROLE or command arguments
-if [ -z "${SF_SERVICE_ROLE}" ]; then
-    case "$1" in
-        *sfapi*|*api*)     export SF_SERVICE_ROLE="api" ;;
-        *scanner*|*sf.py*) export SF_SERVICE_ROLE="scanner" ;;
-        *webui*|*sfwebui*) export SF_SERVICE_ROLE="webui" ;;
-        *)                 export SF_SERVICE_ROLE="standalone" ;;
+# Auto-detect service role from command arguments if not explicitly set
+if [ -z "${SF_SERVICE_ROLE:-}" ]; then
+    case "$*" in
+        *sfapi*|*"service api"*|*"--service api"*)  export SF_SERVICE_ROLE="api" ;;
+        *"--queues=scan"*)                           export SF_SERVICE_ROLE="active-scanner" ;;
+        *celery*worker*)                             export SF_SERVICE_ROLE="scanner" ;;
+        *celery*beat*)                               export SF_SERVICE_ROLE="celery-beat" ;;
+        *celery*flower*)                             export SF_SERVICE_ROLE="flower" ;;
+        *agents*)                                    export SF_SERVICE_ROLE="agents" ;;
+        *)                                           export SF_SERVICE_ROLE="api" ;;
     esac
 fi
 
-echo "Service role: ${SF_SERVICE_ROLE}"
-echo "Deployment mode: ${SF_DEPLOYMENT_MODE:-monolith}"
+echo "SpiderFoot starting — role=${SF_SERVICE_ROLE} mode=${SF_DEPLOYMENT_MODE:-microservice}"
 
-# Execute the original command
+# Validate PostgreSQL connectivity
+if [ -n "${SF_POSTGRES_DSN:-}" ]; then
+    echo "PostgreSQL DSN configured"
+else
+    echo "WARNING: SF_POSTGRES_DSN not set — database operations will fail"
+fi
+
 exec "$@"

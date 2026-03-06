@@ -17,7 +17,7 @@ from __future__ import annotations
 import re
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 # Taken from Google Dorks on exploit-db.com
 regexps = dict({
@@ -32,7 +32,7 @@ regexps = dict({
 })
 
 
-class sfp_errors(SpiderFootModernPlugin):
+class sfp_errors(SpiderFootAsyncPlugin):
     """SpiderFoot plugin to identify common error messages in content like SQL errors, etc."""
     __name__ = "sfp_errors"
 

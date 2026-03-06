@@ -14,10 +14,10 @@ import os
 import subprocess
 import tempfile
 
-from spiderfoot import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_tool_dnsx(SpiderFootModernPlugin):
+class sfp_tool_dnsx(SpiderFootAsyncPlugin):
     """Fast DNS resolution and record enumeration via dnsx."""
 
     meta = {
@@ -147,6 +147,9 @@ class sfp_tool_dnsx(SpiderFootModernPlugin):
             if os.path.exists(output_path):
                 with open(output_path, "r") as f:
                     for line in f:
+                        if self.checkForStop():
+                            return
+
                         line = line.strip()
                         if not line:
                             continue

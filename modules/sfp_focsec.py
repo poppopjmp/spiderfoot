@@ -18,10 +18,10 @@ import json
 import urllib
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_focsec(SpiderFootModernPlugin):
+class sfp_focsec(SpiderFootAsyncPlugin):
     """SpiderFoot plugin for looking up IP address information from Focsec."""
     meta = {
         'name': "Focsec",

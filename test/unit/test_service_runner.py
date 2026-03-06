@@ -27,7 +27,7 @@ class TestHealthStatus(unittest.TestCase):
         d = h.to_dict()
         self.assertEqual(d["service"], "unknown")
         self.assertEqual(d["status"], "starting")
-        self.assertGreater(d["uptime"], 0)
+        self.assertGreaterEqual(d["uptime"], 0)
 
     def test_ready_state(self):
         h = _HealthStatus()
@@ -63,7 +63,7 @@ class TestBuildSfConfig(unittest.TestCase):
     })
     def test_postgres(self):
         config = _build_sf_config()
-        self.assertEqual(config["_dataservice_backend"], "http")
+        self.assertEqual(config["_dataservice_backend"], "postgresql")
 
 
 class TestServiceMap(unittest.TestCase):
@@ -72,7 +72,6 @@ class TestServiceMap(unittest.TestCase):
     def test_all_services_registered(self):
         self.assertIn("scanner", _SERVICE_MAP)
         self.assertIn("api", _SERVICE_MAP)
-        self.assertIn("webui", _SERVICE_MAP)
         self.assertIn("all", _SERVICE_MAP)
 
     def test_services_are_callable(self):

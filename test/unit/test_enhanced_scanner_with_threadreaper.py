@@ -9,12 +9,17 @@ system to eliminate hanging tests and thread leaks.
 
 from __future__ import annotations
 
+import os
+import pytest
+if not os.environ.get('SF_POSTGRES_DSN'):
+    pytest.skip('PostgreSQL not available (SF_POSTGRES_DSN not set)', allow_module_level=True)
+
 import unittest
 import uuid
 import threading
 import time
 
-from spiderfoot.scan_service.scanner import SpiderFootScanner
+from spiderfoot.scan.scanner import SpiderFootScanner
 
 # Import the new infrastructure
 from test.unit.utils.test_scanner_base import TestScannerBase, scanner_test

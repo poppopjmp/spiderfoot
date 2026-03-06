@@ -1,10 +1,10 @@
-"""Tests for spiderfoot.result_aggregator."""
+"""Tests for spiderfoot.correlation.result_aggregator."""
 from __future__ import annotations
 
 import time
 import unittest
 
-from spiderfoot.result_aggregator import (
+from spiderfoot.correlation.result_aggregator import (
     EventRecord,
     ScanResultAggregator,
     TypeStats,

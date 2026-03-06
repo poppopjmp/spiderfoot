@@ -18,10 +18,10 @@ from __future__ import annotations
 import dns.resolver
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_quad9(SpiderFootModernPlugin):
+class sfp_quad9(SpiderFootAsyncPlugin):
 
     """Check if a host would be blocked by Quad9 DNS."""
 

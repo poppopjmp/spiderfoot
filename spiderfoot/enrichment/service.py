@@ -24,6 +24,7 @@ from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 
 from spiderfoot.enrichment.pipeline import EnrichmentPipeline, EnrichmentResult
+from spiderfoot.security.upload_validation import sanitize_filename, validate_upload
 
 logger = logging.getLogger("sf.enrichment.service")
 
@@ -76,8 +77,12 @@ async def upload_document(
     """Upload and process a document through the enrichment pipeline."""
     content = await file.read()
 
-    if len(content) > 100 * 1024 * 1024:  # 100MB limit
-        raise HTTPException(status_code=413, detail="File too large (max 100MB)")
+    # Centralised upload validation
+    safe_filename, upload_err = validate_upload(
+        file.filename, file.content_type, len(content)
+    )
+    if upload_err:
+        raise HTTPException(status_code=400, detail=upload_err)
 
     pipeline = _get_pipeline()
 
@@ -87,7 +92,7 @@ async def upload_document(
         None,
         pipeline.process,
         content,
-        file.filename or "upload",
+        safe_filename,
         file.content_type or "",
         scan_id,
         target,

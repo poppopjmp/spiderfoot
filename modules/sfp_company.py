@@ -18,10 +18,10 @@ from __future__ import annotations
 import re
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_company(SpiderFootModernPlugin):
+class sfp_company(SpiderFootAsyncPlugin):
     """SpiderFoot plugin to identify company names in scraped webpages."""
     meta = {
         'name': "Company Name Extractor",
@@ -131,6 +131,8 @@ class sfp_company(SpiderFootModernPlugin):
 
         myres = list()
         for chunk in chunks:
+            if self.checkForStop():
+                return
             for pat in pattern_match_re:
                 matches = re.findall(
                     pattern_prefix + "(" + pat + ")" + pattern_suffix, chunk, re.MULTILINE | re.DOTALL)

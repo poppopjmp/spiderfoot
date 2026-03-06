@@ -3,9 +3,9 @@ from __future__ import annotations
 """SpiderFoot plug-in module: wechat."""
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
-class sfp_wechat(SpiderFootModernPlugin):
+class sfp_wechat(SpiderFootAsyncPlugin):
     """Monitors WeChat for new messages and emits events."""
 
     meta = {
@@ -71,6 +71,8 @@ class sfp_wechat(SpiderFootModernPlugin):
             self._seen_msgs = set()
 
         for user_id in user_ids:
+            if self.checkForStop():
+                return
             try:
                 # --- MOCKED API CALL ---
                 # Simulate API/network error for a specific user

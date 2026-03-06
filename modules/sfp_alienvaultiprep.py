@@ -18,10 +18,10 @@ from __future__ import annotations
 from netaddr import IPAddress, IPNetwork
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_alienvaultiprep(SpiderFootModernPlugin):
+class sfp_alienvaultiprep(SpiderFootAsyncPlugin):
     """Check if an IP or netblock is malicious according to the AlienVault IP Reputation database."""
     meta = {
         'name': "AlienVault IP Reputation",

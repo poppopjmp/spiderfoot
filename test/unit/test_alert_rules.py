@@ -1,9 +1,9 @@
-"""Tests for spiderfoot.alert_rules."""
+"""Tests for spiderfoot.notifications.alerts."""
 from __future__ import annotations
 
 import time
 import pytest
-from spiderfoot.alert_rules import (
+from spiderfoot.notifications.alerts import (
     AlertSeverity,
     AlertConditionType,
     AlertCondition,

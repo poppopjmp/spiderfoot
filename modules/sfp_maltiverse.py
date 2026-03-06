@@ -21,10 +21,10 @@ from datetime import datetime
 from netaddr import IPNetwork
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_maltiverse(SpiderFootModernPlugin):
+class sfp_maltiverse(SpiderFootAsyncPlugin):
 
     """Obtain information about any malicious activities involving IP addresses"""
 

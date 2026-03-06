@@ -31,10 +31,10 @@ class CorrelationManager:
         self.dbhLock = dbhLock
         self.db_type = db_type
 
-    def _log_db_error(self, msg, exc):
+    def _log_db_error(self, msg: str, exc: BaseException) -> None:
         log.error("[DB] %s: %s", msg, exc)
 
-    def _is_transient_error(self, exc):
+    def _is_transient_error(self, exc: BaseException) -> bool:
         return is_transient_error(exc)
 
     def correlationResultCreate(self, instanceId: str, event_hash: str, ruleId: str,

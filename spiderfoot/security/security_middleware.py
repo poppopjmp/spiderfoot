@@ -21,15 +21,15 @@ import time
 from typing import Any
 import json
 
-from ..input_validation import InputValidator
-from ..rate_limiting import RateLimiter
-from ..session_security import SessionManager
+from .input_validation import InputValidator
+from .rate_limiter import RateLimiterService, RateLimit, get_rate_limiter
+from .session_security import SessionManager
 from .security_logging import SecurityLogger, SecurityEventType
-from ..secure_config import SecureConfigManager
+from .config_encryption import SecureConfigManager
 
 # Optional Flask-dependent imports
 try:
-    from ..api_security import APIKeyManager, JWTManager
+    from .api_auth import APIKeyManager, JWTManager
 except ImportError:
     APIKeyManager = None  # type: ignore
     JWTManager = None  # type: ignore
@@ -198,11 +198,9 @@ class SpiderFootSecurityMiddleware:
             try:
                 # Get Redis config from the main config
                 redis_config = self.config.get('REDIS_CONFIG', {})
-                self.rate_limiter = RateLimiter(
-                    redis_host=redis_config.get('host', 'localhost'),
-                    redis_port=redis_config.get('port', 6379),
-                    redis_db=redis_config.get('db', 0)
-                )
+                self.rate_limiter = get_rate_limiter()
+                # Configure API rate limit (120 req/min by default)
+                self.rate_limiter.set_limit('api', RateLimit(requests=120, window=60.0))
             except Exception as e:
                 self.log.warning("Failed to initialize rate limiter: %s", e)
                 self.rate_limiter = None
@@ -313,12 +311,8 @@ class FastAPISecurityMiddleware:
                 self.middleware.rate_limiter is not None):
                 try:
                     client_id = f"ip:{client_ip}"
-                    allowed, rate_info = self.middleware.rate_limiter._check_memory_limit(client_id, 'api')
-                    if self.middleware.rate_limiter.redis:
-                        try:
-                            allowed, rate_info = self.middleware.rate_limiter._check_redis_limit(client_id, 'api')
-                        except Exception as e:
-                            allowed, rate_info = self.middleware.rate_limiter._check_memory_limit(client_id, 'api')
+                    result = self.middleware.rate_limiter.check(f"{client_id}:api")
+                    allowed = result.allowed
                     if not allowed:
                         return self._create_error_response(429, "Rate limit exceeded")
                 except Exception as e:
@@ -435,10 +429,10 @@ class FastAPISecurityMiddleware:
         """Add security headers to FastAPI response."""
         try:
             # Import SecurityHeaders from input_validation module
-            from ..input_validation import SecurityHeaders
+            from .input_validation import SecurityHeaders
 
-            # Add default security headers
-            for header, value in SecurityHeaders.DEFAULT_HEADERS.items():
+            # Add default security headers (includes HSTS when SF_HSTS_ENABLED)
+            for header, value in SecurityHeaders.get_headers().items():
                 response.headers[header] = value
             return response
         except Exception as e:

@@ -630,8 +630,8 @@ class TestAdvancedStorageModule(TestModuleBase):
             mock_conn.commit.assert_called_once()
             mock_balancer.return_connection.assert_called_with(mock_pool_id, mock_conn, True)
     
-    def test_bulk_store_sqlite_fallback(self):
-        """Test SQLite bulk storage fallback."""
+    def test_bulk_store_default_fallback(self):
+        """Test default bulk storage fallback."""
         # Setup without load balancing
         opts = self.test_opts.copy()
         opts['enable_load_balancing'] = False
@@ -639,11 +639,11 @@ class TestAdvancedStorageModule(TestModuleBase):
         self.module.setup(self.sf, opts)
         self.module.getScanId = Mock(return_value="test_scan_id")
         
-        # Test SQLite bulk storage
+        # Test default bulk storage
         events = [MockSpiderFootEvent(f"EVENT_{i}") for i in range(3)]
-        self.module._bulk_store_sqlite(events)
+        self.module._bulk_store_default(events)
         
-        # Verify SQLite storage calls
+        # Verify storage calls
         self.assertEqual(self.sf.dbh.scanEventStore.call_count, 3)
     
     def test_performance_status_reporting(self):

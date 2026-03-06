@@ -71,11 +71,14 @@ class TestModuleToolGobuster(TestModuleBase):
         module = self.module_class()
         self.assertIsInstance(module.producedEvents(), list)
 
+    @patch('modules.sfp_tool_gobuster.subprocess.run')
     @patch('modules.sfp_tool_gobuster.os.path.isfile', return_value=True)
     @patch('modules.sfp_tool_gobuster.open', create=True)
     @patch('modules.sfp_tool_gobuster.tempfile.NamedTemporaryFile')
-    def test_handleEvent_local_success(self, mock_tempfile, mock_open, mock_isfile):
+    def test_handleEvent_local_success(self, mock_tempfile, mock_open, mock_isfile, mock_subprocess_run):
         """Test handleEvent with successful local execution and event emission."""
+        # Mock subprocess.run to simulate successful gobuster execution
+        mock_subprocess_run.return_value = MagicMock(returncode=0, stdout='', stderr='')
         module = self.module_class()
         module.sf = MagicMock()
         module.sf.execute.return_value = 0

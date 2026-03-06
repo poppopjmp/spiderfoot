@@ -21,10 +21,10 @@ import time
 import urllib.parse
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_publicwww(SpiderFootModernPlugin):
+class sfp_publicwww(SpiderFootAsyncPlugin):
 
     """Search PublicWWW for websites sharing the same analytics IDs, code snippets or technology fingerprints."""
 

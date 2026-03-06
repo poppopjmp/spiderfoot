@@ -18,10 +18,10 @@ import json
 import time
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_bgpview(SpiderFootModernPlugin):
+class sfp_bgpview(SpiderFootAsyncPlugin):
     """SpiderFoot plugin to obtain network information from BGPView API."""
 
     meta = {

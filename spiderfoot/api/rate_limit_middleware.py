@@ -24,8 +24,10 @@ Usage::
 
 from __future__ import annotations
 
+import hashlib
 import logging
 import os
+import re
 import time
 from dataclasses import dataclass, field
 from typing import Any, Callable
@@ -75,6 +77,7 @@ ROUTE_TIER_MAP: dict[str, str] = {
     "/api/export": "export",
     "/api/storage": "storage",
     "/api/graphql": "graphql",
+    "/api/auth": "auth",
     "/api/tasks": "default",
     "/api/webhooks": "default",
     "/api/workspaces": "default",
@@ -82,6 +85,13 @@ ROUTE_TIER_MAP: dict[str, str] = {
     "/api/correlations": "data",
     "/api/rag": "data",
     "/ws/": "default",
+}
+
+# Per-endpoint overrides for security-sensitive paths.
+# These take precedence over tier-level limits.
+DEFAULT_ENDPOINT_OVERRIDES: dict[str, tuple[int, float]] = {
+    "/api/auth/login": (5, 60.0),     # 5 login attempts per minute
+    "/api/auth/register": (3, 60.0),  # 3 registrations per minute
 }
 
 
@@ -101,9 +111,11 @@ class RateLimitConfig:
 
     enabled: bool = True
     tier_limits: dict[str, tuple] = field(default_factory=lambda: dict(DEFAULT_TIER_LIMITS))
-    endpoint_overrides: dict[str, tuple] = field(default_factory=dict)
+    endpoint_overrides: dict[str, tuple] = field(
+        default_factory=lambda: dict(DEFAULT_ENDPOINT_OVERRIDES)
+    )
     exempt_paths: set[str] = field(default_factory=lambda: set(DEFAULT_EXEMPT_PATHS))
-    trust_forwarded: bool = True
+    trust_forwarded: bool = False
     include_headers: bool = True
     log_rejections: bool = True
 
@@ -132,7 +144,7 @@ class RateLimitConfig:
         return cls(
             enabled=config.get("__ratelimit_enabled", True),
             endpoint_overrides=overrides,
-            trust_forwarded=config.get("__ratelimit_trust_forwarded", True),
+            trust_forwarded=config.get("__ratelimit_trust_forwarded", False),
             include_headers=config.get("__ratelimit_headers", True),
             log_rejections=config.get("__ratelimit_log_rejections", True),
         )
@@ -141,6 +153,17 @@ class RateLimitConfig:
 # -----------------------------------------------------------------------
 # Client identity extraction
 # -----------------------------------------------------------------------
+
+# Valid IPv4/IPv6 pattern for forwarded IP validation
+_IP_PATTERN = re.compile(
+    r"^(?:\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|[0-9a-fA-F:]{2,39})$"
+)
+
+
+def _validate_ip(ip: str) -> bool:
+    """Check if a string looks like a valid IP address."""
+    return bool(_IP_PATTERN.match(ip)) and len(ip) <= 45
+
 
 def extract_client_identity(
     scope: dict[str, Any],
@@ -152,28 +175,28 @@ def extract_client_identity(
 
     Priority:
       1. ``Authorization`` header (API key hash) — per-key limits
-      2. ``X-Forwarded-For`` first hop (if trusted)
+      2. ``X-Forwarded-For`` first hop (if trusted AND valid IP)
       3. Direct client IP from ASGI scope
 
     Returns:
-        A string key like ``"apikey:abc123"`` or ``"ip:192.168.1.1"``.
+        A string key like ``"apikey:a1b2c3d4"`` or ``"ip:192.168.1.1"``.
     """
-    # Check for API key
+    # Check for API key — use SHA256 hash for identity keying (avoids leaking raw token)
     auth = headers.get("authorization", "")
     if auth.startswith("Bearer "):
         token = auth[7:].strip()
         if token:
-            # Use first 8 chars as key to avoid storing full token
-            return f"apikey:{token[:8]}"
+            return f"apikey:{hashlib.sha256(token.encode()).hexdigest()[:16]}"
 
-    # Forwarded IP
+    # Forwarded IP — only trusted when explicitly enabled, validated
     if trust_forwarded:
         forwarded = headers.get("x-forwarded-for", "")
         if forwarded:
-            # Take the first (client) IP
+            # Take the first (client) IP and validate format
             client_ip = forwarded.split(",")[0].strip()
-            if client_ip:
+            if client_ip and _validate_ip(client_ip):
                 return f"ip:{client_ip}"
+            # Invalid IP in header — fall through to direct connection
 
     # Direct connection IP
     client = scope.get("client")
@@ -309,7 +332,7 @@ def set_endpoint_override(path: str, requests: int, window: float) -> bool:
     # Update limiter if available
     if _limiter is not None:
         try:
-            from spiderfoot.rate_limiter import RateLimit
+            from spiderfoot.security.rate_limiter import RateLimit
             _limiter.set_limit(f"endpoint:{path}", RateLimit(requests=requests, window=window))
         except Exception as e:
             log.debug("Failed to set rate limit for endpoint %s: %s", path, e)
@@ -381,7 +404,7 @@ if HAS_STARLETTE:
         def _setup_limiter(self) -> None:
             """Initialize the RateLimiterService with tier configs."""
             global _limiter, _config
-            from spiderfoot.rate_limiter import RateLimiterService, RateLimit
+            from spiderfoot.security.rate_limiter import RateLimiterService, RateLimit
 
             _config = self._config
             _limiter = RateLimiterService()
@@ -457,7 +480,7 @@ if HAS_STARLETTE:
                 if self._config.log_rejections:
                     req_id = ""
                     try:
-                        from spiderfoot.request_tracing import get_request_id
+                        from spiderfoot.observability.request_tracing import get_request_id
                         req_id = get_request_id() or ""
                     except ImportError:
                         pass

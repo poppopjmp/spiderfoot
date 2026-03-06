@@ -103,8 +103,17 @@ export default function LoginPage() {
     window.location.href = `/api/auth/sso/saml/login/${provider.id}`;
   };
 
-  // URL error from SSO callback
-  const urlError = new URLSearchParams(window.location.search).get('error');
+  // URL error from SSO callback — sanitize to known error codes only
+  const SSO_ERROR_MAP: Record<string, string> = {
+    access_denied: 'Access denied by identity provider.',
+    invalid_request: 'Invalid authentication request.',
+    server_error: 'Identity provider encountered an error.',
+    temporarily_unavailable: 'Identity provider is temporarily unavailable.',
+    unauthorized_client: 'Client is not authorized for this operation.',
+    auth_failed: 'Authentication failed. Please try again.',
+  };
+  const rawUrlError = new URLSearchParams(window.location.search).get('error');
+  const urlError = rawUrlError ? (SSO_ERROR_MAP[rawUrlError] ?? 'Authentication failed. Please try again.') : null;
 
   return (
     <div className="min-h-screen bg-dark-950 flex items-center justify-center p-4">
@@ -173,6 +182,8 @@ export default function LoginPage() {
                   placeholder="Enter username"
                   autoFocus
                   autoComplete="username"
+                  required
+                  minLength={1}
                 />
               </div>
               <div>
@@ -187,11 +198,14 @@ export default function LoginPage() {
                     className="w-full px-3 py-2.5 bg-dark-800 border border-dark-600 rounded-lg text-foreground placeholder-dark-500 focus:outline-none focus:border-spider-500 focus:ring-1 focus:ring-spider-500 transition-colors pr-10"
                     placeholder="Enter password"
                     autoComplete="current-password"
+                    required
+                    minLength={1}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-500 hover:text-dark-300"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -260,6 +274,7 @@ export default function LoginPage() {
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-500 hover:text-dark-300"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>

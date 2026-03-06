@@ -190,14 +190,15 @@ class TestHttpDataServiceFactory(unittest.TestCase):
 
     def test_factory_creates_http_service(self):
         from spiderfoot.data_service.factory import create_data_service
+        from spiderfoot.data_service.resilient import ResilientDataService
 
         config = DataServiceConfig(
             backend=DataServiceBackend.HTTP,
             api_url="http://data:8001/api",
         )
         ds = create_data_service(config)
-        assert isinstance(ds, HttpDataService)
-        assert ds._base_url == "http://data:8001/api"
+        # Factory wraps HTTP in ResilientDataService by default
+        assert isinstance(ds, ResilientDataService)
 
 
 if __name__ == "__main__":

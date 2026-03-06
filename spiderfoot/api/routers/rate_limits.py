@@ -21,7 +21,7 @@ from ..dependencies import get_api_key
 
 log = logging.getLogger("spiderfoot.api.rate_limits")
 
-router = APIRouter(prefix="/api/rate-limits", tags=["rate-limits"])
+router = APIRouter(prefix="/rate-limits", tags=["rate-limits"])
 
 api_key_dep = Depends(get_api_key)
 
@@ -116,7 +116,7 @@ async def update_tier_limit(
     from spiderfoot.api.rate_limit_middleware import (
         _config, _limiter, DEFAULT_TIER_LIMITS,
     )
-    from spiderfoot.rate_limiter import RateLimit
+    from spiderfoot.security.rate_limiter import RateLimit
 
     if _config is None:
         raise HTTPException(status_code=503, detail="Rate limiting not configured")

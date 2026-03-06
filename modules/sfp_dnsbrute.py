@@ -21,10 +21,10 @@ import threading
 import time
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_dnsbrute(SpiderFootModernPlugin):
+class sfp_dnsbrute(SpiderFootAsyncPlugin):
     """SpiderFoot plugin to brute-force hostnames and sub-domains."""
     meta = {
         'name': "DNS Brute-forcer",

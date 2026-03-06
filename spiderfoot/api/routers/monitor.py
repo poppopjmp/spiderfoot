@@ -23,7 +23,7 @@ from ..dependencies import get_api_key
 
 log = logging.getLogger("spiderfoot.api.monitor")
 
-router = APIRouter(prefix="/api/monitor", tags=["monitoring"])
+router = APIRouter(prefix="/monitor", tags=["monitoring"])
 
 api_key_dep = Depends(get_api_key)
 
@@ -82,7 +82,7 @@ async def list_monitored_domains(
     api_key: str = api_key_dep,
 ) -> DomainListResponse:
     """List all monitored domains."""
-    from spiderfoot.subdomain_monitor import get_subdomain_monitor
+    from spiderfoot.scan.subdomain_monitor import get_subdomain_monitor
     monitor = get_subdomain_monitor()
     domains = monitor.list_domains()
     return DomainListResponse(
@@ -97,7 +97,7 @@ async def add_monitored_domain(
     api_key: str = api_key_dep,
 ) -> MonitorDomainResponse:
     """Add a domain to the monitoring list."""
-    from spiderfoot.subdomain_monitor import get_subdomain_monitor
+    from spiderfoot.scan.subdomain_monitor import get_subdomain_monitor
     monitor = get_subdomain_monitor()
 
     existing = monitor.get_domain(request.domain)
@@ -119,7 +119,7 @@ async def get_monitored_domain(
     api_key: str = api_key_dep,
 ) -> DomainDetailResponse:
     """Get monitored domain details with snapshot and recent changes."""
-    from spiderfoot.subdomain_monitor import get_subdomain_monitor
+    from spiderfoot.scan.subdomain_monitor import get_subdomain_monitor
     monitor = get_subdomain_monitor()
 
     md = monitor.get_domain(domain)
@@ -143,7 +143,7 @@ async def update_monitored_domain(
     api_key: str = api_key_dep,
 ) -> MonitorDomainResponse:
     """Update a monitored domain's settings."""
-    from spiderfoot.subdomain_monitor import get_subdomain_monitor
+    from spiderfoot.scan.subdomain_monitor import get_subdomain_monitor
     monitor = get_subdomain_monitor()
 
     md = monitor.update_domain(
@@ -164,7 +164,7 @@ async def remove_monitored_domain(
     api_key: str = api_key_dep,
 ) -> None:
     """Remove a domain from monitoring."""
-    from spiderfoot.subdomain_monitor import get_subdomain_monitor
+    from spiderfoot.scan.subdomain_monitor import get_subdomain_monitor
     monitor = get_subdomain_monitor()
 
     md = monitor.get_domain(domain)
@@ -181,7 +181,7 @@ async def get_domain_changes(
     api_key: str = api_key_dep,
 ) -> list[SubdomainChangeResponse]:
     """Get change history for a monitored domain."""
-    from spiderfoot.subdomain_monitor import get_subdomain_monitor
+    from spiderfoot.scan.subdomain_monitor import get_subdomain_monitor
     monitor = get_subdomain_monitor()
 
     md = monitor.get_domain(domain)
@@ -201,7 +201,7 @@ async def trigger_domain_check(
 
     Dispatches a Celery task if available, otherwise returns instructions.
     """
-    from spiderfoot.subdomain_monitor import get_subdomain_monitor
+    from spiderfoot.scan.subdomain_monitor import get_subdomain_monitor
     monitor = get_subdomain_monitor()
 
     md = monitor.get_domain(domain)

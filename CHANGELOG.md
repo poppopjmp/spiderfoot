@@ -3,7 +3,261 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [5.9.2] — 2026-02-19 — Module Cleanup, Bug Fixes & Frontend Polish
+## [6.0.0] — 2026-02-21
+
+### Added (Batches 40–45)
+- **Docker Compose modularization** (Batch 40): Split monolithic `docker-compose.yml` into domain-specific include files using the Compose `include` directive for cleaner service management
+- **OpenAPI TypeScript SDK** (Batch 41): Automated SDK generation pipeline via `@hey-api/openapi-ts v0.92.4` — produces fetch-based client with full type safety, JWT interceptor, and clean operation names from post-processed OpenAPI spec
+- **JSONL streaming export** (Batch 42): Newline-delimited JSON export endpoint (`/api/scans/{id}/export/jsonl`) for large scan results; pipeline-friendly format for downstream tooling
+- **SSE live event stream** (Batch 42): Server-Sent Events endpoint (`/events/stream`) for real-time scan event delivery to frontends and integrations
+- **Native async I/O engine** (Batch 43): `SpiderFootAsyncPlugin` base class with native `aiohttp` HTTP client and `aiodns` DNS resolver — opt-in async path for scanner modules without affecting sync modules
+- **AI structured outputs** (Batch 44): 12 Pydantic models in `spiderfoot/ai/schemas.py` for typed LLM responses; `chat_structured()` method using OpenAI `response_format: json_schema` mode with automatic validation
+- **PEP 561 strict typing** (Batch 45): `py.typed` marker for downstream type checking; `mypy` configuration in `setup.cfg`; strict type annotations across DB layer, core models, and network utilities
+
+### Added
+- **Go CLI**: Full-featured cross-platform CLI (`spiderfoot-cli`) built with Cobra/Viper — scan management, module listing, STIX/JSON/CSV export, schedule CRUD, health check, config management
+- **Command Palette**: Global `Ctrl+K` quick-navigate with fuzzy search over pages and recent scans, ARIA-compliant `combobox` pattern
+- **Schedules CRUD page**: Create, edit, enable/disable, delete scan schedules from the frontend with PATCH support
+- **STIX export**: Full STIX 2.1 bundle export from scan detail page
+- **Emotional design system**: Tooltip component, risk pills, SSE-driven progress bars, scan completion celebrations, toast notifications
+- **Comprehensive test coverage**: 282 tests across 27 test files — pages, components, utilities, auth, API client, scan tabs, CommandPalette
+
+### Security
+- **SQL injection fix** (P0): Parameterized `IN` clauses in `db_event.py` (`scanElementSourcesDirect`, `scanElementChildrenDirect`)
+- **Jinja2 SSTI sandbox**: Replaced `jinja2.Environment` with `SandboxedEnvironment` in report templates
+- **SSO tokens → hash fragment**: OAuth2/SAML callbacks redirect to `/#access_token=…` instead of query params
+- **XSS in PDF export**: Escaped `scan.name`, `scan.target`, `scanId` in `document.write()`
+- **Stored XSS in email notifications**: Escaped HTML in `_send_email` title/message/data interpolation
+- **Login URL error sanitization**: Whitelisted SSO error codes via `SSO_ERROR_MAP`; unknown codes get generic message
+- **API auth on all routers**: Added `Depends(get_api_key)` to ~170 previously unprotected endpoints
+- **WebSocket authentication**: JWT/API-key verification on WS connect (code 4003 on failure)
+- **Path parameter validation**: `SafeId` regex applied to 59+ route handlers across scan, workspace, reports, export routers
+- **SSRF webhook URL validation**: Blocks private/loopback/link-local IPs and dangerous hostnames
+- **Content-Disposition injection**: `safe_filename()` applied to all 16 download headers
+- **SSE token leak fix**: Replaced EventSource with fetch+ReadableStream to avoid token in URL
+- **Docker hardening**: `no-new-privileges`, `read_only`, `tmpfs` on 13/23 services
+- **Content-Security-Policy** and optional **HSTS** headers
+- **Error detail leak sweep**: 80+ `detail=str(e)` patterns replaced with generic messages across all routers
+- **Hardcoded credentials removed**: MinIO `changeme123` and PostgreSQL `changeme` fallbacks eliminated
+- **Export SafeID validation**: Added `validateSafeID` call in CLI export command
+
+### Changed
+- **Architecture: microservice-only** (Batches 34–36): Removed monolith entry points (`sf.py`, `sfcli.py`, `sfwebui.py`, `sf_orchestrator.py`) and the entire Python CLI package (`spiderfoot/cli/`, 30 files). SpiderFoot is now strictly: Python API (FastAPI), Node.js Frontend (React), Go CLI (Cobra), PostgreSQL
+- **PostgreSQL-only database layer**: Removed all SQLite support — merged dual schema into single PostgreSQL `createSchemaQueries`, removed `createPostgreSQLSchemaQueries`, eliminated all `import sqlite3` statements, changed every `(sqlite3.Error, psycopg2.Error)` catch to `psycopg2.Error`, removed `SQLiteBackend` class from `report_storage.py` (~165 lines), made `build_config_from_env()` raise `EnvironmentError` instead of SQLite fallback
+- **Renamed SQLite-named symbols**: `SpiderFootSqliteLogHandler` → `SpiderFootDbLogHandler`, `enable_sqlite` → `enable_db_handler`, `_store_sqlite` → `_store_default`, `_bulk_store_sqlite` → `_bulk_store_default`
+- **`db_migrate.py`**: Replaced `SqliteAdapter` with `PostgresAdapter`, removed `SQLITE` from `DbDialect` enum
+- **`auth/service.py`**: PostgreSQL-only with `RuntimeError` on missing DSN
+- **Dockerfile**: API-only (port 8001), removed monolith/webui entry points
+- **Go CLI User-Agent**: Dynamic `SpiderFoot-CLI/<version>` header via `client.Version` propagated from `root.go`
+- **Go CLI input validation**: Added `validateSafeID` to schedule update, delete, and trigger commands
+- **GrpcDataService import**: Wrapped in `try/except ImportError` for graceful degradation when gRPC stubs not generated
+- **Debian packaging**: Removed stale `sf.py`, `sfcli.py`, `sfwebui.py` references from `packaging/debian/install`
+- **Version bump to 6.0.0**: VERSION, package.json, CLI root.go/client.go, Layout.tsx, README badge
+- **STIX API path corrected**: `/scans/` → `/api/scans/` prefix
+- **Health CLI path corrected**: `/api/health` → `/health` (root-mounted router)
+- **GeoMapTab**: Migrated 4 individual `useQuery` calls to single `useQueries()` for parallel fetching
+- **Scans search pagination**: Search mode now uses server-side `limit`/`offset` pagination instead of fetching 200 results; pagination controls shown in search mode
+- **Search/filter reset**: Page resets to 1 when search query or status filter changes
+- **Event types type safety**: `unknown[]` → `Array<{ name: string; description?: string }>`
+- **Empty catch blocks**: GraphTab and LogTab now log errors instead of silently swallowing
+- **`@types/dompurify`** moved from dependencies to devDependencies
+- **Node engines field**: Added `"engines": { "node": ">=18" }` to package.json
+- **Layout version constant**: Extracted `APP_VERSION` constant, replacing 2 hardcoded `v5.9.2` references
+- **Route-level code splitting**: 10 of 12 pages lazy-loaded via `React.lazy()`
+- **AbortSignal support**: All 84 API methods accept `signal`; all 38 `queryFn` call sites forward TanStack Query's signal
+- **Admin pages → React Query**: SSOSettings, Users, ApiKeys migrated from useState/useEffect to useQuery/useMutation
+- **Concurrent token refresh deduplication**: Shared `refreshPromise` prevents race conditions
+- **`useDocumentTitle`** on all 13 pages
+- **Workspaces.tsx refactor**: Extracted `WorkspaceReportCard` component and `useWorkspaceMutations` hook — reduced from 1003 to 714 lines
+- **Workspace scans cache isolation**: Separated `['workspace-scans', workspaceId]` query key from global scans list
+- **TypeScript strict compliance**: Zero errors on `tsc --noEmit` — fixed mutation type mismatches, unused imports/parameters across all source and test files
+- **Accessibility**: ARIA labels on scan tabs, forms, filters, checkboxes, GeoMap SVG, skip-to-content link
+
+### Removed (Batches 34–36 — Microservice Cleanup)
+- **Monolith entry points**: `sf.py`, `sf_orchestrator.py`, `sfcli.py` — all replaced by `sfapi.py` + Go CLI
+- **Python CLI package**: Entire `spiderfoot/cli/` directory (30 files, ~3,500 lines) — replaced by Go CLI
+- **SQLite support**: All SQLite connection paths, schema definitions, adapters, and `import sqlite3` removed from production code
+- **`SQLiteBackend`**: Removed from `report_storage.py` (~165 lines) — PostgreSQL and in-memory backends remain
+- **gRPC proto-generated stubs**: `spiderfoot_pb2.py` and `spiderfoot_pb2_grpc.py` removed from repo (regenerate with `scripts/generate_proto.py`)
+- **Legacy test files**: `test_spiderfootdb.py`, `test_spiderfootdb_enhanced.py`, `test_spiderfootdb_extended.py`, `test_report_storage.py` (SQLite-dependent)
+- **Obsolete test infrastructure**: `test_harness.py`, `benchmark.py` — monolith-era utilities
+
+### Fixed
+- **GraphQL subscription DB leak**: Connection created once before polling loop instead of per-iteration
+- **Canvas animation memory leak**: Proper `cancelAnimationFrame` cleanup in GraphTab
+- **localStorage QuotaExceededError**: `safeStorage.ts` with LRU eviction for report cache
+- **Background polling**: `refetchIntervalInBackground: false` as QueryClient default
+- **Token refresh → centralized `saveTokens()`**
+- **Clipboard unhandled rejections**: `.catch()` on all `navigator.clipboard.writeText()` calls
+- **useEffect dependency arrays**: Fixed stale closures in App.tsx
+- **Report store thread-safety**: Added `threading.Lock` to in-memory fallback dict
+- **Unbounded multi-scan batches**: Capped at 50 IDs per request
+- **`__version__.py` VERSION tuple crash**: Pre-release suffix (e.g. `6.0.0-rc.1`) caused `ValueError` in `tuple(map(int, ...))` — now strips suffix before parsing
+- **Go CLI Makefile stale version**: Changed from hardcoded `5.9.2` to `$(shell cat ../VERSION)`
+- **Go CLI `GetRaw` User-Agent**: Fixed stale `5.9.2` in export request header
+- **`sfcli.py` entry point**: Added `main()` function for `console_scripts` compatibility; guarded unconditional debug print behind `-d` flag
+- **CI branch references**: Fixed 4 workflows targeting `master` instead of `main` (build-artifacts, wiki-sync, semgrep, codeql-analysis)
+- **CodeQL `actions/checkout@v2`**: Updated to `@v4`
+- **Build-artifacts packaging gates**: Changed from Python 3.9 (not in matrix) to 3.10 so .deb/.rpm/snap/Homebrew steps actually run
+- **Acceptance tests**: Fixed port `5001`→`8001` and endpoint `/ping`→`/health` for v6 API
+- **Dockerfile HEALTHCHECK**: Standardized to `/health` endpoint
+- **`docker/build.sh`**: Added active-worker build step (5th image); added configurable `REGISTRY` prefix
+
+### Added (CI/CD)
+- **Go CLI in CI**: New `go-cli` job in `ci.yml` — `go vet`, `go test -race`, smoke build
+- **Go CLI cross-compilation in releases**: 6-platform matrix build in `release.yml` with artifacts attached to GitHub Releases
+- **Go vulnerability scanning**: `govulncheck` step in `security-scan.yml` for `cli/go.mod`
+- **Full-stack deployment test**: New `deploy-test.yml` workflow — Docker build, API smoke test, Go CLI integration against live API, frontend production build validation, summary gate
+- **Semgrep action**: Updated from pinned SHA to tagged `@v1`
+- **Python 3.13 classifier**: Added to `setup.py`
+
+### Documentation
+- **Dual-CLI strategy**: README now documents both Go CLI and Python REPL CLI with comparison table and recommended use cases
+- **Go CLI README**: Fixed `--cron` → `--interval` in schedule examples; added `update` subcommand
+- **Pipfile**: Added deprecation notice — canonical deps are `requirements.txt`
+
+## [5.9.2] — 2026-02-20 — Deep Security & Quality Hardening
+
+### Security — SSO & Hardening Polish (Batch 9)
+- **SSO callback error sanitization**: Replaced `str(e)` in OAuth2 callback and SAML ACS error redirects with generic "SSO authentication failed" message; full exception logged server-side via `log.exception()`
+- **Docker hardening documentation**: Added comprehensive comment block documenting which 13 services are hardened and why each of the 10 remaining services is excluded (writable filesystem requirements)
+
+### Improved — Frontend Performance (Batch 9)
+- **Route-level code splitting expanded**: Moved ScanDetail, NewScan, and Settings from eager imports to `React.lazy()` with `<Suspense>` boundaries — now 10 of 12 pages are lazy-loaded for smaller initial bundle
+
+### Added — Test Coverage Expansion (Batch 9)
+- **99 additional tests** across 3 new test files:
+  - `auth.test.ts` (36): Zustand auth store — saveTokens, clearTokens, setTokensFromUrl, hasPermission (all roles), login/LDAP errors, token refresh, user fetch
+  - `api.test.ts` (45): API utilities — formatEpoch/formatDuration edge cases, statusColor/statusBadgeClass all variants, getErrorMessage for all error shapes
+  - `Layout.test.tsx` (18): Layout component — nav items, dropdowns, admin visibility, user menu, sign out, about modal, mobile header, theme toggle
+- **Total: 230 tests across 11 files, all passing**
+
+### Security — Final Hardening Pass (Batch 8)
+- **Auth route info leak closure**: Sanitized `detail=str(e)` in token refresh (catch-all `Exception`) and LDAP login (`ImportError` could expose filesystem paths); generic messages returned, full details logged server-side
+- **Gateway error sanitization**: Removed internal exception message from `GatewayError` in api_gateway.py; prevents service internals from reaching clients
+- **Docker hardening expansion**: Added `no-new-privileges`, `read_only`, and `tmpfs` to 10 additional services (redis, frontend/nginx, qdrant, vector, tika, agents, celery-beat, flower, litellm, pg-backup) — now 13/23 services hardened
+
+### Improved — Code Quality (Batch 8)
+- **Workspaces.tsx deduplication**: Replaced 115-line inline `renderSimpleMd` with shared `MarkdownRenderer` component; removed unused `sanitizeHTML` and `inlineFormat` imports
+
+### Added — Testing & CI (Batch 8)
+- **92 component/page tests**: UI components (47 tests: StatusBadge, Toast, Tabs, ConfirmDialog, ModalShell, Expandable, EmptyState, PageHeader, ProgressBar), ErrorBoundary (8 tests), MarkdownRenderer component (16 tests), Login page (21 tests with mocked auth/API)
+- **Frontend CI job**: Added to `.github/workflows/ci.yml` — Node 20, TypeScript type-check, ESLint, Vitest (131 tests), coverage reporting. Integration tests now gate on both backend and frontend
+
+### Security — P1 Auth Gaps Closed (Batch 7)
+- **WebSocket authentication**: Added `_verify_ws_token()` that validates `?token=<jwt_or_api_key>` query parameters; unauthenticated connections are rejected with code 4003 before `websocket_manager.connect()` (BaseHTTPMiddleware does not intercept WS)
+- **Scan progress endpoint auth**: Added `Depends(optional_auth)` to all 6 scan_progress REST/SSE endpoints; sanitized 5 error messages that leaked scan IDs
+- **Auth token localStorage safety**: Wrapped `saveTokens`/`clearTokens` and the refresh interceptor in try/catch to prevent QuotaExceededError from breaking auth flows
+
+### Improved — Frontend Architecture (Batch 7)
+- **AbortSignal for request cancellation**: Added optional `signal?: AbortSignal` to all 84 API methods in api.ts; updated all 38 `queryFn` call sites across 17 files to forward TanStack Query's signal — enables automatic cancellation on component unmount
+- **Admin pages → React Query**: Migrated SSOSettings.tsx (1 query + 3 mutations), Users.tsx (1 query + 4 mutations), ApiKeys.tsx (1 query + 3 mutations) from manual useState + useEffect to useQuery/useMutation with signal support
+- **Shared MarkdownRenderer**: Extracted 110-line `renderMarkdownToHTML()` and `inlineFormat()` into a shared component; replaced duplicate code in ReportTab.tsx and Workspaces.tsx
+- **Settings.tsx DOM leak**: Replaced `document.createElement('input')` with a ref-based hidden `<input>` in JSX; added proper append/remove for the download anchor
+
+### Added — Test Infrastructure (Batch 7)
+- **Vitest frontend test foundation**: Added vitest + @testing-library/react + jsdom; 39 tests across 4 suites: sanitize (7 XSS tests), MarkdownRenderer (14 render tests), safeStorage (4 quota tests), API helpers (14 utility tests)
+
+### Security — Defense-in-Depth (Batch 6)
+- **Error detail leak sweep (25 more instances)**: Sanitized 5 GraphQL resolver `message=str(e)`, 13 health endpoint `str(e)` (leaking DSNs/URLs), and 7 scan bulk-op / reports / engines `str(e)` with generic messages; all server-side logging preserved
+- **Path parameter validation**: Added `SafeId` (`^[a-zA-Z0-9_\\-]{1,64}$`) and `SafeName` type aliases to dependencies.py; applied to 59 route handlers across scan.py (38), workspace.py (17), and reports.py (4) — FastAPI returns 422 for non-matching input
+- **Content-Security-Policy header**: Added `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; frame-ancestors 'none'` to `SecurityHeaders.DEFAULT_HEADERS`
+- **HSTS opt-in**: Added `get_headers()` classmethod that includes `Strict-Transport-Security: max-age=63072000; includeSubDomains` when `SF_HSTS_ENABLED` env var is set
+- **Docker container hardening**: Added `no-new-privileges:true`, `read_only: true`, and tmpfs mounts to api, celery-worker, and celery-worker-active containers
+
+### Fixed — Frontend Reliability (Batch 6)
+- **localStorage QuotaExceededError**: Added `safeStorage.ts` with `safeSetItem()` — truncates values to 100 KB, catches quota errors with LRU eviction of report cache keys; applied to 6 report-caching writes in Workspaces.tsx and ReportTab.tsx
+
+### Security — P1 Critical & High (Batch 5)
+- **Path traversal in MinIO / Qdrant storage**: Added `_validate_safe_name()` in minio_manager.py (rejects `..`, `/`, `\`, non-alphanumeric-dot-hyphen); validated bucket names (must start with `sf-`, S3-compliant) and collection/name params in the storage router
+- **SQL identifier injection in db_utils.py**: Added `_quote_ident()` helper that double-quotes SQL identifiers and rejects embedded quotes; applied to all `DROP TABLE` statements and parameterized the `information_schema.columns` WHERE clause
+- **55 error detail leaks sanitized**: Replaced all `detail=str(e)` and `detail=f"...{e}"` patterns across 14 router files (data, rbac, rbac_enhanced, schedules, storage, tenants, workspace, visualization, scan, rag_correlation, keys, engines, export, correlations) with static generic messages; added server-side `log.warning`/`log.exception`
+
+### Fixed — Reliability & Safety (Batch 5)
+- **`_report_store` thread-safety**: Added `threading.Lock` to the in-memory fallback report dict in reports.py; all reads, writes, deletes, and clears wrapped in `with _report_lock:`
+- **Unbounded multi-scan batch endpoints**: Added `MAX_MULTI_SCAN_IDS = 50` cap to `export-multi`, `viz-multi`, and `rerun-multi`; returns 400 when exceeded
+- **Config untyped dict bodies**: Replaced 6 raw `dict = Body(...)` params with Pydantic models: `ApiKeyCreateRequest` (name/scopes/expires with bounds), `CredentialCreateRequest`, `ConfigImportRequest`, plus `extra="allow"` models for freeform option endpoints
+
+### Improved — Accessibility (Batch 5)
+- **About modal → ModalShell**: Replaced ad-hoc About dialog in Layout.tsx with the existing `ModalShell` component, gaining `role="dialog"`, `aria-modal`, `aria-labelledby`, focus trap, and Escape key handling; removed unused X icon import
+
+### Security — P1 Critical & High (Batch 4)
+- **XSS in PDF export**: `scan.name`, `scan.target` and `scanId` were interpolated raw into `document.write()` in ReportTab PDF export; added `escapeHTML()` helper and wrapped all dynamic values
+- **Concurrent token refresh race**: Multiple 401s triggered independent `/api/auth/refresh` calls, invalidating single-use rotation tokens and logging users out; added shared `refreshPromise` deduplication
+- **Route-level RBAC**: Added `RequirePermission` component; `/users` requires `user:read`, `/sso-settings` and `/api-keys` require `system:admin`; falls through when auth is disabled (dev mode)
+- **Hardcoded credentials removed**: Removed `changeme123` MinIO fallbacks from 5 Python files; removed `changeme` PostgreSQL DSN from maintenance.py; MinIOConfig now logs CRITICAL on insecure defaults; stripped credential hints from Layout.tsx service links
+- **SSRF webhook URL validation**: Added `_validate_webhook_url()` — requires http(s) scheme, blocks private/loopback/link-local/reserved IPs and known dangerous hostnames; applied to all webhook Pydantic models
+
+### Fixed — Reliability (Batch 4)
+- **GraphQL subscription DB leak**: `scan_progress` and `scan_events_live` called `_get_db()` inside polling loops, leaking ~30 connections/min per subscriber; DB handle now created once before the loop and closed in `finally`
+- **scan-profiles missing auth**: `list_scan_profiles()` and `get_scan_profile()` were the only unprotected endpoints on the scan router; added `api_key_dep`
+- **Error detail leaks**: Replaced 4 `detail=str(e)` / `detail=f"...{e}"` patterns in scan.py and export.py with generic messages; added `exc_info=True` server-side logging
+- **Clipboard unhandled rejections**: Added `.catch()` to `navigator.clipboard.writeText()` in CopyButton, Scans Copy ID, and ApiKeys Copy Key
+- **Background polling waste**: Set `refetchIntervalInBackground: false` as QueryClient default — polling pauses when tab is hidden
+- **Token refresh bypasses saveTokens**: `refreshAccessToken()` now uses centralized `saveTokens()` instead of raw `localStorage.setItem`
+
+### Security — P0 Critical (Batch 3)
+- **SQL injection in db_event.py**: Replaced string-interpolated `IN` clauses in `scanElementSourcesDirect` and `scanElementChildrenDirect` with parameterized placeholders; added early-return on empty input
+- **Jinja2 SSTI sandbox**: Replaced `jinja2.Environment` with `jinja2.sandbox.SandboxedEnvironment` in report_templates.py; replaced dangerous `str.format()` fallback with `string.Template.safe_substitute()`
+- **SSO tokens moved from URL to hash fragment**: OAuth2 callback and SAML ACS now redirect to `/#access_token=…` instead of `/?access_token=…`; frontend reads from `window.location.hash` — tokens no longer appear in server logs or Referer headers
+
+### Security — P1 High (Batch 3)
+- **API auth on 20 unprotected routers**: Added `Depends(get_api_key)` to all remaining unprotected router groups (~170 endpoints); only health, SSO, auth, and WebSocket routers remain intentionally public
+- **Stored XSS in email notifications**: Wrapped title, message, and data key/value interpolations in `_send_email` with `html.escape()` to prevent stored XSS via crafted scan names or event data
+- **Content-Disposition header injection**: Added `safe_filename()` utility to sanitise download filenames (strips CR/LF, quotes, backslashes, path separators, non-ASCII); applied across all 16 Content-Disposition headers in export, scan, visualization, workspace, and reports routers
+
+### Performance (Batch 3)
+- **useEffect dependency arrays**: Fixed missing deps in App.tsx (`setTokensFromUrl`, `fetchAuthStatus`, `fetchCurrentUser`) to prevent stale closures
+- **Canvas animation memory leak**: GraphTab now stores `requestAnimationFrame` ID and calls `cancelAnimationFrame` in cleanup; uses stable `nodes.length`/`edges.length` deps
+- **SearchInput debounce**: Added `useDebounce<T>` hook; SearchInput accepts optional `debounceMs` prop; enabled on LogTab and BrowseTab to reduce re-renders during typing
+- **React.memo on scan tabs**: Wrapped all 8 scan tab components (`SummaryTab`, `SettingsTab`, `LogTab`, `BrowseTab`, `CorrelationsTab`, `ReportTab`, `GeoMapTab`, `GraphTab`) with `React.memo` to skip unnecessary re-renders
+
+### Security — P0 Critical (Batch 2)
+- **API auth on 5 unprotected router groups**: Added `Depends(get_api_key)` to ASM, Marketplace, RBAC Enhanced, Data Retention, and Distributed Scan routers — 60+ endpoints were previously accessible without authentication
+- **React ErrorBoundary**: Added top-level `ErrorBoundary` component wrapping `<App />`; catches render crashes and shows a recoverable fallback UI instead of a white screen
+- **Unsafe JSON.parse in ApiKeys.tsx**: Wrapped `JSON.parse(k.allowed_modules)` in render path with try/catch to prevent runtime crash on malformed data
+- **Dead file upload UI removed**: Removed non-functional drag-and-drop file upload from NewScan page (files were never sent to the API, misleading users)
+
+### Security — P1 High
+- **Shell injection in sfp_tool_gobuster**: Replaced `shell=True` with `subprocess.run(cmd_list)` (no shell) and `shutil.which()` for path resolution; also fixed calls to non-existent `self.sf.execute()` method
+- **Mutation error feedback**: Added `onError` handlers to 14 React Query mutations that silently swallowed failures (ScanDetail, Scans, Modules, Workspaces, CorrelationsTab, ReportTab, BrowseTab)
+- **GraphQL error logging**: Added `exc_info=True` to all 20 `_log.error()` calls in resolvers.py for proper stack traces in logs
+
+### Accessibility
+- **ModalShell a11y overhaul**: Added `role="dialog"`, `aria-modal="true"`, `aria-labelledby`, Escape key handler, focus trap (Tab/Shift+Tab cycle), auto-focus on mount, `aria-label` on close button
+- **Deduplicated ModalShell**: Removed duplicate definition from SSOSettings.tsx; now uses shared component from `components/ui`
+
+### Fixed — Bugs
+- **Ethereum address detection**: Fixed `detectTargetType()` in Workspaces.tsx — Ethereum addresses (`0x...`) were incorrectly labeled as `BITCOIN_ADDRESS`; added proper `ETHEREUM_ADDRESS` type
+- **Resource management**: Wrapped 3 `urllib.request.urlopen()` calls in `notifications.py` with context managers to properly close HTTP responses
+
+### Security — P0 Critical (Batch 1)
+- **JWT hardening**: Replaced hand-rolled HMAC-SHA256 JWT with PyJWT library; auto-detects insecure default secrets (`changeme`, `secret`, etc.) and generates cryptographic random secret at startup; logs CRITICAL warning for insecure configurations
+- **Auth bypass lockdown**: API key dev-mode bypass now requires explicit `SF_AUTH_DISABLED=true` environment variable (previously any misconfiguration could skip auth)
+- **CORS lockdown**: Default allowed origins changed from `*` to `http://localhost:3000,https://localhost`; logs WARNING when wildcard CORS is active
+- **XSS prevention**: Wrapped all 7 `dangerouslySetInnerHTML` usages in `ScanDetail.tsx` and `Workspaces.tsx` with DOMPurify sanitization (strict tag/attribute allow-list)
+- Removed `python-jose` dependency in favor of sole `pyjwt` JWT library
+
+### Refactored — Frontend Architecture
+- **ScanDetail.tsx split**: Decomposed 1,979-line monolith into 10 focused tab components (`SummaryTab`, `BrowseTab`, `CorrelationsTab`, `GraphTab`, `GeoMapTab`, `ReportTab`, `SettingsTab`, `LogTab`, `MiniStat`, `ExportDropdown`) + shared `geo.ts` utility; page shell reduced to ~130 lines
+- **ESLint flat config**: Added `eslint.config.js` (ESLint v9) with `typescript-eslint`, `react-hooks` plugin, and `@typescript-eslint/no-explicit-any` warning rule
+- **Eliminated all 18 explicit `any` types**: Created shared `getErrorMessage()` utility using `axios.isAxiosError()` for type-safe error extraction; replaced 15 `catch(err: any)` patterns, fixed 1 `onError: (err: any)`, fixed 2 untyped `.map()` callbacks
+- Fixed ESLint errors: unnecessary escape characters, ternary-as-statement expressions
+
+### Reliability — Module Stop Guards
+- Added `self.checkForStop()` guards to 35 critical module loops (15 critical ≥40 body lines, 20 high-priority 24-39 body lines) enabling graceful scan cancellation
+- Modules patched: `sfp_leakcheck`, `sfp_tool_tlsx`, `sfp_tool_sslyze`, `sfp_tool_testsslsh`, `sfp_keybase`, `sfp_leakix`, `sfp_greynoise`, `sfp_arbitrum`, `sfp_grep_app`, `sfp_tool_dnsx`, `sfp_builtwith`, `sfp_names`, `sfp_certspotter`, `sfp_dehashed`, `sfp_mnemonic`, `sfp_circllu`, `sfp_tool_onesixtyone`, `sfp_tool_gitleaks`, `sfp_alienvault`, `sfp_aparat`, `sfp_tool_linkfinder`, `sfp_tool_sslscan`, `sfp_apileak`, `sfp_tool_gospider`, `sfp_company`, `sfp_discord`, `sfp_wechat`, `sfp_douyin`, `sfp_rocketreach`, `sfp_xiaohongshu`, `sfp_emailcrawlr`, `sfp_tool_nikto`, `sfp_tool_dalfox`, `sfp_apple_itunes`, `sfp_hackertarget`
+
+### Cleanup — Dead Code Removal
+- Removed dead `import urllib.error` and `import urllib.request` from 30 modules (only `urllib.parse` was used)
+- Fixed `sfp_zoomeye` latent `NameError` bug: was catching `urllib.error.HTTPError/URLError` without importing `urllib` — dead except blocks removed since module uses `self.fetch_url()`
+- Removed 3,445 lines of dead test code: 120 never-implemented integration test stubs (`@unittest.skip("todo")` with dummy data), 4 broken unit test stubs (had `selfdepth=0` instead of `self, depth=0`)
+- Fixed unconditional `skipIf(True)` in `test_sfcli_enhanced.py` → proper `os.name == 'nt'` platform guard
+
+### Dependencies
+- Removed unused `werkzeug` from requirements (never imported)
+- Moved `openai` to optional comment (LLM client uses raw HTTP, never imports the package)
+- Added note that `weasyprint` is optional (PDF export only)
 
 ### Fixed — Frontend Visualization Bugs
 - **Modules page**: Enabled/Disabled stat cards now compute counts client-side from per-module status map; previously relied on server aggregate fields that could lag after toggling a module
@@ -27,7 +281,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **sfp_subdomainradar**: Fixed 3 critical API structure mismatches (auth header, response parsing, endpoint paths)
 
 ### Changed — Docker Compose Profiles
-- Consolidated `docker-compose-microservices.yml` and `docker-compose-simple.yml` into a **single compose file** using Docker Compose profiles
+- Consolidated `docker-compose.yml` and `docker-compose-simple.yml` into a **single compose file** using Docker Compose profiles
 - 5 core services (postgres, redis, api, celery-worker, frontend) always start without any profile
 - 7 opt-in profiles: `scan`, `proxy`, `storage`, `monitor`, `ai`, `scheduler`, `sso`
 - `full` meta-profile activates all profiles except `sso`
@@ -184,3 +438,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - README.md: updated Mermaid architecture diagram (17 containers), version badge (5.3.3), services table, Quick Start URLs, project structure; added Monitoring, AI Agents, Document Enrichment, User-Defined Input, LLM Gateway sections
 - ARCHITECTURE.md: updated topology diagram, service table, package listing; added AI Agents, Enrichment, User Input, LLM Gateway, Observability Stack sections
 - `docker/env.example`: comprehensive example with all new service configuration
+

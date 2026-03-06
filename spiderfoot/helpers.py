@@ -91,7 +91,7 @@ class SpiderFootHelpers():
             if not os.path.exists(cache_dir):
                 os.makedirs(cache_dir, exist_ok=True)
             return cache_dir
-        except Exception as e:
+        except Exception:
             # Fallback to current directory
             fallback_dir = os.path.abspath(os.path.join(os.getcwd(), 'cache'))
             if not os.path.exists(fallback_dir):
@@ -106,7 +106,7 @@ class SpiderFootHelpers():
             if not os.path.exists(log_dir):
                 os.makedirs(log_dir, exist_ok=True)
             return log_dir
-        except Exception as e:
+        except Exception:
             # Fallback to current directory
             fallback_dir = os.path.abspath(os.path.join(os.getcwd(), 'logs'))
             if not os.path.exists(fallback_dir):

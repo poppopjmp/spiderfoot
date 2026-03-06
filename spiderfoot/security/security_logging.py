@@ -14,7 +14,7 @@ from enum import Enum
 from datetime import datetime, timezone
 from pathlib import Path
 
-from spiderfoot.logging_config import (
+from spiderfoot.observability.logging_config import (
     LOG_FORMAT_NAMED,
     LOG_FORMAT_SECURITY,
     LOG_FORMAT_SECURITY_CONSOLE,
@@ -53,11 +53,19 @@ class SecurityLogger:
             log_file: Path to security log file
             console_output: Whether to output to console
         """
-        self.log_file = log_file or "logs/security.log"
+        import os
+        # Resolve log path: explicit arg → env var → /tmp fallback (handles read-only containers)
+        self.log_file = log_file or os.environ.get(
+            'SF_SECURITY_LOG',
+            '/tmp/spiderfoot/security.log'
+        )
         self.console_output = console_output
 
-        # Create logs directory if it doesn't exist
-        Path(self.log_file).parent.mkdir(parents=True, exist_ok=True)
+        # Create logs directory — silently ignore permission errors (read-only FS)
+        try:
+            Path(self.log_file).parent.mkdir(parents=True, exist_ok=True)
+        except (PermissionError, OSError):
+            pass
 
         # Set up logger
         self.logger = logging.getLogger('spiderfoot.security')
@@ -69,13 +77,16 @@ class SecurityLogger:
         # Remove existing handlers to avoid duplicates
         self.logger.handlers.clear()
 
-        # File handler for security events
-        file_handler = logging.FileHandler(self.log_file, encoding='utf-8')
-        file_formatter = logging.Formatter(
-            LOG_FORMAT_SECURITY
-        )
-        file_handler.setFormatter(file_formatter)
-        self.logger.addHandler(file_handler)
+        # File handler for security events — fall back to console-only if not writable
+        try:
+            file_handler = logging.FileHandler(self.log_file, encoding='utf-8')
+            file_formatter = logging.Formatter(
+                LOG_FORMAT_SECURITY
+            )
+            file_handler.setFormatter(file_formatter)
+            self.logger.addHandler(file_handler)
+        except (PermissionError, OSError):
+            pass  # console-only mode in restricted environments
 
         # Console handler
         if console_output:
@@ -220,15 +231,21 @@ class ErrorHandler:
         Args:
             security_logger: Security logger instance
         """
+        import os
         self.security_logger = security_logger or SecurityLogger()
         self.error_logger = logging.getLogger('spiderfoot.errors')
 
-        # Set up error logger
+        # Set up error logger — fall back to console if logs dir not writable
         if not self.error_logger.handlers:
-            handler = logging.FileHandler('logs/errors.log', encoding='utf-8')
-            formatter = logging.Formatter(LOG_FORMAT_NAMED)
-            handler.setFormatter(formatter)
-            self.error_logger.addHandler(handler)
+            error_log = os.environ.get('SF_ERROR_LOG', '/tmp/spiderfoot/errors.log')
+            try:
+                Path(error_log).parent.mkdir(parents=True, exist_ok=True)
+                handler = logging.FileHandler(error_log, encoding='utf-8')
+                formatter = logging.Formatter(LOG_FORMAT_NAMED)
+                handler.setFormatter(formatter)
+                self.error_logger.addHandler(handler)
+            except (PermissionError, OSError):
+                pass  # console-only mode
             self.error_logger.setLevel(logging.ERROR)
 
     def handle_exception(self, e: Exception, context: dict[str, Any] = None,

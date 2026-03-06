@@ -33,14 +33,18 @@ class TestSfpMatrix(TestModuleBase):
         self.assertIn('MATRIX_MESSAGE', self.plugin.producedEvents())
 
     def test_option_validation(self):
-        with self.assertRaises(ValueError):
-            self.plugin.setup(None, {"access_token": "", "room_id": "!room:id", "max_messages": 10, "output_format": "summary"})
-        with self.assertRaises(ValueError):
-            self.plugin.setup(None, {"access_token": "token", "room_id": "", "max_messages": 10, "output_format": "summary"})
-        with self.assertRaises(ValueError):
-            self.plugin.setup(None, {"access_token": "token", "room_id": "!room:id", "max_messages": 0, "output_format": "summary"})
-        with self.assertRaises(ValueError):
-            self.plugin.setup(None, {"access_token": "token", "room_id": "!room:id", "max_messages": 10, "output_format": "invalid"})
+        p = self.plugin.__class__()
+        p.setup(None, {"access_token": "", "room_id": "!room:id", "max_messages": 10, "output_format": "summary"})
+        self.assertTrue(p.errorState)
+        p = self.plugin.__class__()
+        p.setup(None, {"access_token": "token", "room_id": "", "max_messages": 10, "output_format": "summary"})
+        self.assertTrue(p.errorState)
+        p = self.plugin.__class__()
+        p.setup(None, {"access_token": "token", "room_id": "!room:id", "max_messages": 0, "output_format": "summary"})
+        self.assertTrue(p.errorState)
+        p = self.plugin.__class__()
+        p.setup(None, {"access_token": "token", "room_id": "!room:id", "max_messages": 10, "output_format": "invalid"})
+        self.assertTrue(p.errorState)
 
     def test_handle_event_stub(self):
         event = SpiderFootEvent('ROOT', 'test', 'test', None)

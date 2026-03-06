@@ -23,10 +23,10 @@ import tempfile
 import xml.etree.ElementTree as ET
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_nmap(SpiderFootModernPlugin):
+class sfp_nmap(SpiderFootAsyncPlugin):
     """Nmap — network exploration and port scanning."""
 
     meta = {

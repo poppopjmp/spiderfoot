@@ -71,6 +71,7 @@ class TestModuleWappalyzer(TestModuleBase):
 
 class TestModuleWappalyzerAPI(TestModuleBase):
     def setUp(self):
+        super().setUp()
         self.sf = SpiderFoot({})
         self.module = sfp_tool_wappalyzer()
         self.target_value = 'example.com'

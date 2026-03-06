@@ -536,7 +536,7 @@ class TestConfigEndpoints:
         mock_db_cls.return_value = mock_db
         resp = self.client.post(
             "/api/config/import",
-            json={"_debug": True, "__version__": "99.0", "__modules__": {}},
+            json={"config": {"_debug": True, "__version__": "99.0", "__modules__": {}}},
         )
         assert resp.status_code == 200
         assert resp.json()['success'] is True

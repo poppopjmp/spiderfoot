@@ -20,10 +20,10 @@ import threading
 import time
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_digitaloceanspace(SpiderFootModernPlugin):
+class sfp_digitaloceanspace(SpiderFootAsyncPlugin):
     """Digital Ocean Space Finder"""
     meta = {
         "name": "Digital Ocean Space Finder",

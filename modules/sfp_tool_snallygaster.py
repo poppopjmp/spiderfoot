@@ -20,10 +20,10 @@ import os.path
 from subprocess import PIPE, Popen, TimeoutExpired
 
 from spiderfoot import SpiderFootEvent, SpiderFootHelpers
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_tool_snallygaster(SpiderFootModernPlugin):
+class sfp_tool_snallygaster(SpiderFootAsyncPlugin):
 
     """Finds file leaks and other security problems on HTTP servers."""
 

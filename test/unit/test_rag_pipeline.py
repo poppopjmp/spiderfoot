@@ -1,9 +1,9 @@
-"""Tests for spiderfoot.rag_pipeline — RAG pipeline core."""
+"""Tests for spiderfoot.ai.rag_pipeline — RAG pipeline core."""
 
 from __future__ import annotations
 
 import pytest
-from spiderfoot.rag_pipeline import (
+from spiderfoot.ai.rag_pipeline import (
     LLMProvider,
     MockLLMBackend,
     MockReranker,

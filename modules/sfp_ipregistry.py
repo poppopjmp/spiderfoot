@@ -18,10 +18,10 @@ import json
 import urllib.parse
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_ipregistry(SpiderFootModernPlugin):
+class sfp_ipregistry(SpiderFootAsyncPlugin):
     """Query the ipregistry.co database for reputation and geo-location."""
 
     meta = {

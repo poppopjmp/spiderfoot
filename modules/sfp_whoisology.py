@@ -17,10 +17,10 @@ from __future__ import annotations
 import json
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_whoisology(SpiderFootModernPlugin):
+class sfp_whoisology(SpiderFootAsyncPlugin):
 
     """Reverse Whois lookups using Whoisology.com."""
 

@@ -19,10 +19,10 @@ from __future__ import annotations
 from netaddr import IPNetwork
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_dronebl(SpiderFootModernPlugin):
+class sfp_dronebl(SpiderFootAsyncPlugin):
     """DroneBL plugin for querying the DroneBL database."""
     meta = {
         'name': "DroneBL",

@@ -23,11 +23,11 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
-from ..dependencies import optional_auth
+from ..dependencies import optional_auth, get_api_key
 
 log = logging.getLogger("spiderfoot.api.rag_correlation")
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_api_key)])
 optional_auth_dep = Depends(optional_auth)
 
 # ---------------------------------------------------------------------------
@@ -237,10 +237,10 @@ def _get_vector_engine():
     global _vector_engine
     if _vector_engine is None:
         try:
-            from spiderfoot.vector_correlation import (
+            from spiderfoot.correlation.vector import (
                 VectorCorrelationConfig, VectorCorrelationEngine,
             )
-            from spiderfoot.qdrant_client import get_qdrant_client
+            from spiderfoot.ai.qdrant_client import get_qdrant_client
             from spiderfoot.services.embedding_service import get_embedding_service
             from spiderfoot.services.reranker_service import RerankerConfig, RerankerService
 
@@ -259,7 +259,7 @@ def _get_vector_engine():
             # RAG pipeline (optional — graceful degradation)
             rag = None
             try:
-                from spiderfoot.rag_pipeline import RAGConfig, RAGPipeline
+                from spiderfoot.ai.rag_pipeline import RAGConfig, RAGPipeline
                 rag_cfg = RAGConfig.from_env()
                 if rag_cfg.llm_provider.value != "mock":
                     rag = RAGPipeline(config=rag_cfg)
@@ -288,7 +288,7 @@ def _get_vector_engine():
         except Exception as exc:
             log.error("Failed to init vector engine: %s", exc)
             raise HTTPException(status_code=503,
-                                detail=f"Vector engine unavailable: {exc}")
+                                detail="Vector engine unavailable")
     return _vector_engine
 
 
@@ -297,13 +297,13 @@ def _get_multidim():
     global _multidim_analyzer
     if _multidim_analyzer is None:
         try:
-            from spiderfoot.multidim_correlation import MultiDimAnalyzer
+            from spiderfoot.correlation.multidim import MultiDimAnalyzer
             _multidim_analyzer = MultiDimAnalyzer()
             log.info("Multi-dimensional analyzer initialised")
         except Exception as exc:
             log.error("Failed to init multidim analyzer: %s", exc)
             raise HTTPException(status_code=503,
-                                detail=f"Multi-dim analyzer unavailable: {exc}")
+                                detail="Multi-dim analyzer unavailable")
     return _multidim_analyzer
 
 
@@ -324,7 +324,7 @@ def _get_collection_manager():
             log.error("Failed to init collection manager: %s", exc)
             raise HTTPException(
                 status_code=503,
-                detail=f"Collection manager unavailable: {exc}",
+                detail="Collection manager unavailable",
             )
     return _collection_mgr
 
@@ -355,7 +355,7 @@ async def index_events(req: IndexRequest,
     engine = _get_vector_engine()
     t0 = time.perf_counter()
 
-    from spiderfoot.vector_correlation import OSINTEvent
+    from spiderfoot.correlation.vector import OSINTEvent
     osint_events = [
         OSINTEvent(
             event_id=e.event_id,
@@ -374,7 +374,7 @@ async def index_events(req: IndexRequest,
     except Exception as exc:
         log.error("Indexing failed: %s", exc)
         raise HTTPException(status_code=500,
-                            detail=f"Indexing failed: {exc}")
+                            detail="Indexing failed")
 
     elapsed = (time.perf_counter() - t0) * 1000
     return IndexResponse(
@@ -392,7 +392,7 @@ async def correlate(req: CorrelateRequest,
     engine = _get_vector_engine()
     t0 = time.perf_counter()
 
-    from spiderfoot.vector_correlation import CorrelationStrategy
+    from spiderfoot.correlation.vector import CorrelationStrategy
     try:
         strategy = CorrelationStrategy(req.strategy)
     except ValueError:
@@ -409,7 +409,7 @@ async def correlate(req: CorrelateRequest,
     except Exception as exc:
         log.error("Correlation failed: %s", exc)
         raise HTTPException(status_code=500,
-                            detail=f"Correlation failed: {exc}")
+                            detail="Correlation failed")
 
     elapsed = (time.perf_counter() - t0) * 1000
     hits = [
@@ -444,15 +444,16 @@ async def multidim_analyze(req: MultiDimRequest,
     analyzer = _get_multidim()
     t0 = time.perf_counter()
 
-    from spiderfoot.multidim_correlation import Dimension, EventData
+    from spiderfoot.correlation.multidim import Dimension, EventData
 
     dims = None
     if req.dimensions:
         try:
             dims = [Dimension(d.lower()) for d in req.dimensions]
         except ValueError as exc:
+            log.warning("Unknown dimension: %s", exc)
             raise HTTPException(status_code=400,
-                                detail=f"Unknown dimension: {exc}")
+                                detail="Unknown dimension")
 
     events = [
         EventData(
@@ -475,7 +476,7 @@ async def multidim_analyze(req: MultiDimRequest,
     except Exception as exc:
         log.error("Multi-dim analysis failed: %s", exc)
         raise HTTPException(status_code=500,
-                            detail=f"Analysis failed: {exc}")
+                            detail="Analysis failed")
 
     elapsed = (time.perf_counter() - t0) * 1000
     pairs = [
@@ -543,7 +544,7 @@ async def semantic_search(req: SearchRequest,
                 for p in points
             ]
         else:
-            from spiderfoot.qdrant_client import get_qdrant_client, Filter
+            from spiderfoot.ai.qdrant_client import get_qdrant_client, Filter
 
             payload_filter = None
             conditions: dict[str, Any] = {}
@@ -574,7 +575,7 @@ async def semantic_search(req: SearchRequest,
     except Exception as exc:
         log.error("Semantic search failed: %s", exc)
         raise HTTPException(status_code=500,
-                            detail=f"Search failed: {exc}")
+                            detail="Search failed")
 
     elapsed = (time.perf_counter() - t0) * 1000
     return SearchResponse(
@@ -596,7 +597,7 @@ async def stats(_auth: str = optional_auth_dep) -> StatsResponse:
     extra: dict[str, Any] = {}
 
     try:
-        from spiderfoot.qdrant_client import get_qdrant_client
+        from spiderfoot.ai.qdrant_client import get_qdrant_client
         qd = get_qdrant_client()
         info = qd.collection_stats("osint_events")
         total_vectors = info.get("point_count", 0)
@@ -638,14 +639,14 @@ async def delete_collection(
 ) -> dict:
     """Delete and re-create the vector collection."""
     try:
-        from spiderfoot.qdrant_client import get_qdrant_client
+        from spiderfoot.ai.qdrant_client import get_qdrant_client
         qd = get_qdrant_client()
         qd.delete_collection(collection)
         return {"deleted": collection, "status": "ok"}
     except Exception as exc:
         log.error("Collection delete failed: %s", exc)
         raise HTTPException(status_code=500,
-                            detail=f"Delete failed: {exc}")
+                            detail="Delete failed")
 
 
 # ---------------------------------------------------------------------------
@@ -661,12 +662,13 @@ async def list_collections(
     """List all SpiderFoot-managed Qdrant collections with stats."""
     mgr = _get_collection_manager()
     try:
-        from spiderfoot.qdrant_client import get_qdrant_client
+        from spiderfoot.ai.qdrant_client import get_qdrant_client
         qd = get_qdrant_client()
         all_cols = qd.list_collections()
     except Exception as exc:
+        log.error("Qdrant unavailable: %s", exc)
         raise HTTPException(status_code=503,
-                            detail=f"Qdrant unavailable: {exc}")
+                            detail="Qdrant unavailable")
 
     # The collection manager names use scan_/workspace_/global prefixes
     # plus the Qdrant client may prepend its own prefix
@@ -727,7 +729,7 @@ async def create_workspace_collection(
     except Exception as exc:
         log.error("Workspace collection creation failed: %s", exc)
         raise HTTPException(status_code=500,
-                            detail=f"Failed to create workspace collection: {exc}")
+                            detail="Failed to create workspace collection")
 
     elapsed = (time.perf_counter() - t0) * 1000
     return {
@@ -782,7 +784,7 @@ async def workspace_search(
     except Exception as exc:
         log.error("Workspace search failed: %s", exc)
         raise HTTPException(status_code=500,
-                            detail=f"Workspace search failed: {exc}")
+                            detail="Workspace search failed")
 
     elapsed = (time.perf_counter() - t0) * 1000
     return SearchResponse(
@@ -807,7 +809,7 @@ async def delete_scan_collection(
     except Exception as exc:
         log.error("Failed to delete scan collection %s: %s", scan_id, exc)
         raise HTTPException(status_code=500,
-                            detail=f"Delete failed: {exc}")
+                            detail="Delete failed")
 
 
 @router.get("/rag/collections/{collection_name}/stats",
@@ -818,7 +820,7 @@ async def collection_stats(
 ) -> dict:
     """Get detailed statistics for a named Qdrant collection."""
     try:
-        from spiderfoot.qdrant_client import get_qdrant_client
+        from spiderfoot.ai.qdrant_client import get_qdrant_client
         qd = get_qdrant_client()
         if not qd.collection_exists(collection_name):
             return {"exists": False, "collection": collection_name}
@@ -833,4 +835,4 @@ async def collection_stats(
     except Exception as exc:
         log.error("Collection stats failed for %s: %s", collection_name, exc)
         raise HTTPException(status_code=500,
-                            detail=f"Stats failed: {exc}")
+                            detail="Stats failed")

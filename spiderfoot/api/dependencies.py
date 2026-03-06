@@ -9,7 +9,8 @@ working without changes.
 """
 from __future__ import annotations
 
-from fastapi import Depends, HTTPException, status
+from typing import Annotated
+from fastapi import Depends, HTTPException, Path, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from spiderfoot.db import SpiderFootDb
 from spiderfoot.sflib.core import SpiderFoot
@@ -20,6 +21,15 @@ import logging
 from typing import Any, Generator
 
 security = HTTPBearer(auto_error=False)
+
+# ---------------------------------------------------------------------------
+# Reusable path-parameter types (defense-in-depth input validation)
+# ---------------------------------------------------------------------------
+_ID_PATTERN = r"^[a-zA-Z0-9_\-]{1,64}$"
+_NAME_PATTERN = r"^[a-zA-Z0-9_\-. ]{1,128}$"
+
+SafeId = Annotated[str, Path(pattern=_ID_PATTERN, description="URL-safe identifier")]
+SafeName = Annotated[str, Path(pattern=_NAME_PATTERN, description="URL-safe name")]
 
 
 class Config:
@@ -59,7 +69,7 @@ class Config:
             self.log.info("Using PostgreSQL backend from SF_POSTGRES_DSN")
         else:
             _db_path = f"{SpiderFootHelpers.dataPath()}/spiderfoot.db"
-            _db_type = 'sqlite'
+            _db_type = 'postgresql'
 
         default_config: dict[str, Any] = {
             '__modules__': {},
@@ -156,8 +166,15 @@ class Config:
         try:
             flat = self.get_config()
             dbh = SpiderFootDb(flat)
-            dbh.configSet(flat)
-            self.log.info("Configuration saved to database")
+            # configSet only handles scalar values; configSerialize flattens the
+            # config (including __modules__.*.opts) into storable key/value pairs.
+            from spiderfoot.sflib import configSerialize
+            serialised = configSerialize(flat, filterSystem=True)
+            if serialised:
+                dbh.configSet(serialised)
+                self.log.info("Configuration saved to database (%d keys)", len(serialised))
+            else:
+                self.log.warning("save_config: serialised config is empty — nothing written")
         except Exception as exc:
             self.log.warning("Failed to save config to DB: %s", exc)
 
@@ -474,3 +491,24 @@ def get_visualization_service() -> Generator:
         yield svc
     finally:
         svc.close()
+
+
+import re as _re
+
+def safe_filename(name: str) -> str:
+    """Sanitize a string for safe use in Content-Disposition headers.
+
+    Strips characters that could inject headers or break the filename:
+    - Removes CR/LF (header injection)
+    - Removes quotes and backslashes (RFC 6266 escaping issues)
+    - Replaces path separators and non-ASCII with underscores
+    - Limits length to 200 characters
+    """
+    # Strip dangerous characters
+    name = _re.sub(r'[\r\n"\\/:*?<>|]', '_', name)
+    # Replace non-ASCII
+    name = name.encode('ascii', 'replace').decode('ascii').replace('?', '_')
+    # Collapse multiple underscores
+    name = _re.sub(r'_+', '_', name).strip('_')
+    return name[:200] or 'download'
+

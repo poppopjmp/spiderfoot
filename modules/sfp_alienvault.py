@@ -16,18 +16,16 @@ from __future__ import annotations
 
 import json
 import time
-import urllib.error
 import urllib.parse
-import urllib.request
 from datetime import datetime
 
 from netaddr import IPNetwork
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_alienvault(SpiderFootModernPlugin):
+class sfp_alienvault(SpiderFootAsyncPlugin):
     """SpiderFoot plug-in to obtain information from AlienVault Open Threat Exchange (OTX)."""
     meta = {
         'name': "AlienVault OTX",
@@ -403,6 +401,8 @@ class sfp_alienvault(SpiderFootModernPlugin):
                     self.debug(
                         f"Found passive DNS results for {eventData} in AlienVault OTX")
                     for rec in passive_dns:
+                        if self.checkForStop():
+                            return
                         host = rec.get('hostname')
 
                         if not host:

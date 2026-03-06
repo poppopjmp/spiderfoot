@@ -3,11 +3,11 @@ from __future__ import annotations
 """SpiderFoot plug-in module: discord."""
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 import json
 import requests
 
-class sfp_discord(SpiderFootModernPlugin):
+class sfp_discord(SpiderFootAsyncPlugin):
     """Discord Channel Monitor"""
     meta = {
         'name': "Discord Channel Monitor",
@@ -85,6 +85,8 @@ class sfp_discord(SpiderFootModernPlugin):
             "User-Agent": "DiscordBot (https://github.com/sm/sfp_discord, 1.0)",
         }
         for channel_id in channel_ids:
+            if self.checkForStop():
+                return
             url = f"https://discord.com/api/v10/channels/{channel_id}/messages?limit={max_messages}"
             try:
                 resp = requests.get(url, headers=headers, timeout=15)

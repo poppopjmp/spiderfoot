@@ -3,7 +3,7 @@ from __future__ import annotations
 """SpiderFoot plug-in module: telegram."""
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 import time
 import threading
 
@@ -12,7 +12,7 @@ try:
 except ImportError:
     TelegramClient = None
 
-class sfp_telegram(SpiderFootModernPlugin):
+class sfp_telegram(SpiderFootAsyncPlugin):
     """Monitors specified Telegram channels for new messages and emits events."""
 
     meta = {

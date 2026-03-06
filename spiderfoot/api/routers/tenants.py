@@ -8,14 +8,15 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
+from ..dependencies import get_api_key, SafeId
 from pydantic import BaseModel
 
-from spiderfoot.multi_tenancy import TenantManager, TenantPlan
+from spiderfoot.auth.tenancy import TenantManager, TenantPlan
 
 logger = logging.getLogger("spiderfoot.api.tenants")
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_api_key)])
 
 # Singleton manager
 _manager = TenantManager()
@@ -71,14 +72,15 @@ async def create_tenant(request: TenantCreateRequest):
             custom_quotas=request.custom_quotas,
         )
     except ValueError as e:
-        raise HTTPException(status_code=409, detail=str(e))
+        logger.warning("Tenant already exists: %s", e)
+        raise HTTPException(status_code=409, detail="Tenant already exists")
 
     logger.info("Created tenant: %s", tenant.tenant_id)
     return tenant.to_dict()
 
 
 @router.get("/tenants/{tenant_id}", tags=["tenants"])
-async def get_tenant(tenant_id: str):
+async def get_tenant(tenant_id: SafeId):
     """Get a specific tenant."""
     tenant = get_manager().get_tenant(tenant_id)
     if not tenant:
@@ -87,7 +89,7 @@ async def get_tenant(tenant_id: str):
 
 
 @router.put("/tenants/{tenant_id}", tags=["tenants"])
-async def update_tenant(tenant_id: str, request: TenantUpdateRequest):
+async def update_tenant(tenant_id: SafeId, request: TenantUpdateRequest):
     """Update a tenant."""
     plan = TenantPlan(request.plan) if request.plan else None
     tenant = get_manager().update_tenant(
@@ -104,19 +106,20 @@ async def update_tenant(tenant_id: str, request: TenantUpdateRequest):
 
 
 @router.delete("/tenants/{tenant_id}", tags=["tenants"])
-async def delete_tenant(tenant_id: str):
+async def delete_tenant(tenant_id: SafeId):
     """Delete a tenant."""
     try:
         ok = get_manager().delete_tenant(tenant_id)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.warning("Invalid tenant operation: %s", e)
+        raise HTTPException(status_code=400, detail="Invalid tenant operation")
     if not ok:
         raise HTTPException(status_code=404, detail="Tenant not found")
     return {"status": "deleted"}
 
 
 @router.get("/tenants/{tenant_id}/usage", tags=["tenants"])
-async def tenant_usage(tenant_id: str):
+async def tenant_usage(tenant_id: SafeId):
     """Get resource usage for a tenant."""
     usage = get_manager().get_usage(tenant_id)
     if not usage:
@@ -127,7 +130,7 @@ async def tenant_usage(tenant_id: str):
 @router.get("/tenants/plans/info", tags=["tenants"])
 async def plan_info():
     """Get available plans and their default quotas."""
-    from spiderfoot.multi_tenancy import _PLAN_QUOTAS
+    from spiderfoot.auth.tenancy import _PLAN_QUOTAS
     return {
         "plans": [
             {

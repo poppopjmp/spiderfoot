@@ -109,7 +109,7 @@ class StructuredFormatter(logging.Formatter):
 
         sf_module = getattr(record, 'sf_module', None)
         if sf_module:
-            log_entry["module"] = sf_module
+            log_entry["sf_module"] = sf_module
 
         event_type = getattr(record, 'event_type', None)
         if event_type:
@@ -122,7 +122,7 @@ class StructuredFormatter(logging.Formatter):
         else:
             # Fallback: read directly from contextvar
             try:
-                from spiderfoot.request_tracing import get_request_id
+                from spiderfoot.observability.request_tracing import get_request_id
                 rid = get_request_id()
                 if rid:
                     log_entry["request_id"] = rid

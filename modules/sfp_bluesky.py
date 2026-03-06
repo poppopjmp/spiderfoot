@@ -3,11 +3,11 @@ from __future__ import annotations
 """SpiderFoot plug-in module: bluesky."""
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 import json
 import requests
 
-class sfp_bluesky(SpiderFootModernPlugin):
+class sfp_bluesky(SpiderFootAsyncPlugin):
     """SpiderFoot plugin to monitor Bluesky for posts and emit events."""
     meta = {
         'name': "Bluesky Monitor",

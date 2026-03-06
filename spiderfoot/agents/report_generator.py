@@ -304,9 +304,9 @@ def _get_qdrant_context(
         return context
 
     try:
-        from spiderfoot.qdrant_client import get_qdrant_client, Filter
+        from spiderfoot.ai.qdrant_client import get_qdrant_client, Filter
         from spiderfoot.services.embedding_service import get_embedding_service
-        from spiderfoot.vector_correlation import (
+        from spiderfoot.correlation.vector import (
             VectorCorrelationEngine, VectorCorrelationConfig,
             CorrelationStrategy,
         )

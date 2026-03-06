@@ -13,10 +13,10 @@ import os
 import re
 import subprocess
 
-from spiderfoot import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_tool_gospider(SpiderFootModernPlugin):
+class sfp_tool_gospider(SpiderFootAsyncPlugin):
     """Fast web spidering and link discovery via gospider."""
 
     meta = {
@@ -144,6 +144,8 @@ class sfp_tool_gospider(SpiderFootModernPlugin):
 
             count = 0
             for line in proc.stdout.splitlines():
+                if self.checkForStop():
+                    return
                 if count >= self.opts["max_results"]:
                     break
                 line = line.strip()

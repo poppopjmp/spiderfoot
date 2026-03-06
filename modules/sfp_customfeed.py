@@ -20,7 +20,7 @@ import re
 from netaddr import IPAddress, IPNetwork
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 malchecks = {
     'Custom Threat Data': {
@@ -31,7 +31,7 @@ malchecks = {
 }
 
 
-class sfp_customfeed(SpiderFootModernPlugin):
+class sfp_customfeed(SpiderFootAsyncPlugin):
     """SpiderFoot plugin to check if a host/domain, netblock, ASN or IP is malicious according to your custom feed."""
     meta = {
         'name': "Custom Threat Feed",

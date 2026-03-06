@@ -21,7 +21,7 @@ from ..dependencies import get_api_key
 
 log = logging.getLogger("spiderfoot.api.rbac")
 
-router = APIRouter(prefix="/api/rbac", tags=["rbac"])
+router = APIRouter(prefix="/rbac", tags=["rbac"])
 
 api_key_dep = Depends(get_api_key)
 
@@ -69,7 +69,7 @@ async def get_rbac_config(
     api_key: str = api_key_dep,
 ) -> RBACConfigResponse:
     """Get full RBAC configuration summary."""
-    from spiderfoot.rbac import get_rbac_summary
+    from spiderfoot.auth.rbac import get_rbac_summary
     summary = get_rbac_summary()
     return RBACConfigResponse(
         enforced=summary["enforced"],
@@ -84,7 +84,7 @@ async def list_roles(
     api_key: str = api_key_dep,
 ) -> list[RoleInfo]:
     """List all roles with their permissions."""
-    from spiderfoot.rbac import get_role_hierarchy
+    from spiderfoot.auth.rbac import get_role_hierarchy
     return [RoleInfo(**r) for r in get_role_hierarchy()]
 
 
@@ -94,11 +94,12 @@ async def get_role(
     api_key: str = api_key_dep,
 ) -> RoleInfo:
     """Get a specific role's permissions."""
-    from spiderfoot.rbac import parse_role, get_permissions, EFFECTIVE_PERMISSIONS
+    from spiderfoot.auth.rbac import parse_role, get_permissions, EFFECTIVE_PERMISSIONS
     try:
         role = parse_role(role_name)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        log.warning("Role assignment failed: %s", e)
+        raise HTTPException(status_code=400, detail="Invalid role assignment")
     perms = get_permissions(role)
     return RoleInfo(
         name=role.value,
@@ -115,7 +116,7 @@ async def check_permission(
     api_key: str = api_key_dep,
 ) -> PermissionCheckResponse:
     """Check if a role has a specific permission."""
-    from spiderfoot.rbac import has_permission
+    from spiderfoot.auth.rbac import has_permission
     allowed = has_permission(role, permission)
     return PermissionCheckResponse(
         role=role,
@@ -130,7 +131,7 @@ async def get_current_user(
     api_key: str = api_key_dep,
 ) -> CurrentUserResponse:
     """Get the current user's role and permissions."""
-    from spiderfoot.rbac import get_default_user, get_permissions, UserContext
+    from spiderfoot.auth.rbac import get_default_user, get_permissions, UserContext
     user: UserContext | None = getattr(request.state, "user", None)
     if user is None:
         user = get_default_user()

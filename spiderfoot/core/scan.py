@@ -18,7 +18,7 @@ from copy import deepcopy
 
 from spiderfoot import SpiderFootDb, SpiderFootHelpers
 from spiderfoot.sflib import SpiderFoot
-from spiderfoot.scan_service.scanner import startSpiderFootScanner
+from spiderfoot.scan.scanner import startSpiderFootScanner
 
 from spiderfoot.scan.scan_state_map import (
     DB_STATUS_ABORTED,
@@ -311,7 +311,7 @@ class ScanManager:
             if not info:
                 continue
 
-            status = info[5]
+            status = info[6]
             if status in [DB_STATUS_ERROR_FAILED, DB_STATUS_ABORT_REQUESTED, DB_STATUS_ABORTED, DB_STATUS_FINISHED]:
                 # Wait for process cleanup
                 if scan_id in self.active_scans:
@@ -325,11 +325,11 @@ class ScanManager:
                 return {
                     'status': status,
                     'scan_id': scan_id,
-                    'scan_name': info[0],
-                    'target': info[1],
-                    'created': info[2],
-                    'started': info[3],
-                    'ended': info[4]
+                    'scan_name': info[1],
+                    'target': info[2],
+                    'created': info[3],
+                    'started': info[4],
+                    'ended': info[5]
                 }
 
     def stop_scan(self, scan_id: str) -> bool:
@@ -382,12 +382,12 @@ class ScanManager:
 
             return {
                 'scan_id': scan_id,
-                'scan_name': info[0],
-                'target': info[1],
-                'created': info[2],
-                'started': info[3],
-                'ended': info[4],
-                'status': info[5]
+                'scan_name': info[1],
+                'target': info[2],
+                'created': info[3],
+                'started': info[4],
+                'ended': info[5],
+                'status': info[6]
             }
 
         except Exception as e:

@@ -36,7 +36,7 @@ import weakref
 import resource
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
 class TTLCache:
@@ -297,7 +297,7 @@ class RequestBatcher:
                 pass
 
 
-class sfp_performance_optimizer(SpiderFootModernPlugin):
+class sfp_performance_optimizer(SpiderFootAsyncPlugin):
     """Performance optimization and caching system for SpiderFoot."""
 
     meta = {

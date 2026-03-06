@@ -5,7 +5,9 @@
  * Users can manage their own keys; admins can manage all keys.
  * Supports fine-grained permissions: allowed modules/endpoints, rate limits.
  */
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import {
   Key,
   Plus,
@@ -23,7 +25,8 @@ import {
   Ban,
 } from 'lucide-react';
 import { clsx } from 'clsx';
-import api from '../lib/api';
+import { authApi } from '../lib/api';
+import { getErrorMessage } from '../lib/errors';
 import { ModalShell } from '../components/ui';
 import { useAuthStore } from '../lib/auth';
 
@@ -89,12 +92,11 @@ function expiresLabel(ts: number): string {
 // ── Component ────────────────────────────────────────────
 
 export default function ApiKeysPage() {
+  useDocumentTitle('API Keys');
   const { user: currentUser, hasPermission } = useAuthStore();
   const isAdmin = hasPermission('user:read');
 
-  const [keys, setKeys] = useState<ApiKeyRecord[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
 
   // Modals
@@ -105,23 +107,41 @@ export default function ApiKeysPage() {
 
   // ── Data fetching ──────────────────────────────────────
 
-  const fetchKeys = useCallback(async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const url = isAdmin ? '/api/auth/api-keys' : '/api/auth/api-keys/mine';
-      const res = await api.get(url);
-      setKeys(res.data.items || []);
-    } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Failed to load API keys');
-    } finally {
-      setLoading(false);
-    }
-  }, [isAdmin]);
+  const { data: keys = [], isLoading: loading, error: queryError } = useQuery<ApiKeyRecord[]>({
+    queryKey: ['api-keys', isAdmin],
+    queryFn: ({ signal }) => {
+      return (isAdmin ? authApi.authApiKeys(signal) : authApi.authApiKeysMine(signal))
+        .then(r => r.items || []);
+    },
+  });
 
-  useEffect(() => {
-    fetchKeys();
-  }, [fetchKeys]);
+  // ── Revoke handler ─────────────────────────────────────
+
+  const revokeMutation = useMutation({
+    mutationFn: (k: ApiKeyRecord) => authApi.revokeAuthApiKey(k.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['api-keys'] });
+      setRevokeKey(null);
+    },
+  });
+
+  // ── Delete handler ─────────────────────────────────────
+
+  const deleteMutation = useMutation({
+    mutationFn: (k: ApiKeyRecord) => authApi.deleteAuthApiKey(k.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['api-keys'] });
+      setDeleteKey(null);
+    },
+  });
+
+  const error = queryError
+    ? getErrorMessage(queryError, 'Failed to load API keys')
+    : revokeMutation.error
+      ? getErrorMessage(revokeMutation.error, 'Failed to revoke key')
+      : deleteMutation.error
+        ? getErrorMessage(deleteMutation.error, 'Failed to delete key')
+        : '';
 
   // ── Filter ─────────────────────────────────────────────
 
@@ -135,30 +155,6 @@ export default function ApiKeysPage() {
       k.status.toLowerCase().includes(q)
     );
   });
-
-  // ── Revoke handler ─────────────────────────────────────
-
-  const handleRevoke = async (k: ApiKeyRecord) => {
-    try {
-      await api.post(`/api/auth/api-keys/${k.id}/revoke`);
-      fetchKeys();
-      setRevokeKey(null);
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to revoke key');
-    }
-  };
-
-  // ── Delete handler ─────────────────────────────────────
-
-  const handleDelete = async (k: ApiKeyRecord) => {
-    try {
-      await api.delete(`/api/auth/api-keys/${k.id}`);
-      fetchKeys();
-      setDeleteKey(null);
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to delete key');
-    }
-  };
 
   // ── Render ─────────────────────────────────────────────
 
@@ -206,7 +202,7 @@ export default function ApiKeysPage() {
         <div className="mb-4 flex items-center gap-2 px-4 py-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
           <AlertCircle className="h-4 w-4 flex-shrink-0" />
           {error}
-          <button onClick={() => setError('')} className="ml-auto text-red-500 hover:text-red-300">
+          <button onClick={() => { revokeMutation.reset(); deleteMutation.reset(); }} className="ml-auto text-red-500 hover:text-red-300">
             <X className="h-3 w-3" />
           </button>
         </div>
@@ -247,7 +243,10 @@ export default function ApiKeysPage() {
               ) : (
                 filtered.map((k) => {
                   const statusStyle = STATUS_STYLES[k.status] || STATUS_STYLES.active;
-                  const modules = k.allowed_modules ? JSON.parse(k.allowed_modules) : [];
+                  let modules: string[] = [];
+                  if (k.allowed_modules) {
+                    try { modules = JSON.parse(k.allowed_modules); } catch { /* malformed */ }
+                  }
                   const isExpired = k.expires_at > 0 && k.expires_at < Date.now() / 1000;
 
                   return (
@@ -335,7 +334,7 @@ export default function ApiKeysPage() {
           onCreated={(result) => {
             setShowCreate(false);
             setNewKeyResult(result);
-            fetchKeys();
+            queryClient.invalidateQueries({ queryKey: ['api-keys'] });
           }}
         />
       )}
@@ -351,7 +350,7 @@ export default function ApiKeysPage() {
           message={<>Are you sure you want to revoke <span className="text-foreground font-medium">{revokeKey.name}</span>? The key will immediately stop working.</>}
           confirmLabel="Revoke"
           confirmClass="bg-yellow-600 hover:bg-yellow-500"
-          onConfirm={() => handleRevoke(revokeKey)}
+          onConfirm={() => revokeMutation.mutate(revokeKey)}
           onClose={() => setRevokeKey(null)}
         />
       )}
@@ -361,7 +360,7 @@ export default function ApiKeysPage() {
           message={<>Are you sure you want to permanently delete <span className="text-foreground font-medium">{deleteKey.name}</span>? This cannot be undone.</>}
           confirmLabel="Delete"
           confirmClass="bg-red-600 hover:bg-red-500"
-          onConfirm={() => handleDelete(deleteKey)}
+          onConfirm={() => deleteMutation.mutate(deleteKey)}
           onClose={() => setDeleteKey(null)}
         />
       )}
@@ -410,16 +409,21 @@ function CreateKeyModal({
   const [rateLimit, setRateLimit] = useState(0);
   const [allowedModules, setAllowedModules] = useState('');
   const [allowedEndpoints, setAllowedEndpoints] = useState('');
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
   // Only show roles up to user's current role
   const roleIndex = ROLES.indexOf(userRole as typeof ROLES[number]);
   const availableRoles = ROLES.slice(0, roleIndex >= 0 ? roleIndex + 1 : 1);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const createMutation = useMutation({
+    mutationFn: (data: Record<string, unknown>) =>
+      authApi.createAuthApiKey(data),
+    onSuccess: (result: ApiKeyRecord) => onCreated(result),
+    onError: (err: unknown) => setError(getErrorMessage(err, 'Failed to create API key')),
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setSaving(true);
     setError('');
 
     // Parse module list
@@ -433,7 +437,6 @@ function CreateKeyModal({
         modulesJson = JSON.stringify(mods);
       } catch {
         setError('Allowed modules must be comma-separated names or a JSON array');
-        setSaving(false);
         return;
       }
     }
@@ -447,26 +450,18 @@ function CreateKeyModal({
         endpointsJson = JSON.stringify(eps);
       } catch {
         setError('Allowed endpoints must be comma-separated patterns or a JSON array');
-        setSaving(false);
         return;
       }
     }
 
-    try {
-      const res = await api.post('/api/auth/api-keys', {
-        name,
-        role,
-        expires_in_days: expiresInDays,
-        rate_limit: rateLimit,
-        allowed_modules: modulesJson,
-        allowed_endpoints: endpointsJson,
-      });
-      onCreated(res.data);
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to create API key');
-    } finally {
-      setSaving(false);
-    }
+    createMutation.mutate({
+      name,
+      role,
+      expires_in_days: expiresInDays,
+      rate_limit: rateLimit,
+      allowed_modules: modulesJson,
+      allowed_endpoints: endpointsJson,
+    });
   };
 
   return (
@@ -533,8 +528,8 @@ function CreateKeyModal({
           <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-dark-400 hover:text-dark-200 transition-colors">
             Cancel
           </button>
-          <button type="submit" disabled={saving || !name.trim()} className="px-4 py-2 bg-spider-600 hover:bg-spider-500 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors">
-            {saving ? 'Generating...' : 'Generate Key'}
+          <button type="submit" disabled={createMutation.isPending || !name.trim()} className="px-4 py-2 bg-spider-600 hover:bg-spider-500 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors">
+            {createMutation.isPending ? 'Generating...' : 'Generate Key'}
           </button>
         </div>
       </form>
@@ -553,7 +548,7 @@ function KeyCreatedModal({ apiKey, onClose }: { apiKey: ApiKeyRecord; onClose: (
 
   const copyKey = () => {
     if (apiKey.key) {
-      navigator.clipboard.writeText(apiKey.key);
+      navigator.clipboard.writeText(apiKey.key).catch(() => {});
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }

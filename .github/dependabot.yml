@@ -9,6 +9,6 @@ updates:
     schedule:
       interval: "daily"
   - package-ecosystem: "npm"
-    directory: "/spiderfoot/static"
+    directory: "/frontend"
     schedule:
       interval: "daily"

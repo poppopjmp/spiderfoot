@@ -13,6 +13,8 @@ import typing
 
 import netaddr
 
+__all__ = ["SpiderFootTarget", "TargetAlias"]
+
 
 class TargetAlias(typing.TypedDict):
         """Typed dictionary for a target alias entry."""

@@ -16,15 +16,13 @@ from __future__ import annotations
 
 import json
 import time
-import urllib.error
 import urllib.parse
-import urllib.request
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_apple_itunes(SpiderFootModernPlugin):
+class sfp_apple_itunes(SpiderFootAsyncPlugin):
     """Query Apple iTunes for mobile apps."""
     meta = {
         'name': "Apple iTunes",
@@ -135,6 +133,8 @@ class sfp_apple_itunes(SpiderFootModernPlugin):
         found = False
 
         for result in data:
+            if self.checkForStop():
+                return
             bundleId = result.get('bundleId')
 
             if not bundleId:

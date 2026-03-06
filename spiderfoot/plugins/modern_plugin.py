@@ -8,14 +8,19 @@
 #               Existing modules continue to work unchanged via self.sf.
 #               New/migrated modules can use self.http, self.dns, self.cache, etc.
 #
-# Author:       SpiderFoot Team
+# Author:       Van1sh 
 # Created:      2025-07-08
-# Copyright:    (c) SpiderFoot Team 2025
+# Copyright:    (c) Van1sh  2025
 # Licence:      MIT
 # -------------------------------------------------------------------------------
 
 """
 SpiderFoot Modern Plugin Base
+
+.. deprecated:: 6.0.0
+    This class is retained for **backward compatibility** and as the base for
+    storage modules (``sfp__stor_*``). New modules should subclass
+    :class:`~spiderfoot.plugins.async_plugin.SpiderFootAsyncPlugin` instead.
 
 Extends SpiderFootPlugin with direct service access and metrics instrumentation.
 

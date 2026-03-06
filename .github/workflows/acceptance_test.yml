@@ -55,13 +55,13 @@ jobs:
       - name: Start SpiderFoot container
         run: |
           set -e
-          docker run -d -p 5001:5001 --name spiderfoot ghcr.io/poppopjmp/spiderfoot:v${{ steps.meta.outputs.version }}
+          docker run -d -p 8001:8001 --name spiderfoot ghcr.io/poppopjmp/spiderfoot:v${{ steps.meta.outputs.version }}
 
       - name: Wait for SpiderFoot to start
         run: |
           set -e
           for i in {1..60}; do
-            if curl -sSf http://127.0.0.1:5001/ping > /dev/null; then
+            if curl -sSf http://127.0.0.1:8001/health > /dev/null; then
               echo "SpiderFoot is up!"
               exit 0
             fi
@@ -142,13 +142,13 @@ jobs:
       - name: Start SpiderFoot container
         run: |
           set -e
-          docker run -d -p 5001:5001 --name spiderfoot ghcr.io/poppopjmp/spiderfoot:v${{ steps.meta.outputs.version }}
+          docker run -d -p 8001:8001 --name spiderfoot ghcr.io/poppopjmp/spiderfoot:v${{ steps.meta.outputs.version }}
 
       - name: Wait for SpiderFoot to start
         run: |
           set -e
           for i in {1..60}; do
-            if curl -sSf http://127.0.0.1:5001/ping > /dev/null; then
+            if curl -sSf http://127.0.0.1:8001/health > /dev/null; then
               echo "SpiderFoot is up!"
               exit 0
             fi

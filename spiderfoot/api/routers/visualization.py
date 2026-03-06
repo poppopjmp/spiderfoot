@@ -12,11 +12,13 @@ from fastapi.responses import Response, JSONResponse
 import json
 import logging
 
-from ..dependencies import get_visualization_service, optional_auth
+import re as _re
+
+from ..dependencies import get_visualization_service, optional_auth, get_api_key, safe_filename, SafeId
 from spiderfoot import SpiderFootHelpers
 from spiderfoot.reporting.visualization_service import VisualizationService, VisualizationServiceError
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_api_key)])
 log = logging.getLogger(__name__)
 optional_auth_dep = Depends(optional_auth)
 
@@ -40,6 +42,11 @@ async def get_multi_scan_graph_data(
         scan_list = [s.strip() for s in scan_ids.split(",") if s.strip()]
         if not scan_list:
             raise HTTPException(status_code=400, detail="No valid scan IDs provided")
+        # Validate each ID against SafeId pattern
+        _id_re = _re.compile(r"^[a-zA-Z0-9_\-]{1,64}$")
+        for sid in scan_list:
+            if not _id_re.match(sid):
+                raise HTTPException(status_code=400, detail=f"Invalid scan ID: {sid}")
 
         valid_ids, all_results = svc.get_multi_scan_graph_data(
             scan_list, event_type=filter_type
@@ -55,7 +62,7 @@ async def get_multi_scan_graph_data(
                 content=graph_data,
                 media_type="application/xml",
                 headers={
-                    "Content-Disposition": "attachment; filename=multi_scan_graph.gexf"
+                    "Content-Disposition": f"attachment; filename={safe_filename('multi_scan_graph.gexf')}"
                 },
             )
 
@@ -71,13 +78,13 @@ async def get_multi_scan_graph_data(
     except Exception as e:
         log.error("Failed to generate multi-scan graph: %s", e)
         raise HTTPException(
-            status_code=500, detail=f"Failed to generate graph: {e}"
+            status_code=500, detail="Failed to generate graph"
         )
 
 
 @router.get("/visualization/graph/{scan_id}")
 async def get_scan_graph_data(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = optional_auth_dep,
     format: str = Query("json", description="Output format: json, gexf"),
     filter_type: str | None = Query(None, description="Filter by event type"),
@@ -96,7 +103,7 @@ async def get_scan_graph_data(
                 content=graph_data,
                 media_type="application/xml",
                 headers={
-                    "Content-Disposition": f"attachment; filename=scan_{scan_id}_graph.gexf"
+                    "Content-Disposition": f"attachment; filename={safe_filename(f'scan_{scan_id}_graph.gexf')}"
                 },
             )
 
@@ -108,17 +115,18 @@ async def get_scan_graph_data(
         )
 
     except VisualizationServiceError as exc:
-        raise HTTPException(status_code=404, detail=str(exc))
+        log.warning("Scan not found: %s", exc)
+        raise HTTPException(status_code=404, detail="Scan not found")
     except Exception as e:
         log.error("Failed to generate graph for scan %s: %s", scan_id, e)
         raise HTTPException(
-            status_code=500, detail=f"Failed to generate graph: {e}"
+            status_code=500, detail="Failed to generate graph"
         )
 
 
 @router.get("/visualization/summary/{scan_id}")
 async def get_scan_summary_data(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = optional_auth_dep,
     group_by: str = Query("type", description="Group results by: type, module, risk"),
     svc: VisualizationService = Depends(get_visualization_service),
@@ -128,17 +136,18 @@ async def get_scan_summary_data(
         return svc.get_summary_data(scan_id, group_by=group_by)
 
     except VisualizationServiceError as exc:
-        raise HTTPException(status_code=404, detail=str(exc))
+        log.warning("Scan not found: %s", exc)
+        raise HTTPException(status_code=404, detail="Scan not found")
     except Exception as e:
         log.error("Failed to get summary data for scan %s: %s", scan_id, e)
         raise HTTPException(
-            status_code=500, detail=f"Failed to get summary data: {e}"
+            status_code=500, detail="Failed to get summary data"
         )
 
 
 @router.get("/visualization/timeline/{scan_id}")
 async def get_scan_timeline_data(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = optional_auth_dep,
     interval: str = Query("hour", description="Time interval: hour, day, week"),
     event_type: str | None = Query(None, description="Filter by event type"),
@@ -151,17 +160,18 @@ async def get_scan_timeline_data(
         )
 
     except VisualizationServiceError as exc:
-        raise HTTPException(status_code=404, detail=str(exc))
+        log.warning("Scan not found: %s", exc)
+        raise HTTPException(status_code=404, detail="Scan not found")
     except Exception as e:
         log.error("Failed to get timeline data for scan %s: %s", scan_id, e)
         raise HTTPException(
-            status_code=500, detail=f"Failed to get timeline data: {e}"
+            status_code=500, detail="Failed to get timeline data"
         )
 
 
 @router.get("/visualization/heatmap/{scan_id}")
 async def get_scan_heatmap_data(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = optional_auth_dep,
     dimension_x: str = Query("module", description="X-axis dimension: module, type, risk"),
     dimension_y: str = Query("type", description="Y-axis dimension: module, type, risk"),
@@ -174,9 +184,10 @@ async def get_scan_heatmap_data(
         )
 
     except VisualizationServiceError as exc:
-        raise HTTPException(status_code=404, detail=str(exc))
+        log.warning("Scan not found: %s", exc)
+        raise HTTPException(status_code=404, detail="Scan not found")
     except Exception as e:
         log.error("Failed to get heatmap data for scan %s: %s", scan_id, e)
         raise HTTPException(
-            status_code=500, detail=f"Failed to get heatmap data: {e}"
+            status_code=500, detail="Failed to get heatmap data"
         )

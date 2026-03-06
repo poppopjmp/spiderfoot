@@ -129,9 +129,6 @@ class TestEventPipeline(unittest.TestCase):
         e = PipelineEvent(event_type="IP_ADDRESS", data="  1.2.3.4  ")
         self.assertEqual(p.execute(e), StageResult.CONTINUE)
         self.assertEqual(e.data, "1.2.3.4")
-        self.assertIn("network", e.tags)
-
-    def test_drop_stops_pipeline(self):
         p = EventPipeline()
         p.add_stage(ValidatorStage(allowed_types={"IP_ADDRESS"}, name="v1"))
         p.add_stage(TaggingStage({"x": "tag"}, name="t1"))

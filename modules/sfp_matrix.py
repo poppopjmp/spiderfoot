@@ -3,9 +3,9 @@ from __future__ import annotations
 """SpiderFoot plug-in module: matrix."""
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
-class sfp_matrix(SpiderFootModernPlugin):
+class sfp_matrix(SpiderFootAsyncPlugin):
     """Monitors Matrix servers for messages and emits events."""
 
     meta = {

@@ -21,10 +21,10 @@ from subprocess import PIPE, Popen, TimeoutExpired
 from urllib.parse import urlparse
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_tool_trufflehog(SpiderFootModernPlugin):
+class sfp_tool_trufflehog(SpiderFootAsyncPlugin):
 
     """Searches through git repositories for high entropy strings and secrets, digging deep into commit history."""
 

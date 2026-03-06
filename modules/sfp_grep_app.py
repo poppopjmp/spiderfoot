@@ -18,15 +18,13 @@ from __future__ import annotations
 import json
 import math
 import time
-import urllib.error
 import urllib.parse
-import urllib.request
 
 from spiderfoot import SpiderFootEvent, SpiderFootHelpers
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_grep_app(SpiderFootModernPlugin):
+class sfp_grep_app(SpiderFootAsyncPlugin):
 
     """Search grep.app API for links and emails related to the specified domain."""
 
@@ -166,6 +164,9 @@ class sfp_grep_app(SpiderFootModernPlugin):
                 return
 
             for result in data:
+                if self.checkForStop():
+                    return
+
                 if result is None:
                     continue
 

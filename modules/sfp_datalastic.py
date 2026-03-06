@@ -19,10 +19,10 @@ import json
 import time
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_datalastic(SpiderFootModernPlugin):
+class sfp_datalastic(SpiderFootAsyncPlugin):
 
     """Query Datalastic for maritime vessel tracking, specs, ports and intelligence."""
 
@@ -50,6 +50,11 @@ class sfp_datalastic(SpiderFootModernPlugin):
                 "port data, historical positions, casualty reports, ownership, "
                 "inspections, and classification data."
             ),
+            'apiKeyInstructions': [
+                "Register at https://datalastic.com/",
+                "Navigate to your account dashboard to find your API key",
+                "Enter the key in the _api_key option",
+            ],
         }
     }
 

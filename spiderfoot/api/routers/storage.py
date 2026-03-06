@@ -21,16 +21,36 @@ GET  /storage/objects/{bucket} — list objects in a bucket
 from __future__ import annotations
 
 import logging
+import re as _re
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
-from ..dependencies import optional_auth
+from ..dependencies import optional_auth, get_api_key, SafeId
 
 log = logging.getLogger("spiderfoot.api.storage")
 
-router = APIRouter()
+_SAFE_BUCKET_RE = _re.compile(r'^[a-z0-9][a-z0-9.\-]{1,61}[a-z0-9]$')
+_SAFE_NAME_RE = _re.compile(r'^[a-zA-Z0-9][a-zA-Z0-9._\-]{0,253}$')
+
+
+def _validate_bucket(name: str) -> str:
+    """Validate S3 bucket name — only SpiderFoot buckets allowed."""
+    if not _SAFE_BUCKET_RE.match(name) or ".." in name:
+        raise HTTPException(status_code=400, detail="Invalid bucket name")
+    if not name.startswith("sf-"):
+        raise HTTPException(status_code=403, detail="Access to non-SpiderFoot buckets is denied")
+    return name
+
+
+def _validate_name(name: str, label: str = "name") -> str:
+    """Reject path-traversal characters in storage names."""
+    if ".." in name or "/" in name or "\\" in name or not _SAFE_NAME_RE.match(name):
+        raise HTTPException(status_code=400, detail=f"Invalid {label}")
+    return name
+
+router = APIRouter(dependencies=[Depends(get_api_key)])
 optional_auth_dep = Depends(optional_auth)
 
 
@@ -91,9 +111,10 @@ def _get_storage():
         from spiderfoot.storage.minio_manager import get_storage_manager
         return get_storage_manager()
     except Exception as e:
+        log.exception("MinIO storage not available")
         raise HTTPException(
             status_code=503,
-            detail=f"MinIO storage not available: {e}",
+            detail="MinIO storage not available",
         )
 
 
@@ -103,9 +124,10 @@ def _get_qdrant_backup():
         from spiderfoot.storage.qdrant_backup import QdrantBackupManager
         return QdrantBackupManager()
     except Exception as e:
+        log.exception("Qdrant backup manager not available")
         raise HTTPException(
             status_code=503,
-            detail=f"Qdrant backup manager not available: {e}",
+            detail="Qdrant backup manager not available",
         )
 
 
@@ -132,7 +154,8 @@ async def ensure_buckets():
             message=f"Created {len(created)} buckets" if created else "All buckets already exist",
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        log.exception("Storage operation failed")
+        raise HTTPException(status_code=500, detail="Storage operation failed")
 
 
 # ---------------------------------------------------------------------------
@@ -140,7 +163,7 @@ async def ensure_buckets():
 # ---------------------------------------------------------------------------
 
 @router.get("/reports/{scan_id}", dependencies=[optional_auth_dep])
-async def list_scan_reports(scan_id: str) -> list[ObjectInfo]:
+async def list_scan_reports(scan_id: SafeId) -> list[ObjectInfo]:
     """List all reports stored in MinIO for a scan."""
     mgr = _get_storage()
     objects = mgr.list_reports(scan_id)
@@ -149,8 +172,8 @@ async def list_scan_reports(scan_id: str) -> list[ObjectInfo]:
 
 @router.get("/reports/{scan_id}/{report_id}/url", dependencies=[optional_auth_dep])
 async def presign_report(
-    scan_id: str,
-    report_id: str,
+    scan_id: SafeId,
+    report_id: SafeId,
     extension: str = Query("json", description="File extension"),
     expires: int = Query(3600, ge=60, le=86400, description="URL expiry in seconds"),
 ) -> dict[str, str]:
@@ -160,13 +183,14 @@ async def presign_report(
         url = mgr.presign_report(scan_id, report_id, extension=extension, expires=expires)
         return {"url": url, "expires_in": str(expires)}
     except Exception as e:
-        raise HTTPException(status_code=404, detail=f"Report not found: {e}")
+        log.warning("Report not found: %s", e)
+        raise HTTPException(status_code=404, detail="Report not found")
 
 
 @router.delete("/reports/{scan_id}/{report_id}", dependencies=[optional_auth_dep])
 async def delete_report(
-    scan_id: str,
-    report_id: str,
+    scan_id: SafeId,
+    report_id: SafeId,
     extension: str = Query("json", description="File extension"),
 ) -> dict[str, str]:
     """Delete a report from MinIO."""
@@ -175,11 +199,12 @@ async def delete_report(
         mgr.delete_report(scan_id, report_id, extension=extension)
         return {"status": "deleted", "scan_id": scan_id, "report_id": report_id}
     except Exception as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        log.warning("Snapshot not found: %s", e)
+        raise HTTPException(status_code=404, detail="Snapshot not found")
 
 
 @router.delete("/scans/{scan_id}", dependencies=[optional_auth_dep])
-async def delete_scan_data(scan_id: str) -> dict[str, Any]:
+async def delete_scan_data(scan_id: SafeId) -> dict[str, Any]:
     """Delete ALL MinIO objects for a scan (reports, exports, artefacts)."""
     mgr = _get_storage()
     removed = mgr.delete_scan_data(scan_id)
@@ -223,12 +248,14 @@ async def list_qdrant_snapshots(
 @router.post("/snapshots/{collection}", dependencies=[optional_auth_dep])
 async def snapshot_collection(collection: str) -> SnapshotResult:
     """Create a snapshot of a single Qdrant collection and upload to MinIO."""
+    _validate_name(collection, "collection")
     backup = _get_qdrant_backup()
     try:
         result = backup.snapshot_collection(collection)
         return SnapshotResult(**result)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        log.exception("Storage operation failed")
+        raise HTTPException(status_code=500, detail="Storage operation failed")
 
 
 @router.post("/snapshots/all", dependencies=[optional_auth_dep])
@@ -251,6 +278,7 @@ async def list_bucket_objects(
     max_results: int = Query(100, ge=1, le=1000),
 ) -> list[ObjectInfo]:
     """List objects in any MinIO bucket with optional prefix filter."""
+    _validate_bucket(bucket)
     mgr = _get_storage()
     objects = mgr.list_objects(bucket, prefix=prefix)
     return [ObjectInfo(**obj) for obj in objects[:max_results]]

@@ -49,6 +49,23 @@ from .module_api_client import (
     ResponseFormat,
 )
 
+# Module audit
+from .module_audit import (
+    AuditReport,
+    EventDependencyGraph,
+    ModuleAuditRunner,
+    ModuleContractAuditor,
+    ModuleSourceAnalyzer,
+)
+
+# Module devtools
+from .module_devtools import (
+    ModuleScaffolder,
+    ModuleValidator,
+    ScaffoldConfig,
+    ValidationReport,
+)
+
 # Module capabilities
 from .module_caps import (
     Capability,
@@ -206,6 +223,17 @@ __all__ = [
     "RequestConfig",
     "RequestRecord",
     "ResponseFormat",
+    # Module audit
+    "AuditReport",
+    "EventDependencyGraph",
+    "ModuleAuditRunner",
+    "ModuleContractAuditor",
+    "ModuleSourceAnalyzer",
+    # Module devtools
+    "ModuleScaffolder",
+    "ModuleValidator",
+    "ScaffoldConfig",
+    "ValidationReport",
     # Module capabilities
     "Capability",
     "CapabilityCategory",

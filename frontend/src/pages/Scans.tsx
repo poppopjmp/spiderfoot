@@ -15,10 +15,12 @@ import {
   EmptyState, TableSkeleton, ConfirmDialog, Toast, DropdownMenu, DropdownItem,
   type ToastType,
 } from '../components/ui';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 const PAGE_SIZE = 20;
 
 export default function ScansPage() {
+  useDocumentTitle('Scans');
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
@@ -32,14 +34,15 @@ export default function ScansPage() {
 
   /* Server-side search when query is present */
   const { data: searchData, isLoading: searchLoading } = useQuery({
-    queryKey: ['scans-search', search, statusFilter],
-    queryFn: () => scanApi.search({
+    queryKey: ['scans-search', search, statusFilter, page],
+    queryFn: ({ signal }) => scanApi.search({
       target: search || undefined,
       status: statusFilter || undefined,
       sort_by: 'created',
       sort_order: 'desc',
-      limit: 200,
-    }),
+      limit: PAGE_SIZE,
+      offset: (page - 1) * PAGE_SIZE,
+    }, signal),
     enabled: !!(search || statusFilter),
     refetchInterval: 10_000,
   });
@@ -47,7 +50,7 @@ export default function ScansPage() {
   /* Normal paginated list when no filters */
   const { data: listData, isLoading: listLoading } = useQuery({
     queryKey: ['scans', { page, page_size: PAGE_SIZE, sort_by: 'created', sort_order: 'desc' }],
-    queryFn: () => scanApi.list({ page, page_size: PAGE_SIZE, sort_by: 'created', sort_order: 'desc' }),
+    queryFn: ({ signal }) => scanApi.list({ page, page_size: PAGE_SIZE, sort_by: 'created', sort_order: 'desc' }, signal),
     enabled: !search && !statusFilter,
     refetchInterval: 10_000,
   });
@@ -56,7 +59,9 @@ export default function ScansPage() {
   const isLoading = isSearchMode ? searchLoading : listLoading;
 
   const scans = isSearchMode ? (searchData?.scans ?? []) : (listData?.items ?? []);
-  const totalPages = isSearchMode ? 1 : (listData?.pages ?? 1);
+  const totalPages = isSearchMode
+    ? Math.max(1, Math.ceil((searchData?.total ?? 0) / PAGE_SIZE))
+    : (listData?.pages ?? 1);
   const totalCount = isSearchMode ? (searchData?.total ?? scans.length) : (listData?.total ?? 0);
 
   /* No further client-side filtering needed — server handles it */
@@ -64,36 +69,44 @@ export default function ScansPage() {
 
   /* Mutations */
   const stopMut = useMutation({
-    mutationFn: scanApi.stop,
+    mutationFn: (id: string) => scanApi.stop(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['scans'] });
       setToast({ type: 'success', message: 'Scan stopped' });
     },
+    onError: () => {
+      setToast({ type: 'error', message: 'Failed to stop scan' });
+    },
   });
   const deleteMut = useMutation({
-    mutationFn: scanApi.delete,
+    mutationFn: (id: string) => scanApi.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['scans'] });
       queryClient.invalidateQueries({ queryKey: ['scan-stats-all'] });
       setToast({ type: 'success', message: 'Scan deleted' });
     },
-    onError: (err: any) => {
-      const detail = err?.response?.data?.detail || err?.message || 'Delete failed';
-      setToast({ type: 'error', message: detail });
+    onError: (err: Error) => {
+      setToast({ type: 'error', message: err.message || 'Delete failed' });
     },
   });
   const rerunMut = useMutation({
-    mutationFn: scanApi.rerun,
+    mutationFn: (id: string) => scanApi.rerun(id),
     onSuccess: (r) => {
       queryClient.invalidateQueries({ queryKey: ['scans'] });
       setToast({ type: 'success', message: `Rerun started: ${r?.new_scan_id?.slice(0, 8)}` });
     },
+    onError: () => {
+      setToast({ type: 'error', message: 'Failed to rerun scan' });
+    },
   });
   const cloneMut = useMutation({
-    mutationFn: scanApi.clone,
+    mutationFn: (id: string) => scanApi.clone(id),
     onSuccess: (r) => {
       queryClient.invalidateQueries({ queryKey: ['scans'] });
       setToast({ type: 'success', message: `Cloned: ${r?.new_scan_id?.slice(0, 8)}` });
+    },
+    onError: () => {
+      setToast({ type: 'error', message: 'Failed to clone scan' });
     },
   });
   const bulkStopMut = useMutation({
@@ -103,6 +116,9 @@ export default function ScansPage() {
       setSelected(new Set());
       setToast({ type: 'success', message: 'Bulk stop complete' });
     },
+    onError: () => {
+      setToast({ type: 'error', message: 'Bulk stop failed' });
+    },
   });
   const bulkDeleteMut = useMutation({
     mutationFn: (ids: string[]) => scanApi.bulkDelete(ids),
@@ -111,12 +127,15 @@ export default function ScansPage() {
       setSelected(new Set());
       setToast({ type: 'success', message: 'Bulk delete complete' });
     },
+    onError: () => {
+      setToast({ type: 'error', message: 'Bulk delete failed' });
+    },
   });
 
   /* Selection helpers */
   const toggleSelect = (id: string) => {
     const next = new Set(selected);
-    next.has(id) ? next.delete(id) : next.add(id);
+    if (next.has(id)) { next.delete(id); } else { next.add(id); }
     setSelected(next);
   };
   const toggleAll = () => {
@@ -132,7 +151,7 @@ export default function ScansPage() {
   /* Status stats across all scans */
   const { data: statsData } = useQuery({
     queryKey: ['scan-stats-all'],
-    queryFn: () => scanApi.search({ limit: 1, offset: 0 }),
+    queryFn: ({ signal }) => scanApi.search({ limit: 1, offset: 0 }, signal),
     refetchInterval: 15_000,
   });
   const facets = statsData?.facets?.status ?? {};
@@ -161,13 +180,14 @@ export default function ScansPage() {
         <div className="flex gap-3 items-center flex-1 w-full sm:w-auto">
           <SearchInput
             value={search}
-            onChange={setSearch}
+            onChange={(v: string) => { setSearch(v); setPage(1); }}
             placeholder="Search by name, target, or ID..."
             className="flex-1 max-w-md"
           />
           <select
+            aria-label="Filter by scan status"
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
             className="input-field w-auto min-w-[140px] text-sm"
           >
             <option value="">All Statuses</option>
@@ -218,6 +238,7 @@ export default function ScansPage() {
                   <th className="table-header w-10">
                     <input
                       type="checkbox"
+                      aria-label="Select all scans"
                       checked={selected.size === filteredScans.length && filteredScans.length > 0}
                       onChange={toggleAll}
                       className="rounded border-dark-600 bg-dark-700 text-spider-500 focus:ring-spider-500/30"
@@ -242,6 +263,7 @@ export default function ScansPage() {
                     <td className="table-cell">
                       <input
                         type="checkbox"
+                        aria-label={`Select scan ${scan.name || scan.target}`}
                         checked={selected.has(scan.scan_id)}
                         onChange={() => toggleSelect(scan.scan_id)}
                         className="rounded border-dark-600 bg-dark-700 text-spider-500 focus:ring-spider-500/30"
@@ -307,7 +329,7 @@ export default function ScansPage() {
                           trigger={<button className="btn-icon text-dark-400 hover:text-dark-200"><MoreVertical className="h-4 w-4" /></button>}
                         >
                           <DropdownItem icon={ClipboardCopy} onClick={() => {
-                            navigator.clipboard.writeText(scan.scan_id);
+                            navigator.clipboard.writeText(scan.scan_id).catch(() => {});
                             setToast({ type: 'info', message: 'Scan ID copied' });
                           }}>Copy ID</DropdownItem>
                           <DropdownItem icon={CopyIcon} onClick={() => cloneMut.mutate(scan.scan_id)}>Clone</DropdownItem>
@@ -369,7 +391,7 @@ export default function ScansPage() {
       </div>
 
       {/* Pagination */}
-      {!isSearchMode && totalPages > 1 && (
+      {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-dark-500">
             Page {page} of {totalPages} ({totalCount} total)

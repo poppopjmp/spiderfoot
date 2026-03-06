@@ -17,15 +17,13 @@ from __future__ import annotations
 
 import json
 import time
-import urllib.error
 import urllib.parse
-import urllib.request
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_mnemonic(SpiderFootModernPlugin):
+class sfp_mnemonic(SpiderFootAsyncPlugin):
 
     """Obtain Passive DNS information from PassiveDNS.mnemonic.no."""
 
@@ -212,6 +210,9 @@ class sfp_mnemonic(SpiderFootModernPlugin):
             position += per_page
 
             for r in data:
+                if self.checkForStop():
+                    return
+
                 if "*" in r['query'] or "%" in r['query']:
                     continue
 

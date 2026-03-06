@@ -18,10 +18,10 @@ from __future__ import annotations
 import ipaddress
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_dnsneighbor(SpiderFootModernPlugin):
+class sfp_dnsneighbor(SpiderFootAsyncPlugin):
     """SpiderFoot plugin for gathering IP addresses from sub-domains and hostnames identified, and optionally affiliates."""
     meta = {
         'name': "DNS Look-aside",

@@ -15,10 +15,10 @@ import os
 import subprocess
 import tempfile
 
-from spiderfoot import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_tool_gowitness(SpiderFootModernPlugin):
+class sfp_tool_gowitness(SpiderFootAsyncPlugin):
     """Web page screenshotting via gowitness."""
 
     meta = {

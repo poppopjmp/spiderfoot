@@ -5,9 +5,9 @@
 #               Provides service stubs and a lightweight JSON-over-HTTP
 #               fallback for environments without grpcio.
 #
-# Author:       SpiderFoot Team
+# Author:       Van1sh 
 # Created:      2025-07-08
-# Copyright:    (c) SpiderFoot Team 2025
+# Copyright:    (c) Van1sh  2025
 # Licence:      MIT
 # -------------------------------------------------------------------------------
 

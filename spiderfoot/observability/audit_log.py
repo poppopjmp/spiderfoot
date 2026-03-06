@@ -6,9 +6,9 @@
 #               configuration changes, and scan operations for
 #               compliance and forensics.
 #
-# Author:       SpiderFoot Team
+# Author:       Van1sh 
 # Created:      2025-07-08
-# Copyright:    (c) SpiderFoot Team 2025
+# Copyright:    (c) Van1sh  2025
 # Licence:      MIT
 # -------------------------------------------------------------------------------
 
@@ -45,7 +45,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Callable
 
-log = logging.getLogger("spiderfoot.audit_log")
+log = logging.getLogger("spiderfoot.observability.audit_events")
 
 
 class AuditCategory(str, Enum):

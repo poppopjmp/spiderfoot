@@ -211,7 +211,7 @@ class TestSpiderFootComprehensive(TestModuleBase):
         expected = hashlib.sha256(str(test_dict).encode('raw_unicode_escape')).hexdigest()
         self.assertEqual(result, expected)    # ===== CACHING =====
 
-    @patch('spiderfoot.sflib.SpiderFootHelpers.cachePath')
+    @patch('spiderfoot.sflib.helpers.SpiderFootHelpers.cachePath')
     @patch('os.stat')
     @patch('builtins.open', new_callable=mock_open, read_data='cached content')
     def test_cacheGet_valid_cache(self, mock_file, mock_stat, mock_cache_path):
@@ -224,7 +224,7 @@ class TestSpiderFootComprehensive(TestModuleBase):
         result = self.sf.cacheGet("test_label", 24)
         self.assertEqual(result, 'cached content')
 
-    @patch('spiderfoot.sflib.SpiderFootHelpers.cachePath')
+    @patch('spiderfoot.sflib.helpers.SpiderFootHelpers.cachePath')
     @patch('os.stat')
     def test_cacheGet_expired_cache(self, mock_stat, mock_cache_path):
         """Test cacheGet with expired cache."""
@@ -236,7 +236,7 @@ class TestSpiderFootComprehensive(TestModuleBase):
         result = self.sf.cacheGet("test_label", 1)  # 1 hour timeout
         self.assertIsNone(result)
 
-    @patch('spiderfoot.sflib.SpiderFootHelpers.cachePath')
+    @patch('spiderfoot.sflib.helpers.SpiderFootHelpers.cachePath')
     @patch('os.stat')
     def test_cacheGet_nonexistent_file(self, mock_stat, mock_cache_path):
         """Test cacheGet with non-existent cache file."""
@@ -251,8 +251,8 @@ class TestSpiderFootComprehensive(TestModuleBase):
         result = self.sf.cacheGet("", 24)
         self.assertIsNone(result)
 
-    @patch('spiderfoot.sflib.SpiderFootHelpers.cachePath')
-    @patch('spiderfoot.sflib.io.open', new_callable=mock_open)
+    @patch('spiderfoot.sflib.helpers.SpiderFootHelpers.cachePath')
+    @patch('spiderfoot.sflib.helpers.open', new_callable=mock_open)
     @patch('builtins.open', new_callable=mock_open)
     def test_cachePut_string_data(self, mock_builtins_open, mock_io_open, mock_cache_path):
         """Test cachePut with string data."""
@@ -264,8 +264,8 @@ class TestSpiderFootComprehensive(TestModuleBase):
             "Expected either builtins.open or spiderfoot.sflib.io.open to have been called."
         )
 
-    @patch('spiderfoot.sflib.SpiderFootHelpers.cachePath')
-    @patch('spiderfoot.sflib.io.open', new_callable=mock_open)
+    @patch('spiderfoot.sflib.helpers.SpiderFootHelpers.cachePath')
+    @patch('spiderfoot.sflib.helpers.open', new_callable=mock_open)
     @patch('builtins.open', new_callable=mock_open)
     def test_cachePut_list_data(self, mock_builtins_open, mock_io_open, mock_cache_path):
         """Test cachePut with list data."""
@@ -277,8 +277,8 @@ class TestSpiderFootComprehensive(TestModuleBase):
             "Expected either builtins.open or spiderfoot.sflib.io.open to have been called."
         )
 
-    @patch('spiderfoot.sflib.SpiderFootHelpers.cachePath')
-    @patch('spiderfoot.sflib.io.open', new_callable=mock_open)
+    @patch('spiderfoot.sflib.helpers.SpiderFootHelpers.cachePath')
+    @patch('spiderfoot.sflib.helpers.open', new_callable=mock_open)
     @patch('builtins.open', new_callable=mock_open)
     def test_cachePut_bytes_data(self, mock_builtins_open, mock_io_open, mock_cache_path):
         """Test cachePut with bytes data."""
@@ -701,21 +701,23 @@ class TestSpiderFootComprehensive(TestModuleBase):
         # Skip this test due to netaddr API compatibility issues
         self.skipTest("Skipping due to netaddr API compatibility issues")    # ===== DNS RESOLUTION =====
 
-    @patch('socket.gethostbyname_ex')
-    def test_resolveHost_valid_hostname(self, mock_gethostbyname_ex):
+    @patch('dns.resolver.resolve')
+    def test_resolveHost_valid_hostname(self, mock_resolve):
         """Test resolveHost with valid hostname."""
-        mock_gethostbyname_ex.return_value = ('example.com', [], ['93.184.216.34'])
-        
-        result = self.sf.resolveHost('example.com')
-        # normalizeDNS processes all parts of the response, so we get both hostname and IP
-        self.assertIn('93.184.216.34', result)
-        self.assertIn('example.com', result)
+        # dns.resolver.resolve returns an iterable of rdata with .address
+        rdata = MagicMock()
+        rdata.address = '93.184.216.34'
+        mock_resolve.return_value = [rdata]
 
-    @patch('socket.gethostbyname_ex')
-    def test_resolveHost_resolution_error(self, mock_gethostbyname_ex):
+        result = self.sf.resolveHost('example.com')
+        self.assertIn('93.184.216.34', result)
+
+    @patch('dns.resolver.resolve')
+    def test_resolveHost_resolution_error(self, mock_resolve):
         """Test resolveHost with resolution error."""
-        mock_gethostbyname_ex.side_effect = Exception("Name resolution failed")
-        
+        import dns.resolver
+        mock_resolve.side_effect = dns.resolver.NXDOMAIN()
+
         result = self.sf.resolveHost('nonexistent.example.com')
         self.assertEqual(result, [])
 
@@ -741,7 +743,7 @@ class TestSpiderFootComprehensive(TestModuleBase):
     @patch('socket.gethostbyaddr')
     def test_resolveIP_resolution_error(self, mock_gethostbyaddr):
         """Test resolveIP with resolution error."""
-        mock_gethostbyaddr.side_effect = Exception("Reverse resolution failed")
+        mock_gethostbyaddr.side_effect = socket.herror("Reverse resolution failed")
         
         result = self.sf.resolveIP('93.184.216.34')
         self.assertEqual(result, [])
@@ -768,7 +770,7 @@ class TestSpiderFootComprehensive(TestModuleBase):
     @patch('socket.getaddrinfo')
     def test_resolveHost6_resolution_error(self, mock_getaddrinfo):
         """Test resolveHost6 with resolution error."""
-        mock_getaddrinfo.side_effect = Exception("IPv6 resolution failed")
+        mock_getaddrinfo.side_effect = socket.gaierror("IPv6 resolution failed")
         
         result = self.sf.resolveHost6('nonexistent.example.com')
         self.assertEqual(result, [])
@@ -832,10 +834,14 @@ class TestSpiderFootComprehensive(TestModuleBase):
         """Test getSession without SOCKS proxy."""
         mock_session_obj = Mock()
         mock_session.return_value = mock_session_obj
-        
+
+        # Reset thread-local so the mock is always called
+        from spiderfoot.sflib import network as _net_mod
+        _net_mod._session_local.session = None
+
         self.sf.socksProxy = None
         result = self.sf.getSession()
-        
+
         mock_session.assert_called_once()
         self.assertEqual(result, mock_session_obj)
 
@@ -844,11 +850,15 @@ class TestSpiderFootComprehensive(TestModuleBase):
         """Test getSession with SOCKS proxy."""
         mock_session_obj = Mock()
         mock_session.return_value = mock_session_obj
-        
+
+        # Reset thread-local so the mock is always called
+        from spiderfoot.sflib import network as _net_mod
+        _net_mod._session_local.session = None
+
         test_proxy = 'socks5://127.0.0.1:9050'
         self.sf.socksProxy = test_proxy
         result = self.sf.getSession()
-        
+
         mock_session.assert_called_once()
         expected_proxies = {'http': test_proxy, 'https': test_proxy}
         mock_session_obj.proxies = expected_proxies

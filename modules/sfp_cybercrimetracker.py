@@ -15,10 +15,10 @@ from __future__ import annotations
 # -------------------------------------------------------------------------------
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_cybercrimetracker(SpiderFootModernPlugin):
+class sfp_cybercrimetracker(SpiderFootAsyncPlugin):
     """SpiderFoot plugin to check if a host/domain or IP address is malicious according to CyberCrime-Tracker.net."""
     meta = {
         'name': "CyberCrime-Tracker.net",

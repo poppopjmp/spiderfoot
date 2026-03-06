@@ -19,10 +19,10 @@ import dns.resolver
 import socket
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_cloudflaredns(SpiderFootModernPlugin):
+class sfp_cloudflaredns(SpiderFootAsyncPlugin):
     """SpiderFoot plugin to check if a host would be blocked by CloudFlare DNS content filters."""
     meta = {
         'name': "CloudFlare DNS",

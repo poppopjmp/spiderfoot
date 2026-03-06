@@ -16,6 +16,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootTarget
 
 class TestModuleIntegrationVirustotal(TestModuleBase):
     def setUp(self):
+        super().setUp()
         self.sf = SpiderFoot({
             '_fetchtimeout': 0.1,
             '_useragent': 'SpiderFootTestAgent',
@@ -42,7 +43,7 @@ class TestModuleIntegrationVirustotal(TestModuleBase):
     @patch('time.sleep', return_value=None)
     @patch.object(SpiderFoot, 'fetchUrl')
     def test_handleEvent_ip_address(self, mock_fetch, mock_sleep):
-        vt_response = json.dumps({'detected_urls': [{}]})
+        vt_response = json.dumps({'data': {'attributes': {'last_analysis_stats': {'malicious': 5, 'suspicious': 0}}}})
         mock_fetch.return_value = {'code': '200', 'content': vt_response}
         target = SpiderFootTarget('8.8.8.8', 'IP_ADDRESS')
         self.module.setTarget(target)
@@ -57,8 +58,10 @@ class TestModuleIntegrationVirustotal(TestModuleBase):
     @patch('time.sleep', return_value=None)
     @patch.object(SpiderFoot, 'fetchUrl')
     def test_handleEvent_internet_name(self, mock_fetch, mock_sleep):
-        vt_response = json.dumps({'detected_urls': [{}], 'domain_siblings': ['alt.example.com'], 'subdomains': ['sub.example.com']})
-        mock_fetch.return_value = {'code': '200', 'content': vt_response}
+        main_response = {'code': '200', 'content': json.dumps({'data': {'attributes': {'last_analysis_stats': {'malicious': 5, 'suspicious': 0}}}})}
+        siblings_response = {'code': '200', 'content': json.dumps({'data': [{'id': 'alt.example.com'}]})}
+        subdomains_response = {'code': '200', 'content': json.dumps({'data': [{'id': 'sub.example.com'}]})}
+        mock_fetch.side_effect = [main_response, siblings_response, subdomains_response]
         target = SpiderFootTarget('example.com', 'INTERNET_NAME')
         self.module.setTarget(target)
         parent_evt = SpiderFootEvent('ROOT', 'rootdata', 'test', None)

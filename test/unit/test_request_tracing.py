@@ -17,7 +17,7 @@ import time
 import unittest
 from unittest.mock import MagicMock, patch
 
-from spiderfoot.request_tracing import (
+from spiderfoot.observability.request_tracing import (
     RequestIdFilter,
     generate_request_id,
     get_request_context,
@@ -307,7 +307,7 @@ class TestInstallTracingMiddleware(unittest.TestCase):
 
     def test_install_without_starlette(self):
         """Should not crash when Starlette is unavailable."""
-        with patch("spiderfoot.request_tracing.HAS_STARLETTE", False):
+        with patch("spiderfoot.observability.request_tracing.HAS_STARLETTE", False):
             # This should log a warning but not crash
             mock_app = MagicMock()
             install_tracing_middleware(mock_app)

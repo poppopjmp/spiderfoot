@@ -18,10 +18,10 @@ from __future__ import annotations
 import dns.resolver
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_opennic(SpiderFootModernPlugin):
+class sfp_opennic(SpiderFootAsyncPlugin):
 
     """Resolves host names in the OpenNIC alternative DNS system."""
 

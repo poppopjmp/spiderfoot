@@ -20,10 +20,10 @@ import urllib.parse
 import base64
 from typing import Any
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_fofa(SpiderFootModernPlugin):
+class sfp_fofa(SpiderFootAsyncPlugin):
     """SpiderFoot plugin for querying Fofa API to look up domain, IP address, and other information."""
     meta = {
         'name': "Fofa",

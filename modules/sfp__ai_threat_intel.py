@@ -93,7 +93,7 @@ except ImportError:
     HAS_NLTK = False
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
 @dataclass
@@ -1066,7 +1066,7 @@ class NLPThreatAnalyzer:
         return list(set(iocs))  # Remove duplicates
 
 
-class sfp__ai_threat_intel(SpiderFootModernPlugin):
+class sfp__ai_threat_intel(SpiderFootAsyncPlugin):
     """AI-Powered Threat Intelligence Engine."""
 
     meta = {

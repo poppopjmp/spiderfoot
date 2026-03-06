@@ -16,7 +16,7 @@ from __future__ import annotations
 # -------------------------------------------------------------------------------
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 nearchars = {
     'a': ['4', 's'],
@@ -63,7 +63,7 @@ pairs = {
 }
 
 
-class sfp_similar(SpiderFootModernPlugin):
+class sfp_similar(SpiderFootAsyncPlugin):
 
     """Search various sources to identify similar looking domain names, for instance squatted domains."""
 

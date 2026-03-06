@@ -3,9 +3,9 @@ from __future__ import annotations
 """SpiderFoot plug-in module: douyin."""
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
-class sfp_douyin(SpiderFootModernPlugin):
+class sfp_douyin(SpiderFootAsyncPlugin):
     """Douyin plugin for monitoring video uploads."""
     meta = {
         'name': "Douyin Monitor",
@@ -64,6 +64,8 @@ class sfp_douyin(SpiderFootModernPlugin):
             self._seen_videos = set()
 
         for username in usernames:
+            if self.checkForStop():
+                return
             try:
                 # --- MOCKED API CALL ---
                 # Simulate API/network error for a specific user

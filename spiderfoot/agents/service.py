@@ -3,11 +3,11 @@ Agents Service Runner
 ======================
 FastAPI service that hosts all SpiderFoot AI agents.
 
-Exposes:
-  - POST /agents/process       — Submit events for agent processing
-  - POST /agents/analyze       — Analyze uploaded documents
-  - POST /agents/report        — Generate scan report
-  - GET  /agents/status        — Agent status and metrics
+Exposes (mounted at /agents):
+  - POST /process              — Submit events for agent processing
+  - POST /analyze              — Analyze uploaded documents
+  - POST /report               — Generate scan report
+  - GET  /status               — Agent status and metrics
   - GET  /metrics              — Prometheus metrics endpoint
   - GET  /health               — Health check
 
@@ -42,6 +42,7 @@ def _init_agents():
     from spiderfoot.agents.report_generator import ReportGeneratorAgent
     from spiderfoot.agents.document_analyzer import DocumentAnalyzerAgent
     from spiderfoot.agents.threat_intel import ThreatIntelAnalyzerAgent
+    from spiderfoot.agents.iac_advisor import IaCAdvisorAgent
 
     agent_classes = [
         FindingValidatorAgent,
@@ -50,6 +51,7 @@ def _init_agents():
         ReportGeneratorAgent,
         DocumentAnalyzerAgent,
         ThreatIntelAnalyzerAgent,
+        IaCAdvisorAgent,
     ]
 
     for cls in agent_classes:
@@ -169,7 +171,18 @@ class ReportRequest(BaseModel):
     geo_data: Dict[str, Any] = {}
 
 
-@app.post("/agents/process")
+class IaCReviewRequest(BaseModel):
+    """Request body for the IaC Advisor review endpoint."""
+    scan_id: str = ""
+    target: str = ""
+    provider: str = "aws"
+    # The full bundle from POST /api/scans/{id}/iac
+    bundle: Dict[str, Any] = {}
+    # files map: category → list[filename]
+    files: Dict[str, Any] = {}
+
+
+@app.post("/process")
 async def process_events(request: ProcessRequest):
     """Submit events for agent processing."""
     results = []
@@ -196,7 +209,7 @@ async def process_events(request: ProcessRequest):
     return {"results": results, "total": len(results)}
 
 
-@app.post("/agents/analyze")
+@app.post("/analyze")
 async def analyze_document(request: DocumentRequest):
     """Analyze an uploaded document."""
     if "document_analyzer" not in _agents:
@@ -227,7 +240,7 @@ async def analyze_document(request: DocumentRequest):
     }
 
 
-@app.post("/agents/report")
+@app.post("/report")
 async def generate_report(request: ReportRequest):
     """Generate a scan report."""
     if "report_generator" not in _agents:
@@ -262,7 +275,36 @@ async def generate_report(request: ReportRequest):
     }
 
 
-@app.get("/agents/status")
+@app.post("/iac/review")
+async def iac_review(request: IaCReviewRequest):
+    """Review an IaC bundle for security, best-practice and hardening issues."""
+    if "iac_advisor" not in _agents:
+        raise HTTPException(status_code=503, detail="IaC Advisor agent not available")
+
+    agent = _agents["iac_advisor"]
+
+    result = await agent.review_bundle(
+        bundle=request.bundle,
+        files=request.files,
+        provider=request.provider,
+        scan_id=request.scan_id,
+        target=request.target,
+    )
+
+    if result is None:
+        raise HTTPException(status_code=500, detail="Agent returned no result")
+
+    return {
+        "agent": result.agent_name,
+        "result_type": result.result_type,
+        "data": result.data,
+        "confidence": result.confidence,
+        "processing_time_ms": result.processing_time_ms,
+        "error": result.error,
+    }
+
+
+@app.get("/status")
 async def agent_status():
     """Return status and metrics for all agents."""
     return {

@@ -18,10 +18,10 @@ import json
 import requests
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_c99(SpiderFootModernPlugin):
+class sfp_c99(SpiderFootAsyncPlugin):
     """SpiderFoot plugin to query the C99 API which offers various data (geo location, proxy detection, phone lookup, etc)."""
     meta = {
         "name": "C99",

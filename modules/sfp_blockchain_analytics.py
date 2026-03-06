@@ -34,7 +34,7 @@ from typing import Any
 from collections import defaultdict
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
 class BlockchainAnalyzer:
@@ -303,7 +303,7 @@ class BlockchainAnalyzer:
         return decreasing_count / (len(transactions) - 1) > 0.7
 
 
-class sfp_blockchain_analytics(SpiderFootModernPlugin):
+class sfp_blockchain_analytics(SpiderFootAsyncPlugin):
     """Advanced blockchain and cryptocurrency investigation module."""
 
     meta = {

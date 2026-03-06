@@ -20,10 +20,10 @@ import json
 from netaddr import IPNetwork
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_spur(SpiderFootModernPlugin):
+class sfp_spur(SpiderFootAsyncPlugin):
 
     """Obtain information about any malicious activities involving IP addresses found"""
 

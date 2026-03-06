@@ -33,6 +33,12 @@ try:
 except ImportError:
     HAS_NETADDR = False
 
+try:
+    from cachetools import TTLCache
+    HAS_CACHETOOLS = True
+except ImportError:
+    HAS_CACHETOOLS = False
+
 log = logging.getLogger("spiderfoot.dns_service")
 
 
@@ -54,6 +60,7 @@ class DnsServiceConfig:
     lifetime: float = 10.0
     cache_enabled: bool = True
     cache_ttl: int = 300
+    cache_maxsize: int = 4096
     doh_enabled: bool = False
     doh_url: str = DEFAULT_DOH_URL
 
@@ -86,9 +93,17 @@ class DnsService:
         """Initialize the DnsService."""
         self.config = config or DnsServiceConfig()
         self.log = logging.getLogger("spiderfoot.dns_service")
-        self._cache: dict[str, tuple[float, Any]] = {}
         self._query_count = 0
         self._cache_hits = 0
+
+        # Use cachetools.TTLCache for automatic expiry, fall back to manual dict
+        if HAS_CACHETOOLS and self.config.cache_enabled:
+            self._cache: dict[str, Any] | TTLCache = TTLCache(
+                maxsize=self.config.cache_maxsize,
+                ttl=self.config.cache_ttl,
+            )
+        else:
+            self._cache = {}
 
         # Configure resolver
         self._resolver = None
@@ -100,16 +115,31 @@ class DnsService:
             self._resolver.lifetime = self.config.lifetime
 
     def _cache_get(self, key: str) -> Any | None:
-        """Get value from DNS cache."""
+        """Get value from DNS cache.
+
+        When using TTLCache, expiry is handled automatically.
+        When using fallback dict, manual TTL check is performed.
+        """
         if not self.config.cache_enabled:
             return None
 
+        if HAS_CACHETOOLS and isinstance(self._cache, TTLCache):
+            # Honour dynamic TTL changes (e.g. cache_ttl=0 in tests)
+            if self.config.cache_ttl <= 0:
+                return None
+            value = self._cache.get(key)
+            if value is not None:
+                self._cache_hits += 1
+            return value
+
+        # Fallback: manual TTL check for plain dict
         entry = self._cache.get(key)
         if entry is None:
             return None
 
         cached_time, value = entry
-        if time.time() - cached_time > self.config.cache_ttl:
+        ttl = self.config.cache_ttl
+        if ttl <= 0 or (time.time() - cached_time) >= ttl:
             del self._cache[key]
             return None
 
@@ -120,7 +150,11 @@ class DnsService:
         """Store value in DNS cache."""
         if not self.config.cache_enabled:
             return
-        self._cache[key] = (time.time(), value)
+
+        if HAS_CACHETOOLS and isinstance(self._cache, TTLCache):
+            self._cache[key] = value
+        else:
+            self._cache[key] = (time.time(), value)
 
     # --- Forward DNS ---
 
@@ -373,7 +407,8 @@ class DnsService:
     def check_wildcard(self, domain: str) -> bool:
         """Check if a domain has wildcard DNS configured.
 
-        Generates a random subdomain and checks if it resolves.
+        Results are cached per-domain to avoid redundant live DNS queries
+        (Cycle 57).
 
         Args:
             domain: Domain to check
@@ -381,11 +416,61 @@ class DnsService:
         Returns:
             True if wildcard DNS is detected
         """
+        cache_key = f"wildcard:{domain}"
+        cached = self._cache_get(cache_key)
+        if cached is not None:
+            return cached
+
         random_sub = ''.join(random.choices(string.ascii_lowercase, k=12))
         test_domain = f"{random_sub}.{domain}"
 
         results = self.resolve_host(test_domain)
-        return len(results) > 0
+        is_wildcard = len(results) > 0
+        self._cache_set(cache_key, is_wildcard)
+        return is_wildcard
+
+    # --- Bulk Operations (Cycle 58 / 53) ---
+
+    def bulk_resolve(
+        self,
+        hostnames: list[str],
+        rdtype: str = "A",
+        batch_size: int = 50,
+    ) -> dict[str, list[str]]:
+        """Resolve multiple hostnames in batches.
+
+        For the synchronous DnsService this processes hostnames sequentially
+        but leverages the cache so already-seen names are free.  The async
+        counterpart (``async_bulk_resolve``) runs true parallel batches.
+
+        Args:
+            hostnames: Hostnames to resolve.
+            rdtype: DNS record type.
+            batch_size: Not used in sync path (kept for API compat).
+
+        Returns:
+            Dict mapping hostname → list of resolved addresses.
+        """
+        results: dict[str, list[str]] = {}
+        for host in hostnames:
+            if not host:
+                continue
+            results[host] = self.resolve(host, rdtype)
+        return results
+
+    def prefetch(self, hostnames: list[str]) -> None:
+        """Pre-resolve a list of hostnames into the DNS cache.
+
+        Should be called when a module discovers new domains so that
+        subsequent modules can resolve them from cache (Cycle 53).
+        """
+        for host in hostnames:
+            if not host:
+                continue
+            # Only resolve if not already cached
+            cache_key = f"resolve:{host}:A"
+            if self._cache_get(cache_key) is None:
+                self.resolve(host, "A")
 
     def check_zone_transfer(self, domain: str) -> list[dict[str, str]] | None:
         """Attempt a DNS zone transfer (AXFR).

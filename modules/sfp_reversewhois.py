@@ -19,10 +19,10 @@ import re
 from bs4 import BeautifulSoup
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_reversewhois(SpiderFootModernPlugin):
+class sfp_reversewhois(SpiderFootAsyncPlugin):
 
     """Reverse Whois lookups using reversewhois.io."""
 

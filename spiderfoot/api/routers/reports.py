@@ -16,6 +16,7 @@ Endpoints:
 from __future__ import annotations
 
 import logging
+import threading
 import time
 import uuid
 from enum import Enum
@@ -40,6 +41,7 @@ except ImportError:
 
 # Legacy fallback dict — only used when ReportStore is unavailable
 _report_store: dict[str, dict[str, Any]] = {}
+_report_lock = threading.Lock()  # guards _report_store across threads
 
 
 def _get_store() -> ReportStore | None:
@@ -175,7 +177,8 @@ def store_report(report_id: str, data: dict[str, Any]) -> None:
             return
         except Exception as exc:
             log.warning("Persistent save failed, using in-memory: %s", exc)
-    _report_store[report_id] = data
+    with _report_lock:
+        _report_store[report_id] = data
 
 
 def get_stored_report(report_id: str) -> dict[str, Any] | None:
@@ -188,7 +191,8 @@ def get_stored_report(report_id: str) -> dict[str, Any] | None:
                 return result
         except Exception as exc:
             log.debug("Persistent get failed: %s", exc)
-    return _report_store.get(report_id)
+    with _report_lock:
+        return _report_store.get(report_id)
 
 
 def delete_stored_report(report_id: str) -> bool:
@@ -201,7 +205,8 @@ def delete_stored_report(report_id: str) -> bool:
         except Exception as exc:
             log.debug("Persistent delete failed: %s", exc)
     if not deleted:
-        deleted = _report_store.pop(report_id, None) is not None
+        with _report_lock:
+            deleted = _report_store.pop(report_id, None) is not None
     return deleted
 
 
@@ -220,7 +225,8 @@ def list_stored_reports(
         except Exception as exc:
             log.debug("Persistent list failed: %s", exc)
     # Fallback
-    reports = list(_report_store.values())
+    with _report_lock:
+        reports = list(_report_store.values())
     if scan_id:
         reports = [r for r in reports if r.get("scan_id") == scan_id]
     reports.sort(key=lambda r: r.get("created_at", 0), reverse=True)
@@ -237,8 +243,9 @@ def update_stored_report(report_id: str, updates: dict[str, Any]) -> None:
         except Exception as exc:
             log.debug("Persistent update failed: %s", exc)
     # Fallback
-    if report_id in _report_store:
-        _report_store[report_id].update(updates)
+    with _report_lock:
+        if report_id in _report_store:
+            _report_store[report_id].update(updates)
 
 
 def clear_store() -> None:
@@ -263,7 +270,8 @@ def clear_store() -> None:
         except (OSError, AttributeError):
             pass
         _persistent_store = None
-    _report_store.clear()
+    with _report_lock:
+        _report_store.clear()
 
 
 # ---------------------------------------------------------------------------
@@ -361,7 +369,7 @@ def _generate_report_background(
     except Exception as e:
         update_stored_report(report_id, {
             "status": "failed",
-            "message": f"Generation failed: {str(e)}",
+            "message": "Generation failed",
         })
         log.error("Report %s generation failed: %s", report_id, e, exc_info=True)
 
@@ -432,9 +440,9 @@ if not HAS_FASTAPI:
         pass
     router = _StubRouter()
 else:
-    from ..dependencies import get_scan_service
+    from ..dependencies import get_scan_service, get_api_key, safe_filename, SafeId
 
-    router = APIRouter()
+    router = APIRouter(dependencies=[Depends(get_api_key)])
 
     @router.post(
         "/reports/generate",
@@ -499,7 +507,7 @@ else:
         summary="Get generated report",
         description="Retrieve a generated report by ID. Check status to see if generation is complete.",
     )
-    async def get_report(report_id: str) -> ReportResponse:
+    async def get_report(report_id: SafeId) -> ReportResponse:
         """Retrieve a generated report by its ID."""
         stored = get_stored_report(report_id)
         if stored is None:
@@ -524,7 +532,7 @@ else:
         response_model=ReportStatusResponse,
         summary="Check report generation status",
     )
-    async def get_report_status(report_id: str) -> ReportStatusResponse:
+    async def get_report_status(report_id: SafeId) -> ReportStatusResponse:
         """Check the generation status of a report."""
         stored = get_stored_report(report_id)
         if stored is None:
@@ -568,7 +576,7 @@ else:
         description="Export a completed report as Markdown, HTML, JSON, plain text, or CSV.",
     )
     async def export_report(
-        report_id: str,
+        report_id: SafeId,
         fmt: ReportFormatEnum = Query(
             ReportFormatEnum.MARKDOWN, alias="format",
             description="Output format"
@@ -641,7 +649,7 @@ else:
             iter([content]),
             media_type=media_type,
             headers={
-                "Content-Disposition": f'attachment; filename="{filename}"',
+                "Content-Disposition": f'attachment; filename="{safe_filename(filename)}"',
                 "Pragma": "no-cache",
             },
         )
@@ -677,7 +685,7 @@ else:
         summary="Delete a report",
         status_code=204,
     )
-    async def delete_report(report_id: str) -> None:
+    async def delete_report(report_id: SafeId) -> None:
         """Delete a report by its ID."""
         if not delete_stored_report(report_id):
             raise HTTPException(status_code=404, detail="Report not found")
@@ -775,7 +783,7 @@ else:
                 "scan_id": request.scan_id,
                 "status": "failed",
                 "report_type": "pdf",
-                "message": str(e),
+                "message": "PDF generation failed",
                 "created_at": time.time(),
             })
 

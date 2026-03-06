@@ -18,10 +18,10 @@ from __future__ import annotations
 import json
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_blockchain(SpiderFootModernPlugin):
+class sfp_blockchain(SpiderFootAsyncPlugin):
     """SpiderFoot plugin to query blockchain.info to find the balance of identified bitcoin wallet addresses."""
     meta = {
         'name': "Blockchain",

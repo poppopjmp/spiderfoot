@@ -19,3 +19,15 @@ Supported formats:
 """
 
 __version__ = "0.1.0"
+
+# Re-export event enrichment pipeline classes for backward compatibility
+from spiderfoot.enrichment.event_pipeline import (  # noqa: F401
+    DataSizeEnricher,
+    Enricher,
+    EnrichmentContext,
+    EnrichmentPipeline,
+    EnrichmentPriority,
+    FunctionEnricher,
+    TagEnricher,
+    create_default_pipeline,
+)

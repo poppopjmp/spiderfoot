@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueries } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import {
   scanApi, healthApi, formatEpoch, formatDuration,
@@ -11,30 +11,60 @@ import {
 import {
   PageHeader, StatCard, StatusBadge, RiskPills, EmptyState, TableSkeleton,
 } from '../components/ui';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 export default function DashboardPage() {
+  useDocumentTitle('Dashboard');
   const { data: scanData, isLoading: scansLoading } = useQuery({
     queryKey: ['scans', { page: 1, page_size: 10, sort_by: 'created', sort_order: 'desc' }],
-    queryFn: () => scanApi.list({ page: 1, page_size: 10, sort_by: 'created', sort_order: 'desc' }),
+    queryFn: ({ signal }) => scanApi.list({ page: 1, page_size: 10, sort_by: 'created', sort_order: 'desc' }, signal),
     refetchInterval: 15_000,
   });
 
   // Separate query for accurate status counts across ALL scans
   const { data: searchData } = useQuery({
     queryKey: ['scan-stats'],
-    queryFn: () => scanApi.search({ limit: 1, offset: 0 }),
+    queryFn: ({ signal }) => scanApi.search({ limit: 1, offset: 0 }, signal),
     refetchInterval: 15_000,
   });
 
   const { data: health } = useQuery({
     queryKey: ['health-dashboard'],
-    queryFn: healthApi.dashboard,
+    queryFn: ({ signal }) => healthApi.dashboard(signal),
     retry: 1,
     refetchInterval: 30_000,
   });
 
   const scans = scanData?.items ?? [];
   const total = scanData?.total ?? 0;
+
+  // Fetch correlation risk summaries for recent scans (parallel, cached)
+  const riskQueries = useQueries({
+    queries: scans.map((scan: Scan) => ({
+      queryKey: ['scan-risk', scan.scan_id],
+      queryFn: ({ signal }: { signal: AbortSignal }) =>
+        scanApi.correlationsSummary(scan.scan_id, 'risk', signal),
+      enabled: scan.status === 'FINISHED' || scan.status === 'ERROR-FAILED',
+      staleTime: 5 * 60_000, // Risk data rarely changes — cache 5 min
+    })),
+  });
+
+  // Build a map of scan_id → { high, medium, low, info }
+  const riskMap = new Map<string, { high: number; medium: number; low: number; info: number }>();
+  scans.forEach((scan: Scan, i: number) => {
+    const data = riskQueries[i]?.data;
+    if (data?.summary) {
+      const counts = { high: 0, medium: 0, low: 0, info: 0 };
+      for (const row of data.summary as { risk: string; total: number }[]) {
+        const key = row.risk?.toLowerCase();
+        if (key === 'high') counts.high = row.total;
+        else if (key === 'medium') counts.medium = row.total;
+        else if (key === 'low') counts.low = row.total;
+        else if (key === 'info' || key === 'informational') counts.info = row.total;
+      }
+      riskMap.set(scan.scan_id, counts);
+    }
+  });
 
   // Use facets from search API for accurate cross-scan status counts
   const facets = searchData?.facets?.status ?? {};
@@ -102,7 +132,7 @@ export default function DashboardPage() {
                       <td className="table-cell text-dark-300 font-mono text-xs">{scan.target}</td>
                       <td className="table-cell"><StatusBadge status={scan.status} /></td>
                       <td className="table-cell">
-                        <RiskPills />
+                        <RiskPills {...(riskMap.get(scan.scan_id) ?? {})} />
                       </td>
                       <td className="table-cell text-dark-400 text-xs whitespace-nowrap">{formatEpoch(scan.started)}</td>
                       <td className="table-cell text-dark-400 text-xs whitespace-nowrap">{formatDuration(scan.started, scan.ended)}</td>
@@ -142,15 +172,13 @@ export default function DashboardPage() {
                 <p className="section-label mb-3">Components</p>
                 <div className="space-y-2">
                   {health?.components && Object.keys(health.components).length > 0 ? (
-                    Object.entries(health.components)
+                    (Object.entries(health.components) as [string, HealthComponent][])
                       .sort(([, a], [, b]) => {
                         // Sort: up first, then degraded, then unknown, then down
                         const order: Record<string, number> = { up: 0, degraded: 1, unknown: 2, down: 3 };
-                        const aComp = a as HealthComponent;
-                        const bComp = b as HealthComponent;
-                        return (order[aComp.status] ?? 2) - (order[bComp.status] ?? 2);
+                        return (order[a.status] ?? 2) - (order[b.status] ?? 2);
                       })
-                      .map(([name, comp]: [string, any]) => (
+                      .map(([name, comp]) => (
                       <div key={name} className="flex items-center justify-between text-xs">
                         <span className="text-dark-300 capitalize">{name.replace(/_/g, ' ')}</span>
                         <span className="flex items-center gap-2">

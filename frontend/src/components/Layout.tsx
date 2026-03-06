@@ -8,7 +8,6 @@ import {
   Server,
   ExternalLink,
   ChevronDown,
-  X,
   Briefcase,
   Bot,
   BookOpen,
@@ -23,10 +22,14 @@ import {
   Moon,
   Monitor,
   Cpu,
+  Calendar,
 } from 'lucide-react';
 import { clsx } from 'clsx';
+import { ModalShell } from './ui';
 import { useAuthStore } from '../lib/auth';
 import { useTheme, type Theme } from '../lib/theme';
+import { NotificationBell, NotificationPanel } from './NotificationCenter';
+import { CommandPalette, CommandPaletteTrigger } from './CommandPalette';
 
 interface NavItem {
   name: string;
@@ -40,21 +43,25 @@ const navItems: NavItem[] = [
   { name: 'Dashboard', to: '/', icon: LayoutDashboard },
   { name: 'New Scan', to: '/scans/new', icon: PlusCircle },
   { name: 'Scans', to: '/scans', icon: Radar },
+  { name: 'Schedules', to: '/schedules', icon: Calendar },
   { name: 'Modules', to: '/modules', icon: Cpu },
+  { name: 'Agents', to: '/agents', icon: Bot },
   { name: 'Workspaces', to: '/workspaces', icon: Briefcase },
   { name: 'Documentation', to: '/documentation', icon: BookOpen },
   { name: 'Settings', to: '/settings', icon: Settings },
 ];
 
 const SERVICE_LINKS = [
-  { name: 'AI Agents', url: '/agents', internal: true, desc: 'AI agent orchestrator' },
-  { name: 'Grafana', url: '/grafana/', internal: false, desc: 'Metrics & dashboards (admin/spiderfoot)' },
+  { name: 'AI Agents', url: '/agents', internal: true, desc: 'AI agent management' },
+  { name: 'Grafana', url: '/grafana/', internal: false, desc: 'Metrics & dashboards' },
   { name: 'Jaeger', url: '/jaeger/', internal: false, desc: 'Distributed tracing' },
   { name: 'Prometheus', url: '/prometheus/', internal: false, desc: 'Metrics collection' },
-  { name: 'Traefik', url: '/dashboard/', internal: false, desc: 'Reverse proxy (admin/spiderfoot)' },
-  { name: 'MinIO', url: '/minio/', internal: false, desc: 'Object storage (spiderfoot/changeme123)' },
-  { name: 'Flower', url: '/flower/', internal: false, desc: 'Celery monitor (admin/spiderfoot)' },
+  { name: 'Traefik', url: '/dashboard/', internal: false, desc: 'Reverse proxy' },
+  { name: 'MinIO', url: '/minio/', internal: false, desc: 'Object storage' },
+  { name: 'Flower', url: '/flower/', internal: false, desc: 'Celery monitor' },
 ];
+
+const APP_VERSION = '6.0.0';
 
 export default function Layout() {
   const [showAbout, setShowAbout] = useState(false);
@@ -71,6 +78,14 @@ export default function Layout() {
 
   return (
     <div className="flex h-full">
+      {/* Skip to content — WCAG 2.4.1 */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-spider-600 focus:text-white focus:rounded-lg focus:text-sm focus:font-medium"
+      >
+        Skip to content
+      </a>
+
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
@@ -198,6 +213,20 @@ export default function Layout() {
           </div>
         </div>
 
+        {/* Quick search */}
+        <div className="px-3 pb-1">
+          <CommandPaletteTrigger />
+        </div>
+
+        {/* Notification center */}
+        <div className="px-3 pb-1 relative">
+          <div className="flex items-center gap-2 px-3">
+            <NotificationBell />
+            <span className="text-xs text-dark-500">Notifications</span>
+          </div>
+          <NotificationPanel />
+        </div>
+
         {/* Services dropdown */}
         <div className="px-3 pb-2">
           <button
@@ -264,7 +293,7 @@ export default function Layout() {
             </div>
           ) : null}
           <div className="px-3 py-2">
-            <p className="text-xs text-dark-500">SpiderFoot v5.9.2</p>
+            <p className="text-xs text-dark-500">SpiderFoot v{APP_VERSION}</p>
           </div>
         </div>
       </aside>
@@ -273,50 +302,43 @@ export default function Layout() {
       <main className="flex-1 overflow-auto">
         {/* Mobile header */}
         <div className="lg:hidden flex items-center gap-3 px-4 py-3 border-b border-dark-700 bg-dark-900">
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-dark-300 hover:text-foreground">
+          <button onClick={() => setSidebarOpen(!sidebarOpen)} aria-label="Toggle navigation menu" className="text-dark-300 hover:text-foreground">
             <Menu className="h-5 w-5" />
           </button>
           <img src="/spiderfoot-icon.png" alt="SpiderFoot" className="h-5 w-5" />
           <span className="text-sm font-bold text-foreground">SpiderFoot</span>
         </div>
-        <div className="px-6 py-8">
+        <div id="main-content" className="px-6 py-8">
           <Outlet />
         </div>
       </main>
 
       {/* About Modal */}
       {showAbout && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowAbout(false)} />
-          <div className="relative bg-dark-800 border border-dark-700 rounded-2xl p-8 max-w-md w-full shadow-2xl animate-fade-in-up">
-            <button
-              onClick={() => setShowAbout(false)}
-              className="absolute top-4 right-4 text-dark-500 hover:text-dark-300"
-            >
-              <X className="h-5 w-5" />
-            </button>
-            <div className="text-center">
-              <img src="/spiderfoot-header-dark.png" alt="SpiderFoot" className="h-16 mx-auto mb-4" />
-              <h2 className="text-xl font-bold text-foreground">SpiderFoot</h2>
-              <p className="text-dark-400 text-sm mt-1">Open Source Intelligence Automation</p>
-              <p className="text-spider-400 font-mono text-sm mt-3">v5.9.2</p>
-              <div className="mt-6 space-y-2 text-sm text-dark-400">
-                <p>An OSINT automation tool for reconnaissance.</p>
-                <p>
-                  <a
-                    href="https://github.com/poppopjmp/spiderfoot"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-spider-400 hover:text-spider-300 underline decoration-spider-600/50 underline-offset-2"
-                  >
-                    View on GitHub
-                  </a>
-                </p>
-              </div>
+        <ModalShell title="About SpiderFoot" onClose={() => setShowAbout(false)}>
+          <div className="text-center">
+            <img src="/spiderfoot-header-dark.png" alt="SpiderFoot" className="h-16 mx-auto mb-4" />
+            <p className="text-dark-400 text-sm mt-1">Open Source Intelligence Automation</p>
+            <p className="text-spider-400 font-mono text-sm mt-3">v{APP_VERSION}</p>
+            <div className="mt-6 space-y-2 text-sm text-dark-400">
+              <p>An OSINT automation tool for reconnaissance.</p>
+              <p>
+                <a
+                  href="https://github.com/poppopjmp/spiderfoot"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-spider-400 hover:text-spider-300 underline decoration-spider-600/50 underline-offset-2"
+                >
+                  View on GitHub
+                </a>
+              </p>
             </div>
           </div>
-        </div>
+        </ModalShell>
       )}
+
+      {/* Command Palette (⌘K / Ctrl+K) */}
+      <CommandPalette />
     </div>
   );
 }

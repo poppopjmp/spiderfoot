@@ -1,24 +1,26 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { dataApi, Module } from '../lib/api';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { Search, Cpu, Tag, ChevronRight, ChevronDown, BookOpen, Layers, Shield, ExternalLink } from 'lucide-react';
 
 export default function DocumentationPage() {
+  useDocumentTitle('Documentation');
   const [search, setSearch] = useState('');
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
   const [activeTab, setActiveTab] = useState<'modules' | 'events' | 'guides'>('modules');
 
   const { data: modulesData } = useQuery({
     queryKey: ['doc-modules'],
-    queryFn: () => dataApi.modules({ page: 1, page_size: 500 }),
+    queryFn: ({ signal }) => dataApi.modules({ page: 1, page_size: 500 }, signal),
   });
   const { data: entityData } = useQuery({
     queryKey: ['doc-entity-types'],
-    queryFn: () => dataApi.entityTypes(),
+    queryFn: ({ signal }) => dataApi.entityTypes(signal),
   });
   const { data: catData } = useQuery({
     queryKey: ['doc-module-categories'],
-    queryFn: () => dataApi.moduleCategories(),
+    queryFn: ({ signal }) => dataApi.moduleCategories(signal),
   });
 
   const modules = modulesData?.items ?? [];
@@ -327,7 +329,7 @@ const GUIDES: Guide[] = [
       },
       {
         title: 'Docker Compose deployment',
-        content: `Deploy with: \`docker compose -f docker-compose-microservices.yml up -d\`\n\nKey services:\n- **sf-api**: FastAPI backend (port 443 via Traefik)\n- **celery-worker**: Scan execution workers\n- **celery-beat**: Periodic task scheduler\n- **redis**: Message broker and cache\n- **postgres**: Primary database\n- **flower**: Celery monitoring (accessible at /flower/)\n- **traefik**: Reverse proxy and TLS\n\nAll services run on internal Docker networks with only Traefik exposed externally.`,
+        content: `Deploy with: \`docker compose -f docker-compose.yml up -d\`\n\nKey services:\n- **sf-api**: FastAPI backend (port 443 via Traefik)\n- **celery-worker**: Scan execution workers\n- **celery-beat**: Periodic task scheduler\n- **redis**: Message broker and cache\n- **postgres**: Primary database\n- **flower**: Celery monitoring (accessible at /flower/)\n- **traefik**: Reverse proxy and TLS\n\nAll services run on internal Docker networks with only Traefik exposed externally.`,
       },
     ],
   },
@@ -407,7 +409,7 @@ function GuidesPanel() {
                       <div className="prose prose-sm prose-invert max-w-none">
                         {section.content.split('\n\n').map((para, i) => (
                           <p key={i} className="text-sm text-dark-300 leading-relaxed mb-3 last:mb-0">
-                            {para.split(/(\*\*[^*]+\*\*|\`[^`]+\`)/).map((segment, j) => {
+                            {para.split(/(\*\*[^*]+\*\*|`[^`]+`)/).map((segment, j) => {
                               if (segment.startsWith('**') && segment.endsWith('**')) {
                                 return <strong key={j} className="text-foreground font-semibold">{segment.slice(2, -2)}</strong>;
                               }
@@ -437,3 +439,4 @@ function GuidesPanel() {
     </div>
   );
 }
+

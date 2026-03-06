@@ -17,10 +17,10 @@ from __future__ import annotations
 import json
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_textmagic(SpiderFootModernPlugin):
+class sfp_textmagic(SpiderFootAsyncPlugin):
 
     """Obtain phone number type from TextMagic API"""
 

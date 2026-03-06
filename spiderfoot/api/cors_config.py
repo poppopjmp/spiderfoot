@@ -2,11 +2,17 @@
 CORS (Cross-Origin Resource Sharing) configuration for the SpiderFoot API.
 
 Configurable via environment variables:
-    SF_API_CORS_ORIGINS    — Comma-separated allowed origins (default: *)
+    SF_API_CORS_ORIGINS    — Comma-separated allowed origins
+                             (default: http://localhost:3000,https://localhost)
     SF_API_CORS_METHODS    — Comma-separated allowed methods (default: *)
     SF_API_CORS_HEADERS    — Comma-separated allowed headers (default: *)
-    SF_API_CORS_CREDENTIALS — Allow credentials (default: false)
+    SF_API_CORS_CREDENTIALS — Allow credentials (default: true)
     SF_API_CORS_MAX_AGE    — Preflight cache max age in seconds (default: 600)
+
+Security note (v5.9.2):
+    The default origins are now restricted to localhost.  Set
+    SF_API_CORS_ORIGINS=* explicitly if you need wide-open access
+    (e.g. behind an authenticating reverse proxy).
 
 Usage::
 
@@ -20,6 +26,9 @@ import os
 from typing import Any
 
 log = logging.getLogger("spiderfoot.api.cors")
+
+# Secure default: only local origins.  Override via SF_API_CORS_ORIGINS.
+_DEFAULT_ORIGINS = "http://localhost:3000,https://localhost"
 
 
 def _parse_list(env_var: str, default: str = "*") -> list[str]:
@@ -38,10 +47,10 @@ def install_cors(app: Any) -> None:
     """
     from starlette.middleware.cors import CORSMiddleware
 
-    origins = _parse_list("SF_API_CORS_ORIGINS")
+    origins = _parse_list("SF_API_CORS_ORIGINS", _DEFAULT_ORIGINS)
     methods = _parse_list("SF_API_CORS_METHODS")
     headers = _parse_list("SF_API_CORS_HEADERS")
-    credentials = os.environ.get("SF_API_CORS_CREDENTIALS", "false").lower() in ("1", "true", "yes")
+    credentials = os.environ.get("SF_API_CORS_CREDENTIALS", "true").lower() in ("1", "true", "yes")
     max_age = int(os.environ.get("SF_API_CORS_MAX_AGE", "600"))
 
     # When allowing all origins, credentials cannot be true (browser security)
@@ -51,6 +60,12 @@ def install_cors(app: Any) -> None:
             "Disabling credentials. Set SF_API_CORS_ORIGINS to specific origins."
         )
         credentials = False
+
+    if "*" in origins:
+        log.warning(
+            "CORS: allow_origins=['*'] is active. This is insecure for "
+            "production. Set SF_API_CORS_ORIGINS to your frontend URL(s)."
+        )
 
     app.add_middleware(
         CORSMiddleware,

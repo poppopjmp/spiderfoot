@@ -10,14 +10,16 @@ from __future__ import annotations
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Query
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, Depends, HTTPException, Query
+from ..dependencies import get_api_key, SafeId
+from pydantic import BaseModel, Field, field_validator
+from .webhooks import _validate_webhook_url
 
-from spiderfoot.webhook_delivery import WebhookDeliveryManager, RetryPolicy
+from spiderfoot.webhooks.delivery import WebhookDeliveryManager, RetryPolicy
 
 _log = logging.getLogger("spiderfoot.api.webhook_delivery")
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_api_key)])
 
 _manager = WebhookDeliveryManager()
 
@@ -32,6 +34,11 @@ class CreateDeliveryRequest(BaseModel):
     headers: dict = Field(default_factory=dict)
     timeout_seconds: int = Field(30, ge=5, le=120)
     max_retries: int = Field(5, ge=0, le=20)
+
+    @field_validator("endpoint_url")
+    @classmethod
+    def _check_url(cls, v: str) -> str:
+        return _validate_webhook_url(v)
 
 
 class RecordAttemptRequest(BaseModel):
@@ -79,7 +86,7 @@ async def list_deliveries(
 
 
 @router.get("/webhook-delivery/deliveries/{delivery_id}")
-async def get_delivery(delivery_id: str):
+async def get_delivery(delivery_id: SafeId):
     """Get a specific delivery with full attempt history."""
     delivery = _manager.get_delivery(delivery_id)
     if not delivery:
@@ -88,7 +95,7 @@ async def get_delivery(delivery_id: str):
 
 
 @router.post("/webhook-delivery/deliveries/{delivery_id}/attempt")
-async def record_attempt(delivery_id: str, req: RecordAttemptRequest):
+async def record_attempt(delivery_id: SafeId, req: RecordAttemptRequest):
     """Record a delivery attempt result."""
     delivery = _manager.record_attempt(
         delivery_id=delivery_id,
@@ -103,7 +110,7 @@ async def record_attempt(delivery_id: str, req: RecordAttemptRequest):
 
 
 @router.post("/webhook-delivery/deliveries/{delivery_id}/cancel")
-async def cancel_delivery(delivery_id: str):
+async def cancel_delivery(delivery_id: SafeId):
     """Cancel a pending or retrying delivery."""
     if not _manager.cancel_delivery(delivery_id):
         raise HTTPException(400, "Cannot cancel delivery (not found or already completed)")
@@ -129,7 +136,7 @@ async def get_dead_letter_queue(limit: int = Query(50, ge=1, le=200)):
 
 
 @router.post("/webhook-delivery/dead-letter/{delivery_id}/replay")
-async def replay_dead_letter(delivery_id: str):
+async def replay_dead_letter(delivery_id: SafeId):
     """Replay a delivery from the dead letter queue."""
     delivery = _manager.replay_dead_letter(delivery_id)
     if not delivery:
@@ -140,14 +147,14 @@ async def replay_dead_letter(delivery_id: str):
 # ── Circuit breaker ───────────────────────────────────────────────────
 
 @router.get("/webhook-delivery/circuits/{endpoint_id}")
-async def get_circuit_state(endpoint_id: str):
+async def get_circuit_state(endpoint_id: SafeId):
     """Get circuit breaker state for an endpoint."""
     cb = _manager.get_circuit_state(endpoint_id)
     return {"circuit": cb.__dict__}
 
 
 @router.post("/webhook-delivery/circuits/{endpoint_id}/reset")
-async def reset_circuit(endpoint_id: str):
+async def reset_circuit(endpoint_id: SafeId):
     """Manually reset a circuit breaker."""
     cb = _manager.reset_circuit(endpoint_id)
     return {"circuit": cb.__dict__, "status": "reset"}
@@ -162,7 +169,7 @@ async def get_stats():
 
 
 @router.get("/webhook-delivery/stats/{endpoint_id}")
-async def get_endpoint_stats(endpoint_id: str):
+async def get_endpoint_stats(endpoint_id: SafeId):
     """Get delivery stats for a specific endpoint."""
     return {"stats": _manager.get_endpoint_stats(endpoint_id)}
 

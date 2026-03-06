@@ -43,6 +43,7 @@ setup(
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
         "Topic :: Security",
         "Topic :: Internet :: WWW/HTTP :: Indexing/Search",
         "Topic :: System :: Networking :: Monitoring",
@@ -51,8 +52,6 @@ setup(
     install_requires=requirements,
     entry_points={
         "console_scripts": [
-            "spiderfoot=sf:main",
-            "spiderfoot-cli=sfcli:main",
             "spiderfoot-api=sfapi:main",
         ],
     },

@@ -31,7 +31,7 @@ class TestDetection:
 
     def test_already_modern(self):
         assert _is_already_modern(
-            "from spiderfoot.modern_plugin import SpiderFootModernPlugin"
+            "from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin"
         )
 
     def test_not_modern(self):
@@ -47,7 +47,7 @@ class TestImportMigration:
         src = "from spiderfoot import SpiderFootPlugin\n"
         result = MigrationResult("test.py")
         out = migrate_content(src, result)
-        assert "from spiderfoot.modern_plugin import SpiderFootModernPlugin" in out
+        assert "from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin" in out
         assert "SpiderFootPlugin" not in out
         assert result.migrated
 
@@ -56,7 +56,7 @@ class TestImportMigration:
         result = MigrationResult("test.py")
         out = migrate_content(src, result)
         assert "from spiderfoot import SpiderFootEvent" in out
-        assert "from spiderfoot.modern_plugin import SpiderFootModernPlugin" in out
+        assert "from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin" in out
         assert result.migrated
 
     def test_multi_import_with_helpers(self):
@@ -254,7 +254,7 @@ class TestFullModule:
 
         # Imports
         assert "from spiderfoot import SpiderFootEvent" in out
-        assert "from spiderfoot.modern_plugin import SpiderFootModernPlugin" in out
+        assert "from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin" in out
 
         # Base class
         assert "class sfp_example(SpiderFootModernPlugin):" in out
@@ -311,7 +311,7 @@ class TestMigrateFile:
     def test_skip_already_modern(self, tmp_path):
         p = tmp_path / "sfp_test.py"
         p.write_text(
-            "from spiderfoot.modern_plugin import SpiderFootModernPlugin\n"
+            "from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin\n"
             "class sfp_test(SpiderFootModernPlugin):\n    pass\n"
         )
         result = migrate_file(str(p))

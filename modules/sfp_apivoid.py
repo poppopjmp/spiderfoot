@@ -19,10 +19,10 @@ import json
 import time
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_apivoid(SpiderFootModernPlugin):
+class sfp_apivoid(SpiderFootAsyncPlugin):
 
     """Query APIVoid for IP and domain reputation, blacklist checks and threat intelligence."""
 

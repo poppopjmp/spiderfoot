@@ -100,7 +100,7 @@ class TestHttpService(unittest.TestCase):
         proxies = self.http._get_proxy_dict()
         self.assertIn("user:pass@", proxies["http"])
     
-    @patch("spiderfoot.http_service.requests")
+    @patch("spiderfoot.services.http_service.requests")
     def test_fetch_url_success(self, mock_requests):
         mock_session = MagicMock()
         mock_response = MagicMock()
@@ -119,7 +119,7 @@ class TestHttpService(unittest.TestCase):
         self.assertEqual(result["content"], "<html>Hello</html>")
         mock_session.close.assert_called_once()
     
-    @patch("spiderfoot.http_service.requests")
+    @patch("spiderfoot.services.http_service.requests")
     def test_fetch_url_post(self, mock_requests):
         mock_session = MagicMock()
         mock_response = MagicMock()
@@ -140,7 +140,7 @@ class TestHttpService(unittest.TestCase):
         self.assertEqual(result["code"], "200")
         mock_session.post.assert_called_once()
     
-    @patch("spiderfoot.http_service.requests")
+    @patch("spiderfoot.services.http_service.requests")
     def test_fetch_url_head(self, mock_requests):
         mock_session = MagicMock()
         mock_response = MagicMock()
@@ -157,11 +157,13 @@ class TestHttpService(unittest.TestCase):
         self.assertEqual(result["code"], "200")
         self.assertIsNone(result["content"])
     
-    @patch("spiderfoot.http_service.requests")
+    @patch("spiderfoot.services.http_service.requests")
     def test_fetch_url_timeout(self, mock_requests):
+        import requests as real_requests
         mock_session = MagicMock()
-        mock_session.get.side_effect = mock_requests.exceptions.Timeout()
+        mock_session.get.side_effect = real_requests.exceptions.Timeout("timeout")
         mock_requests.Session.return_value = mock_session
+        mock_requests.exceptions = real_requests.exceptions
         
         result = self.http.fetch_url("https://example.com")
         
@@ -181,7 +183,7 @@ class TestHttpService(unittest.TestCase):
         result = self.http.bing_iterate("test query")
         self.assertEqual(result["urls"], [])
     
-    @patch("spiderfoot.http_service.requests")
+    @patch("spiderfoot.services.http_service.requests")
     def test_google_iterate_with_results(self, mock_requests):
         self.http.config.google_api_key = "test-key"
         self.http.config.google_cse_id = "test-cse"
@@ -217,7 +219,7 @@ class TestHttpServiceSSL(unittest.TestCase):
     
     def test_parse_cert_no_crypto(self):
         """Gracefully handle missing cryptography lib."""
-        with patch("spiderfoot.http_service.HAS_CRYPTO", False):
+        with patch("spiderfoot.services.http_service.HAS_CRYPTO", False):
             result = self.http.parse_cert("fake cert")
             self.assertEqual(result["issuer"], "")
             self.assertFalse(result["expired"])

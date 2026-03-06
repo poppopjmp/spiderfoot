@@ -22,10 +22,10 @@ from subprocess import PIPE, Popen, TimeoutExpired
 
 from spiderfoot import SpiderFootEvent
 from spiderfoot import SpiderFootHelpers
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_tool_dnstwist(SpiderFootModernPlugin):
+class sfp_tool_dnstwist(SpiderFootAsyncPlugin):
 
     """Identify bit-squatting, typo and other similar domains to the target using a local DNSTwist installation."""
 

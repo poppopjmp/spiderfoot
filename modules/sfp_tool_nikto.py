@@ -13,10 +13,10 @@ import re
 import subprocess
 import tempfile
 
-from spiderfoot import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_tool_nikto(SpiderFootModernPlugin):
+class sfp_tool_nikto(SpiderFootAsyncPlugin):
     """Web server vulnerability scanning via Nikto."""
 
     meta = {
@@ -144,6 +144,8 @@ class sfp_tool_nikto(SpiderFootModernPlugin):
             if os.path.exists(output_path):
                 with open(output_path, "r") as f:
                     for line in f:
+                        if self.checkForStop():
+                            return
                         line = line.strip()
                         if not line or line.startswith('"Nikto') or line.startswith('"Host'):
                             continue

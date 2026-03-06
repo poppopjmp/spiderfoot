@@ -9,7 +9,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from spiderfoot.context_window import (
+from spiderfoot.ai.context_window import (
     AllocationStrategy,
     ContextWindow,
     ContextWindowManager,

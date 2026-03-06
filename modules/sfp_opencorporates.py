@@ -19,10 +19,10 @@ import json
 import urllib
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_opencorporates(SpiderFootModernPlugin):
+class sfp_opencorporates(SpiderFootAsyncPlugin):
 
     """Look up company information from OpenCorporates."""
 

@@ -13,10 +13,10 @@ import os
 import subprocess
 import tempfile
 
-from spiderfoot import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_tool_dalfox(SpiderFootModernPlugin):
+class sfp_tool_dalfox(SpiderFootAsyncPlugin):
     """XSS vulnerability detection via Dalfox."""
 
     meta = {
@@ -151,6 +151,8 @@ class sfp_tool_dalfox(SpiderFootModernPlugin):
                 if content:
                     # Dalfox JSON output: one JSON object per line
                     for line in content.splitlines():
+                        if self.checkForStop():
+                            return
                         line = line.strip()
                         if not line:
                             continue

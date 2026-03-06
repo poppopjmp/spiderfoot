@@ -27,12 +27,12 @@ spec:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
         - name: scanner
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          image: "{{ .Values.scanner.image.repository | default .Values.image.repository }}:{{ .Values.scanner.image.tag | default .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command: ["python", "-m", "spiderfoot.service_runner", "--service", "scanner"]
           env:
             {{- include "spiderfoot.env" . | nindent 12 }}
-            - name: SF_SERVICE
+            - name: SF_SERVICE_ROLE
               value: "scanner"
             {{- with .Values.scanner.env }}
             {{- toYaml . | nindent 12 }}

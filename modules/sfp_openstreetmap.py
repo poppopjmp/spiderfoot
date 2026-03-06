@@ -18,15 +18,13 @@ from __future__ import annotations
 import json
 import re
 import time
-import urllib.error
 import urllib.parse
-import urllib.request
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_openstreetmap(SpiderFootModernPlugin):
+class sfp_openstreetmap(SpiderFootAsyncPlugin):
 
     """Retrieves latitude/longitude coordinates for physical addresses from OpenStreetMap API."""
 

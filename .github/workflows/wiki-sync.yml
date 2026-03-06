@@ -3,12 +3,12 @@
 name: Sync Documentation to GitHub Wiki
 on:
   push:
-    branches: [master]
+    branches: [main]
     paths:
       - 'documentation/**'
       - '.github/workflows/wiki-sync.yml'          
   pull_request:
-    branches: [master]
+    branches: [main]
     paths:
       - 'documentation/**'
       - '.github/workflows/wiki-sync.yml'

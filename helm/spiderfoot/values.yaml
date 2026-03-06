@@ -8,7 +8,7 @@ fullnameOverride: ""
 
 image:
   repository: spiderfoot/spiderfoot
-  tag: "5.14.0"
+  tag: "6.0.0"
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []
@@ -34,14 +34,17 @@ securityContext:
     drop:
       - ALL
 
-# -- SpiderFoot Web UI Service
+# -- SpiderFoot Web UI Service (React SPA served by Nginx)
 webui:
   enabled: true
   replicaCount: 1
-  port: 5001
+  port: 80
+  image:
+    repository: spiderfoot/spiderfoot-frontend
+    tag: ""  # defaults to .Values.image.tag if empty
   service:
     type: ClusterIP
-    port: 5001
+    port: 80
   resources:
     requests:
       cpu: 100m
@@ -56,6 +59,9 @@ api:
   enabled: true
   replicaCount: 1
   port: 8001
+  image:
+    repository: ""  # defaults to .Values.image.repository if empty
+    tag: ""         # defaults to .Values.image.tag if empty
   service:
     type: ClusterIP
     port: 8001
@@ -72,6 +78,9 @@ api:
 scanner:
   enabled: true
   replicaCount: 2
+  image:
+    repository: ""  # defaults to .Values.image.repository if empty
+    tag: ""         # defaults to .Values.image.tag if empty
   resources:
     requests:
       cpu: 250m
@@ -87,7 +96,7 @@ celery:
     enabled: true
     replicaCount: 2
     concurrency: 4
-    queues: "default,scan,enrichment,export,notification,maintenance"
+    queues: "default,scan,report,export,agents,monitor"
     resources:
       requests:
         cpu: 250m

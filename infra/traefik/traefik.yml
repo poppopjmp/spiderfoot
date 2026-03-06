@@ -58,8 +58,10 @@ accessLog:
       - "400-599"
 
 # --- Health check ---
+# Use the metrics entrypoint (port 8082) so ping is not subject to the
+# HTTP→HTTPS redirect on the web entrypoint.
 ping:
-  entryPoint: "web"
+  entryPoint: "metrics"
 
 # --- Metrics (Prometheus) ---
 metrics:

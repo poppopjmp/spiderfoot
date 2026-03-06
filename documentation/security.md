@@ -29,7 +29,7 @@ graph TD
 ## Core Security Components
 
 ### 1. Security Middleware
-**File:** `spiderfoot/security_middleware.py`
+**File:** `spiderfoot/security/security_middleware.py`
 
 The unified security middleware integrates all security components and provides:
 
@@ -46,7 +46,7 @@ The unified security middleware integrates all security components and provides:
 - Performance optimization
 
 ### 2. CSRF Protection
-**File:** `spiderfoot/csrf_protection.py`
+**File:** `spiderfoot/security/csrf_protection.py`
 
 Protects against Cross-Site Request Forgery attacks with:
 
@@ -63,7 +63,7 @@ Protects against Cross-Site Request Forgery attacks with:
 ```
 
 ### 3. Input Validation and Sanitization
-**File:** `spiderfoot/input_validation.py`
+**File:** `spiderfoot/security/input_validation.py`
 
 Comprehensive input validation with static methods for:
 
@@ -86,7 +86,7 @@ InputValidator.sanitize_api_key(key)
 ```
 
 ### 4. Rate Limiting
-**File:** `spiderfoot/rate_limiting.py`
+**File:** `spiderfoot/security/rate_limiter.py`
 
 Advanced rate limiting with multiple storage backends:
 
@@ -105,7 +105,7 @@ Advanced rate limiting with multiple storage backends:
 ```
 
 ### 5. Session Management
-**File:** `spiderfoot/session_security.py`
+**File:** `spiderfoot/security/session_security.py`
 
 Secure session handling with:
 
@@ -123,7 +123,7 @@ session_manager.invalidate_session(token)
 ```
 
 ### 6. API Security
-**File:** `spiderfoot/api_security.py`
+**File:** `spiderfoot/security/api_auth.py`
 
 Comprehensive API protection including:
 
@@ -140,7 +140,7 @@ Comprehensive API protection including:
 - `DDoSProtectionManager`: Attack mitigation
 
 ### 7. Security Logging
-**File:** `spiderfoot/security_logging.py`
+**File:** `spiderfoot/security/security_logging.py`
 
 Structured security event logging with:
 
@@ -162,7 +162,7 @@ SecurityEventType.SQL_INJECTION_ATTEMPT
 ```
 
 ### 8. Secure Configuration
-**File:** `spiderfoot/secure_config.py`
+**File:** `spiderfoot/security/config_encryption.py`
 
 Enhanced configuration management with:
 
@@ -294,7 +294,7 @@ The security middleware is automatically integrated into the SpiderFoot web UI:
 
 ```python
 # In sfwebui.py
-from spiderfoot.security_middleware import SpiderFootSecurityMiddleware
+from spiderfoot.security import SpiderFootSecurityMiddleware
 
 # Initialize security middleware
 security_middleware = SpiderFootSecurityMiddleware(config)
@@ -308,7 +308,7 @@ For FastAPI applications:
 
 ```python
 # In api/main.py
-from spiderfoot.security_middleware import SpiderFootSecurityMiddleware
+from spiderfoot.security import SpiderFootSecurityMiddleware
 
 app = FastAPI()
 security_middleware = SpiderFootSecurityMiddleware(config)
@@ -321,7 +321,7 @@ security_middleware = SpiderFootSecurityMiddleware(config)
 For custom applications:
 
 ```python
-from spiderfoot.security_middleware import SpiderFootSecurityMiddleware
+from spiderfoot.security import SpiderFootSecurityMiddleware
 
 # Initialize middleware
 security = SpiderFootSecurityMiddleware(config)

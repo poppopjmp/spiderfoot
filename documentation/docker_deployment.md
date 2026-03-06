@@ -15,16 +15,16 @@ cp .env.example .env
 # Edit .env — change passwords, uncomment profile sections as needed
 
 # Core only (5 services)
-docker compose -f docker-compose-microservices.yml up --build -d
+docker compose -f docker-compose.yml up --build -d
 
 # Full stack (all services except SSO)
-docker compose -f docker-compose-microservices.yml --profile full up --build -d
+docker compose -f docker-compose.yml --profile full up --build -d
 
 # View logs
-docker compose -f docker-compose-microservices.yml logs -f
+docker compose -f docker-compose.yml logs -f
 
 # Stop everything
-docker compose -f docker-compose-microservices.yml down
+docker compose -f docker-compose.yml down
 ```
 
 ### Access Points
@@ -68,10 +68,10 @@ Services are organized into **profiles** — activate only what you need:
 
 ```bash
 # Mix and match profiles
-docker compose -f docker-compose-microservices.yml --profile proxy --profile storage up -d
+docker compose -f docker-compose.yml --profile proxy --profile storage up -d
 
 # Full stack + SSO
-docker compose -f docker-compose-microservices.yml --profile full --profile sso up -d
+docker compose -f docker-compose.yml --profile full --profile sso up -d
 ```
 
 ---
@@ -193,7 +193,7 @@ TLS requires the `proxy` profile (Traefik). To enable:
 ./generate-certificate
 
 # Start with proxy profile
-docker compose -f docker-compose-microservices.yml --profile proxy up -d
+docker compose -f docker-compose.yml --profile proxy up -d
 
 # Traefik auto-discovers TLS certificates from the mounted certs directory
 ```
@@ -206,7 +206,7 @@ All services include Docker `HEALTHCHECK` directives. Monitor with:
 
 ```bash
 # Check all service health
-docker compose -f docker-compose-microservices.yml ps
+docker compose -f docker-compose.yml ps
 
 # Detailed health for one service
 docker inspect --format='{{json .State.Health}}' sf-api
@@ -235,7 +235,7 @@ docker exec sf-pg-backup /scripts/pg_backup_minio.sh
 For horizontal scaling, increase replicas of stateless services:
 
 ```bash
-docker compose -f docker-compose-microservices.yml up -d --scale sf-api=3
+docker compose -f docker-compose.yml up -d --scale sf-api=3
 ```
 
 ### Active Scan Worker Scaling
@@ -243,7 +243,7 @@ docker compose -f docker-compose-microservices.yml up -d --scale sf-api=3
 The active scan worker requires the `scan` profile. Scale independently:
 
 ```bash
-docker compose -f docker-compose-microservices.yml --profile scan up -d --scale celery-worker-active=3
+docker compose -f docker-compose.yml --profile scan up -d --scale celery-worker-active=3
 ```
 
 Each instance competes for tasks from the `scan` queue via Celery's fair scheduling.
@@ -270,7 +270,7 @@ For production deployments, consider the Helm chart in `helm/` for Kubernetes.
 
 ```bash
 # All services
-docker compose -f docker-compose-microservices.yml logs -f
+docker compose -f docker-compose.yml logs -f
 
 # Specific service
 docker logs -f sf-api
@@ -278,3 +278,4 @@ docker logs -f sf-api
 # Archived logs in MinIO
 # Access via MinIO Console at https://localhost/minio/
 ```
+

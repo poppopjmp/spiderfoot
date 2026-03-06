@@ -15,10 +15,10 @@ from __future__ import annotations
 # -------------------------------------------------------------------------------
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_vxvault(SpiderFootModernPlugin):
+class sfp_vxvault(SpiderFootAsyncPlugin):
 
     """Check if a domain or IP address is malicious according to VXVault.net."""
 

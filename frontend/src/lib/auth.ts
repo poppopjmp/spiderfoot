@@ -6,6 +6,7 @@
  */
 import { create } from 'zustand';
 import api from './api';
+import { getErrorMessage } from './errors';
 
 // ── Types ────────────────────────────────────────────────
 
@@ -101,16 +102,25 @@ const ROLE_PERMISSIONS: Record<string, Set<string>> = {
 // ── Token helpers ────────────────────────────────────────
 
 function saveTokens(access: string, refresh: string) {
-  localStorage.setItem('sf_access_token', access);
-  localStorage.setItem('sf_refresh_token', refresh);
-  // Also set legacy key for backward compat
-  localStorage.setItem('sf_api_key', access);
+  try {
+    localStorage.setItem('sf_access_token', access);
+    localStorage.setItem('sf_refresh_token', refresh);
+    // Also set legacy key for backward compat
+    localStorage.setItem('sf_api_key', access);
+  } catch {
+    // QuotaExceeded — tokens are tiny so this is very unlikely
+    console.warn('[auth] Failed to save tokens to localStorage');
+  }
 }
 
 function clearTokens() {
-  localStorage.removeItem('sf_access_token');
-  localStorage.removeItem('sf_refresh_token');
-  localStorage.removeItem('sf_api_key');
+  try {
+    localStorage.removeItem('sf_access_token');
+    localStorage.removeItem('sf_refresh_token');
+    localStorage.removeItem('sf_api_key');
+  } catch {
+    // Ignore storage errors on clear
+  }
 }
 
 function loadTokens(): { access: string | null; refresh: string | null } {
@@ -147,8 +157,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         isLoading: false,
         error: null,
       });
-    } catch (err: any) {
-      const msg = err.response?.data?.detail || 'Login failed';
+    } catch (err: unknown) {
+      const msg = getErrorMessage(err, 'Login failed');
       set({ isLoading: false, error: msg });
       throw new Error(msg);
     }
@@ -172,8 +182,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         isLoading: false,
         error: null,
       });
-    } catch (err: any) {
-      const msg = err.response?.data?.detail || 'LDAP login failed';
+    } catch (err: unknown) {
+      const msg = getErrorMessage(err, 'LDAP login failed');
       set({ isLoading: false, error: msg });
       throw new Error(msg);
     }
@@ -203,8 +213,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         refresh_token: refreshToken,
       });
       const { access_token } = res.data;
-      localStorage.setItem('sf_access_token', access_token);
-      localStorage.setItem('sf_api_key', access_token);
+      saveTokens(access_token, refreshToken);
       set({ accessToken: access_token, isAuthenticated: true });
       return true;
     } catch {
@@ -247,7 +256,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   setTokensFromUrl: () => {
-    const params = new URLSearchParams(window.location.search);
+    // Read tokens from hash fragment (not query params) to prevent
+    // leakage via server logs, Referer headers, and browser history.
+    // Hash fragments are never sent to the server in HTTP requests.
+    const hash = window.location.hash.replace(/^#/, '');
+    const params = new URLSearchParams(hash);
     const access = params.get('access_token');
     const refresh = params.get('refresh_token');
     if (access) {
@@ -257,7 +270,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         refreshToken: refresh,
         isAuthenticated: true,
       });
-      // Clean URL
+      // Clean URL — remove hash fragment immediately
       window.history.replaceState({}, '', window.location.pathname);
     }
   },

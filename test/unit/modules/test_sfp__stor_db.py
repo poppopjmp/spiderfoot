@@ -20,7 +20,7 @@ class TestModuleStor_db(TestModuleBase):
     
     Tests all enterprise-grade features including:
     - Connection pooling and health checks
-    - PostgreSQL and SQLite storage
+    - PostgreSQL storage
     - Error handling and recovery
     - Configuration validation
     - Performance optimization
@@ -69,14 +69,17 @@ class TestModuleStor_db(TestModuleBase):
         module = sfp__stor_db()
         self.assertEqual(len(module.opts), len(module.optdescs))
 
-    def test_setup_sqlite_default(self):
-        """Test setup with default SQLite configuration."""
+    @patch('modules.sfp__stor_db.psycopg2.connect')
+    def test_setup_postgresql_default(self, mock_connect):
+        """Test setup with default PostgreSQL configuration."""
+        mock_conn = MagicMock()
+        mock_connect.return_value = mock_conn
         module = sfp__stor_db()
-        # Force SQLite mode to avoid PostgreSQL connection attempts
-        module.setup(self.sf_instance, {'db_type': 'sqlite'})
+        # Use PostgreSQL mode
+        module.setup(self.sf_instance, {'db_type': 'postgresql'})
         
         self.assertFalse(module.errorState)
-        self.assertEqual(module.opts['db_type'], 'sqlite')
+        self.assertEqual(module.opts['db_type'], 'postgresql')
         self.assertIsNotNone(module.__sfdb__)
 
     def test_setup_no_database_handle(self):
@@ -208,10 +211,10 @@ class TestModuleStor_db(TestModuleBase):
         module = sfp__stor_db()
         self.assertIsInstance(module.producedEvents(), list)
 
-    def test_sqlite_storage(self):
-        """Test SQLite storage functionality."""
+    def test_postgresql_storage(self):
+        """Test PostgreSQL storage functionality."""
         module = sfp__stor_db()
-        module.setup(self.sf_instance, {'_store': True, 'db_type': 'sqlite'})
+        module.setup(self.sf_instance, {'_store': True, 'db_type': 'postgresql'})
         
         # Create test event
         test_event = self.create_test_event()
@@ -224,25 +227,43 @@ class TestModuleStor_db(TestModuleBase):
         # Verify that scanEventStore was called
         self.mock_dbh.scanEventStore.assert_called()
 
-    def test_sqlite_storage_with_size_limit(self):
-        """Test SQLite storage with size limits."""
+    @patch('modules.sfp__stor_db.psycopg2.connect')
+    def test_postgresql_storage_with_size_limit(self, mock_connect):
+        """Test PostgreSQL storage falls back to default handler with size limit on connection failure."""
+        mock_conn = MagicMock()
+        mock_cursor = MagicMock()
+        mock_conn.cursor.return_value = mock_cursor
+
+        # First connect call succeeds (setup), second call fails (reconnect)
+        mock_connect.side_effect = [mock_conn, psycopg2.OperationalError("Reconnect failed")]
+        # Health check fails so module attempts reconnect
+        mock_cursor.execute.side_effect = psycopg2.OperationalError("Connection lost")
+
         module = sfp__stor_db()
         module.setup(self.sf_instance, {
             '_store': True,
-            'db_type': 'sqlite',
-            'maxstorage': 10  # Very small limit
+            'db_type': 'postgresql',
+            'postgresql_host': 'localhost',
+            'postgresql_port': 5432,
+            'postgresql_database': 'spiderfoot',
+            'postgresql_username': 'user',
+            'postgresql_password': 'pass',
+            'maxstorage': 10,
+            'enable_auto_recovery': False,
         })
-        
+
+        self.assertFalse(module.errorState)
+
         # Create test event with large data
         large_data = "x" * 100  # 100 characters, exceeds limit
         test_event = self.create_test_event("IP_ADDRESS", large_data)
-        
+
         # Mock getScanId
         module.getScanId = MagicMock(return_value="test_scan_id")
-        
+
         module.handleEvent(test_event)
-        
-        # Verify that scanEventStore was called with size limit
+
+        # Verify that scanEventStore was called with size limit (fallback path)
         self.mock_dbh.scanEventStore.assert_called_with(
             "test_scan_id", test_event, 10
         )
@@ -322,8 +343,8 @@ class TestModuleStor_db(TestModuleBase):
         self.assertEqual(mock_connect.call_count, 2)
 
     @patch('modules.sfp__stor_db.psycopg2.connect')
-    def test_postgresql_storage_fallback_to_sqlite(self, mock_connect):
-        """Test PostgreSQL storage falls back to SQLite on error."""
+    def test_postgresql_storage_fallback_on_error(self, mock_connect):
+        """Test PostgreSQL storage falls back to default handler on error."""
         mock_conn = MagicMock()
         mock_cursor = MagicMock()
         mock_conn.cursor.return_value = mock_cursor
@@ -353,14 +374,14 @@ class TestModuleStor_db(TestModuleBase):
         
         module.handleEvent(test_event)
         
-        # Should fall back to SQLite storage
+        # Should fall back to default storage handler
         self.mock_dbh.scanEventStore.assert_called()
         mock_conn.rollback.assert_called()
 
     def test_storage_disabled(self):
         """Test that storage is skipped when disabled."""
         module = sfp__stor_db()
-        module.setup(self.sf_instance, {'_store': False, 'db_type': 'sqlite'})
+        module.setup(self.sf_instance, {'_store': False, 'db_type': 'postgresql'})
         
         test_event = self.create_test_event()
         module.handleEvent(test_event)
@@ -371,7 +392,7 @@ class TestModuleStor_db(TestModuleBase):
     def test_storage_error_state(self):
         """Test that storage is skipped when module is in error state."""
         module = sfp__stor_db()
-        module.setup(self.sf_instance, {'_store': True, 'db_type': 'sqlite'})
+        module.setup(self.sf_instance, {'_store': True, 'db_type': 'postgresql'})
         module.errorState = True
         
         test_event = self.create_test_event()
@@ -397,7 +418,7 @@ class TestModuleStor_db(TestModuleBase):
         opts = {
             'maxstorage': 1024,
             '_store': True,
-            'db_type': 'sqlite',
+            'db_type': 'postgresql',
             'bulk_processing_enabled': True,
             'bulk_threshold': 5
         }
@@ -463,9 +484,10 @@ class TestModuleStor_db(TestModuleBase):
         opts = {
             'maxstorage': 1024,
             '_store': True,
-            'db_type': 'sqlite',
+            'db_type': 'postgresql',
             'enable_performance_monitoring': True,
-            'collect_metrics': True
+            'collect_metrics': True,
+            'enable_auto_recovery': True,  # Prevent errorState when PostgreSQL unavailable
         }
         
         module.setup(self.sf_instance, opts)
@@ -479,7 +501,7 @@ class TestModuleStor_db(TestModuleBase):
         module.handleEvent(test_event)
         execution_time = time.time() - start_time
         
-        # Verify event was processed (SQLite storage)
+        # Verify event was processed (PostgreSQL storage)
         self.sf_instance.dbh.scanEventStore.assert_called()
         
         # Verify execution completed within reasonable time (performance check)
@@ -491,7 +513,7 @@ class TestModuleStor_db(TestModuleBase):
         opts = {
             'maxstorage': 1024,
             '_store': True,
-            'db_type': 'sqlite',
+            'db_type': 'postgresql',
             'enable_graceful_shutdown': True
         }
         
@@ -630,7 +652,8 @@ class TestModuleStor_db(TestModuleBase):
         legacy_opts = {
             'maxstorage': 1024,
             '_store': True,
-            'db_type': 'sqlite'
+            'db_type': 'postgresql',
+            'enable_auto_recovery': True,  # Allow fallback when PostgreSQL unavailable
         }
         
         module.setup(self.sf_instance, legacy_opts)
@@ -652,8 +675,9 @@ class TestModuleStor_db(TestModuleBase):
         opts = {
             'maxstorage': 1024,
             '_store': True,
-            'db_type': 'sqlite',
-            'enable_performance_benchmarking': True
+            'db_type': 'postgresql',
+            'enable_performance_benchmarking': True,
+            'enable_auto_recovery': True,  # Allow fallback when PostgreSQL unavailable
         }
         
         module.setup(self.sf_instance, opts)
@@ -675,7 +699,7 @@ class TestModuleStor_db(TestModuleBase):
             events_per_second = float('inf')
         else:
             events_per_second = events_count / total_time
-        # Verify reasonable performance (at least 100 events/sec for SQLite)
+        # Verify reasonable performance (at least 100 events/sec for PostgreSQL)
         self.assertGreater(events_per_second, 100, 
                           f"Performance should be at least 100 events/sec, got {events_per_second:.1f}")
         

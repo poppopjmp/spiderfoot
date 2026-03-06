@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 # Import security modules
-from ..secure_config import SecureConfigManager
+from .config_encryption import SecureConfigManager
 from .security_logging import SecurityLogger, SecurityEventType
 
 
@@ -295,7 +295,7 @@ class SecurityIntegrator:
         migration_plan['phases']['phase_1_critical']['tasks'].extend([
             {
                 'task': 'Install security dependencies',
-                'action': 'pip install cryptography PyJWT redis bleach werkzeug',
+                'action': 'pip install cryptography PyJWT redis bleach',
                 'files_affected': ['requirements.txt'],
                 'risk': 'low'
             },

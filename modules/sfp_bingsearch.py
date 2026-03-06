@@ -14,10 +14,10 @@ from __future__ import annotations
 # Licence:     MIT
 # -------------------------------------------------------------------------------
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_bingsearch(SpiderFootModernPlugin):
+class sfp_bingsearch(SpiderFootAsyncPlugin):
     """SpiderFoot plugin to obtain information from Bing to identify sub-domains and links."""
     meta = {
         'name': "Bing",

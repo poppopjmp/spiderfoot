@@ -27,6 +27,7 @@ from .types import (
     MutationResult, ScanCreateResult, FalsePositiveResult,
     VectorSearchHit, VectorSearchResult, VectorCollectionInfo,
 )
+from .dataloaders import create_dataloaders
 
 _log = logging.getLogger("spiderfoot.api.graphql")
 
@@ -52,7 +53,7 @@ def _normalize_scan_row(row):
     
     scanInstanceGet returns either:
       - A DictRow (which is a list subclass) for PostgreSQL
-      - A list of rows for SQLite
+      - A list of rows from the database
       - A tuple for ApiClient
     We detect DictRow by checking for .keys() method.
     """
@@ -127,7 +128,7 @@ class Query:
                 return None
             return _scan_row_to_type(r, scan_id)
         except Exception as e:
-            _log.error("GraphQL scan() error: %s", e)
+            _log.error("GraphQL scan() error: %s", e, exc_info=True)
             return None
 
     @strawberry.field(description="List all scans with optional pagination")
@@ -170,7 +171,7 @@ class Query:
                 page_size=page_size,
             )
         except Exception as e:
-            _log.error("GraphQL scans() error: %s", e)
+            _log.error("GraphQL scans() error: %s", e, exc_info=True)
             return PaginatedScans(scans=[], total=0, page=page, page_size=page_size)
 
     @strawberry.field(description="Get events for a scan with optional filtering")
@@ -218,7 +219,7 @@ class Query:
                 total_pages=(total + page_size - 1) // page_size if page_size else 0,
             )
         except Exception as e:
-            _log.error("GraphQL scan_events() error: %s", e)
+            _log.error("GraphQL scan_events() error: %s", e, exc_info=True)
             return PaginatedEvents(
                 events=[], total=0, page=page,
                 page_size=page_size, total_pages=0,
@@ -244,7 +245,7 @@ class Query:
                 for et, c in sorted(counts.items(), key=lambda x: -x[1])
             ]
         except Exception as e:
-            _log.error("GraphQL event_summary() error: %s", e)
+            _log.error("GraphQL event_summary() error: %s", e, exc_info=True)
             return []
 
     @strawberry.field(description="Correlations for a scan")
@@ -266,7 +267,7 @@ class Query:
                 ))
             return results
         except Exception as e:
-            _log.error("GraphQL scan_correlations() error: %s", e)
+            _log.error("GraphQL scan_correlations() error: %s", e, exc_info=True)
             return []
 
     @strawberry.field(description="Scan execution logs")
@@ -293,7 +294,7 @@ class Query:
                 results.append(entry)
             return results
         except Exception as e:
-            _log.error("GraphQL scan_logs() error: %s", e)
+            _log.error("GraphQL scan_logs() error: %s", e, exc_info=True)
             return []
 
     @strawberry.field(description="Complete scan statistics for dashboard visualization")
@@ -388,7 +389,7 @@ class Query:
             )
 
         except Exception as e:
-            _log.error("GraphQL scan_statistics() error: %s", e)
+            _log.error("GraphQL scan_statistics() error: %s", e, exc_info=True)
             return None
 
     @strawberry.field(description="Event relationship graph for visualization")
@@ -446,7 +447,7 @@ class Query:
             )
 
         except Exception as e:
-            _log.error("GraphQL scan_graph() error: %s", e)
+            _log.error("GraphQL scan_graph() error: %s", e, exc_info=True)
             return None
 
     @strawberry.field(description="List all available event types")
@@ -464,7 +465,7 @@ class Query:
                 for k, v in types.items()
             ]
         except Exception as e:
-            _log.error("GraphQL event_types() error: %s", e)
+            _log.error("GraphQL event_types() error: %s", e, exc_info=True)
             return []
 
     @strawberry.field(description="List workspaces")
@@ -486,7 +487,7 @@ class Query:
                 ))
             return results
         except Exception as e:
-            _log.error("GraphQL workspaces() error: %s", e)
+            _log.error("GraphQL workspaces() error: %s", e, exc_info=True)
             return []
 
     @strawberry.field(description="Cross-scan event search")
@@ -537,7 +538,7 @@ class Query:
             return all_events
 
         except Exception as e:
-            _log.error("GraphQL search_events() error: %s", e)
+            _log.error("GraphQL search_events() error: %s", e, exc_info=True)
             return []
 
     # ── Vector / Semantic Search ────────────────────────────────────
@@ -557,7 +558,7 @@ class Query:
         in the configured Qdrant vector store.
         """
         try:
-            from spiderfoot.qdrant_client import get_qdrant_client, Filter
+            from spiderfoot.ai.qdrant_client import get_qdrant_client, Filter
             from spiderfoot.services.embedding_service import EmbeddingService
 
             embed_svc = EmbeddingService()
@@ -604,7 +605,7 @@ class Query:
             )
 
         except Exception as e:
-            _log.error("GraphQL semantic_search() error: %s", e)
+            _log.error("GraphQL semantic_search() error: %s", e, exc_info=True)
             return VectorSearchResult(
                 hits=[], total_found=0, query_time_ms=0,
                 collection=collection or "osint_events",
@@ -614,7 +615,7 @@ class Query:
     def vector_collections(self) -> list[VectorCollectionInfo]:
         """Return all vector collections and their statistics."""
         try:
-            from spiderfoot.qdrant_client import get_qdrant_client
+            from spiderfoot.ai.qdrant_client import get_qdrant_client
             qdrant = get_qdrant_client()
             names = qdrant.list_collections()
             result = []
@@ -629,7 +630,7 @@ class Query:
                     ))
             return result
         except Exception as e:
-            _log.error("GraphQL vector_collections() error: %s", e)
+            _log.error("GraphQL vector_collections() error: %s", e, exc_info=True)
             return []
 
 
@@ -671,10 +672,10 @@ class Mutation:
             )
 
         except Exception as e:
-            _log.error("GraphQL startScan() error: %s", e)
+            _log.error("GraphQL startScan() error: %s", e, exc_info=True)
             return ScanCreateResult(
                 success=False,
-                message=f"Failed to start scan: {e}",
+                message="Failed to start scan",
             )
 
     @strawberry.mutation(description="Stop a running scan")
@@ -693,8 +694,8 @@ class Mutation:
                 message=f"Scan {scan_id} stopped",
             )
         except Exception as e:
-            _log.error("GraphQL stopScan() error: %s", e)
-            return MutationResult(success=False, message=str(e))
+            _log.error("GraphQL stopScan() error: %s", e, exc_info=True)
+            return MutationResult(success=False, message="An internal error occurred")
 
     @strawberry.mutation(description="Delete a scan and all its data")
     def delete_scan(self, scan_id: str) -> MutationResult:
@@ -722,8 +723,8 @@ class Mutation:
                 message=f"Scan {scan_id} deleted",
             )
         except Exception as e:
-            _log.error("GraphQL deleteScan() error: %s", e)
-            return MutationResult(success=False, message=str(e))
+            _log.error("GraphQL deleteScan() error: %s", e, exc_info=True)
+            return MutationResult(success=False, message="An internal error occurred")
 
     @strawberry.mutation(description="Mark scan results as false positive (or unmark)")
     def set_false_positive(
@@ -752,8 +753,8 @@ class Mutation:
                 updated=updated,
             )
         except Exception as e:
-            _log.error("GraphQL setFalsePositive() error: %s", e)
-            return FalsePositiveResult(success=False, message=str(e))
+            _log.error("GraphQL setFalsePositive() error: %s", e, exc_info=True)
+            return FalsePositiveResult(success=False, message="An internal error occurred")
 
     @strawberry.mutation(description="Rerun a completed scan with same configuration")
     def rerun_scan(self, scan_id: str) -> ScanCreateResult:
@@ -792,8 +793,8 @@ class Mutation:
                 scan=scan,
             )
         except Exception as e:
-            _log.error("GraphQL rerunScan() error: %s", e)
-            return ScanCreateResult(success=False, message=str(e))
+            _log.error("GraphQL rerunScan() error: %s", e, exc_info=True)
+            return ScanCreateResult(success=False, message="An internal error occurred")
 
 
 # ── Subscription Root ───────────────────────────────────────────────
@@ -815,36 +816,40 @@ class Subscription:
         Automatically completes when the scan is finished.
         """
         last_status = None
-        while True:
-            try:
-                dbh = _get_db()
-                row = dbh.scanInstanceGet(scan_id)
-                if not row:
+        dbh = _get_db()
+        try:
+            while True:
+                try:
+                    row = dbh.scanInstanceGet(scan_id)
+                    if not row:
+                        return
+
+                    r = _normalize_scan_row(row)
+                    if not r:
+                        return
+
+                    current = _scan_row_to_type(r, scan_id)
+
+                    # Yield on every poll (client sees latest state)
+                    if current.status != last_status:
+                        last_status = current.status
+                        yield current
+
+                    # Terminal states — stop streaming
+                    if current.status in (
+                        "FINISHED", "ABORTED", "ERROR-FAILED",
+                        "CANCELLED", "FAILED",
+                    ):
+                        return
+
+                except Exception as e:
+                    _log.error("GraphQL scanProgress error: %s", e, exc_info=True)
                     return
 
-                r = _normalize_scan_row(row)
-                if not r:
-                    return
-
-                current = _scan_row_to_type(r, scan_id)
-
-                # Yield on every poll (client sees latest state)
-                if current.status != last_status:
-                    last_status = current.status
-                    yield current
-
-                # Terminal states — stop streaming
-                if current.status in (
-                    "FINISHED", "ABORTED", "ERROR-FAILED",
-                    "CANCELLED", "FAILED",
-                ):
-                    return
-
-            except Exception as e:
-                _log.error("GraphQL scanProgress error: %s", e)
-                return
-
-            await asyncio.sleep(interval)
+                await asyncio.sleep(interval)
+        finally:
+            if hasattr(dbh, 'close'):
+                dbh.close()
 
     @strawberry.subscription(description="Live event stream for a running scan")
     async def scan_events_live(
@@ -857,30 +862,34 @@ class Subscription:
         Polls for new events and yields only those not previously seen.
         """
         seen_hashes: set[str] = set()
-        while True:
-            try:
-                dbh = _get_db()
-                raw = dbh.scanResultEvent(scan_id, 'ALL') or []
-                for r in raw:
-                    ev = _event_row_to_type(r, scan_id)
-                    if ev.event_hash not in seen_hashes:
-                        seen_hashes.add(ev.event_hash)
-                        yield ev
+        dbh = _get_db()
+        try:
+            while True:
+                try:
+                    raw = dbh.scanResultEvent(scan_id, 'ALL') or []
+                    for r in raw:
+                        ev = _event_row_to_type(r, scan_id)
+                        if ev.event_hash not in seen_hashes:
+                            seen_hashes.add(ev.event_hash)
+                            yield ev
 
-                # Check if scan is done
-                scan_row = dbh.scanInstanceGet(scan_id)
-                if scan_row:
-                    sr = _normalize_scan_row(scan_row)
-                    status = str(sr[5]) if sr and len(sr) > 5 else ""
-                    if status in ("FINISHED", "ABORTED", "ERROR-FAILED",
-                                  "CANCELLED", "FAILED"):
-                        return
+                    # Check if scan is done
+                    scan_row = dbh.scanInstanceGet(scan_id)
+                    if scan_row:
+                        sr = _normalize_scan_row(scan_row)
+                        status = str(sr[5]) if sr and len(sr) > 5 else ""
+                        if status in ("FINISHED", "ABORTED", "ERROR-FAILED",
+                                      "CANCELLED", "FAILED"):
+                            return
 
-            except Exception as e:
-                _log.error("GraphQL scanEventsLive error: %s", e)
-                return
+                except Exception as e:
+                    _log.error("GraphQL scanEventsLive error: %s", e, exc_info=True)
+                    return
 
-            await asyncio.sleep(interval)
+                await asyncio.sleep(interval)
+        finally:
+            if hasattr(dbh, 'close'):
+                dbh.close()
 
 
 # ── Query Complexity Extension ──────────────────────────────────────

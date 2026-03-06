@@ -14,10 +14,10 @@ import os
 import subprocess
 import tempfile
 
-from spiderfoot import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_tool_ffuf(SpiderFootModernPlugin):
+class sfp_tool_ffuf(SpiderFootAsyncPlugin):
     """Fast web fuzzing for hidden content discovery via ffuf."""
 
     meta = {

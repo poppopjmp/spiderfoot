@@ -13,12 +13,13 @@ Provides REST endpoints for managing reusable scan engine configurations:
 from __future__ import annotations
 
 import logging
+import re
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
-from spiderfoot.scan_engine import (
+from spiderfoot.scan.scan_engine import (
     ScanEngine,
     ScanEngineError,
     ScanEngineLoader,
@@ -28,9 +29,22 @@ from spiderfoot.scan_engine import (
 
 from ..dependencies import get_api_key
 
+# Regex for safe engine names: alphanumerics, hyphens, underscores only
+_SAFE_ENGINE_NAME = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}$")
+
+
+def _validate_engine_name(name: str) -> str:
+    """Validate engine name to prevent path traversal."""
+    if not _SAFE_ENGINE_NAME.match(name) or ".." in name:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid engine name: must be alphanumeric with hyphens/underscores, max 128 chars",
+        )
+    return name
+
 log = logging.getLogger("spiderfoot.api.engines")
 
-router = APIRouter(prefix="/api/engines", tags=["engines"])
+router = APIRouter(prefix="/engines", tags=["engines"])
 
 # Dependency
 api_key_dep = Depends(get_api_key)
@@ -177,11 +191,13 @@ async def get_engine(
     api_key: str = optional_auth_dep,
 ) -> EngineDetailResponse:
     """Get a scan engine profile by name."""
+    _validate_engine_name(engine_name)
     loader = get_engine_loader()
     try:
         engine = loader.load(engine_name)
     except ScanEngineError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        log.warning("Engine not found: %s", e)
+        raise HTTPException(status_code=404, detail="Engine not found")
 
     data = engine.to_dict()
     data["enabled_modules"] = engine.get_enabled_modules()
@@ -209,7 +225,8 @@ async def create_engine(
         engine = loader.load_from_dict(request.model_dump())
         loader.save(engine)
     except ScanEngineError as e:
-        raise HTTPException(status_code=422, detail=str(e))
+        log.warning("Invalid engine configuration: %s", e)
+        raise HTTPException(status_code=422, detail="Invalid engine configuration")
 
     data = engine.to_dict()
     data["enabled_modules"] = engine.get_enabled_modules()
@@ -223,13 +240,15 @@ async def update_engine(
     api_key: str = api_key_dep,
 ) -> EngineDetailResponse:
     """Update an existing scan engine profile."""
+    _validate_engine_name(engine_name)
     loader = get_engine_loader()
 
     try:
         engine = loader.load_from_dict(request.model_dump())
         loader.save(engine, name=engine_name)
     except ScanEngineError as e:
-        raise HTTPException(status_code=422, detail=str(e))
+        log.warning("Invalid engine configuration: %s", e)
+        raise HTTPException(status_code=422, detail="Invalid engine configuration")
 
     data = engine.to_dict()
     data["enabled_modules"] = engine.get_enabled_modules()
@@ -245,6 +264,7 @@ async def delete_engine(
     import os
     from pathlib import Path
 
+    _validate_engine_name(engine_name)
     loader = get_engine_loader()
     path = loader.engines_dir / f"{engine_name}.yaml"
     if not path.exists():
@@ -285,12 +305,14 @@ async def validate_engine(
             module_count=len(engine.get_enabled_modules()),
         )
     except ScanEngineError as e:
+        log.warning("Engine validation failed: %s", e)
         return EngineValidateResponse(
             valid=False,
-            errors=[str(e)],
+            errors=["Validation error"],
         )
     except Exception as e:
+        log.warning("Engine validation unexpected error: %s", e)
         return EngineValidateResponse(
             valid=False,
-            errors=[f"Unexpected error: {str(e)}"],
+            errors=["Unexpected validation error"],
         )

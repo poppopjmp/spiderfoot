@@ -37,9 +37,12 @@ class TestSfpTron(TestModuleBase):
         self.assertIn('TRON_TX', self.plugin.producedEvents())
 
     def test_option_validation(self):
-        with self.assertRaises(ValueError):
-            self.plugin.setup(None, {"api_key": "", "addresses": "TXYZ123", "max_transactions": 10, "output_format": "summary"})
-        with self.assertRaises(ValueError):
-            self.plugin.setup(None, {"api_key": "key", "addresses": "TXYZ123", "max_transactions": 0, "output_format": "summary"})
-        with self.assertRaises(ValueError):
-            self.plugin.setup(None, {"api_key": "key", "addresses": "TXYZ123", "max_transactions": 10, "output_format": "invalid"})
+        p = self.plugin.__class__()
+        p.setup(None, {"api_key": "", "addresses": "TXYZ123", "max_transactions": 10, "output_format": "summary"})
+        self.assertTrue(p.errorState)
+        p = self.plugin.__class__()
+        p.setup(None, {"api_key": "key", "addresses": "TXYZ123", "max_transactions": 0, "output_format": "summary"})
+        self.assertTrue(p.errorState)
+        p = self.plugin.__class__()
+        p.setup(None, {"api_key": "key", "addresses": "TXYZ123", "max_transactions": 10, "output_format": "invalid"})
+        self.assertTrue(p.errorState)

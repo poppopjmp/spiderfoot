@@ -23,7 +23,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Query
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, Field
 
-from spiderfoot.rbac import UserContext, require_permission
+from spiderfoot.auth.rbac import UserContext, require_permission
 
 log = logging.getLogger("spiderfoot.auth.routes")
 
@@ -206,7 +206,8 @@ async def login(body: LoginRequest, request: Request):
         )
         return result
     except ValueError as e:
-        raise HTTPException(status_code=401, detail=str(e))
+        log.warning("Login failed for %s: %s", body.username, e)
+        raise HTTPException(status_code=401, detail="Invalid credentials")
 
 
 @router.post("/ldap/login")
@@ -224,9 +225,11 @@ async def ldap_login(body: LDAPLoginRequest, request: Request):
         )
         return result
     except ValueError as e:
-        raise HTTPException(status_code=401, detail=str(e))
+        log.warning("LDAP login failed for %s: %s", body.username, e)
+        raise HTTPException(status_code=401, detail="Invalid credentials")
     except ImportError as e:
-        raise HTTPException(status_code=501, detail=str(e))
+        log.error("LDAP module not available: %s", e)
+        raise HTTPException(status_code=501, detail="LDAP authentication is not available")
 
 
 @router.post("/refresh")
@@ -235,8 +238,12 @@ async def refresh_token(body: RefreshRequest):
     svc = _get_auth_svc()
     try:
         return svc.refresh_access_token(body.refresh_token)
+    except ValueError as e:
+        log.debug("Token refresh rejected: %s", e)
+        raise HTTPException(status_code=401, detail="Token refresh failed")
     except Exception as e:
-        raise HTTPException(status_code=401, detail=str(e))
+        log.exception("Token refresh failed")
+        raise HTTPException(status_code=401, detail="Token refresh failed")
 
 
 @router.post("/logout")
@@ -257,7 +264,7 @@ async def get_current_user(request: Request):
     user: UserContext | None = getattr(request.state, "user", None)
     if not user or not user.user_id:
         # Return anonymous context when auth not enforced
-        from spiderfoot.rbac import get_default_user
+        from spiderfoot.auth.rbac import get_default_user
         default = get_default_user()
         return {
             "authenticated": False,
@@ -323,7 +330,8 @@ async def create_user(
         )
         return new_user.to_dict()
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        log.warning("User creation failed: %s", e)
+        raise HTTPException(status_code=400, detail="User creation failed — check username, email, and password requirements")
 
 
 @router.get("/users/{user_id}")
@@ -354,7 +362,8 @@ async def update_user(
             raise HTTPException(status_code=404, detail="User not found")
         return updated.to_dict()
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        log.warning("User update failed for %s: %s", user_id, e)
+        raise HTTPException(status_code=400, detail="User update failed")
 
 
 @router.delete("/users/{user_id}", status_code=204)
@@ -382,7 +391,8 @@ async def admin_change_password(
         svc.change_password(user_id, body.new_password)
         return {"message": "Password changed"}
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        log.warning("Admin password change failed for %s: %s", user_id, e)
+        raise HTTPException(status_code=400, detail="Password does not meet requirements")
 
 
 @router.post("/password")
@@ -397,8 +407,13 @@ async def change_own_password(body: ChangePasswordRequest, request: Request):
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # Verify current password (skip if SSO user without password)
-    if db_user.password_hash and body.current_password:
+    # Verify current password (required for local users)
+    if db_user.password_hash:
+        if not body.current_password:
+            raise HTTPException(
+                status_code=400,
+                detail="current_password is required for local accounts",
+            )
         if not svc.verify_password(body.current_password, db_user.password_hash):
             raise HTTPException(status_code=401, detail="Current password incorrect")
 
@@ -406,7 +421,8 @@ async def change_own_password(body: ChangePasswordRequest, request: Request):
         svc.change_password(user.user_id, body.new_password)
         return {"message": "Password changed"}
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        log.warning("Password change failed for %s: %s", user.user_id, e)
+        raise HTTPException(status_code=400, detail="Password does not meet requirements")
 
 
 # ═══════════════════════════════════════════════════════════
@@ -449,7 +465,7 @@ async def list_api_keys(
 ):
     """List API keys. Admins see all; others see only their own."""
     svc = _get_auth_svc()
-    from spiderfoot.rbac import has_permission
+    from spiderfoot.auth.rbac import has_permission
     if user_id and has_permission(user.role, "user:read"):
         keys = svc.list_api_keys(user_id=user_id)
     elif has_permission(user.role, "user:read"):
@@ -483,7 +499,7 @@ async def create_api_key(
     svc = _get_auth_svc()
 
     # Validate role: user can only create keys with their role or lower
-    from spiderfoot.rbac import parse_role
+    from spiderfoot.auth.rbac import parse_role
     requested_role = parse_role(body.role)
     user_role = parse_role(ctx.role.value if hasattr(ctx.role, 'value') else str(ctx.role))
     if requested_role.level > user_role.level:
@@ -510,7 +526,8 @@ async def create_api_key(
         result["key"] = raw_key  # Only returned at creation time
         return result
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        log.warning("API key creation failed: %s", e)
+        raise HTTPException(status_code=400, detail="API key creation failed")
 
 
 @router.post("/api-keys/for-user/{target_user_id}", status_code=201)
@@ -539,7 +556,8 @@ async def create_api_key_for_user(
         result["key"] = raw_key
         return result
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        log.warning("API key creation for user %s failed: %s", target_user_id, e)
+        raise HTTPException(status_code=400, detail="API key creation failed")
 
 
 @router.get("/api-keys/{key_id}")
@@ -558,7 +576,7 @@ async def get_api_key(
         raise HTTPException(status_code=404, detail="API key not found")
 
     # Non-admins can only see their own keys
-    from spiderfoot.rbac import has_permission
+    from spiderfoot.auth.rbac import has_permission
     if api_key.user_id != ctx.user_id and not has_permission(ctx.role, "user:read"):
         raise HTTPException(status_code=403, detail="Access denied")
 
@@ -580,7 +598,8 @@ async def update_api_key(
             raise HTTPException(status_code=404, detail="API key not found")
         return api_key.to_dict()
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        log.warning("API key update failed for %s: %s", key_id, e)
+        raise HTTPException(status_code=400, detail="API key update failed")
 
 
 @router.delete("/api-keys/{key_id}", status_code=204)
@@ -598,7 +617,7 @@ async def delete_api_key(
     if not api_key:
         raise HTTPException(status_code=404, detail="API key not found")
 
-    from spiderfoot.rbac import has_permission
+    from spiderfoot.auth.rbac import has_permission
     if api_key.user_id != ctx.user_id and not has_permission(ctx.role, "user:delete"):
         raise HTTPException(status_code=403, detail="Access denied")
 
@@ -620,7 +639,7 @@ async def revoke_api_key(
     if not api_key:
         raise HTTPException(status_code=404, detail="API key not found")
 
-    from spiderfoot.rbac import has_permission
+    from spiderfoot.auth.rbac import has_permission
     if api_key.user_id != ctx.user_id and not has_permission(ctx.role, "user:update"):
         raise HTTPException(status_code=403, detail="Access denied")
 
@@ -767,25 +786,39 @@ async def oauth2_callback(
 
     # Validate OAuth2 state parameter (CSRF protection)
     r = _get_redis()
-    if r and state:
-        try:
-            stored = r.get(f"{_OAUTH2_STATE_PREFIX}{state}")
-            r.delete(f"{_OAUTH2_STATE_PREFIX}{state}")  # one-time use
-            if stored is None:
-                log.warning("OAuth2 state expired or invalid: %s", state[:8])
-                return RedirectResponse(
-                    url="/login?error=OAuth2+state+expired+or+invalid.+Please+try+again.",
-                    status_code=302,
-                )
-            if stored != provider_id:
-                log.warning("OAuth2 state provider mismatch: expected=%s got=%s", stored, provider_id)
-                return RedirectResponse(
-                    url="/login?error=OAuth2+state+mismatch", status_code=302,
-                )
-        except Exception as e:
-            log.warning("Redis state check failed (allowing request): %s", e)
-    elif r and not state:
-        log.warning("OAuth2 callback missing state parameter — possible CSRF")
+    if not r:
+        log.error(
+            "OAuth2 callback rejected — Redis unavailable for state validation. "
+            "Set SF_REDIS_URL to enable OAuth2 CSRF protection."
+        )
+        return RedirectResponse(
+            url="/login?error=OAuth2+unavailable+-+Redis+required+for+state+validation",
+            status_code=302,
+        )
+    if not state:
+        log.warning("OAuth2 callback missing state parameter — CSRF rejected")
+        return RedirectResponse(
+            url="/login?error=OAuth2+state+missing", status_code=302,
+        )
+    try:
+        stored = r.get(f"{_OAUTH2_STATE_PREFIX}{state}")
+        r.delete(f"{_OAUTH2_STATE_PREFIX}{state}")  # one-time use
+        if stored is None:
+            log.warning("OAuth2 state expired or invalid: %s", state[:8])
+            return RedirectResponse(
+                url="/login?error=OAuth2+state+expired+or+invalid.+Please+try+again.",
+                status_code=302,
+            )
+        if stored != provider_id:
+            log.warning("OAuth2 state provider mismatch: expected=%s got=%s", stored, provider_id)
+            return RedirectResponse(
+                url="/login?error=OAuth2+state+mismatch", status_code=302,
+            )
+    except Exception as e:
+        log.error("Redis state check failed — rejecting OAuth2 callback: %s", e)
+        return RedirectResponse(
+            url="/login?error=OAuth2+state+validation+failed", status_code=302,
+        )
 
     base_url = _get_external_base_url(request)
     redirect_uri = f"{base_url}/api/auth/sso/callback/{provider_id}"
@@ -809,14 +842,16 @@ async def oauth2_callback(
             client["ip_address"], client["user_agent"], "oauth2"
         )
 
-        # Redirect to frontend with token
+        # Redirect to frontend with tokens in hash fragment (not query params)
+        # Hash fragments are never sent to the server in HTTP requests,
+        # preventing token leakage via server logs, Referer headers, etc.
         return RedirectResponse(
-            url=f"/?access_token={access_token}&refresh_token={refresh_token}",
+            url=f"/#access_token={access_token}&refresh_token={refresh_token}",
             status_code=302,
         )
     except Exception as e:
-        log.error("OAuth2 callback error: %s", e)
-        return RedirectResponse(url=f"/login?error={str(e)}", status_code=302)
+        log.exception("OAuth2 callback error for provider %s", provider_id)
+        return RedirectResponse(url="/login?error=SSO+authentication+failed", status_code=302)
 
 
 @router.post("/sso/saml/acs/{provider_id}")
@@ -870,13 +905,13 @@ async def saml_acs(provider_id: str, request: Request):
 
         from fastapi.responses import RedirectResponse as _Redir
         return _Redir(
-            url=f"/?access_token={access_token}&refresh_token={refresh_token}",
+            url=f"/#access_token={access_token}&refresh_token={refresh_token}",
             status_code=302,
         )
     except Exception as e:
-        log.error("SAML ACS error: %s", e)
+        log.exception("SAML ACS error for provider %s", provider_id)
         from fastapi.responses import RedirectResponse as _Redir
-        return _Redir(url=f"/login?error={str(e)}", status_code=302)
+        return _Redir(url="/login?error=SSO+authentication+failed", status_code=302)
 
 
 @router.get("/sso/saml/login/{provider_id}")

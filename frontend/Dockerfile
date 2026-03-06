@@ -45,8 +45,25 @@ COPY nginx.conf /etc/nginx/templates/default.conf.template
 # Runtime env defaults — injected into Nginx config via envsubst
 ENV SF_API_URL=http://api:8001
 ENV SF_WS_URL=http://api:8001
+ENV SF_AGENTS_URL=http://sf-agents:8100
 
-# Expose HTTP
+# ── Security hardening ────────────────────────────────────────────────────
+# Remove apk and other package managers to prevent in-container installs
+RUN apk --no-cache del apk-tools 2>/dev/null || true
+
+# Create non-root nginx user directories and fix ownership
+RUN mkdir -p /var/cache/nginx /var/run /var/log/nginx && \
+    chown -R nginx:nginx /var/cache/nginx /var/run /var/log/nginx && \
+    chown -R nginx:nginx /usr/share/nginx/html && \
+    chown -R nginx:nginx /etc/nginx/conf.d && \
+    chown -R nginx:nginx /etc/nginx/templates
+
+# NOTE: We intentionally do NOT set USER nginx here.
+# The nginx Docker entrypoint must run as root to do envsubst template
+# processing. Nginx itself drops worker processes to the nginx user via
+# the `user nginx;` directive in nginx.conf.
+# With read_only: true + tmpfs mounts, running USER nginx breaks envsubst.
+
 EXPOSE 80
 
 # Nginx (PID 1) — template processing happens automatically via

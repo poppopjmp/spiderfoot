@@ -21,7 +21,40 @@ import uuid
 from typing import Any, Optional
 
 import jwt
-from passlib.hash import bcrypt
+
+# ── Passlib 1.7.4 / bcrypt >= 4.0 compatibility fix ──────────────────────────
+# passlib 1.7.4 is incompatible with bcrypt >= 4.0.0.  In detect_wrap_bug() it
+# passes a 255-byte secret to bcrypt.hashpw(), which bcrypt 4.0+ rejects with
+# ValueError.  Bypass passlib's bcrypt handler entirely and call the bcrypt
+# package directly so we inherit its proper 4.x behaviour.
+import bcrypt as _bcrypt_pkg
+
+
+class _BcryptCompat:
+    """Drop-in for ``passlib.hash.bcrypt`` that works with bcrypt >= 4.0."""
+
+    @staticmethod
+    def hash(password: str) -> str:  # noqa: A003
+        raw = password.encode("utf-8") if isinstance(password, str) else password
+        return _bcrypt_pkg.hashpw(raw[:72], _bcrypt_pkg.gensalt()).decode("utf-8")
+
+    @staticmethod
+    def verify(password: str, password_hash: str) -> bool:
+        try:
+            raw = password.encode("utf-8") if isinstance(password, str) else password
+            hashed = (
+                password_hash.encode("utf-8")
+                if isinstance(password_hash, str)
+                else password_hash
+            )
+            return _bcrypt_pkg.checkpw(raw[:72], hashed)
+        except Exception:
+            return False
+
+
+bcrypt = _BcryptCompat()
+# ─────────────────────────────────────────────────────────────────────────────
+
 
 from spiderfoot.auth.models import (
     AccountStatus,
@@ -32,7 +65,7 @@ from spiderfoot.auth.models import (
     SSOProvider,
     User,
 )
-from spiderfoot.rbac import Role, UserContext, has_permission, parse_role
+from spiderfoot.auth.rbac import Role, UserContext, has_permission, parse_role
 
 log = logging.getLogger("spiderfoot.auth")
 
@@ -60,7 +93,7 @@ class AuthService:
     def __init__(self, config: AuthConfig | None = None) -> None:
         self.config = config or AuthConfig()
         self._db_conn = None
-        self._db_type = "sqlite"
+        self._db_type = "postgresql"
         self._initialized = False
 
     # ------------------------------------------------------------------
@@ -73,23 +106,19 @@ class AuthService:
             return self._db_conn
 
         pg_dsn = os.environ.get("SF_POSTGRES_DSN", "")
-        if pg_dsn:
-            import psycopg2
-            self._db_conn = psycopg2.connect(pg_dsn)
-            self._db_conn.autocommit = False
-            self._db_type = "postgresql"
-        else:
-            import sqlite3
-            from spiderfoot.helpers import SpiderFootHelpers
-            db_path = f"{SpiderFootHelpers.dataPath()}/spiderfoot.db"
-            self._db_conn = sqlite3.connect(db_path)
-            self._db_type = "sqlite"
+        if not pg_dsn:
+            raise RuntimeError("SF_POSTGRES_DSN environment variable is required")
+
+        import psycopg2
+        self._db_conn = psycopg2.connect(pg_dsn)
+        self._db_conn.autocommit = False
+        self._db_type = "postgresql"
 
         return self._db_conn
 
     def _ph(self, idx: int = 1) -> str:
-        """Return placeholder for the dialect (%s for PG, ? for SQLite)."""
-        return "%s" if self._db_type == "postgresql" else "?"
+        """Return the PostgreSQL parameter placeholder."""
+        return "%s"
 
     def _phs(self, count: int) -> str:
         """Return comma-separated placeholders."""
@@ -119,8 +148,7 @@ class AuthService:
 
     def _get_schema(self) -> list[str]:
         """Return CREATE TABLE statements for auth tables."""
-        if self._db_type == "postgresql":
-            return [
+        return [
                 """CREATE TABLE IF NOT EXISTS tbl_users (
                     id VARCHAR(64) NOT NULL PRIMARY KEY,
                     username VARCHAR(255) NOT NULL UNIQUE,
@@ -209,96 +237,6 @@ class AuthService:
                 "CREATE INDEX IF NOT EXISTS idx_api_keys_user ON tbl_api_keys (user_id)",
                 "CREATE INDEX IF NOT EXISTS idx_api_keys_prefix ON tbl_api_keys (key_prefix)",
             ]
-        else:
-            # SQLite variant
-            return [
-                """CREATE TABLE IF NOT EXISTS tbl_users (
-                    id VARCHAR NOT NULL PRIMARY KEY,
-                    username VARCHAR NOT NULL UNIQUE,
-                    email VARCHAR NOT NULL,
-                    password_hash VARCHAR NOT NULL DEFAULT '',
-                    role VARCHAR NOT NULL DEFAULT 'viewer',
-                    display_name VARCHAR NOT NULL DEFAULT '',
-                    auth_method VARCHAR NOT NULL DEFAULT 'local',
-                    status VARCHAR NOT NULL DEFAULT 'active',
-                    created_at REAL NOT NULL DEFAULT 0,
-                    updated_at REAL NOT NULL DEFAULT 0,
-                    last_login REAL NOT NULL DEFAULT 0,
-                    failed_logins INT NOT NULL DEFAULT 0,
-                    locked_until REAL NOT NULL DEFAULT 0,
-                    sso_provider_id VARCHAR NOT NULL DEFAULT '',
-                    sso_subject VARCHAR NOT NULL DEFAULT '',
-                    metadata_json TEXT NOT NULL DEFAULT '{}'
-                )""",
-                """CREATE TABLE IF NOT EXISTS tbl_sessions (
-                    id VARCHAR NOT NULL PRIMARY KEY,
-                    user_id VARCHAR NOT NULL REFERENCES tbl_users(id),
-                    token_hash VARCHAR NOT NULL,
-                    created_at REAL NOT NULL DEFAULT 0,
-                    expires_at REAL NOT NULL DEFAULT 0,
-                    ip_address VARCHAR NOT NULL DEFAULT '',
-                    user_agent TEXT NOT NULL DEFAULT '',
-                    auth_method VARCHAR NOT NULL DEFAULT 'local',
-                    is_active INT NOT NULL DEFAULT 1
-                )""",
-                """CREATE TABLE IF NOT EXISTS tbl_sso_providers (
-                    id VARCHAR NOT NULL PRIMARY KEY,
-                    name VARCHAR NOT NULL,
-                    protocol VARCHAR NOT NULL,
-                    enabled INT NOT NULL DEFAULT 1,
-                    client_id VARCHAR NOT NULL DEFAULT '',
-                    client_secret TEXT NOT NULL DEFAULT '',
-                    authorization_url TEXT NOT NULL DEFAULT '',
-                    token_url TEXT NOT NULL DEFAULT '',
-                    userinfo_url TEXT NOT NULL DEFAULT '',
-                    jwks_uri TEXT NOT NULL DEFAULT '',
-                    scopes VARCHAR NOT NULL DEFAULT 'openid email profile',
-                    idp_entity_id TEXT NOT NULL DEFAULT '',
-                    idp_sso_url TEXT NOT NULL DEFAULT '',
-                    idp_slo_url TEXT NOT NULL DEFAULT '',
-                    idp_certificate TEXT NOT NULL DEFAULT '',
-                    sp_entity_id TEXT NOT NULL DEFAULT '',
-                    sp_acs_url TEXT NOT NULL DEFAULT '',
-                    ldap_url TEXT NOT NULL DEFAULT '',
-                    ldap_bind_dn TEXT NOT NULL DEFAULT '',
-                    ldap_bind_password TEXT NOT NULL DEFAULT '',
-                    ldap_base_dn TEXT NOT NULL DEFAULT '',
-                    ldap_user_filter VARCHAR NOT NULL DEFAULT '(uid={username})',
-                    ldap_group_filter VARCHAR NOT NULL DEFAULT '(member={dn})',
-                    ldap_tls INT NOT NULL DEFAULT 1,
-                    default_role VARCHAR NOT NULL DEFAULT 'viewer',
-                    allowed_domains TEXT NOT NULL DEFAULT '',
-                    auto_create_users INT NOT NULL DEFAULT 1,
-                    attribute_mapping TEXT NOT NULL DEFAULT '{}',
-                    group_attribute VARCHAR NOT NULL DEFAULT 'groups',
-                    admin_group VARCHAR NOT NULL DEFAULT '',
-                    created_at REAL NOT NULL DEFAULT 0,
-                    updated_at REAL NOT NULL DEFAULT 0
-                )""",
-                """CREATE TABLE IF NOT EXISTS tbl_api_keys (
-                    id VARCHAR NOT NULL PRIMARY KEY,
-                    user_id VARCHAR NOT NULL REFERENCES tbl_users(id),
-                    name VARCHAR NOT NULL,
-                    key_prefix VARCHAR NOT NULL,
-                    key_hash VARCHAR NOT NULL,
-                    role VARCHAR NOT NULL DEFAULT 'viewer',
-                    status VARCHAR NOT NULL DEFAULT 'active',
-                    expires_at REAL NOT NULL DEFAULT 0,
-                    allowed_modules TEXT NOT NULL DEFAULT '',
-                    allowed_endpoints TEXT NOT NULL DEFAULT '',
-                    rate_limit INT NOT NULL DEFAULT 0,
-                    last_used REAL NOT NULL DEFAULT 0,
-                    created_at REAL NOT NULL DEFAULT 0,
-                    updated_at REAL NOT NULL DEFAULT 0,
-                    metadata_json TEXT NOT NULL DEFAULT '{}'
-                )""",
-                "CREATE INDEX IF NOT EXISTS idx_sessions_user ON tbl_sessions (user_id)",
-                "CREATE INDEX IF NOT EXISTS idx_sessions_token ON tbl_sessions (token_hash)",
-                "CREATE INDEX IF NOT EXISTS idx_users_email ON tbl_users (email)",
-                "CREATE INDEX IF NOT EXISTS idx_users_sso ON tbl_users (sso_provider_id, sso_subject)",
-                "CREATE INDEX IF NOT EXISTS idx_api_keys_user ON tbl_api_keys (user_id)",
-                "CREATE INDEX IF NOT EXISTS idx_api_keys_prefix ON tbl_api_keys (key_prefix)",
-            ]
 
     def _seed_default_admin(self, cur, conn) -> None:
         """Create the default admin user if no users exist."""
@@ -310,7 +248,32 @@ class AuthService:
 
         now = time.time()
         admin_id = str(uuid.uuid4())
-        password = self.config.default_admin_password or "admin"
+        password = self.config.default_admin_password
+        if not password:
+            import secrets as _sec
+            password = _sec.token_urlsafe(24)
+            # Write to a file with restrictive permissions instead of logging
+            _pw_file = os.path.join(
+                os.environ.get("SF_DATA_DIR", "/var/lib/spiderfoot"),
+                ".admin_password",
+            )
+            try:
+                os.makedirs(os.path.dirname(_pw_file), exist_ok=True)
+                with open(_pw_file, "w") as f:
+                    f.write(password)
+                os.chmod(_pw_file, 0o600)
+                log.warning(
+                    "SF_ADMIN_PASSWORD not set — generated random admin "
+                    "password written to %s  (set SF_ADMIN_PASSWORD to suppress this)",
+                    _pw_file,
+                )
+            except OSError:
+                # Fallback: log only first 4 chars
+                log.warning(
+                    "SF_ADMIN_PASSWORD not set — generated random admin "
+                    "password starting with: %s****  (set SF_ADMIN_PASSWORD)",
+                    password[:4],
+                )
         pw_hash = bcrypt.hash(password)
 
         try:
@@ -334,9 +297,8 @@ class AuthService:
             )
             conn.commit()
             log.info(
-                "Created default admin user: %s (password: %s)",
+                "Created default admin user: %s",
                 self.config.default_admin_username,
-                "****" if self.config.default_admin_password else "admin",
             )
         except Exception:
             # Another worker may have already seeded the admin
@@ -507,6 +469,9 @@ class AuthService:
 
     def list_users(self, limit: int = 100, offset: int = 0) -> list[User]:
         """List all users."""
+        # Cap limit to prevent unbounded queries
+        limit = min(max(limit, 1), 1000)
+        offset = max(offset, 0)
         conn = self._get_conn()
         cur = conn.cursor()
         cur.execute(
@@ -1207,8 +1172,20 @@ class AuthService:
                 "Install with: pip install ldap3"
             )
 
-        # Build user filter
-        user_filter = provider.ldap_user_filter.replace("{username}", username)
+        # Build user filter — escape LDAP special characters to prevent injection
+        def _ldap_escape(s: str) -> str:
+            """Escape LDAP filter special characters (RFC 4515)."""
+            return (
+                s.replace("\\", "\\5c")
+                .replace("*", "\\2a")
+                .replace("(", "\\28")
+                .replace(")", "\\29")
+                .replace("\x00", "\\00")
+            )
+
+        user_filter = provider.ldap_user_filter.replace(
+            "{username}", _ldap_escape(username)
+        )
 
         server = ldap3.Server(
             provider.ldap_url,

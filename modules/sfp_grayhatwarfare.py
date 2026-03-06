@@ -18,10 +18,10 @@ import time
 import urllib
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_grayhatwarfare(SpiderFootModernPlugin):
+class sfp_grayhatwarfare(SpiderFootAsyncPlugin):
 
     """Find bucket names matching the keyword extracted from a domain from Grayhat API."""
 

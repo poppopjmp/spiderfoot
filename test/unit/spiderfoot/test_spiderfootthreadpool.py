@@ -174,8 +174,8 @@ class TestThreadPoolWorker(TestModuleBase):
         self.worker.log = mock_logger
         
         self.worker.run()
-        # The worker should have logged an error
-        mock_logger.error.assert_called_once()
+        # The worker should have logged via exception (not error)
+        mock_logger.exception.assert_called_once()
 
     def tearDown(self):
         """Clean up after each test."""

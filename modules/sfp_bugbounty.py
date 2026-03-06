@@ -20,10 +20,10 @@ import time
 from ipaddress import ip_network
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_bugbounty(SpiderFootModernPlugin):
+class sfp_bugbounty(SpiderFootAsyncPlugin):
     """Bug Bounty Scope — Import in-scope targets from HackerOne, Bugcrowd, and Intigriti."""
 
     meta = {
@@ -43,6 +43,12 @@ class sfp_bugbounty(SpiderFootModernPlugin):
             'description': "Import targets from bug bounty platforms to ensure your scans "
             "stay within the defined program scope. Supports HackerOne, Bugcrowd, "
             "and Intigriti public/private programs.",
+            'apiKeyInstructions': [
+                "For HackerOne: create an API token at https://hackerone.com/settings/api_token/edit",
+                "For Bugcrowd: create an API token in account settings",
+                "For Intigriti: create an API token in account settings",
+                "Enter the relevant token in the corresponding option",
+            ],
         },
     }
 

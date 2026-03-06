@@ -31,6 +31,10 @@ SpiderFoot features a modern dark-themed React SPA with real-time scan updates, 
 | Correlations Engine | [Correlations](correlations/correlation.md) |
 | Module Migration | [Module Migration Guide](MODULE_MIGRATION_GUIDE.md) |
 | Security | [Security](security.md) |
+| Async Plugin Guide | [Async Plugin Guide](async_plugin_guide.md) |
+| AI Structured Outputs | [AI Structured Outputs](ai_structured_outputs.md) |
+| Streaming Export | [Streaming Export (JSONL/SSE)](streaming_export.md) |
+| TypeScript SDK | [TypeScript SDK](typescript_sdk.md) |
 
 ---
 

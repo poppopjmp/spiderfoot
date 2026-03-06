@@ -43,7 +43,7 @@ except ImportError:
 def _check_vector() -> dict[str, Any]:
     """Vector.dev log pipeline health."""
     try:
-        from spiderfoot.vector_bootstrap import VectorBootstrap, VectorBootstrapConfig
+        from spiderfoot.observability.vector_bootstrap import VectorBootstrap, VectorBootstrapConfig
         # Use VECTOR_API_URL env or Docker service name 'vector' on API port 8687
         api_url = os.environ.get("VECTOR_API_URL", "http://vector:8687")
         cfg = VectorBootstrapConfig(
@@ -65,7 +65,8 @@ def _check_vector() -> dict[str, Any]:
     except ImportError:
         return {"status": "unknown", "message": "VectorBootstrap not available"}
     except Exception as e:
-        return {"status": "down", "message": str(e)}
+        log.warning("Health check failed: %s", e)
+        return {"status": "down", "message": "Service check failed"}
 
 
 def _check_report_storage() -> dict[str, Any]:
@@ -83,7 +84,8 @@ def _check_report_storage() -> dict[str, Any]:
     except ImportError:
         return {"status": "unknown", "message": "ReportStore not available"}
     except Exception as e:
-        return {"status": "down", "message": str(e)}
+        log.warning("Health check failed: %s", e)
+        return {"status": "down", "message": "Service check failed"}
 
 
 def _check_app_config() -> dict[str, Any]:
@@ -95,13 +97,14 @@ def _check_app_config() -> dict[str, Any]:
         if errors:
             return {
                 "status": "degraded",
-                "errors": [str(e) for e in errors[:5]],
+                "errors": [f"validation error {i+1}" for i, e in enumerate(errors[:5])],
             }
         return {"status": "up"}
     except ImportError:
         return {"status": "unknown", "message": "AppConfig not available"}
     except Exception as e:
-        return {"status": "down", "message": str(e)}
+        log.warning("Health check failed: %s", e)
+        return {"status": "down", "message": "Service check failed"}
 
 
 def _check_scan_hooks() -> dict[str, Any]:
@@ -119,7 +122,8 @@ def _check_scan_hooks() -> dict[str, Any]:
     except ImportError:
         return {"status": "unknown", "message": "scan_hooks module not available"}
     except Exception as e:
-        return {"status": "down", "message": str(e)}
+        log.warning("Health check failed: %s", e)
+        return {"status": "down", "message": "Service check failed"}
 
 
 def _check_module_timeout() -> dict[str, Any]:
@@ -138,7 +142,8 @@ def _check_module_timeout() -> dict[str, Any]:
     except ImportError:
         return {"status": "unknown", "message": "module_timeout module not available"}
     except Exception as e:
-        return {"status": "down", "message": str(e)}
+        log.warning("Health check failed: %s", e)
+        return {"status": "down", "message": "Service check failed"}
 
 
 # -----------------------------------------------------------------------
@@ -154,7 +159,8 @@ def _get_metrics_text() -> str:
     except ImportError:
         return "# spiderfoot_metrics_unavailable 1\n"
     except Exception as e:
-        return f"# spiderfoot_metrics_error{{error=\"{e}\"}} 1\n"
+        log.warning("Health check failed: %s", e)
+        return f"# spiderfoot_metrics_error 1\n"
 
 
 # -----------------------------------------------------------------------
@@ -170,7 +176,8 @@ def _check_minio() -> dict[str, Any]:
     except ImportError:
         return {"status": "unknown", "message": "MinIO storage module not available"}
     except Exception as e:
-        return {"status": "down", "message": str(e)}
+        log.warning("Health check failed: %s", e)
+        return {"status": "down", "message": "Service check failed"}
 
 
 def _check_redis() -> dict[str, Any]:
@@ -189,7 +196,8 @@ def _check_redis() -> dict[str, Any]:
     except ImportError:
         return {"status": "unknown", "message": "redis package not installed"}
     except Exception as e:
-        return {"status": "down", "message": str(e)}
+        log.warning("Health check failed: %s", e)
+        return {"status": "down", "message": "Service check failed"}
 
 
 def _check_celery() -> dict[str, Any]:
@@ -212,7 +220,8 @@ def _check_celery() -> dict[str, Any]:
     except ImportError:
         return {"status": "unknown", "message": "redis package not installed"}
     except Exception as e:
-        return {"status": "down", "message": str(e)}
+        log.warning("Health check failed: %s", e)
+        return {"status": "down", "message": "Service check failed"}
 
 
 def _check_postgresql() -> dict[str, Any]:
@@ -227,19 +236,27 @@ def _check_postgresql() -> dict[str, Any]:
         cur = conn.cursor()
         cur.execute("SELECT version()")
         version = cur.fetchone()[0]
-        cur.execute("SELECT count(*) FROM tbl_scan_instance")
-        scan_count = cur.fetchone()[0]
+        # Try to get scan count — table may not exist yet (lazy init)
+        scan_count = None
+        try:
+            cur.execute("SELECT count(*) FROM tbl_scan_instance")
+            scan_count = cur.fetchone()[0]
+        except Exception:
+            conn.rollback()  # clear the error state
         cur.close()
         conn.close()
-        return {
+        result = {
             "status": "up",
             "version": version.split(",")[0] if version else "unknown",
-            "scan_count": scan_count,
         }
+        if scan_count is not None:
+            result["scan_count"] = scan_count
+        return result
     except ImportError:
         return {"status": "unknown", "message": "psycopg2 not installed"}
     except Exception as e:
-        return {"status": "down", "message": str(e)}
+        log.warning("Health check failed: %s", e)
+        return {"status": "down", "message": "Service check failed"}
 
 
 # -----------------------------------------------------------------------
@@ -265,28 +282,37 @@ _startup_complete = False
 # Core subsystems whose failure should affect overall status.
 # Optional/auxiliary subsystems report individual status but
 # do not drag the overall health to "down".
-_CORE_SUBSYSTEMS = {
-    "postgresql", "redis", "celery", "minio", "vector",
-}
+# minio/vector are only core if their endpoints are actually configured.
+def _get_core_subsystems() -> set[str]:
+    """Return the set of core subsystems based on current configuration."""
+    import os
+    core = {"postgresql", "redis", "celery"}
+    if os.environ.get("SF_MINIO_ENDPOINT", "").strip():
+        core.add("minio")
+    if os.environ.get("SF_QDRANT_HOST", "").strip() or os.environ.get("SF_VECTOR_URL", "").strip():
+        core.add("vector")
+    return core
 
 
 def run_all_checks() -> dict[str, Any]:
     """Execute all registered subsystem checks and aggregate."""
     components: dict[str, Any] = {}
     overall = "up"
+    core_subsystems = _get_core_subsystems()
 
     for name, check_fn in _SUBSYSTEM_CHECKS.items():
         t0 = time.monotonic()
         try:
             result = check_fn()
         except Exception as e:
-            result = {"status": "down", "message": str(e)}
+            log.warning("Health check failed: %s", e)
+            result = {"status": "down", "message": "Service check failed"}
         elapsed = (time.monotonic() - t0) * 1000
         result["latency_ms"] = round(elapsed, 2)
         components[name] = result
 
         # Only core subsystems affect the overall status
-        if name not in _CORE_SUBSYSTEMS:
+        if name not in core_subsystems:
             continue
 
         status = result.get("status", "unknown")
@@ -311,7 +337,8 @@ def run_single_check(name: str) -> dict[str, Any] | None:
     try:
         result = check_fn()
     except Exception as e:
-        result = {"status": "down", "message": str(e)}
+        log.warning("Health check failed: %s", e)
+        result = {"status": "down", "message": "Service check failed"}
     result["latency_ms"] = round((time.monotonic() - t0) * 1000, 2)
     return result
 
@@ -465,7 +492,7 @@ else:
     )
     async def shutdown_status() -> dict[str, Any]:
         """Return shutdown manager status and registered services."""
-        from spiderfoot.graceful_shutdown import get_shutdown_coordinator
+        from spiderfoot.ops.graceful_shutdown import get_shutdown_coordinator
         mgr = get_shutdown_coordinator()
         return mgr.status()
 

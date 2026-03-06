@@ -1,10 +1,10 @@
-"""Unit tests for spiderfoot.api_gateway."""
+"""Unit tests for spiderfoot.api.gateway."""
 from __future__ import annotations
 
 import time
 import unittest
 
-from spiderfoot.api_gateway import (
+from spiderfoot.api.gateway import (
     APIGateway,
     CircuitBreaker,
     CircuitState,

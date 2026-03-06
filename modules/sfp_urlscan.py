@@ -15,15 +15,13 @@ from __future__ import annotations
 # -------------------------------------------------------------------------------
 
 import json
-import urllib.error
 import urllib.parse
-import urllib.request
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_urlscan(SpiderFootModernPlugin):
+class sfp_urlscan(SpiderFootAsyncPlugin):
 
     """Search URLScan.io cache for domain information."""
 

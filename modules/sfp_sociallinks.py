@@ -18,10 +18,10 @@ from __future__ import annotations
 import json
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_sociallinks(SpiderFootModernPlugin):
+class sfp_sociallinks(SpiderFootAsyncPlugin):
 
     """Queries SocialLinks.io to gather intelligence from social media platforms and dark web."""
 

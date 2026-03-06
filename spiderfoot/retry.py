@@ -6,9 +6,9 @@
 #               backoff, circuit breaker integration, and dead-letter
 #               queues for failed operations.
 #
-# Author:       SpiderFoot Team
+# Author:       Van1sh 
 # Created:      2025-07-08
-# Copyright:    (c) SpiderFoot Team 2025
+# Copyright:    (c) Van1sh  2025
 # Licence:      MIT
 # -------------------------------------------------------------------------------
 
@@ -429,3 +429,184 @@ def retry(max_attempts: int = 3, *,
         return wrapper
 
     return decorator
+
+
+# ── Adaptive Request Backoff for Rate-Limited Endpoints ───────────────
+
+
+@dataclass
+class BackoffState:
+    """Tracks backoff state for a single host."""
+    consecutive_429s: int = 0
+    last_429_time: float = 0.0
+    current_delay: float = 0.0
+    retry_after: float | None = None
+    total_429_count: int = 0
+
+
+@dataclass
+class AdaptiveBackoffConfig:
+    """Configuration for adaptive request backoff.
+
+    Attributes:
+        initial_delay: First backoff delay in seconds.
+        max_delay: Maximum backoff delay cap.
+        backoff_factor: Multiplier for exponential increase.
+        decay_time: Seconds after which to start reducing delay.
+        reset_after: Seconds of no 429s before resetting to zero.
+        rate_limit_codes: HTTP status codes that trigger backoff.
+    """
+    initial_delay: float = 1.0
+    max_delay: float = 120.0
+    backoff_factor: float = 2.0
+    decay_time: float = 60.0
+    reset_after: float = 300.0
+    rate_limit_codes: frozenset[int] = field(
+        default_factory=lambda: frozenset({429, 503})
+    )
+
+
+class AdaptiveBackoff:
+    """Per-host adaptive request backoff with exponential delay.
+
+    Thread-safe. Tracks rate-limit responses per host and computes
+    appropriate delays for subsequent requests.
+    """
+
+    def __init__(self, config: AdaptiveBackoffConfig | None = None) -> None:
+        self.config = config or AdaptiveBackoffConfig()
+        self._hosts: dict[str, BackoffState] = {}
+        self._lock = threading.Lock()
+
+    def get_delay(self, host: str) -> float:
+        """Get the recommended delay before making a request to *host*.
+
+        Returns 0.0 if no backoff is needed.
+        """
+        with self._lock:
+            state = self._hosts.get(host)
+            if state is None:
+                return 0.0
+
+            now = time.time()
+            elapsed = now - state.last_429_time
+
+            if elapsed > self.config.reset_after:
+                del self._hosts[host]
+                return 0.0
+
+            if state.retry_after is not None:
+                remaining = state.retry_after - (now - state.last_429_time)
+                if remaining > 0:
+                    return min(remaining, self.config.max_delay)
+                state.retry_after = None
+
+            if elapsed > self.config.decay_time and state.current_delay > 0:
+                decay_factor = (elapsed - self.config.decay_time) / self.config.reset_after
+                decayed = state.current_delay * max(0.0, 1.0 - decay_factor)
+                return max(0.0, decayed)
+
+            return state.current_delay
+
+    def record_response(
+        self,
+        host: str,
+        status_code: int,
+        retry_after: str | float | None = None,
+    ) -> float:
+        """Record an HTTP response and update backoff state.
+
+        Args:
+            host: The target host.
+            status_code: HTTP response status code.
+            retry_after: Value of Retry-After header (seconds or HTTP-date).
+
+        Returns:
+            The new delay for this host.
+        """
+        with self._lock:
+            if status_code in self.config.rate_limit_codes:
+                return self._handle_rate_limit(host, retry_after)
+            else:
+                return self._handle_success(host)
+
+    def _handle_rate_limit(
+        self,
+        host: str,
+        retry_after: str | float | None,
+    ) -> float:
+        """Process a rate-limit response (429/503)."""
+        state = self._hosts.get(host)
+        if state is None:
+            state = BackoffState()
+            self._hosts[host] = state
+
+        state.consecutive_429s += 1
+        state.total_429_count += 1
+        state.last_429_time = time.time()
+
+        if retry_after is not None:
+            try:
+                state.retry_after = float(retry_after)
+                state.current_delay = min(
+                    float(retry_after), self.config.max_delay
+                )
+                log.info(
+                    "Host %s: Retry-After=%s, delay=%.1fs",
+                    host, retry_after, state.current_delay,
+                )
+                return state.current_delay
+            except (ValueError, TypeError):
+                pass
+
+        state.current_delay = min(
+            self.config.initial_delay
+            * (self.config.backoff_factor ** (state.consecutive_429s - 1)),
+            self.config.max_delay,
+        )
+        log.info(
+            "Host %s: 429 #%d, backoff delay=%.1fs",
+            host, state.consecutive_429s, state.current_delay,
+        )
+        return state.current_delay
+
+    def _handle_success(self, host: str) -> float:
+        """Process a successful (non-429) response."""
+        state = self._hosts.get(host)
+        if state is None:
+            return 0.0
+
+        if state.consecutive_429s > 0:
+            state.consecutive_429s = max(0, state.consecutive_429s - 1)
+
+        if state.current_delay > 0:
+            state.current_delay = state.current_delay / 2.0
+            if state.current_delay < 0.1:
+                state.current_delay = 0.0
+                del self._hosts[host]
+                return 0.0
+
+        return state.current_delay
+
+    def clear(self, host: str | None = None) -> None:
+        """Clear backoff state for a specific host or all hosts."""
+        with self._lock:
+            if host:
+                self._hosts.pop(host, None)
+            else:
+                self._hosts.clear()
+
+    def stats(self) -> dict[str, Any]:
+        """Return backoff statistics for all tracked hosts."""
+        with self._lock:
+            return {
+                "tracked_hosts": len(self._hosts),
+                "hosts": {
+                    host: {
+                        "consecutive_429s": state.consecutive_429s,
+                        "total_429s": state.total_429_count,
+                        "current_delay": round(state.current_delay, 2),
+                    }
+                    for host, state in self._hosts.items()
+                },
+            }

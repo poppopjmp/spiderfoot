@@ -124,7 +124,7 @@ flowchart TD
 | `Address already in use`             | Port conflict                       | Change port in config or command         |
 | `Permission denied`                  | File or directory permissions       | Check file permissions, run as admin     |
 | `API key not set`                    | Missing API key for a module        | Set API key in web UI                    |
-| `Database locked`                    | SQLite concurrency issue            | Restart SpiderFoot, avoid multiple runs  |
+| `Database connection error`           | PostgreSQL connectivity issue        | Check connection string and PG status    |
 
 ---
 

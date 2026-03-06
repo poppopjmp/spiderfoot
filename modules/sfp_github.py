@@ -18,10 +18,10 @@ from __future__ import annotations
 import json
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_github(SpiderFootModernPlugin):
+class sfp_github(SpiderFootAsyncPlugin):
     """SpiderFoot plugin to identify public code repositories in Github associated with your target."""
     __name__ = "sfp_github"
     meta = {

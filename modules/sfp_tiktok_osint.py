@@ -29,10 +29,10 @@ import time
 from typing import Any
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_tiktok_osint(SpiderFootModernPlugin):
+class sfp_tiktok_osint(SpiderFootAsyncPlugin):
     """TikTok OSINT intelligence gathering module."""
 
     meta = {

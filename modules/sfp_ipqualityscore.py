@@ -17,10 +17,10 @@ from __future__ import annotations
 import json
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_ipqualityscore(SpiderFootModernPlugin):
+class sfp_ipqualityscore(SpiderFootAsyncPlugin):
 
     """Determine if target is malicious using IPQualityScore API"""
 

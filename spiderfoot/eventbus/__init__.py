@@ -11,10 +11,13 @@ from __future__ import annotations
 from spiderfoot.eventbus.base import EventBus, EventBusConfig
 from spiderfoot.eventbus.memory import InMemoryEventBus
 from spiderfoot.eventbus.factory import create_event_bus
+from spiderfoot.eventbus.hardening import ResilientEventBus, ResilientConfig
 
 __all__ = [
     'EventBus',
     'EventBusConfig',
     'InMemoryEventBus',
     'create_event_bus',
+    'ResilientEventBus',
+    'ResilientConfig',
 ]

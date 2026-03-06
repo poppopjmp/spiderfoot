@@ -23,10 +23,10 @@ cp .env.example .env
 # Edit .env — change passwords, uncomment profile sections as needed
 
 # Core only (5 services)
-docker compose -f docker-compose-microservices.yml up --build -d
+docker compose -f docker-compose.yml up --build -d
 
 # Or full stack (all services except SSO)
-docker compose -f docker-compose-microservices.yml --profile full up --build -d
+docker compose -f docker-compose.yml --profile full up --build -d
 ```
 
 Access the UI at [http://localhost:3000](http://localhost:3000) (core) or [https://localhost](https://localhost) (with proxy profile).
@@ -126,3 +126,4 @@ python security_validator.py .
 ---
 
 Continue to the [Quick Start](quickstart.md) or [User Guide](user_guide.md) for more advanced usage, tips, and best practices.
+

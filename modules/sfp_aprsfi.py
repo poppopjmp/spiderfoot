@@ -19,10 +19,10 @@ import json
 import time
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_aprsfi(SpiderFootModernPlugin):
+class sfp_aprsfi(SpiderFootAsyncPlugin):
 
     """Query aprs.fi for APRS station locations and AIS vessel tracking data."""
 
@@ -50,6 +50,11 @@ class sfp_aprsfi(SpiderFootModernPlugin):
                 "Includes AIS vessel tracking with MMSI, IMO, course, speed, heading, "
                 "length, width and draught data."
             ),
+            'apiKeyInstructions': [
+                "Register an account at https://aprs.fi/",
+                "Go to Account Settings and locate your API key",
+                "Enter the API key in the _api_key option",
+            ],
         }
     }
 

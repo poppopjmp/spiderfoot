@@ -18,10 +18,10 @@ import json
 import time
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_leakix(SpiderFootModernPlugin):
+class sfp_leakix(SpiderFootAsyncPlugin):
 
     """Search LeakIX for host data leaks, open ports, software and geoip."""
 
@@ -193,6 +193,9 @@ class sfp_leakix(SpiderFootModernPlugin):
 
             if services:
                 for service in services:
+                    if self.checkForStop():
+                        return
+
                     src = event
                     ipevt = None
                     hostname = service.get('host')

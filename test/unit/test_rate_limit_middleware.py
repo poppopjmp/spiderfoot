@@ -31,7 +31,7 @@ class TestRateLimitConfig:
         from spiderfoot.api.rate_limit_middleware import RateLimitConfig
         cfg = RateLimitConfig()
         assert cfg.enabled is True
-        assert cfg.trust_forwarded is True
+        assert cfg.trust_forwarded is False
         assert cfg.include_headers is True
         assert cfg.log_rejections is True
         assert "default" in cfg.tier_limits
@@ -79,12 +79,15 @@ class TestClientIdentity:
     """extract_client_identity tests."""
 
     def test_api_key(self):
+        import hashlib
         from spiderfoot.api.rate_limit_middleware import extract_client_identity
+        token = "abcdefghijklmnop"
+        expected = hashlib.sha256(token.encode()).hexdigest()[:16]
         result = extract_client_identity(
             {"client": ("192.168.1.1", 12345)},
-            {"authorization": "Bearer abcdefghijklmnop"},
+            {"authorization": f"Bearer {token}"},
         )
-        assert result == "apikey:abcdefgh"
+        assert result == f"apikey:{expected}"
 
     def test_forwarded_ip(self):
         from spiderfoot.api.rate_limit_middleware import extract_client_identity
@@ -572,6 +575,7 @@ class TestPerClientLimits:
 
         config = RateLimitConfig(
             tier_limits={"default": (1, 60.0)},
+            trust_forwarded=True,  # explicitly enable to test per-IP bucketing
             log_rejections=False,
         )
         app = Starlette(routes=[Route("/api/test", lambda r: PlainTextResponse("ok"))])

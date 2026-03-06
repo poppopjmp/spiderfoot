@@ -69,10 +69,10 @@ Docker is the easiest way to run SpiderFoot in a portable, isolated environment.
   # Edit .env — change passwords, uncomment profile sections as needed
 
   # Core only (5 services: postgres, redis, api, worker, frontend)
-  docker compose -f docker-compose-microservices.yml up --build -d
+  docker compose -f docker-compose.yml up --build -d
 
   # Full stack (all services except SSO)
-  docker compose -f docker-compose-microservices.yml --profile full up --build -d
+  docker compose -f docker-compose.yml --profile full up --build -d
   ```
 
   See [Docker Deployment Guide](docker_deployment.md) for available profiles and advanced configuration.
@@ -105,3 +105,4 @@ Docker is the easiest way to run SpiderFoot in a portable, isolated environment.
 ---
 
 Continue to the [Getting Started](getting_started.md) guide to launch your first scan.
+

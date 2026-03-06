@@ -18,10 +18,10 @@ import json
 import time
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_dehashed(SpiderFootModernPlugin):
+class sfp_dehashed(SpiderFootAsyncPlugin):
     """Dehashed API integration for SpiderFoot"""
 
     __name__ = "sfp_dehashed"
@@ -199,6 +199,9 @@ class sfp_dehashed(SpiderFootModernPlugin):
                 return
 
             for row in data.get('entries'):
+                if self.checkForStop():
+                    return
+
                 email = row.get('email')
                 password = row.get('password')
                 passwordHash = row.get('hashed_password')

@@ -7,10 +7,12 @@ of all 25 endpoints, eliminating every raw ``SpiderFootDb`` call.
 
 from __future__ import annotations
 
+import asyncio
 import csv
 import json
 import logging
 import multiprocessing as mp
+import re as _re
 import time
 from copy import deepcopy
 from io import BytesIO, StringIO
@@ -21,11 +23,11 @@ from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel, Field
 
 from spiderfoot import SpiderFootHelpers
-from spiderfoot.scan_service.scanner import startSpiderFootScanner
+from spiderfoot.scan.scanner import startSpiderFootScanner
 from spiderfoot.scan.scan_service_facade import ScanService, ScanServiceError
 from spiderfoot.sflib.core import SpiderFoot
 
-from ..dependencies import get_app_config, get_api_key, optional_auth, get_scan_service
+from ..dependencies import get_app_config, get_api_key, optional_auth, get_scan_service, safe_filename, SafeId
 from ..pagination import PaginationParams, paginate
 from ..schemas import (
     ScanCreateResponse,
@@ -59,12 +61,16 @@ optional_auth_dep = Depends(optional_auth)
 
 class ScanRequest(BaseModel):
     """Data model for a scan creation request."""
-    name: str = Field(..., description="Name of the scan")
-    target: str = Field(..., description="Target for the scan")
+    name: str = Field(..., description="Name of the scan", min_length=1, max_length=256)
+    target: str = Field(..., description="Target for the scan", min_length=1, max_length=1024)
     modules: list[str] | None = Field(None, description="List of module names to run")
     type_filter: list[str] | None = Field(None, description="List of event types to include")
     engine: str | None = Field(None, description="Scan engine profile name (from /api/engines)")
     profile: str | None = Field(None, description="Scan profile name (e.g. 'tools-only', 'quick-recon')")
+    stealth_level: str | None = Field(
+        None,
+        description="Stealth level: none, low, medium, high, maximum (maps to paranoid)",
+    )
 
 
 class ScheduleCreateRequest(BaseModel):
@@ -108,7 +114,7 @@ def _profile_to_dict(p, all_modules: dict) -> dict:
 
 
 @router.get("/scan-profiles", summary="List available scan profiles")
-def list_scan_profiles():
+def list_scan_profiles(api_key: str = api_key_dep):
     """Return all built-in and custom scan profiles."""
     try:
         from spiderfoot.scan.scan_profile import get_profile_manager
@@ -122,7 +128,7 @@ def list_scan_profiles():
 
 
 @router.get("/scan-profiles/{profile_name}", summary="Get a specific scan profile")
-def get_scan_profile(profile_name: str):
+def get_scan_profile(profile_name: str, api_key: str = api_key_dep):
     """Return details of a specific scan profile."""
     try:
         from spiderfoot.scan.scan_profile import get_profile_manager
@@ -154,6 +160,7 @@ def start_scan_background(
     modules: list,
     type_filter: list,
     config: dict,
+    stealth_level: str | None = None,
 ) -> None:
     """Launch a SpiderFoot scan in the background for the given target and modules.
 
@@ -168,19 +175,22 @@ def start_scan_background(
         from spiderfoot.celery_app import is_celery_available
         if is_celery_available():
             from spiderfoot.tasks.scan import run_scan
+            kwargs = {
+                "scan_name": scan_name,
+                "scan_id": scan_id,
+                "target_value": target,
+                "target_type": target_type,
+                "module_list": modules,
+                "global_opts": config,
+            }
+            if stealth_level:
+                kwargs["stealth_level"] = stealth_level
             run_scan.apply_async(
-                kwargs={
-                    "scan_name": scan_name,
-                    "scan_id": scan_id,
-                    "target_value": target,
-                    "target_type": target_type,
-                    "module_list": modules,
-                    "global_opts": config,
-                },
+                kwargs=kwargs,
                 task_id=scan_id,
                 queue="scan",
             )
-            log.info("Scan %s dispatched to Celery worker", scan_id)
+            log.info("Scan %s dispatched to Celery worker (stealth=%s)", scan_id, stealth_level or "none")
             return
     except Exception as e:
         log.warning("Celery dispatch failed for scan %s, falling back to in-process: %s", scan_id, e)
@@ -188,6 +198,11 @@ def start_scan_background(
     # Fallback: run in-process via multiprocessing
     import multiprocessing as mp
     from spiderfoot.observability.logger import logListenerSetup
+
+    # Inject stealth level into config so the scanner can pick it up
+    if stealth_level:
+        config = {**config, "_stealth_level": stealth_level}
+
     try:
         logging_queue = mp.Queue()
         logListenerSetup(logging_queue, config)
@@ -203,6 +218,24 @@ def start_scan_background(
 # -----------------------------------------------------------------------
 
 
+MAX_MULTI_SCAN_IDS = 50  # hard cap on multi-scan batch endpoints
+_SAFE_ID_RE = _re.compile(r"^[a-zA-Z0-9_\-]{1,64}$")
+
+
+def _validate_multi_ids(raw: str) -> list[str]:
+    """Split comma-separated IDs, validate each against SafeId pattern."""
+    parts = [s.strip() for s in raw.split(",") if s.strip()]
+    if len(parts) > MAX_MULTI_SCAN_IDS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Too many scan IDs (max {MAX_MULTI_SCAN_IDS})",
+        )
+    for sid in parts:
+        if not _SAFE_ID_RE.match(sid):
+            raise HTTPException(status_code=422, detail=f"Invalid scan ID: {sid!r}")
+    return parts
+
+
 @router.get("/scans/export-multi")
 async def export_scan_json_multi(
     ids: str,
@@ -210,13 +243,11 @@ async def export_scan_json_multi(
     svc: ScanService = Depends(get_scan_service),
 ) -> StreamingResponse:
     """Export event results for multiple scans as JSON."""
+    id_parts = _validate_multi_ids(ids)
     scaninfo: list = []
     scan_name = ""
 
-    for scan_id in ids.split(","):
-        scan_id = scan_id.strip()
-        if not scan_id:
-            continue
+    for scan_id in id_parts:
         record = svc.get_scan(scan_id)
         if record is None:
             continue
@@ -237,7 +268,7 @@ async def export_scan_json_multi(
                 "scan_target": record.target,
             })
 
-    id_list = [s.strip() for s in ids.split(",") if s.strip()]
+    id_list = id_parts
     if len(id_list) > 1 or not scan_name:
         fname = "SpiderFoot.json"
     else:
@@ -246,7 +277,7 @@ async def export_scan_json_multi(
     return StreamingResponse(
         iter([json.dumps(scaninfo, ensure_ascii=False)]),
         media_type="application/json; charset=utf-8",
-        headers={"Content-Disposition": f"attachment; filename={fname}", "Pragma": "no-cache"},
+        headers={"Content-Disposition": f"attachment; filename={safe_filename(fname)}", "Pragma": "no-cache"},
     )
 
 
@@ -261,14 +292,13 @@ async def export_scan_viz_multi(
     if not ids:
         raise HTTPException(status_code=400, detail="No scan IDs provided")
 
+    id_parts_viz = _validate_multi_ids(ids)
+
     data: list = []
     roots: list = []
     scan_name = ""
 
-    for scan_id in ids.split(","):
-        scan_id = scan_id.strip()
-        if not scan_id:
-            continue
+    for scan_id in id_parts_viz:
         record = svc.get_scan(scan_id)
         if record is None:
             continue
@@ -282,7 +312,7 @@ async def export_scan_viz_multi(
     if gexf == "0":
         raise HTTPException(status_code=501, detail="Graph JSON for multi-scan not implemented")
 
-    id_list = [s.strip() for s in ids.split(",") if s.strip()]
+    id_list = id_parts_viz
     fname = (
         f"{scan_name}-SpiderFoot.gexf"
         if len(id_list) == 1 and scan_name
@@ -292,7 +322,7 @@ async def export_scan_viz_multi(
     return Response(
         gexf_data,
         media_type="application/gexf",
-        headers={"Content-Disposition": f"attachment; filename={fname}", "Pragma": "no-cache"},
+        headers={"Content-Disposition": f"attachment; filename={safe_filename(fname)}", "Pragma": "no-cache"},
     )
 
 
@@ -308,10 +338,9 @@ async def rerun_scan_multi(
     dbh = svc.dbh
     new_scan_ids: list = []
 
-    for scan_id in ids.split(","):
-        scan_id = scan_id.strip()
-        if not scan_id:
-            continue
+    id_parts_rerun = _validate_multi_ids(ids)
+
+    for scan_id in id_parts_rerun:
         record = svc.get_scan(scan_id)
         if record is None:
             continue
@@ -357,7 +386,7 @@ async def rerun_scan_multi(
         except Exception as e:
             continue
         while dbh.scanInstanceGet(new_scan_id) is None:
-            time.sleep(1)
+            await asyncio.sleep(1)
         new_scan_ids.append(new_scan_id)
 
     return {"new_scan_ids": new_scan_ids, "message": f"{len(new_scan_ids)} scans rerun started"}
@@ -399,7 +428,7 @@ async def bulk_stop_scans(
                     log.debug("on_stopped hook failed for scan %s: %s", scan_id, e)
         except Exception as e:
             log.error("Bulk stop failed for %s: %s", scan_id, e)
-            results["errors"].append({"scan_id": scan_id, "error": str(e)})
+            results["errors"].append({"scan_id": scan_id, "error": "Operation failed"})
     return {
         **results,
         "summary": {
@@ -434,7 +463,7 @@ async def bulk_delete_scans(
                     log.debug("on_deleted hook failed for scan %s: %s", scan_id, e)
         except Exception as e:
             log.error("Bulk delete failed for %s: %s", scan_id, e)
-            results["errors"].append({"scan_id": scan_id, "error": str(e)})
+            results["errors"].append({"scan_id": scan_id, "error": "Operation failed"})
     return {
         **results,
         "summary": {
@@ -468,7 +497,7 @@ async def bulk_archive_scans(
                     log.debug("on_archived hook failed for scan %s: %s", scan_id, e)
         except Exception as e:
             log.error("Bulk archive failed for %s: %s", scan_id, e)
-            results["errors"].append({"scan_id": scan_id, "error": str(e)})
+            results["errors"].append({"scan_id": scan_id, "error": "Operation failed"})
     return {
         **results,
         "summary": {
@@ -487,7 +516,7 @@ async def bulk_archive_scans(
 async def list_schedules(api_key: str = optional_auth_dep) -> dict:
     """List all recurring scan schedules."""
     try:
-        from spiderfoot.recurring_schedule import get_recurring_scheduler
+        from spiderfoot.scan.recurring_schedule import get_recurring_scheduler
         scheduler = get_recurring_scheduler()
         schedules = scheduler.list_all()
         return {
@@ -512,7 +541,7 @@ async def create_schedule(
             detail="Either interval_minutes (>0) or run_at must be provided",
         )
     try:
-        from spiderfoot.recurring_schedule import get_recurring_scheduler
+        from spiderfoot.scan.recurring_schedule import get_recurring_scheduler
         scheduler = get_recurring_scheduler()
         schedule = scheduler.add_schedule(
             name=body.name,
@@ -538,7 +567,7 @@ async def create_schedule(
 @router.get("/scans/schedules/{schedule_id}")
 async def get_schedule(schedule_id: str, api_key: str = optional_auth_dep) -> dict:
     """Get details of a specific scan schedule."""
-    from spiderfoot.recurring_schedule import get_recurring_scheduler
+    from spiderfoot.scan.recurring_schedule import get_recurring_scheduler
     scheduler = get_recurring_scheduler()
     s = scheduler.get(schedule_id)
     if s is None:
@@ -549,7 +578,7 @@ async def get_schedule(schedule_id: str, api_key: str = optional_auth_dep) -> di
 @router.delete("/scans/schedules/{schedule_id}")
 async def delete_schedule(schedule_id: str, api_key: str = api_key_dep) -> dict:
     """Delete a scan schedule."""
-    from spiderfoot.recurring_schedule import get_recurring_scheduler
+    from spiderfoot.scan.recurring_schedule import get_recurring_scheduler
     scheduler = get_recurring_scheduler()
     if not scheduler.remove(schedule_id):
         raise HTTPException(status_code=404, detail="Schedule not found")
@@ -559,7 +588,7 @@ async def delete_schedule(schedule_id: str, api_key: str = api_key_dep) -> dict:
 @router.post("/scans/schedules/{schedule_id}/pause")
 async def pause_schedule(schedule_id: str, api_key: str = api_key_dep) -> dict:
     """Pause a recurring scan schedule."""
-    from spiderfoot.recurring_schedule import get_recurring_scheduler
+    from spiderfoot.scan.recurring_schedule import get_recurring_scheduler
     scheduler = get_recurring_scheduler()
     if not scheduler.pause(schedule_id):
         raise HTTPException(status_code=404, detail="Schedule not found or not active")
@@ -569,7 +598,7 @@ async def pause_schedule(schedule_id: str, api_key: str = api_key_dep) -> dict:
 @router.post("/scans/schedules/{schedule_id}/resume")
 async def resume_schedule(schedule_id: str, api_key: str = api_key_dep) -> dict:
     """Resume a paused scan schedule."""
-    from spiderfoot.recurring_schedule import get_recurring_scheduler
+    from spiderfoot.scan.recurring_schedule import get_recurring_scheduler
     scheduler = get_recurring_scheduler()
     if not scheduler.resume(schedule_id):
         raise HTTPException(status_code=404, detail="Schedule not found or not paused")
@@ -730,14 +759,15 @@ async def create_scan(
         # If an engine profile is specified, load it and merge settings
         if scan_request.engine:
             try:
-                from spiderfoot.scan_engine import ScanEngineLoader
+                from spiderfoot.scan.scan_engine import ScanEngineLoader
                 loader = ScanEngineLoader()
                 engine = loader.load(scan_request.engine)
                 modules = engine.get_enabled_modules()
                 sf_config = engine.to_sf_config(sf_config)
                 log.info("Using scan engine '%s' for scan %s", scan_request.engine, scan_id)
             except Exception as e:
-                raise HTTPException(status_code=422, detail=f"Invalid engine: {e}")
+                log.warning("Invalid engine configuration: %s", e)
+                raise HTTPException(status_code=422, detail="Invalid engine configuration")
         elif scan_request.profile:
             # Load modules from a scan profile (e.g. "tools-only", "quick-recon")
             try:
@@ -758,7 +788,8 @@ async def create_scan(
             except HTTPException:
                 raise
             except Exception as e:
-                raise HTTPException(status_code=422, detail=f"Invalid profile: {e}")
+                log.warning("Invalid scan profile: %s", e)
+                raise HTTPException(status_code=422, detail="Invalid scan profile")
         else:
             all_modules = sf.modulesProducing(["*"])
             modules = scan_request.modules if scan_request.modules else all_modules
@@ -790,6 +821,7 @@ async def create_scan(
             modules,
             scan_request.type_filter,
             sf_config,
+            stealth_level=scan_request.stealth_level,
         )
         return ScanCreateResponse(
             id=scan_id,
@@ -813,7 +845,7 @@ async def create_scan(
 
 @router.get("/scans/{scan_id}")
 async def get_scan(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
 ) -> dict:
@@ -836,7 +868,7 @@ async def get_scan(
 
 @router.get("/scans/{scan_id}/events")
 async def get_scan_events(
-    scan_id: str,
+    scan_id: SafeId,
     event_type: str = Query(None, description="Filter by event type"),
     filter_fp: bool = Query(False, description="Filter false positives"),
     api_key: str = optional_auth_dep,
@@ -866,7 +898,7 @@ async def get_scan_events(
 
 @router.get("/scans/{scan_id}/summary")
 async def get_scan_summary(
-    scan_id: str,
+    scan_id: SafeId,
     by: str = Query("type", description="Group by: type, module, entity"),
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
@@ -893,7 +925,7 @@ async def get_scan_summary(
 
 @router.get("/scans/{scan_id}/logs")
 async def get_scan_logs(
-    scan_id: str,
+    scan_id: SafeId,
     limit: int = Query(None, description="Max log entries"),
     offset: int = Query(0, description="Offset (fromRowId)"),
     api_key: str = optional_auth_dep,
@@ -919,7 +951,7 @@ async def get_scan_logs(
 
 @router.get("/scans/{scan_id}/history")
 async def get_scan_history(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
 ) -> dict:
@@ -941,7 +973,7 @@ async def get_scan_history(
 
 @router.get("/scans/{scan_id}/events/unique")
 async def get_scan_events_unique(
-    scan_id: str,
+    scan_id: SafeId,
     event_type: str = Query("ALL", description="Filter by event type"),
     filterfp: bool = Query(False, description="Filter false positives"),
     api_key: str = optional_auth_dep,
@@ -965,7 +997,7 @@ async def get_scan_events_unique(
 
 @router.get("/scans/{scan_id}/correlations")
 async def get_scan_correlations(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
 ) -> dict:
@@ -996,7 +1028,7 @@ async def get_scan_correlations(
 
 @router.get("/scans/{scan_id}/correlations/summary")
 async def get_scan_correlation_summary(
-    scan_id: str,
+    scan_id: SafeId,
     by: str = Query("risk", description="Group by: rule or risk"),
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
@@ -1033,7 +1065,7 @@ async def get_scan_correlation_summary(
 
 @router.post("/scans/{scan_id}/correlations/run")
 async def run_scan_correlations(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
 ) -> dict:
@@ -1095,12 +1127,185 @@ async def run_scan_correlations(
         raise
     except Exception as e:
         log.error("Correlation run failed for %s: %s", scan_id, e, exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Correlation failed: {e}") from e
+        raise HTTPException(status_code=500, detail="Correlation analysis failed") from e
+
+
+# -----------------------------------------------------------------------
+# IaC generation endpoint (Phase 2 — Steps 75-76)
+# -----------------------------------------------------------------------
+
+class IaCRequest(BaseModel):
+    """Request body for IaC generation."""
+    provider: str = Field("aws", description="Cloud provider: aws, azure, gcp, digitalocean, vmware")
+    include_terraform: bool = Field(True, description="Include Terraform configs")
+    include_ansible: bool = Field(True, description="Include Ansible playbook")
+    include_docker: bool = Field(True, description="Include Docker Compose")
+    include_packer: bool = Field(False, description="Include Packer configs")
+    validate: bool = Field(True, description="Run schema validation on output")
+    use_agent: bool = Field(False, description="Use LLM agent to validate and repair generated IaC")
+    agent_max_iterations: int = Field(3, ge=1, le=5, description="Max LLM repair iterations (1-5)")
+
+
+@router.post("/scans/{scan_id}/iac")
+async def generate_iac(
+    scan_id: SafeId,
+    request: IaCRequest = Body(default=IaCRequest()),
+    api_key: str = optional_auth_dep,
+    svc: ScanService = Depends(get_scan_service),
+) -> dict:
+    """Generate Infrastructure as Code from scan results.
+
+    Extracts discovered services, ports, and infrastructure from scan events,
+    then generates validated Terraform, Ansible, and Docker Compose configs
+    that replicate the target's infrastructure.
+    """
+    record = svc.get_scan(scan_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Scan not found")
+
+    try:
+        from spiderfoot.iac.target_replication import (
+            CloudProvider,
+            TargetProfileExtractor,
+            TargetReplicator,
+        )
+        from spiderfoot.iac.schema_validation import validate_iac_bundle
+
+        # Map string to CloudProvider enum
+        provider_map = {p.value.lower(): p for p in CloudProvider}
+        provider_str = request.provider.lower()
+        if provider_str not in provider_map:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unknown provider '{request.provider}'. "
+                       f"Supported: {', '.join(provider_map.keys())}",
+            )
+        provider = provider_map[provider_str]
+
+        # Get scan events
+        events = svc.get_events(scan_id)
+        if not events:
+            return {
+                "scan_id": scan_id,
+                "message": "No events found — run a scan first",
+                "bundle": {},
+                "validation": [],
+            }
+
+        # Convert DB rows to dicts for the extractor
+        event_dicts = []
+        for ev in events:
+            if isinstance(ev, dict):
+                event_dicts.append(ev)
+            elif isinstance(ev, (list, tuple)) and len(ev) >= 5:
+                event_dicts.append({
+                    "type": ev[4] if len(ev) > 4 else "",
+                    "data": ev[1] if len(ev) > 1 else "",
+                    "module": ev[2] if len(ev) > 2 else "",
+                    "source": ev[5] if len(ev) > 5 else "",
+                })
+
+        # Extract target profile from events
+        extractor = TargetProfileExtractor()
+        for ev in event_dicts:
+            extractor.ingest(ev)
+        profile = extractor.build()
+
+        # Generate IaC bundle
+        replicator = TargetReplicator(profile, provider=provider)
+        bundle = replicator.generate()
+
+        # Filter bundle by request flags
+        filtered = {}
+        if request.include_terraform and "terraform" in bundle:
+            filtered["terraform"] = bundle["terraform"]
+        if request.include_ansible and "ansible" in bundle:
+            filtered["ansible"] = bundle["ansible"]
+        if request.include_docker and "docker" in bundle:
+            filtered["docker"] = bundle["docker"]
+        if request.include_packer and "packer" in bundle:
+            filtered["packer"] = bundle["packer"]
+        if "docs" in bundle:
+            filtered["docs"] = bundle["docs"]
+
+        # Validate if requested
+        validation_results = []
+        if request.validate:
+            raw_results = validate_iac_bundle(filtered)
+            validation_results = [r.to_dict() for r in raw_results]
+
+        all_valid = all(v.get("valid", True) for v in validation_results)
+        agent_result_dict: dict = {}
+        manual_fixes_required: dict[str, list[str]] = {}
+
+        # Run LLM agent for repair if requested
+        if request.use_agent:
+            try:
+                from spiderfoot.iac.iac_agent import IaCAgent
+                from spiderfoot.ai.llm_client import LLMClient, LLMConfig
+                llm_config = LLMConfig.from_env()
+                llm_client = LLMClient(llm_config)
+                # Hard cap at MAX_REPAIR_CYCLES; user value capped inside IaCAgent.__init__
+                agent = IaCAgent(llm_client, max_iterations=request.agent_max_iterations)
+                agent_result = agent.validate_and_repair(filtered, profile)
+                filtered = agent_result.bundle
+                agent_result_dict = agent_result.to_dict()
+                manual_fixes_required = agent_result.unresolved_errors
+                # Re-run deterministic validation on the (possibly repaired) bundle
+                if request.validate:
+                    raw_results = validate_iac_bundle(filtered)
+                    validation_results = [r.to_dict() for r in raw_results]
+                    all_valid = not manual_fixes_required and all(
+                        v.get("valid", True) for v in validation_results
+                    )
+            except Exception as agent_exc:
+                log.warning("IaC agent failed, returning unrepaired bundle: %s", agent_exc)
+                agent_result_dict = {"error": str(agent_exc)}
+
+        # Build the human-readable manual-fix advisory
+        manual_fix_advisory: list[str] = []
+        for fname, errs in manual_fixes_required.items():
+            manual_fix_advisory.append(
+                f"{fname}: {len(errs)} error(s) could not be resolved automatically "
+                f"after {request.agent_max_iterations} repair cycle(s):"
+            )
+            for e in errs:
+                manual_fix_advisory.append(f"  • {e}")
+
+        return {
+            "scan_id": scan_id,
+            "provider": request.provider,
+            "profile_summary": {
+                "ip_count": len(profile.ip_addresses),
+                "port_count": len(profile.open_ports),
+                "service_count": len(profile.services),
+                "web_server": profile.web_server,
+                "os_detected": profile.operating_system,
+            },
+            "files": {
+                category: list(files.keys())
+                for category, files in filtered.items()
+                if isinstance(files, dict)
+            },
+            "validation": validation_results,
+            "all_valid": all_valid,
+            "agent": agent_result_dict,
+            # Errors the agent could not fix — require human attention
+            "manual_fixes_required": manual_fixes_required,
+            "manual_fix_advisory": manual_fix_advisory,
+            "bundle": filtered,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        log.error("IaC generation failed for %s: %s", scan_id, e, exc_info=True)
+        raise HTTPException(status_code=500, detail="IaC generation failed") from e
 
 
 @router.delete("/scans/{scan_id}", response_model=ScanDeleteResponse)
 async def delete_scan(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
 ) -> ScanDeleteResponse:
@@ -1119,7 +1324,7 @@ async def delete_scan(
 
 @router.delete("/scans/{scan_id}/full", response_model=MessageResponse)
 async def delete_scan_full(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
 ) -> MessageResponse:
@@ -1133,7 +1338,7 @@ async def delete_scan_full(
 
 @router.post("/scans/{scan_id}/stop", response_model=ScanStopResponse)
 async def stop_scan(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
 ) -> ScanStopResponse:
@@ -1150,12 +1355,13 @@ async def stop_scan(
                 log.debug("on_aborted hook failed for scan %s: %s", scan_id, e)
         return ScanStopResponse(message="Scan stopped successfully", status=new_status)
     except ScanServiceError as e:
-        raise HTTPException(status_code=409, detail=str(e)) from e
+        log.warning("Scan operation conflict: %s", e)
+        raise HTTPException(status_code=409, detail="Scan operation conflict") from e
 
 
 @router.post("/scans/{scan_id}/retry")
 async def retry_scan(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
 ) -> dict:
@@ -1241,7 +1447,7 @@ async def retry_scan(
 
 @router.get("/scans/{scan_id}/events/export")
 async def export_scan_event_results(
-    scan_id: str,
+    scan_id: SafeId,
     event_type: str = None,
     filetype: str = "csv",
     dialect: str = "excel",
@@ -1278,7 +1484,7 @@ async def export_scan_event_results(
                 iter([f.read()]),
                 media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 headers={
-                    "Content-Disposition": f"attachment; filename=SpiderFoot-{scan_id}-eventresults.xlsx",
+                    "Content-Disposition": f"attachment; filename={safe_filename(f'SpiderFoot-{scan_id}-eventresults.xlsx')}",
                     "Pragma": "no-cache",
                 },
             )
@@ -1294,7 +1500,7 @@ async def export_scan_event_results(
             iter([fileobj.getvalue()]),
             media_type="text/csv",
             headers={
-                "Content-Disposition": f"attachment; filename=SpiderFoot-{scan_id}-eventresults.csv",
+                "Content-Disposition": f"attachment; filename={safe_filename(f'SpiderFoot-{scan_id}-eventresults.csv')}",
                 "Pragma": "no-cache",
             },
         )
@@ -1319,7 +1525,7 @@ async def export_scan_event_results(
             content=payload,
             media_type="application/json",
             headers={
-                "Content-Disposition": f"attachment; filename=SpiderFoot-{scan_id}-eventresults.json",
+                "Content-Disposition": f"attachment; filename={safe_filename(f'SpiderFoot-{scan_id}-eventresults.json')}",
                 "Pragma": "no-cache",
             },
         )
@@ -1333,7 +1539,7 @@ async def export_scan_event_results(
 
 @router.get("/scans/{scan_id}/search/export")
 async def export_scan_search_results(
-    scan_id: str,
+    scan_id: SafeId,
     event_type: str = None,
     value: str = None,
     filetype: str = "csv",
@@ -1368,7 +1574,7 @@ async def export_scan_search_results(
                 iter([f.read()]),
                 media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 headers={
-                    "Content-Disposition": f"attachment; filename=SpiderFoot-{scan_id}-searchresults.xlsx",
+                    "Content-Disposition": f"attachment; filename={safe_filename(f'SpiderFoot-{scan_id}-searchresults.xlsx')}",
                     "Pragma": "no-cache",
                 },
             )
@@ -1384,7 +1590,7 @@ async def export_scan_search_results(
             iter([fileobj.getvalue()]),
             media_type="text/csv",
             headers={
-                "Content-Disposition": f"attachment; filename=SpiderFoot-{scan_id}-searchresults.csv",
+                "Content-Disposition": f"attachment; filename={safe_filename(f'SpiderFoot-{scan_id}-searchresults.csv')}",
                 "Pragma": "no-cache",
             },
         )
@@ -1394,7 +1600,7 @@ async def export_scan_search_results(
 
 @router.get("/scans/{scan_id}/viz")
 async def export_scan_viz(
-    scan_id: str,
+    scan_id: SafeId,
     gexf: str = "0",
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
@@ -1482,13 +1688,13 @@ async def export_scan_viz(
     return Response(
         gexf_data,
         media_type="application/gexf",
-        headers={"Content-Disposition": f"attachment; filename={fname}", "Pragma": "no-cache"},
+        headers={"Content-Disposition": f"attachment; filename={safe_filename(fname)}", "Pragma": "no-cache"},
     )
 
 
 @router.get("/scans/{scan_id}/logs/export")
 async def export_scan_logs(
-    scan_id: str,
+    scan_id: SafeId,
     dialect: str = "excel",
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
@@ -1513,7 +1719,7 @@ async def export_scan_logs(
         iter([fileobj.getvalue()]),
         media_type="text/csv",
         headers={
-            "Content-Disposition": f"attachment; filename=SpiderFoot-{scan_id}.log.csv",
+            "Content-Disposition": f"attachment; filename={safe_filename(f'SpiderFoot-{scan_id}.log.csv')}",
             "Pragma": "no-cache",
         },
     )
@@ -1521,7 +1727,7 @@ async def export_scan_logs(
 
 @router.get("/scans/{scan_id}/timeline")
 async def get_scan_timeline(
-    scan_id: str,
+    scan_id: SafeId,
     limit: int = Query(200, ge=1, le=5000, description="Max timeline entries"),
     event_type: str | None = Query(None, description="Filter by event type"),
     api_key: str = optional_auth_dep,
@@ -1599,7 +1805,7 @@ async def get_scan_timeline(
 
 @router.get("/scans/{scan_id}/dedup")
 async def detect_duplicate_events(
-    scan_id: str,
+    scan_id: SafeId,
     threshold: int = Query(2, ge=2, le=100, description="Min occurrences to flag as duplicate"),
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
@@ -1670,7 +1876,7 @@ async def detect_duplicate_events(
 
 @router.get("/scans/{scan_id}/correlations/export")
 async def export_scan_correlations(
-    scan_id: str,
+    scan_id: SafeId,
     filetype: str = "csv",
     dialect: str = "excel",
     api_key: str = optional_auth_dep,
@@ -1705,7 +1911,7 @@ async def export_scan_correlations(
             iter([content]),
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             headers={
-                "Content-Disposition": f"attachment; filename=SpiderFoot-{scan_id}-correlations.xlsx",
+                "Content-Disposition": f"attachment; filename={safe_filename(f'SpiderFoot-{scan_id}-correlations.xlsx')}",
                 "Pragma": "no-cache",
             },
         )
@@ -1724,7 +1930,7 @@ async def export_scan_correlations(
             iter([fileobj.getvalue()]),
             media_type="text/csv",
             headers={
-                "Content-Disposition": f"attachment; filename=SpiderFoot-{scan_id}-correlations.csv",
+                "Content-Disposition": f"attachment; filename={safe_filename(f'SpiderFoot-{scan_id}-correlations.csv')}",
                 "Pragma": "no-cache",
             },
         )
@@ -1739,19 +1945,19 @@ async def export_scan_correlations(
 
 @router.get("/scans/{scan_id}/options")
 async def get_scan_options(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
+    config=Depends(get_app_config),
 ) -> dict:
     """Return configuration used for the specified scan."""
-    config = get_app_config()
     ret = svc.get_scan_options(scan_id, config.get_config())
     return ret
 
 
 @router.post("/scans/{scan_id}/rerun", response_model=ScanRerunResponse)
 async def rerun_scan(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
 ) -> ScanRerunResponse:
@@ -1819,17 +2025,18 @@ async def rerun_scan(
             p.daemon = True
             p.start()
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Scan [{new_scan_id}] failed: {e}")
+        log.error("Scan rerun failed for %s: %s", new_scan_id, e, exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to start scan rerun")
 
     while dbh.scanInstanceGet(new_scan_id) is None:
-        time.sleep(1)
+        await asyncio.sleep(1)
 
     return ScanRerunResponse(new_scan_id=new_scan_id)
 
 
 @router.post("/scans/{scan_id}/clone", response_model=ScanCloneResponse)
 async def clone_scan(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
 ) -> ScanCloneResponse:
@@ -1865,7 +2072,8 @@ async def clone_scan(
         dbh.scanInstanceCreate(new_scan_id, f"{record.name} (Clone)", scantarget)
         dbh.scanConfigSet(new_scan_id, scanconfig)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Scan [{new_scan_id}] clone failed: {e}") from e
+        log.error("Scan clone failed for %s: %s", new_scan_id, e, exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to clone scan") from e
 
     return ScanCloneResponse(new_scan_id=new_scan_id)
 
@@ -1879,7 +2087,7 @@ _ANNOTATIONS_KEY = "_annotations"
 
 @router.get("/scans/{scan_id}/annotations")
 async def list_event_annotations(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
 ) -> dict:
@@ -1903,7 +2111,7 @@ async def list_event_annotations(
 
 @router.put("/scans/{scan_id}/annotations/{result_id}")
 async def set_event_annotation(
-    scan_id: str,
+    scan_id: SafeId,
     result_id: str,
     note: str = Body(..., embed=True, max_length=2000),
     api_key: str = api_key_dep,
@@ -1941,7 +2149,7 @@ async def set_event_annotation(
 
 @router.delete("/scans/{scan_id}/annotations/{result_id}")
 async def delete_event_annotation(
-    scan_id: str,
+    scan_id: SafeId,
     result_id: str,
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
@@ -1971,7 +2179,7 @@ async def delete_event_annotation(
 
 @router.post("/scans/{scan_id}/results/falsepositive")
 async def set_results_false_positive(
-    scan_id: str,
+    scan_id: SafeId,
     resultids: list[str] = Body(...),
     fp: str = Body(...),
     api_key: str = api_key_dep,
@@ -1984,12 +2192,13 @@ async def set_results_false_positive(
     try:
         return svc.set_false_positive(scan_id, resultids, fp)
     except ScanServiceError as e:
-        raise HTTPException(status_code=404, detail=str(e)) from e
+        log.warning("Scan data not found: %s", e)
+        raise HTTPException(status_code=404, detail="Scan data not found") from e
 
 
 @router.post("/scans/{scan_id}/clear", response_model=MessageResponse)
 async def clear_scan(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
 ) -> MessageResponse:
@@ -2012,7 +2221,7 @@ async def clear_scan(
 
 @router.get("/scans/{scan_id}/metadata", response_model=ScanMetadataResponse)
 async def get_scan_metadata(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
 ) -> ScanMetadataResponse:
@@ -2025,7 +2234,7 @@ async def get_scan_metadata(
 
 @router.patch("/scans/{scan_id}/metadata")
 async def update_scan_metadata(
-    scan_id: str,
+    scan_id: SafeId,
     metadata: dict = Body(...),
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
@@ -2042,7 +2251,7 @@ async def update_scan_metadata(
 
 @router.get("/scans/{scan_id}/notes", response_model=ScanNotesResponse)
 async def get_scan_notes(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
 ) -> ScanNotesResponse:
@@ -2055,7 +2264,7 @@ async def get_scan_notes(
 
 @router.patch("/scans/{scan_id}/notes")
 async def update_scan_notes(
-    scan_id: str,
+    scan_id: SafeId,
     notes: str = Body(...),
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
@@ -2070,7 +2279,7 @@ async def update_scan_notes(
 
 @router.post("/scans/{scan_id}/archive", response_model=MessageResponse)
 async def archive_scan(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
 ) -> MessageResponse:
@@ -2089,7 +2298,7 @@ async def archive_scan(
 
 @router.post("/scans/{scan_id}/unarchive", response_model=MessageResponse)
 async def unarchive_scan(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
 ) -> MessageResponse:
@@ -2115,7 +2324,7 @@ _TAGS_KEY = "_tags"
 
 @router.get("/scans/{scan_id}/tags", response_model=ScanTagsResponse)
 async def get_scan_tags(
-    scan_id: str,
+    scan_id: SafeId,
     api_key: str = optional_auth_dep,
     svc: ScanService = Depends(get_scan_service),
 ) -> ScanTagsResponse:
@@ -2130,7 +2339,7 @@ async def get_scan_tags(
 
 @router.put("/scans/{scan_id}/tags", response_model=ScanTagsResponse)
 async def set_scan_tags(
-    scan_id: str,
+    scan_id: SafeId,
     tags: list[str] = Body(..., description="Complete list of tags to set"),
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
@@ -2151,7 +2360,7 @@ async def set_scan_tags(
 
 @router.post("/scans/{scan_id}/tags", response_model=ScanTagsResponse)
 async def add_scan_tags(
-    scan_id: str,
+    scan_id: SafeId,
     tags: list[str] = Body(..., description="Tags to add"),
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
@@ -2177,7 +2386,7 @@ async def add_scan_tags(
 
 @router.delete("/scans/{scan_id}/tags", response_model=ScanTagsResponse)
 async def remove_scan_tags(
-    scan_id: str,
+    scan_id: SafeId,
     tags: list[str] = Body(..., description="Tags to remove"),
     api_key: str = api_key_dep,
     svc: ScanService = Depends(get_scan_service),
@@ -2283,3 +2492,63 @@ async def compare_scans(
     except Exception as e:
         log.error("Failed to compare scans %s vs %s: %s", scan_a, scan_b, e)
         raise HTTPException(status_code=500, detail="Scan comparison failed") from e
+
+
+# ---------------------------------------------------------------------------
+# Stealth stats endpoints (wires stealth_integration.py into the API)
+# ---------------------------------------------------------------------------
+
+
+@router.get(
+    "/scans/{scan_id}/stealth-stats",
+    summary="Get stealth statistics for a scan",
+    tags=["stealth"],
+)
+async def get_scan_stealth_stats(
+    scan_id: SafeId,
+    _auth=Depends(optional_auth),
+):
+    """Return stealth metrics for a running or recently completed scan.
+
+    Provides detection events, request counts per domain, proxy chain
+    health, and overall stealth effectiveness metrics collected by the
+    :class:`StealthFetchMiddleware` during the scan.
+    """
+    try:
+        from spiderfoot.recon.stealth_integration import get_scan_context
+        ctx = get_scan_context(scan_id)
+        if ctx is None:
+            raise HTTPException(
+                status_code=404,
+                detail="No stealth context found for this scan — "
+                       "the scan may not be running, may have completed, "
+                       "or was started without stealth enabled.",
+            )
+        return {"scan_id": scan_id, "stealth": ctx.get_stats()}
+    except HTTPException:
+        raise
+    except Exception as e:
+        log.error("Failed to get stealth stats for %s: %s", scan_id, e)
+        raise HTTPException(status_code=500, detail="Failed to retrieve stealth stats") from e
+
+
+@router.get(
+    "/stealth-stats",
+    summary="Get stealth statistics for all active scans",
+    tags=["stealth"],
+)
+async def get_all_stealth_stats(
+    _auth=Depends(optional_auth),
+):
+    """Return stealth metrics for all currently running scans.
+
+    Useful for the operations dashboard to monitor stealth effectiveness
+    across all active scans.
+    """
+    try:
+        from spiderfoot.recon.stealth_integration import get_all_scan_stats
+        stats = get_all_scan_stats()
+        return {"active_scans": len(stats), "scans": stats}
+    except Exception as e:
+        log.error("Failed to get all stealth stats: %s", e)
+        raise HTTPException(status_code=500, detail="Failed to retrieve stealth stats") from e

@@ -1,11 +1,15 @@
-"""Tests for spiderfoot.db_migrate."""
+"""Tests for spiderfoot.db.migrate."""
 from __future__ import annotations
 
 import os
+import pytest
+if not os.environ.get('SF_POSTGRES_DSN'):
+    pytest.skip('PostgreSQL not available (SF_POSTGRES_DSN not set)', allow_module_level=True)
+
 import tempfile
 import unittest
 
-from spiderfoot.db_migrate import (
+from spiderfoot.db.migrate import (
     AppliedMigration,
     DbDialect,
     InMemoryDbAdapter,
@@ -15,7 +19,7 @@ from spiderfoot.db_migrate import (
     MigrationPlan,
     MigrationRecord,
     MigrationStatus,
-    SqliteAdapter,
+    PostgresAdapter,
 )
 
 
@@ -54,7 +58,7 @@ class TestMigrationPlan(unittest.TestCase):
         self.assertTrue(d["dry_run"])
 
 
-class TestMigrationManagerWithSqlite(unittest.TestCase):
+class TestMigrationManagerWithPostgres(unittest.TestCase):
     def setUp(self):
         self.tmpdir = tempfile.mkdtemp()
         self.db_path = os.path.join(self.tmpdir, "test.db")
@@ -81,7 +85,7 @@ def downgrade(db, dialect):
     pass
 """)
 
-        self.db = SqliteAdapter(self.db_path)
+        self.db = PostgresAdapter(self.db_path)
         self.mgr = MigrationManager(
             db=self.db,
             migrations_dir=self.migrations_dir,

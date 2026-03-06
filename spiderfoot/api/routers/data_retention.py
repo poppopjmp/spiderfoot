@@ -8,19 +8,20 @@ v5.6.8
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from typing import Any
 
-from spiderfoot.data_retention import (
+from spiderfoot.ops.data_retention import (
     RetentionManager,
     RetentionRule,
     RetentionAction,
     FileResourceAdapter,
     InMemoryResourceAdapter,
 )
+from ..dependencies import get_api_key
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_api_key)])
 
 # -------------------------------------------------------------------
 # Singleton manager

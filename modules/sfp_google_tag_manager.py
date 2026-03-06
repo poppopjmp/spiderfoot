@@ -15,15 +15,13 @@ from __future__ import annotations
 """SpiderFoot plug-in module: google_tag_manager."""
 
 import re
-import urllib.error
 import urllib.parse
-import urllib.request
 
 from spiderfoot import SpiderFootEvent, SpiderFootHelpers
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_google_tag_manager(SpiderFootModernPlugin):
+class sfp_google_tag_manager(SpiderFootAsyncPlugin):
     """SpiderFoot plugin to search Google Tag Manager (GTM) for hosts sharing the same GTM code."""
     __name__ = "sfp_google_tag_manager"
     meta = {

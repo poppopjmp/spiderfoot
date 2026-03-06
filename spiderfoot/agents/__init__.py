@@ -13,6 +13,8 @@ Agents:
     - ReportGenerator: Generates comprehensive scan reports
     - ThreatIntelAnalyzer: Cross-references findings with threat intel
     - DocumentAnalyzer: Analyzes uploaded documents for OSINT relevance
+    - IaCAdvisor: Reviews generated IaC bundles for security issues,
+                  best-practice violations and hardening gaps
 """
 
 __version__ = "0.1.0"

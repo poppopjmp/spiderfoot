@@ -13,17 +13,25 @@
 Exposes :class:`SpiderFootDb`, the high-level facade that delegates to
 specialised sub-modules (``db_core``, ``db_scan``, ``db_event``,
 ``db_config``, ``db_correlation``).  Handles connection lifecycle,
-schema migrations, and retry logic for SQLite operations.
+schema migrations, and retry logic for PostgreSQL operations.
 """
 
 from __future__ import annotations
 
-__all__ = ["SpiderFootDb", "get_schema_queries"]
+__all__ = ["SpiderFootDb", "get_schema_queries",
+           # Diagnostics
+           "ExplainResult", "QueryDiagnostics",
+           # Notify
+           "PgNotifyService",
+           # Performance
+           "PartitionManager", "ReadReplicaRouter", "ScanStatsCache", "VacuumAnalyze",
+           # Migration
+           "MigrationManager", "MigrationPlan", "DbAdapter",
+           ]
 
 from pathlib import Path
 import logging
 import re
-import sqlite3
 import threading
 import psycopg2
 import psycopg2.extras
@@ -42,82 +50,7 @@ def get_schema_queries(db_type: str) -> list[str]:
     """
     Return a list of schema creation queries appropriate for the backend.
     """
-    if db_type == 'sqlite':
-        return [
-            "CREATE TABLE IF NOT EXISTS tbl_schema_version (\n    version INTEGER NOT NULL,\n    applied_at INTEGER NOT NULL\n)",
-            "PRAGMA journal_mode=WAL",
-            "CREATE TABLE IF NOT EXISTS tbl_event_types ( \
-                event       VARCHAR NOT NULL PRIMARY KEY, \
-                event_descr VARCHAR NOT NULL, \
-                event_raw   INT NOT NULL DEFAULT 0, \
-                event_type  VARCHAR NOT NULL \
-            )",
-            "CREATE TABLE IF NOT EXISTS tbl_config ( \
-                scope   VARCHAR NOT NULL, \
-                opt     VARCHAR NOT NULL, \
-                val     VARCHAR NOT NULL, \
-                PRIMARY KEY (scope, opt) \
-            )",
-            "CREATE TABLE IF NOT EXISTS tbl_scan_instance ( \
-                guid        VARCHAR NOT NULL PRIMARY KEY, \
-                name        VARCHAR NOT NULL, \
-                seed_target VARCHAR NOT NULL, \
-                created     INT DEFAULT 0, \
-                started     INT DEFAULT 0, \
-                ended       INT DEFAULT 0, \
-                status      VARCHAR NOT NULL \
-            )",
-            "CREATE TABLE IF NOT EXISTS tbl_scan_log ( \
-                scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
-                generated           INT NOT NULL, \
-                component           VARCHAR, \
-                type                VARCHAR NOT NULL, \
-                message             VARCHAR \
-            )",
-            "CREATE TABLE IF NOT EXISTS tbl_scan_config ( \
-                scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
-                component           VARCHAR NOT NULL, \
-                opt                 VARCHAR NOT NULL, \
-                val                 VARCHAR NOT NULL, \
-                UNIQUE (scan_instance_id, component, opt) \
-            )",
-            "CREATE TABLE IF NOT EXISTS tbl_scan_results ( \
-                scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
-                hash                VARCHAR NOT NULL, \
-                type                VARCHAR NOT NULL REFERENCES tbl_event_types(event), \
-                generated           INT NOT NULL, \
-                confidence          INT NOT NULL DEFAULT 100, \
-                visibility          INT NOT NULL DEFAULT 100, \
-                risk                INT NOT NULL DEFAULT 0, \
-                module              VARCHAR NOT NULL, \
-                data                TEXT, \
-                false_positive      INT NOT NULL DEFAULT 0, \
-                source_event_hash  VARCHAR DEFAULT 'ROOT' \
-            )",
-            "CREATE TABLE IF NOT EXISTS tbl_scan_correlation_results ( \
-                id                  VARCHAR NOT NULL PRIMARY KEY, \
-                scan_instance_id    VARCHAR NOT NULL REFERENCES tbl_scan_instance(guid), \
-                title               VARCHAR NOT NULL, \
-                rule_risk           VARCHAR NOT NULL, \
-                rule_id             VARCHAR NOT NULL, \
-                rule_name           VARCHAR NOT NULL, \
-                rule_descr          VARCHAR NOT NULL, \
-                rule_logic          VARCHAR NOT NULL \
-            )",
-            "CREATE TABLE IF NOT EXISTS tbl_scan_correlation_results_events ( \
-                correlation_id      VARCHAR NOT NULL REFERENCES tbl_scan_correlation_results(id), \
-                event_hash          VARCHAR NOT NULL \
-            )",
-            "CREATE INDEX IF NOT EXISTS idx_scan_results_id ON tbl_scan_results (scan_instance_id)",
-            "CREATE INDEX IF NOT EXISTS idx_scan_results_type ON tbl_scan_results (scan_instance_id, type)",
-            "CREATE INDEX IF NOT EXISTS idx_scan_results_hash ON tbl_scan_results (scan_instance_id, hash)",
-            "CREATE INDEX IF NOT EXISTS idx_scan_results_module ON tbl_scan_results(scan_instance_id, module)",
-            "CREATE INDEX IF NOT EXISTS idx_scan_results_srchash ON tbl_scan_results (scan_instance_id, source_event_hash)",
-            "CREATE INDEX IF NOT EXISTS idx_scan_logs ON tbl_scan_log (scan_instance_id)",
-            "CREATE INDEX IF NOT EXISTS idx_scan_correlation ON tbl_scan_correlation_results (scan_instance_id, id)",
-            "CREATE INDEX IF NOT EXISTS idx_scan_correlation_events ON tbl_scan_correlation_results_events (correlation_id)"
-        ]
-    elif db_type == 'postgresql':
+    if db_type == 'postgresql':
         return [
             "CREATE TABLE IF NOT EXISTS tbl_schema_version (\n    version INTEGER NOT NULL,\n    applied_at BIGINT NOT NULL\n)",
             "CREATE TABLE IF NOT EXISTS tbl_event_types ( \
@@ -189,7 +122,27 @@ def get_schema_queries(db_type: str) -> list[str]:
             "CREATE INDEX IF NOT EXISTS idx_scan_results_srchash ON tbl_scan_results (scan_instance_id, source_event_hash)",
             "CREATE INDEX IF NOT EXISTS idx_scan_logs ON tbl_scan_log (scan_instance_id)",
             "CREATE INDEX IF NOT EXISTS idx_scan_correlation ON tbl_scan_correlation_results (scan_instance_id, id)",
-            "CREATE INDEX IF NOT EXISTS idx_scan_correlation_events ON tbl_scan_correlation_results_events (correlation_id)"
+            "CREATE INDEX IF NOT EXISTS idx_scan_correlation_events ON tbl_scan_correlation_results_events (correlation_id)",
+            # Cycle 72: partial index for false-positive filtering
+            "CREATE INDEX IF NOT EXISTS idx_scan_results_fp ON tbl_scan_results (false_positive) WHERE false_positive = 1",
+            # Cycle 72: type+time descending for time-ordered queries
+            "CREATE INDEX IF NOT EXISTS idx_scan_results_type_time ON tbl_scan_results (scan_instance_id, type, generated DESC)",
+            # Cycle 78: unique constraint for ON CONFLICT deduplication
+            "DO $$ BEGIN "
+            "IF NOT EXISTS ("
+            "  SELECT 1 FROM pg_constraint WHERE conname = 'uq_scan_results_hash'"
+            ") THEN "
+            "  ALTER TABLE tbl_scan_results "
+            "    ADD CONSTRAINT uq_scan_results_hash "
+            "    UNIQUE (scan_instance_id, hash); "
+            "END IF; "
+            "END $$",
+        ]
+        # Cycle 73: GIN trigram index for substring search on event data.
+        # pg_trgm extension must be available. Failure is non-fatal.
+        trigram_queries = [
+            "CREATE EXTENSION IF NOT EXISTS pg_trgm",
+            "CREATE INDEX IF NOT EXISTS idx_scan_results_data_trgm ON tbl_scan_results USING gin(data gin_trgm_ops)",
         ]
     else:
         raise ValueError(f"Unsupported database type: {db_type}")
@@ -397,6 +350,89 @@ class SpiderFootDb:
         ['WEBSERVER_TECHNOLOGY', 'Web Technology', 0, 'DESCRIPTOR'],
         ['WIFI_ACCESS_POINT', 'WiFi Access Point Nearby', 0, 'ENTITY'],
         ['WIKIPEDIA_PAGE_EDIT', 'Wikipedia Page Edit', 0, 'DESCRIPTOR'],
+        # Extended event types added for newer modules
+        ['BITCOIN_TRANSACTION', 'Bitcoin Transaction', 0, 'DESCRIPTOR'],
+        ['CELL_TOWER', 'Cell Tower', 0, 'ENTITY'],
+        ['CRYPTOCURRENCY_ADDRESS', 'Cryptocurrency Address', 0, 'ENTITY'],
+        ['DOCUMENT_UPLOAD', 'Document Upload', 0, 'DATA'],
+        ['ETHEREUM_TRANSACTION', 'Ethereum Transaction', 0, 'DESCRIPTOR'],
+        ['MAC_ADDRESS', 'MAC Address', 0, 'ENTITY'],
+        ['REPORT_UPLOAD', 'Report Upload', 0, 'DATA'],
+        ['USER_DOCUMENT', 'User Document', 0, 'DATA'],
+        ['USER_INPUT_DATA', 'User Input Data', 0, 'DATA'],
+        ['APARAT_VIDEO', 'Aparat Video', 0, 'DESCRIPTOR'],
+        ['API_KEY_LEAK', 'API Key Leak', 0, 'DESCRIPTOR'],
+        ['ARBITRUM_ADDRESS', 'Arbitrum Address', 0, 'ENTITY'],
+        ['ARBITRUM_TX', 'Arbitrum Transaction', 0, 'DESCRIPTOR'],
+        ['BEHAVIORAL_PATTERN', 'Behavioral Pattern', 0, 'DESCRIPTOR'],
+        ['BLOCKCHAIN_ANALYSIS', 'Blockchain Analysis', 0, 'DATA'],
+        ['BLOCKCHAIN_TRANSACTION_FLOW', 'Blockchain Transaction Flow', 0, 'DATA'],
+        ['BLUESKY_POST', 'Bluesky Post', 0, 'DESCRIPTOR'],
+        ['BNB_ADDRESS', 'BNB Address', 0, 'ENTITY'],
+        ['BNB_TX', 'BNB Transaction', 0, 'DESCRIPTOR'],
+        ['CARRIER_NAME', 'Carrier Name', 0, 'ENTITY'],
+        ['CARRIER_TYPE', 'Carrier Type', 0, 'DESCRIPTOR'],
+        ['CDN_DETECTED', 'CDN Detected', 0, 'DESCRIPTOR'],
+        ['CLOUD_INSTANCE_TYPE', 'Cloud Instance Type', 0, 'DESCRIPTOR'],
+        ['CLOUD_PROVIDER', 'Cloud Provider', 0, 'ENTITY'],
+        ['CLOUD_STORAGE_OPEN', 'Cloud Storage Open', 0, 'DESCRIPTOR'],
+        ['CORRELATION_ANALYSIS', 'Correlation Analysis', 0, 'DATA'],
+        ['CREDENTIAL_LEAK', 'Credential Leak', 0, 'DESCRIPTOR'],
+        ['CRYPTOCURRENCY_EXCHANGE_ATTRIBUTION', 'Cryptocurrency Exchange Attribution', 0, 'DESCRIPTOR'],
+        ['CRYPTOCURRENCY_RISK_ASSESSMENT', 'Cryptocurrency Risk Assessment', 0, 'DESCRIPTOR'],
+        ['DIDEO_VIDEO', 'Dideo Video', 0, 'DESCRIPTOR'],
+        ['DISCORD_MESSAGE', 'Discord Message', 0, 'DESCRIPTOR'],
+        ['DOCUMENT_TEXT', 'Document Text', 0, 'DATA'],
+        ['DOUYIN_VIDEO', 'Douyin Video', 0, 'DESCRIPTOR'],
+        ['ENTITY_RELATIONSHIP', 'Entity Relationship', 0, 'DESCRIPTOR'],
+        ['ETHEREUM_TX', 'Ethereum Transaction Hash', 0, 'DESCRIPTOR'],
+        ['FOURCHAN_POST', '4chan Post', 0, 'DESCRIPTOR'],
+        ['GEOSPATIAL_CLUSTER', 'Geospatial Cluster', 0, 'DESCRIPTOR'],
+        ['IDENTITY_RESOLUTION', 'Identity Resolution', 0, 'DESCRIPTOR'],
+        ['INSTAGRAM_POST', 'Instagram Post', 0, 'DESCRIPTOR'],
+        ['INTERNATIONAL_FORMAT', 'International Phone Format', 0, 'DATA'],
+        ['IS_POSSIBLE', 'Phone Number Is Possible', 0, 'DESCRIPTOR'],
+        ['IS_VALID', 'Phone Number Is Valid', 0, 'DESCRIPTOR'],
+        ['LINE_TYPE', 'Phone Line Type', 0, 'DESCRIPTOR'],
+        ['LOCAL_FORMAT', 'Local Phone Format', 0, 'DATA'],
+        ['LOCATION', 'Location', 0, 'ENTITY'],
+        ['MASTODON_POST', 'Mastodon Post', 0, 'DESCRIPTOR'],
+        ['MATRIX_MESSAGE', 'Matrix Message', 0, 'DESCRIPTOR'],
+        ['MATTERMOST_MESSAGE', 'Mattermost Message', 0, 'DESCRIPTOR'],
+        ['MONEY_LAUNDERING_INDICATOR', 'Money Laundering Indicator', 0, 'DESCRIPTOR'],
+        ['NUMBER_TYPE', 'Phone Number Type', 0, 'DESCRIPTOR'],
+        ['OPENWIFIMAP_HOTSPOT', 'OpenWifiMap Hotspot', 0, 'ENTITY'],
+        ['REDDIT_POST', 'Reddit Post', 0, 'DESCRIPTOR'],
+        ['REGION_NAME', 'Region Name', 0, 'ENTITY'],
+        ['ROCKETCHAT_MESSAGE', 'Rocket.Chat Message', 0, 'DESCRIPTOR'],
+        ['RUBIKA_MESSAGE', 'Rubika Message', 0, 'DESCRIPTOR'],
+        ['SANCTIONS_LIST_MATCH', 'Sanctions List Match', 0, 'DESCRIPTOR'],
+        ['SOCIAL_MEDIA_CONTENT', 'Social Media Content', 0, 'DATA'],
+        ['SOCIAL_MEDIA_HASHTAG', 'Social Media Hashtag', 0, 'DESCRIPTOR'],
+        ['SOCIAL_MEDIA_MENTION', 'Social Media Mention', 0, 'DESCRIPTOR'],
+        ['SOCIAL_MEDIA_NETWORK', 'Social Media Network', 0, 'ENTITY'],
+        ['SOCIAL_MEDIA_PROFILE', 'Social Media Profile', 0, 'ENTITY'],
+        ['SOROUSH_MESSAGE', 'Soroush Message', 0, 'DESCRIPTOR'],
+        ['TARGET_WEB_CONTENT_TYPE', 'Target Web Content Type', 0, 'DESCRIPTOR'],
+        ['TELEGRAM_MESSAGE', 'Telegram Message', 0, 'DESCRIPTOR'],
+        ['TEMPORAL_PATTERN', 'Temporal Pattern', 0, 'DESCRIPTOR'],
+        ['THREAT_INTELLIGENCE', 'Threat Intelligence', 0, 'DESCRIPTOR'],
+        ['TRON_ADDRESS', 'TRON Address', 0, 'ENTITY'],
+        ['TRON_TX', 'TRON Transaction', 0, 'DESCRIPTOR'],
+        ['UNWIREDLABS_GEOINFO', 'UnwiredLabs Geo Info', 0, 'DATA'],
+        ['URL_DIRECTORY', 'URL Directory', 0, 'ENTITY'],
+        ['URL_FILE', 'URL File', 0, 'ENTITY'],
+        ['URL_WEB', 'URL Web', 0, 'ENTITY'],
+        ['WALLET_CLUSTER', 'Wallet Cluster', 0, 'DESCRIPTOR'],
+        ['WECHAT_MESSAGE', 'WeChat Message', 0, 'DESCRIPTOR'],
+        ['WHATSAPP_MESSAGE', 'WhatsApp Message', 0, 'DESCRIPTOR'],
+        ['WIFICAFESPOTS_HOTSPOT', 'WiFi Cafe Spots Hotspot', 0, 'ENTITY'],
+        ['WIFIMAPIO_HOTSPOT', 'Wifimap.io Hotspot', 0, 'ENTITY'],
+        ['XIAOHONGSHU_POST', 'Xiaohongshu Post', 0, 'DESCRIPTOR'],
+        ['PERFORMANCE_STATS', 'Performance Statistics', 1, 'DATA'],
+        ['CACHE_STATS', 'Cache Statistics', 1, 'DATA'],
+        ['RESOURCE_USAGE', 'Resource Usage', 1, 'DATA'],
+        ['OPTIMIZATION_SUGGESTION', 'Optimization Suggestion', 1, 'DATA'],
     ]
 
     def __init__(self, *args, **kwargs) -> None:
@@ -418,7 +454,7 @@ class SpiderFootDb:
                 )
             dbhost, dbport, dbname, dbuser, dbpass = args[:5]
             opts = {
-                '__dbtype': 'sqlite',  # or 'postgresql' if you want to support both
+                '__dbtype': 'postgresql',
                 '__database': dbname,
                 '__dbhost': dbhost,
                 '__dbport': dbport,
@@ -449,7 +485,7 @@ class SpiderFootDb:
     def build_config_from_env() -> dict:
         """Build a database config dict from environment variables.
 
-        Prefers PostgreSQL (SF_POSTGRES_DSN) over SQLite.
+        Uses PostgreSQL (SF_POSTGRES_DSN).
 
         Returns:
             dict: Configuration suitable for SpiderFootDb(opts).
@@ -461,11 +497,9 @@ class SpiderFootDb:
                 '__database': pg_dsn,
                 '__dbtype': 'postgresql',
             }
-        from spiderfoot import SpiderFootHelpers
-        return {
-            '__database': f"{SpiderFootHelpers.dataPath()}/spiderfoot.db",
-            '__dbtype': 'sqlite',
-        }
+        raise EnvironmentError(
+            "SF_POSTGRES_DSN environment variable is required for PostgreSQL connection"
+        )
 
     def _populate_event_types(self) -> None:
         """Upsert the canonical SpiderFoot event types into tbl_event_types.
@@ -514,7 +548,7 @@ class SpiderFootDb:
         self.managers['correlation'] = CorrelationManager(self)
         # self.managers['utils'] = DbUtils(self)  # Removed: DbUtils class no longer exists, use get_placeholder instead
 
-    def execute(self, sql: str, params=None):
+    def execute(self, sql: str, params: Any = None) -> Any:
         """Execute a raw SQL query with proper placeholder handling.
 
         This is a low-level method for direct SQL execution (e.g., API key management).
@@ -542,6 +576,10 @@ class SpiderFootDb:
     def close(self) -> None:
         """
         Close the database connection and release all resources.
+
+        When using the connection pool, the connection is returned via
+        ``DbCore._pool.putconn()`` rather than being physically closed, so
+        the pool slot stays available for the next request.
         """
         import gc
         try:
@@ -555,7 +593,15 @@ class SpiderFootDb:
                             log.debug("Cleanup failed: %s", e)
                     self.managers[key] = None
                 self.managers = None
-            # Dereference all manager attributes
+            # Delegate connection teardown to _core so it can do pool.putconn()
+            # instead of physically closing the connection.  Must happen BEFORE
+            # _core is nullified.
+            if hasattr(self, '_core') and self._core is not None:
+                try:
+                    self._core.close()
+                except Exception as e:
+                    log.debug("_core.close() failed: %s", e)
+            # Dereference all manager attributes (connection already handled above)
             for attr in ['_event', '_scan', '_config', '_correlation', '_core']:
                 if hasattr(self, attr):
                     setattr(self, attr, None)
@@ -565,12 +611,8 @@ class SpiderFootDb:
                 except Exception as e:
                     log.debug("Cleanup failed: %s", e)
                 self.cursor = None
-            if hasattr(self, 'conn') and self.conn:
-                try:
-                    self.conn.close()
-                except Exception as e:
-                    log.debug("Cleanup failed: %s", e)
-                self.conn = None
+            # self.conn was returned to the pool by _core.close(); just null it out.
+            self.conn = None
         except Exception as e:
             log.debug("Cleanup failed: %s", e)
         gc.collect()
@@ -675,8 +717,8 @@ class SpiderFootDb:
     # --- SCAN RESULT / EVENT FUNCTIONS ---
     def scanResultEvent(
         self, instanceId: str, eventType: str = 'ALL',
-        srcModule: str = None, data: list = None,
-        sourceId: list = None, correlationId: str = None,
+        srcModule: str | None = None, data: list | None = None,
+        sourceId: list | None = None, correlationId: str | None = None,
         filterFp: bool = False,
     ) -> list:
         """Retrieve scan result events, optionally filtered by type or module."""
@@ -737,21 +779,12 @@ class SpiderFootDb:
         """
         Generate schema DDL queries for the specified backend.
         Args:
-            db_type (str): 'sqlite' or 'postgresql'
+            db_type (str): 'postgresql'
         Returns:
             list: List of DDL queries for schema creation.
         """
-        # SQLite and PostgreSQL type mapping
-        if db_type == 'sqlite':
-            int_type = 'INT'
-            bigint_type = 'INT'
-            text_type = 'TEXT'
-            varchar_type = 'VARCHAR'
-            pk_autoinc = 'INTEGER PRIMARY KEY AUTOINCREMENT'
-            pragma = ["PRAGMA journal_mode=WAL"]
-            if_not_exists = ''
-            index_if_not_exists = ''
-        elif db_type == 'postgresql':
+        # PostgreSQL type mapping
+        if db_type == 'postgresql':
             int_type = 'INT'
             bigint_type = 'BIGINT'
             text_type = 'TEXT'
@@ -849,9 +882,7 @@ class SpiderFootDb:
                     self.dbh.execute(query)
                 except Exception as e:
                     # Ignore index/table exists errors, raise others
-                    if self.db_type == 'sqlite' and 'already exists' in str(e):
-                        continue
-                    if self.db_type == 'postgresql' and 'already exists' in str(e):
+                    if 'already exists' in str(e):
                         continue
                     raise
             self.conn.commit()
@@ -916,3 +947,18 @@ class SpiderFootDb:
                 'source_event_hash': event[9]  # source_event_hash
             })
         return children
+
+
+# ---------------------------------------------------------------------------
+# Sub-module re-exports (diagnostics, notify, performance, migration)
+# ---------------------------------------------------------------------------
+
+from .db_diagnostics import ExplainResult, QueryDiagnostics  # noqa: E402
+from .db_notify import PgNotifyService  # noqa: E402
+from .db_performance import (  # noqa: E402
+    PartitionManager,
+    ReadReplicaRouter,
+    ScanStatsCache,
+    VacuumAnalyze,
+)
+from .migrate import DbAdapter, MigrationManager, MigrationPlan  # noqa: E402

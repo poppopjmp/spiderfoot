@@ -19,10 +19,10 @@ import json
 import time
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_ipapico(SpiderFootModernPlugin):
+class sfp_ipapico(SpiderFootAsyncPlugin):
 
     """Queries ipapi.co to identify geolocation of IP Addresses using ipapi.co API"""
 

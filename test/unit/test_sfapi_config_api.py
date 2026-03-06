@@ -2,7 +2,11 @@ from __future__ import annotations
 
 """Tests for sfapi_config_api module."""
 
+import os
 import pytest
+if not os.environ.get('SF_POSTGRES_DSN'):
+    pytest.skip('PostgreSQL not available (SF_POSTGRES_DSN not set)', allow_module_level=True)
+
 from fastapi.testclient import TestClient
 import sfapi
 

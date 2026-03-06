@@ -91,7 +91,8 @@ def _check_imports(content: str, tree: ast.Module, result: ValidationResult) -> 
 
     for node in ast.walk(tree):
         if isinstance(node, ast.ImportFrom):
-            if node.module == "spiderfoot.modern_plugin":
+            if node.module in ("spiderfoot.modern_plugin",
+                               "spiderfoot.plugins.modern_plugin"):
                 for alias in node.names:
                     if alias.name == "SpiderFootModernPlugin":
                         has_modern_import = True
@@ -103,7 +104,7 @@ def _check_imports(content: str, tree: ast.Module, result: ValidationResult) -> 
     if has_modern_import:
         result.pass_("imports_modern_plugin")
     else:
-        result.fail("missing_modern_import: No 'from spiderfoot.modern_plugin import SpiderFootModernPlugin'")
+        result.fail("missing_modern_import: No 'from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin'")
 
     if has_legacy_import:
         result.fail("has_legacy_import: Still imports SpiderFootPlugin from spiderfoot")

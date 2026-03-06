@@ -20,10 +20,10 @@ import re
 from bs4 import BeautifulSoup
 
 from spiderfoot import SpiderFootEvent, SpiderFootHelpers
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_emailformat(SpiderFootModernPlugin):
+class sfp_emailformat(SpiderFootAsyncPlugin):
     """EmailFormat plugin for looking up email address formats."""
     meta = {
         'name': "EmailFormat",

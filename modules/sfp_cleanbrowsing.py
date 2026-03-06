@@ -19,10 +19,10 @@ from __future__ import annotations
 import dns.resolver
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_cleanbrowsing(SpiderFootModernPlugin):
+class sfp_cleanbrowsing(SpiderFootAsyncPlugin):
     """SpiderFoot plugin to check if a host would be blocked by CleanBrowsing.org DNS content filters."""
     meta = {
         'name': "CleanBrowsing.org",

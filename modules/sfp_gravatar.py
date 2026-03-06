@@ -20,10 +20,10 @@ import json
 import time
 
 from spiderfoot import SpiderFootEvent, SpiderFootHelpers
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_gravatar(SpiderFootModernPlugin):
+class sfp_gravatar(SpiderFootAsyncPlugin):
 
     """Retrieve user information from Gravatar API."""
 

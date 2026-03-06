@@ -243,8 +243,8 @@ class TestModuleLoaderInit:
 class TestModuleLoaderCreate:
     """Tests for the classmethod factory."""
 
-    @patch("spiderfoot.module_graph.ModuleGraph")
-    @patch("spiderfoot.module_registry.ModuleRegistry")
+    @patch("spiderfoot.plugins.module_graph.ModuleGraph")
+    @patch("spiderfoot.plugins.module_registry.ModuleRegistry")
     def test_create_imports_registry_and_graph(self, MockReg, MockGraph):
         """Factory should attempt to build both registry and graph."""
         mock_reg = MagicMock()
@@ -265,7 +265,7 @@ class TestModuleLoaderCreate:
         """Should work even if ModuleRegistry import fails."""
         with patch.dict(
             "sys.modules",
-            {"spiderfoot.module_registry": None},
+            {"spiderfoot.plugins.module_registry": None},
         ):
             # ModuleLoader.create will handle the import error
             loader = ModuleLoader()
@@ -775,7 +775,7 @@ class TestGlobalSingleton:
     def test_get_returns_none_initially(self):
         assert get_module_loader() is None
 
-    @patch("spiderfoot.module_loader.ModuleLoader.create")
+    @patch("spiderfoot.plugins.module_loader.ModuleLoader.create")
     def test_init_creates_loader(self, mock_create):
         mock_loader = MagicMock()
         mock_create.return_value = mock_loader
@@ -783,7 +783,7 @@ class TestGlobalSingleton:
         result = init_module_loader("/fake/dir")
         assert result is mock_loader
 
-    @patch("spiderfoot.module_loader.ModuleLoader.create")
+    @patch("spiderfoot.plugins.module_loader.ModuleLoader.create")
     def test_init_idempotent(self, mock_create):
         mock_loader = MagicMock()
         mock_create.return_value = mock_loader
@@ -793,7 +793,7 @@ class TestGlobalSingleton:
         assert first is second
         mock_create.assert_called_once()  # Only created once
 
-    @patch("spiderfoot.module_loader.ModuleLoader.create")
+    @patch("spiderfoot.plugins.module_loader.ModuleLoader.create")
     def test_reset_clears_singleton(self, mock_create):
         loader1 = MagicMock()
         loader2 = MagicMock()
@@ -806,7 +806,7 @@ class TestGlobalSingleton:
         assert first is not second
         assert mock_create.call_count == 2
 
-    @patch("spiderfoot.module_loader.ModuleLoader.create")
+    @patch("spiderfoot.plugins.module_loader.ModuleLoader.create")
     def test_thread_safety(self, mock_create):
         """Concurrent init calls should produce same singleton."""
         mock_loader = MagicMock()
@@ -840,7 +840,7 @@ class TestScannerIntegration:
         """_wire_module_loader should set scanner._module_loader."""
         scanner = MagicMock()
 
-        with patch("spiderfoot.module_loader.init_module_loader") as mock_init:
+        with patch("spiderfoot.plugins.module_loader.init_module_loader") as mock_init:
             mock_loader = MagicMock()
             mock_init.return_value = mock_loader
 

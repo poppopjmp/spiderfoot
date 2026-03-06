@@ -60,9 +60,9 @@ class TestSfp4chan(TestModuleBase):
     @patch('modules.sfp_4chan.requests.get')
     def test_handle_event_network_error(self, mock_get):
         mock_get.side_effect = Exception('Network error')
-        self.plugin.sf.error = MagicMock()
+        self.plugin._log = MagicMock()
         self.plugin.handleEvent(self.event)
-        self.plugin.sf.error.assert_called()
+        self.plugin._log.error.assert_called()
 
     @patch('modules.sfp_4chan.requests.get')
     def test_handle_event_duplicate_post(self, mock_get):

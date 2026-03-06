@@ -187,6 +187,7 @@ class TransformStage(PipelineStage):
     def process(self, event: PipelineEvent) -> StageResult:
         """Apply the transform function to the event data."""
         try:
+            event.data = self._transform(event.data)
             return StageResult.CONTINUE
         except Exception as e:
             log.error("Transform '%s' error: %s", self.name, e)

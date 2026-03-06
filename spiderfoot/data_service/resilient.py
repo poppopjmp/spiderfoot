@@ -40,7 +40,7 @@ class CircuitState:
 class DataServiceCircuitBreaker:
     """Synchronous circuit breaker for DataService calls.
 
-    Re-uses the pattern from spiderfoot.api_gateway.CircuitBreaker
+    Re-uses the pattern from spiderfoot.api.gateway.CircuitBreaker
     but is DataService-specific with integrated metrics.
     """
 

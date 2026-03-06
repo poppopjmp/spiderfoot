@@ -5,9 +5,9 @@
 #               Provides streaming exports in JSON, CSV, STIX 2.1, and
 #               SARIF formats via DataService.
 #
-# Author:       SpiderFoot Team
+# Author:       Van1sh 
 # Created:      2025-07-08
-# Copyright:    (c) SpiderFoot Team 2025
+# Copyright:    (c) Van1sh  2025
 # Licence:      MIT
 # -------------------------------------------------------------------------------
 

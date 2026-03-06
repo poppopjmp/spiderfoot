@@ -12,10 +12,10 @@ from __future__ import annotations
 import os
 import subprocess
 
-from spiderfoot import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_tool_hakrawler(SpiderFootModernPlugin):
+class sfp_tool_hakrawler(SpiderFootAsyncPlugin):
     """Simple web crawling and endpoint discovery via hakrawler."""
 
     meta = {

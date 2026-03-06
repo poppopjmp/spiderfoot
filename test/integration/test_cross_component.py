@@ -21,10 +21,7 @@ from spiderfoot.plugins.module_sandbox import (
 from spiderfoot.plugins.module_metrics import MetricsCollector, MetricType
 from spiderfoot.scan.scan_orchestrator import ScanOrchestrator, ScanPhase
 from spiderfoot.scan.scan_policy import ScanPolicy, PolicyEngine, PolicyAction
-from spiderfoot.correlation_rules import (
-    CorrelationEngine, CorrelationRule, Condition, ConditionOp, MatchMode,
-)
-from spiderfoot.data_export import (
+from spiderfoot.export.data_export import (
     ExportEvent, ExportOptions, ExportRegistry,
 )
 from spiderfoot.plugins.module_deps import ModuleDependencyResolver
@@ -179,55 +176,6 @@ class TestOrchestratorWithPolicy(unittest.TestCase):
         self.assertTrue(target_ok.allowed)
 
 
-class TestCorrelationWithPipeline(unittest.TestCase):
-    """Test CorrelationEngine fed by EventPipeline."""
-
-    def test_pipeline_feeds_correlation_engine(self):
-        """Events flow through pipeline into correlation engine."""
-        engine = CorrelationEngine()
-        rule = CorrelationRule(name="Multiple IPs")
-        rule.add_condition(Condition("type", ConditionOp.EQUALS, "IP_ADDRESS"))
-        rule.set_threshold(count=2, window_seconds=60.0)
-        engine.add_rule(rule)
-
-        matches = []
-        engine.on_match(lambda m: matches.append(m))
-
-        pipeline = EventPipeline()
-
-        def correlate_stage(event):
-            evt = {"type": event.event_type, "data": event.data}
-            engine.process(evt)
-            return StageResult.CONTINUE
-
-        pipeline.add_stage(FunctionStage(correlate_stage, name="correlate"))
-
-        for ip in ["1.1.1.1", "2.2.2.2", "3.3.3.3"]:
-            e = PipelineEvent("IP_ADDRESS", ip, "sfp_dns")
-            pipeline.execute(e)
-
-        self.assertTrue(len(matches) > 0)
-
-    def test_correlation_with_group_by(self):
-        """Correlation groups by module field."""
-        engine = CorrelationEngine()
-        rule = CorrelationRule(name="Module Events")
-        rule.add_condition(Condition("type", ConditionOp.EQUALS, "IP_ADDRESS"))
-        rule.set_threshold(count=2, window_seconds=60.0)
-        rule.set_group_by("module")
-        engine.add_rule(rule)
-
-        matches = []
-        engine.on_match(lambda m: matches.append(m))
-
-        engine.process({"type": "IP_ADDRESS", "data": "1.1.1.1", "module": "sfp_dns"})
-        engine.process({"type": "IP_ADDRESS", "data": "2.2.2.2", "module": "sfp_dns"})
-        engine.process({"type": "IP_ADDRESS", "data": "3.3.3.3", "module": "sfp_other"})
-
-        # Threshold met for sfp_dns group
-        self.assertTrue(len(matches) > 0)
-
-
 class TestExportWithFiltering(unittest.TestCase):
     """Test ExportRegistry with filtered events."""
 
@@ -377,6 +325,7 @@ class TestEndToEndScanWorkflow(unittest.TestCase):
             )
 
         # 6. Advance orchestrator
+        orch.advance_phase()  # INIT -> DISCOVERY
         orch.advance_phase()  # DISCOVERY -> ENUMERATION
         self.assertEqual(orch.current_phase, ScanPhase.ENUMERATION)
 

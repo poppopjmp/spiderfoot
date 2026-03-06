@@ -18,10 +18,10 @@ from __future__ import annotations
 import dns.resolver
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_yandexdns(SpiderFootModernPlugin):
+class sfp_yandexdns(SpiderFootAsyncPlugin):
 
     """Check if a host would be blocked by Yandex DNS."""
 

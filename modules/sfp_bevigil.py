@@ -19,10 +19,10 @@ import json
 import time
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_bevigil(SpiderFootModernPlugin):
+class sfp_bevigil(SpiderFootAsyncPlugin):
 
     """Query BeVigil OSINT API for subdomains, URLs, and mobile app packages associated with domains."""
 

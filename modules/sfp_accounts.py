@@ -23,10 +23,10 @@ from queue import Empty as QueueEmpty
 from queue import Queue
 
 from spiderfoot import SpiderFootEvent, SpiderFootHelpers
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_accounts(SpiderFootModernPlugin):
+class sfp_accounts(SpiderFootAsyncPlugin):
     """Look for possible associated accounts on over 500 social and other websites such as Instagram, Reddit, etc."""
     meta = {
         'name': "Account Finder",

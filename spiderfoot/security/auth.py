@@ -4,9 +4,9 @@
 # Purpose:      Authentication and authorization middleware for SpiderFoot
 #               API and WebUI services.
 #
-# Author:       SpiderFoot Team
+# Author:       Van1sh 
 # Created:      2025-07-08
-# Copyright:    (c) SpiderFoot Team 2025
+# Copyright:    (c) Van1sh  2025
 # Licence:      MIT
 # -------------------------------------------------------------------------------
 
@@ -183,18 +183,35 @@ class AuthConfig:
 # ---------------------------------------------------------------------------
 
 def _hash_password(password: str) -> str:
-    """Hash a password using SHA-256 with salt."""
-    salt = "spiderfoot"  # Simple salt; use bcrypt in production
-    return hashlib.sha256(
-        f"{salt}:{password}".encode()
-    ).hexdigest()
+    """Hash a password using bcrypt."""
+    try:
+        import bcrypt
+        return bcrypt.hashpw(
+            password.encode(), bcrypt.gensalt(rounds=12)
+        ).decode()
+    except ImportError:
+        # Fallback: PBKDF2-HMAC-SHA256 (stdlib) — never plain SHA-256
+        import os
+        salt = os.urandom(16)
+        dk = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, 310_000)
+        return f"pbkdf2:{salt.hex()}:{dk.hex()}"
 
 
 def _verify_password(password: str, password_hash: str) -> bool:
     """Verify a password against its hash."""
-    return hmac.compare_digest(
-        _hash_password(password), password_hash
-    )
+    try:
+        import bcrypt
+        return bcrypt.checkpw(password.encode(), password_hash.encode())
+    except (ImportError, ValueError):
+        pass
+    # PBKDF2 fallback
+    if password_hash.startswith("pbkdf2:"):
+        _, salt_hex, dk_hex = password_hash.split(":", 2)
+        dk = hashlib.pbkdf2_hmac(
+            "sha256", password.encode(), bytes.fromhex(salt_hex), 310_000
+        )
+        return hmac.compare_digest(dk.hex(), dk_hex)
+    return False
 
 
 # ---------------------------------------------------------------------------
@@ -260,7 +277,7 @@ class AuthGuard:
         if self._is_public_path(path):
             return AuthResult(True, identity="public", role=Role.VIEWER)
 
-        # No auth configured
+        # No auth configured — allow everything with full access
         if self.config.method == AuthMethod.NONE:
             return AuthResult(True, identity="anonymous", role=Role.ADMIN)
 
@@ -332,40 +349,21 @@ class AuthGuard:
         return AuthResult(True, identity=username, role=role)
 
     def _check_jwt(self, headers: dict[str, str]) -> AuthResult:
-        """Validate JWT token (simplified, no external dependency)."""
+        """Validate JWT token using PyJWT (standard 3-part format)."""
         auth_header = headers.get("Authorization", "")
         if not auth_header.startswith("Bearer "):
             return AuthResult(False, error="Bearer token required")
 
         token = auth_header[7:]
 
-        # Simple HMAC-based token validation
-        # Format: base64(payload).signature
-        parts = token.split(".")
-        if len(parts) != 2:
-            return AuthResult(False, error="Invalid token format")
-
-        import base64
         try:
-            payload_b64, signature = parts
-            payload_bytes = base64.urlsafe_b64decode(
-                payload_b64 + "==")
-            expected_sig = hmac.new(
-                self.config.jwt_secret.encode(),
-                payload_bytes,
-                hashlib.sha256,
-            ).hexdigest()
-
-            if not hmac.compare_digest(signature, expected_sig):
-                return AuthResult(False, error="Invalid token signature")
-
-            import json
-            payload = json.loads(payload_bytes.decode())
-
-            # Check expiry
-            if payload.get("exp", 0) < time.time():
-                return AuthResult(False, error="Token expired")
-
+            import jwt  # PyJWT
+            payload = jwt.decode(
+                token,
+                self.config.jwt_secret,
+                algorithms=["HS256"],
+                options={"require": ["exp", "sub"]},
+            )
             identity = payload.get("sub", "unknown")
             role = self._get_role(identity)
             return AuthResult(True, identity=identity, role=role)
@@ -394,7 +392,7 @@ class AuthGuard:
 
     def generate_jwt(self, subject: str,
                      expiry: int | None = None) -> str:
-        """Generate a JWT-like token.
+        """Generate a JWT token using PyJWT.
 
         Args:
             subject: Token subject (username/identity).
@@ -403,8 +401,7 @@ class AuthGuard:
         Returns:
             Token string.
         """
-        import base64
-        import json
+        import jwt  # PyJWT
 
         if not self.config.jwt_secret:
             raise ValueError("JWT secret not configured")
@@ -416,13 +413,4 @@ class AuthGuard:
             "iat": int(time.time()),
         }
 
-        payload_bytes = json.dumps(payload).encode()
-        payload_b64 = base64.urlsafe_b64encode(
-            payload_bytes).decode().rstrip("=")
-        signature = hmac.new(
-            self.config.jwt_secret.encode(),
-            payload_bytes,
-            hashlib.sha256,
-        ).hexdigest()
-
-        return f"{payload_b64}.{signature}"
+        return jwt.encode(payload, self.config.jwt_secret, algorithm="HS256")

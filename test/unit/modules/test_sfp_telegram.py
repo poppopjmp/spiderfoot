@@ -73,7 +73,8 @@ class TestModuleTelegram(TestModuleBase):
         self.assertEqual(self.module.notifyListeners.call_count, 0)
 
     def test_setup_missing_opts(self):
-        self.module.setup(self.sf_instance, {})
+        # Explicitly pass empty credentials to reset any class-level opts pollution
+        self.module.setup(self.sf_instance, {'api_id': '', 'api_hash': '', 'channels': ''})
         self.assertTrue(self.module.errorState)
 
     @patch("modules.sfp_telegram.TelegramClient", None)

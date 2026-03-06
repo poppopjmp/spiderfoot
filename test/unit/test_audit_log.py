@@ -1,4 +1,4 @@
-"""Tests for spiderfoot.audit_log."""
+"""Tests for spiderfoot.observability.audit_events."""
 from __future__ import annotations
 
 import json
@@ -320,7 +320,7 @@ class TestAuditLogger:
 
 class TestSingleton:
     def test_get_audit_logger(self):
-        import spiderfoot.audit_log as mod
+        import spiderfoot.observability.audit_events as mod
         mod._audit_instance = None
         a1 = get_audit_logger()
         a2 = get_audit_logger()

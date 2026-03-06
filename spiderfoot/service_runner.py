@@ -4,9 +4,9 @@
 # Purpose:      Unified entry point for running SpiderFoot as individual
 #               microservices (scanner, api) or as a monolith.
 #
-# Author:       SpiderFoot Team
+# Author:       Van1sh 
 # Created:      2025-07-08
-# Copyright:    (c) SpiderFoot Team 2025
+# Copyright:    (c) Van1sh  2025
 # Licence:      MIT
 # -------------------------------------------------------------------------------
 
@@ -20,7 +20,7 @@ Run individual SpiderFoot services for microservice deployment:
     python -m spiderfoot.service_runner --service all  # monolith mode
 
 Environment variables:
-    SF_SERVICE           Service to run (scanner|api|all)
+    SF_SERVICE_ROLE      Service to run (scanner|api|all)
     SF_REDIS_URL         Redis connection URL
     SF_POSTGRES_DSN      PostgreSQL DSN
     SF_VECTOR_ENDPOINT   Vector.dev HTTP source endpoint
@@ -38,7 +38,7 @@ import threading
 import time
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
-from spiderfoot.logging_config import LOG_FORMAT_TEXT
+from spiderfoot.observability.logging_config import LOG_FORMAT_TEXT
 
 # Ensure project root is on path
 _project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -161,7 +161,7 @@ def _run_scanner(port: int, config: dict) -> None:
     _health.service_name = "scanner"
 
     from spiderfoot.scan.scan_scheduler import ScanScheduler, SchedulerConfig
-    from spiderfoot.worker_pool import WorkerPool, WorkerPoolConfig
+    from spiderfoot.scan.worker_pool import WorkerPool, WorkerPoolConfig
     from spiderfoot.service_registry import initialize_services
 
     initialize_services(config)
@@ -221,20 +221,22 @@ def _run_api(port: int, config: dict) -> None:
 
 
 def _run_all(port: int, config: dict) -> None:
-    """Run all services in a single process (monolith mode)."""
-    _health.service_name = "monolith"
+    """Run all services in a single process (API + Scanner)."""
+    _health.service_name = "all"
     _health.ready = True
 
-    log.info("Running in monolith mode (all services)")
+    log.info("Running in combined mode (API + Scanner)")
 
-    sys.argv = [
-        "sf.py",
-        "--api",
-        "--api-listen", f"0.0.0.0:{port}",
-    ]
+    # Start scanner in background thread
+    import threading
+    scanner_thread = threading.Thread(
+        target=_run_scanner, args=(port + 1000, config),
+        daemon=True, name="scanner"
+    )
+    scanner_thread.start()
 
-    from sf import main as sf_main
-    sf_main()
+    # Run API in foreground
+    _run_api(port, config)
 
 
 _SERVICE_MAP = {
@@ -256,7 +258,7 @@ def main() -> None:
     parser.add_argument(
         "--service", "-s",
         choices=list(_SERVICE_MAP.keys()),
-        default=os.environ.get("SF_SERVICE", "all"),
+        default=os.environ.get("SF_SERVICE_ROLE", os.environ.get("SF_SERVICE", "all")),
         help="Service to run (default: all)",
     )
     parser.add_argument(

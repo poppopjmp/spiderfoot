@@ -22,10 +22,10 @@ from subprocess import PIPE, Popen, TimeoutExpired
 
 from spiderfoot import SpiderFootEvent
 from spiderfoot import SpiderFootHelpers
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_tool_whatweb(SpiderFootModernPlugin):
+class sfp_tool_whatweb(SpiderFootAsyncPlugin):
 
     """Identify what software is in use on the specified website."""
 

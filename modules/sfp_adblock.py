@@ -18,10 +18,10 @@ from __future__ import annotations
 import adblockparser
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_adblock(SpiderFootModernPlugin):
+class sfp_adblock(SpiderFootAsyncPlugin):
     """SpiderFoot plug-in to test if external/internally linked pages
     would be blocked by AdBlock Plus."""
     meta = {

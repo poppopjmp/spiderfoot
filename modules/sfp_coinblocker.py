@@ -15,10 +15,10 @@ from __future__ import annotations
 # -------------------------------------------------------------------------------
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_coinblocker(SpiderFootModernPlugin):
+class sfp_coinblocker(SpiderFootAsyncPlugin):
     """SpiderFoot plugin to check if a domain appears on CoinBlocker lists."""
     meta = {
         'name': "CoinBlocker Lists",

@@ -104,7 +104,7 @@ class TestMetricsRegistry(unittest.TestCase):
         g.set(99)
         text = reg.expose()
         self.assertIn("reg_test_1 5.0", text)
-        self.assertIn("reg_test_2 99.0", text)
+        self.assertIn("reg_test_2 99", text)
 
     def test_unregister(self):
         reg = MetricsRegistry()

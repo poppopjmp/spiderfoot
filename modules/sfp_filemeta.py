@@ -27,10 +27,10 @@ import exifread
 import pptx
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_filemeta(SpiderFootModernPlugin):
+class sfp_filemeta(SpiderFootAsyncPlugin):
     """SpiderFoot plugin for extracting file metadata."""
     meta = {
         'name': "File Metadata Extractor",

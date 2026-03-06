@@ -183,7 +183,7 @@ def _replace_import(m: re.Match) -> str:
     if after:
         parts.append(f"from spiderfoot import {after}")
 
-    parts.append("from spiderfoot.modern_plugin import SpiderFootModernPlugin")
+    parts.append("from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin")
     return "\n".join(parts)
 
 
@@ -202,7 +202,7 @@ def _replace_import_inline(m: re.Match) -> str:
     remaining_str = ", ".join(r for r in remaining if r)
     if remaining_str:
         parts.append(f"from spiderfoot import {remaining_str}")
-    parts.append("from spiderfoot.modern_plugin import SpiderFootModernPlugin")
+    parts.append("from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin")
     return "\n".join(parts)
 
 

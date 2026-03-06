@@ -17,10 +17,10 @@ import json
 import time
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_venmo(SpiderFootModernPlugin):
+class sfp_venmo(SpiderFootAsyncPlugin):
 
     """Gather user information from Venmo API."""
 

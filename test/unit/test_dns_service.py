@@ -78,7 +78,7 @@ class TestDnsServiceResolve(unittest.TestCase):
     @patch("socket.gethostbyname_ex")
     def test_resolve_host_socket_fallback(self, mock_resolve):
         # When dnspython not available, falls back to socket
-        with patch("spiderfoot.dns_service.HAS_DNSPYTHON", False):
+        with patch("spiderfoot.services.dns_service.HAS_DNSPYTHON", False):
             dns_svc = DnsService(DnsServiceConfig(cache_enabled=False))
             mock_resolve.return_value = ("example.com", [], ["93.184.216.34"])
             
@@ -87,7 +87,7 @@ class TestDnsServiceResolve(unittest.TestCase):
     
     @patch("socket.gethostbyname_ex")
     def test_resolve_host_nxdomain(self, mock_resolve):
-        with patch("spiderfoot.dns_service.HAS_DNSPYTHON", False):
+        with patch("spiderfoot.services.dns_service.HAS_DNSPYTHON", False):
             dns_svc = DnsService(DnsServiceConfig(cache_enabled=False))
             import socket
             mock_resolve.side_effect = socket.gaierror("not found")
@@ -97,7 +97,7 @@ class TestDnsServiceResolve(unittest.TestCase):
     
     @patch("socket.gethostbyaddr")
     def test_reverse_resolve_socket_fallback(self, mock_reverse):
-        with patch("spiderfoot.dns_service.HAS_DNSPYTHON", False):
+        with patch("spiderfoot.services.dns_service.HAS_DNSPYTHON", False):
             dns_svc = DnsService(DnsServiceConfig(cache_enabled=False))
             mock_reverse.return_value = ("example.com", [], ["93.184.216.34"])
             
@@ -136,7 +136,7 @@ class TestDnsServiceStats(unittest.TestCase):
     
     def test_query_count_increments(self):
         dns_svc = DnsService(DnsServiceConfig(cache_enabled=False))
-        with patch("spiderfoot.dns_service.HAS_DNSPYTHON", False):
+        with patch("spiderfoot.services.dns_service.HAS_DNSPYTHON", False):
             dns_svc_nolib = DnsService(DnsServiceConfig(cache_enabled=False))
             with patch("socket.gethostbyname_ex", return_value=("h", [], ["1.1.1.1"])):
                 dns_svc_nolib.resolve_host("test.com")

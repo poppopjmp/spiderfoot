@@ -12,10 +12,10 @@ import os
 import re
 import subprocess
 
-from spiderfoot import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_tool_sslscan(SpiderFootModernPlugin):
+class sfp_tool_sslscan(SpiderFootAsyncPlugin):
     """SSL cipher enumeration via sslscan."""
 
     meta = {
@@ -126,6 +126,8 @@ class sfp_tool_sslscan(SpiderFootModernPlugin):
             vulns = []
 
             for line in output.splitlines():
+                if self.checkForStop():
+                    return
                 line = line.strip()
 
                 # Parse cipher suites

@@ -289,13 +289,19 @@ class TestModuleBase(unittest.TestCase):
     def setUpClass(cls):
         """Set up class-level resources."""
         super().setUpClass()
-        print(f"🧪 Setting up test class: {cls.__name__}")
+        try:
+            print(f"🧪 Setting up test class: {cls.__name__}")
+        except (UnicodeEncodeError, UnicodeDecodeError):
+            print(f"[setup] Setting up test class: {cls.__name__}")
     
     @classmethod
     def tearDownClass(cls):
         """Clean up class-level resources."""
         try:
-            print(f"🧹 Tearing down test class: {cls.__name__}")
+            try:
+                print(f"🧹 Tearing down test class: {cls.__name__}")
+            except (UnicodeEncodeError, UnicodeDecodeError):
+                print(f"[teardown] Tearing down test class: {cls.__name__}")
             
             # Force cleanup of any remaining resources
             manager = get_test_resource_manager()
@@ -305,7 +311,10 @@ class TestModuleBase(unittest.TestCase):
             cleanup_shared_pools()
             
         except Exception as e:
-            print(f"⚠️  Error during tearDownClass: {e}")
+            try:
+                print(f"⚠️  Error during tearDownClass: {e}")
+            except (UnicodeEncodeError, UnicodeDecodeError):
+                print(f"[warning] Error during tearDownClass: {e}")
         
         finally:
             super().tearDownClass()

@@ -16,10 +16,10 @@ import subprocess
 import tempfile
 from typing import Any
 
-from spiderfoot import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_subfinder(SpiderFootModernPlugin):
+class sfp_subfinder(SpiderFootAsyncPlugin):
     """Passive subdomain discovery via ProjectDiscovery subfinder."""
 
     meta = {

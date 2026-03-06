@@ -19,10 +19,10 @@ import json
 import urllib
 
 from spiderfoot import SpiderFootEvent, SpiderFootHelpers
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_gleif(SpiderFootModernPlugin):
+class sfp_gleif(SpiderFootAsyncPlugin):
     """SpiderFoot plugin for searching the Global LEI Index."""
     __name__ = "sfp_gleif"
     meta = {

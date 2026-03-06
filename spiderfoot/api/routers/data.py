@@ -4,14 +4,14 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from ..dependencies import get_app_config, optional_auth
+from ..dependencies import get_app_config, optional_auth, get_api_key
 from ..pagination import PaginationParams, paginate
 from ..schemas import RiskLevelsResponse
 from spiderfoot.sflib.core import SpiderFoot
 from spiderfoot.db import SpiderFootDb
 import logging
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_api_key)])
 log = logging.getLogger(__name__)
 optional_auth_dep = Depends(optional_auth)
 
@@ -54,7 +54,7 @@ async def list_entity_types(api_key: str = optional_auth_dep) -> dict:
         return {"entity_types": sorted(set(str(t) for t in types)) if types else []}
     except Exception as e:
         log.exception("Failed to list entity types")
-        raise HTTPException(status_code=500, detail=f"Failed to list entity types: {e}") from e
+        raise HTTPException(status_code=500, detail="Failed to list entity types") from e
 
 
 @router.get("/data/modules")
@@ -82,7 +82,8 @@ async def list_modules(
         # modules may be a dict — convert to list for pagination
         if isinstance(modules, dict):
             module_list = [
-                {"name": k, **v} if isinstance(v, dict) else {"name": k, "info": v}
+                # Spread v first so canonical sfp key always wins as 'name'
+                {**v, "name": k} if isinstance(v, dict) else {"name": k, "info": v}
                 for k, v in modules.items()
             ]
         else:
@@ -90,7 +91,7 @@ async def list_modules(
         return paginate(module_list, params)
     except Exception as e:
         log.exception("Failed to list modules")
-        raise HTTPException(status_code=500, detail=f"Failed to list modules: {e}") from e
+        raise HTTPException(status_code=500, detail="Failed to list modules") from e
 
 
 @router.get("/data/sources")

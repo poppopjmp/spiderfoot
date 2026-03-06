@@ -18,17 +18,15 @@ from __future__ import annotations
 
 import json
 import re
-import urllib.error
 import urllib.parse
-import urllib.request
 
 from netaddr import IPNetwork
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 
 
-class sfp_hackertarget(SpiderFootModernPlugin):
+class sfp_hackertarget(SpiderFootAsyncPlugin):
 
     """Search HackerTarget.com for hosts sharing the same IP."""
 
@@ -270,6 +268,8 @@ class sfp_hackertarget(SpiderFootModernPlugin):
 
             # Try and pull out individual records
             for row in records:
+                if self.checkForStop():
+                    return
                 pat = re.compile(
                     r"^(\S+)\.?\s+\d+\s+IN\s+[AC].*", re.IGNORECASE | re.DOTALL)
                 grps = re.findall(pat, row)

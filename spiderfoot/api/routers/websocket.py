@@ -11,7 +11,10 @@ Endpoints:
 
 from __future__ import annotations
 
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+import re as _re
+from urllib.parse import urlparse
+
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
 from ..dependencies import get_app_config
 import json
 import time
@@ -27,6 +30,92 @@ from spiderfoot.scan.scan_state_map import (
 
 router = APIRouter()
 log = logging.getLogger("spiderfoot.api.websocket")
+
+# ---------------------------------------------------------------------------
+# Allowed WebSocket origin configuration
+# ---------------------------------------------------------------------------
+
+# Populated by ``configure_allowed_origins()`` at startup.  When empty
+# every origin is accepted (development mode).
+_allowed_origins: set[str] = set()
+
+
+def configure_allowed_origins(origins: list[str] | None = None) -> None:
+    """Set the allowed WebSocket origins.
+
+    Each entry should be an *origin* in the form ``scheme://host[:port]``,
+    e.g. ``["https://spiderfoot.example.com"]``.
+
+    Pass ``None`` or an empty list to allow all origins (development only).
+    """
+    _allowed_origins.clear()
+    if origins:
+        for o in origins:
+            _allowed_origins.add(o.rstrip("/").lower())
+
+
+def _check_origin(websocket: WebSocket) -> bool:
+    """Return True if the WebSocket ``Origin`` header is permitted.
+
+    Rules:
+    1. If no origins are configured, accept any (backwards-compatible).
+    2. A missing ``Origin`` header is **rejected** when an allow-list is set
+       — browsers always send it; its absence means a non-browser client
+       that should use the REST API instead.
+    3. The origin must match one of the configured entries exactly.
+    """
+    if not _allowed_origins:
+        return True
+
+    origin = (websocket.headers.get("origin") or "").rstrip("/").lower()
+    if not origin:
+        log.warning("WebSocket rejected: no Origin header")
+        return False
+
+    if origin in _allowed_origins:
+        return True
+
+    log.warning("WebSocket rejected: origin %r not in %s", origin, _allowed_origins)
+    return False
+
+
+async def _verify_ws_token(websocket: WebSocket) -> bool:
+    """Verify the WebSocket connection token from query parameters.
+
+    Accepts ``?token=<jwt_or_api_key>`` since browsers cannot set custom
+    headers in the WebSocket constructor.  Returns *True* if auth is
+    disabled or the token is valid; *False* otherwise.
+    """
+    try:
+        config = get_app_config()
+        cfg = config.get_config() if config else {}
+    except Exception:
+        cfg = {}
+
+    # If no API key is configured, auth is effectively disabled
+    api_key = cfg.get("__webaddr_apikey", "")
+    if not api_key:
+        return True
+
+    token = websocket.query_params.get("token", "")
+    if not token:
+        return False
+
+    # Check direct API-key match
+    if token == api_key:
+        return True
+
+    # Check JWT / sf_ API key via auth service
+    try:
+        from spiderfoot.auth.service import get_auth_service
+        auth_svc = get_auth_service()
+        if token.startswith("sf_"):
+            auth_svc.api_key_to_user_context(token)
+        else:
+            auth_svc.token_to_user_context(token)
+        return True
+    except Exception:
+        return False
 
 
 class WebSocketManager:
@@ -197,8 +286,9 @@ async def _polling_mode(websocket: WebSocket, scan_id: str) -> None:
         repo = factory.scan_repo()
         svc = ScanService(repo, dbh=repo._dbh)
     except Exception as e:
+        log.error("WebSocket service init failed: %s", e, exc_info=True)
         await websocket.send_text(json.dumps({
-            "error": f"Service not available: {e}",
+            "error": "Service not available",
         }))
         return
 
@@ -278,9 +368,29 @@ async def _polling_mode(websocket: WebSocket, scan_id: str) -> None:
 async def websocket_scan_stream(websocket: WebSocket, scan_id: str) -> None:
     """Stream scan events over WebSocket.
 
+    Requires a valid token via ``?token=<jwt_or_api_key>`` query param
+    when authentication is enabled.
+
     Uses EventRelay push mode if the relay has an EventBus wired.
     Falls back to database polling otherwise.
     """
+    # ── Validate scan_id ────────────────────────────────────────────
+    if not _re.match(r"^[a-zA-Z0-9_\-]{1,64}$", scan_id):
+        await websocket.close(code=4000, reason="Invalid scan ID")
+        log.warning("Rejected WebSocket with invalid scan_id: %s", scan_id[:80])
+        return
+
+    # ── Origin validation ─────────────────────────────────────────────
+    if not _check_origin(websocket):
+        await websocket.close(code=4001, reason="Origin not allowed")
+        return
+
+    # ── Auth gate ─────────────────────────────────────────────────────
+    if not await _verify_ws_token(websocket):
+        await websocket.close(code=4003, reason="Authentication required")
+        log.warning("Rejected unauthenticated WebSocket for scan %s", scan_id)
+        return
+
     await websocket_manager.connect(websocket, scan_id)
 
     try:

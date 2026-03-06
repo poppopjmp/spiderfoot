@@ -1,9 +1,9 @@
-"""Tests for spiderfoot.api_versioning."""
+"""Tests for spiderfoot.api.version_negotiation."""
 from __future__ import annotations
 
 import unittest
 
-from spiderfoot.api_versioning import (
+from spiderfoot.api.version_negotiation import (
     APIVersion,
     APIVersionManager,
     VersionedRoute,

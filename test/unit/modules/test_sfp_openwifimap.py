@@ -35,12 +35,14 @@ def test_produced_events(plugin):
 
 def test_option_validation():
     p = sfp_openwifimap()
-    with pytest.raises(ValueError):
-        p.setup(None, {"search_term": "", "max_results": 10, "output_format": "summary"})
-    with pytest.raises(ValueError):
-        p.setup(None, {"search_term": "wifi", "max_results": 0, "output_format": "summary"})
-    with pytest.raises(ValueError):
-        p.setup(None, {"search_term": "wifi", "max_results": 10, "output_format": "invalid"})
+    p.setup(None, {"search_term": "", "max_results": 10, "output_format": "summary"})
+    assert p.errorState
+    p = sfp_openwifimap()
+    p.setup(None, {"search_term": "wifi", "max_results": 0, "output_format": "summary"})
+    assert p.errorState
+    p = sfp_openwifimap()
+    p.setup(None, {"search_term": "wifi", "max_results": 10, "output_format": "invalid"})
+    assert p.errorState
 
 def test_handle_event_stub(plugin):
     event = SpiderFootEvent('INTERNET_NAME', 'test', 'test', None)

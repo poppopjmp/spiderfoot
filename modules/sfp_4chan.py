@@ -3,11 +3,11 @@ from __future__ import annotations
 """SpiderFoot plug-in module: 4chan."""
 
 from spiderfoot import SpiderFootEvent
-from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 import requests
 import time
 
-class sfp_4chan(SpiderFootModernPlugin):
+class sfp_4chan(SpiderFootAsyncPlugin):
     """
     SpiderFoot plugin to monitor 4chan boards for new posts and emit events.
     """
