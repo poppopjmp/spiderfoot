@@ -131,6 +131,11 @@ class sfp__stor_db(SpiderFootModernPlugin):
             except Exception as _e:
                 self.debug(f"Could not parse __database DSN: {_e}")
 
+        # Validate configuration before attempting connection.
+        if not self._validateConfig():
+            self.errorState = True
+            return
+
         # Optionally open a dedicated direct connection for _store_postgresql.
         # If this fails we fall back to _store_default (self.__sfdb__) which
         # uses the pooled connection already established by SpiderFoot.
@@ -184,7 +189,10 @@ class sfp__stor_db(SpiderFootModernPlugin):
             self.debug("Connected to PostgreSQL database (direct)")
         except Exception as e:
             self.error(f"Direct PostgreSQL connection failed ({e}); will use shared DB handle instead")
-            self.pg_conn = None  # fall back to _store_default — do NOT errorState
+            self.pg_conn = None  # fall back to _store_default
+            # If auto-recovery is disabled, treat connection failure as fatal
+            if not self.opts.get('enable_auto_recovery', True):
+                self.errorState = True
 
     def _check_postgresql_connection(self):
         """Check if PostgreSQL connection is healthy.

@@ -66,7 +66,7 @@ class FakeDbh:
         self._configs.pop(scan_id, None)
 
     def scanInstanceCreate(self, scan_id, name, target):
-        self._scans[scan_id] = (name, target, "CREATED", 0, 0, "CREATED")
+        self._scans[scan_id] = (scan_id, name, target, 0, 0, 0, "CREATED", 0)
 
     def scanInstanceDelete(self, scan_id):
         self._scans.pop(scan_id, None)
@@ -153,7 +153,7 @@ def _make_svc(scans=None, events=None, configs=None, logs=None,
     for rec in (scans or []):
         repo._scans[rec.scan_id] = rec
         dbh._scans[rec.scan_id] = (
-            rec.name, rec.target, rec.status, 0, 0, rec.status,
+            rec.scan_id, rec.name, rec.target, 0, 0, 0, rec.status, 0,
         )
 
     for sid, rows in (events or {}).items():
@@ -258,7 +258,7 @@ class TestScanServiceResults:
     def test_set_false_positive_success(self):
         rec = ScanRecord(scan_id="s1", name="T", target="t", status="FINISHED")
         dbh = FakeDbh()
-        dbh._scans["s1"] = ("T", "t", "FINISHED", 0, 0, "FINISHED")
+        dbh._scans["s1"] = ("s1", "T", "t", 0, 0, 0, "FINISHED", 0)
         repo = FakeRepo(dbh=dbh)
         repo._scans["s1"] = rec
         svc = ScanService(repo, dbh=dbh)
@@ -268,7 +268,7 @@ class TestScanServiceResults:
     def test_set_false_positive_not_finished(self):
         rec = ScanRecord(scan_id="s1", name="T", target="t", status="RUNNING")
         dbh = FakeDbh()
-        dbh._scans["s1"] = ("T", "t", "RUNNING", 0, 0, "RUNNING")
+        dbh._scans["s1"] = ("s1", "T", "t", 0, 0, 0, "RUNNING", 0)
         repo = FakeRepo(dbh=dbh)
         repo._scans["s1"] = rec
         svc = ScanService(repo, dbh=dbh)

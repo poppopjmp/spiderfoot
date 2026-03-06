@@ -321,33 +321,10 @@ class ScanResultAggregator:
             "module_stats": self.get_module_stats(),
         }
 
-    def reset(self) -> None:
-        """Reset all aggregation data."""
-        self._events.clear()
-        self._type_stats.clear()
-        self._module_counts.clear()
-        self._risk_events.clear()
-        self._category_counts.clear()
-        self.start_time = time.time()
-
-
-# Alias used by scanner.py and correlation engine tests
-ResultAggregator = ScanResultAggregator
-
-
-class ResultAggregator:
-    """Simple aggregator for correlation result sets.
-
-    Used by the correlation engine to count or summarise rule results.
-
-    Example::
-
-        agg = ResultAggregator()
-        count = agg.aggregate(results, method='count')
-    """
-
     def aggregate(self, results: list, method: str = "count") -> int:
         """Aggregate *results* using the given *method*.
+
+        Supports backwards-compatible ``ResultAggregator().aggregate(...)`` usage.
 
         Currently supported methods:
           * ``'count'`` – return ``len(results)``
@@ -365,3 +342,16 @@ class ResultAggregator:
         if method == "count":
             return len(results)
         raise ValueError(f"Unknown aggregation method: {method!r}")
+
+    def reset(self) -> None:
+        """Reset all aggregation data."""
+        self._events.clear()
+        self._type_stats.clear()
+        self._module_counts.clear()
+        self._risk_events.clear()
+        self._category_counts.clear()
+        self.start_time = time.time()
+
+
+# Alias — ResultAggregator is the full-featured ScanResultAggregator
+ResultAggregator = ScanResultAggregator

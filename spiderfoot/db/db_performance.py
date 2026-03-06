@@ -61,8 +61,8 @@ class PartitionManager:
     the table and the runtime partition management.
     """
 
-    # Strict: only hex chars and hyphens (UUID format)
-    _SAFE_SCAN_ID = re.compile(r"^[a-zA-Z0-9_\-]{1,128}$")
+    # Strict: only hex chars and hyphens (UUID format), max 64 chars
+    _SAFE_SCAN_ID = re.compile(r"^[a-zA-Z0-9_\-]{1,64}$")
 
     def __init__(self, conn: Any) -> None:
         if conn is None:

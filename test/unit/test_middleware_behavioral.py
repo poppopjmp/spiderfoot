@@ -65,7 +65,7 @@ class TestCSRFMiddleware:
     def csrf_app(self):
         from spiderfoot.api.csrf_middleware import CSRFMiddleware, CSRFConfig
         app = _make_app()
-        cfg = CSRFConfig(enabled=True)
+        cfg = CSRFConfig(enabled=True, protected_paths=["/api"])
         app.add_middleware(CSRFMiddleware, config=cfg)
         return app
 

@@ -83,7 +83,7 @@ class TestLocalDataService(unittest.TestCase):
     
     def test_scan_instance_get(self):
         self.mock_dbh.scanInstanceGet.return_value = [
-            ("Test Scan", "example.com", 1000, 1001, 1002, "FINISHED")
+            ("scan-1", "Test Scan", "example.com", 1000, 1001, 1002, "FINISHED", 0)
         ]
         result = self.ds.scan_instance_get("scan-1")
         self.assertIsNotNone(result)
@@ -238,7 +238,7 @@ class TestDataServiceBridge(unittest.TestCase):
     
     def test_scanInstanceGet(self):
         self.mock_dbh.scanInstanceGet.return_value = [
-            ("Test", "target.com", 100, 101, 102, "FINISHED")
+            ("id-1", "Test", "target.com", 100, 101, 102, "FINISHED", 0)
         ]
         result = self.bridge.scanInstanceGet("id-1")
         self.assertIsInstance(result, list)
