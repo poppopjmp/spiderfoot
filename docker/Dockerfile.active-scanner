@@ -114,6 +114,12 @@ RUN mkdir -p /tools/wordlists && \
       https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/DNS/subdomains-top1million-5000.txt && \
     wget -q -O /tools/wordlists/subdomains-top1million-20000.txt \
       https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/DNS/subdomains-top1million-20000.txt && \
+    wget -q -O /tools/wordlists/subdomains-top1million-110000.txt \
+      https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/DNS/subdomains-top1million-110000.txt && \
+    wget -q -O /tools/wordlists/raft-medium-files.txt \
+      https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/Web-Content/raft-medium-files.txt && \
+    wget -q -O /tools/wordlists/burp-parameter-names.txt \
+      https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/Web-Content/burp-parameter-names.txt && \
     wget -q -O /tools/wordlists/resolvers.txt \
       https://raw.githubusercontent.com/trickest/resolvers/main/resolvers.txt
 

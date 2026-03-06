@@ -171,8 +171,8 @@ jobs:
         run: |
           docker run --rm --entrypoint /opt/venv/bin/python spiderfoot-active:latest -c "
           import importlib, sys, os
-          os.chdir('/opt/spiderfoot')
-          sys.path.insert(0, '/opt/spiderfoot')
+          os.chdir('/home/spiderfoot')
+          sys.path.insert(0, '/home/spiderfoot')
 
           modules = [
               'sfp_tool_amass', 'sfp_tool_dnsx', 'sfp_tool_massdns',
