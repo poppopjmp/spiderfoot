@@ -2,9 +2,9 @@ name: CI - Test & Lint
 
 on:
   push:
-    branches: [main, dev-*]
+    branches: [master, dev-*]
   pull_request:
-    branches: [main]
+    branches: [master]
 
 permissions:
   contents: read

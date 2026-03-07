@@ -4,7 +4,7 @@ on:
   workflow_run:
     workflows: ["CI - Test & Lint", "Docker Build & Push"]
     types: [completed]
-    branches: [main]
+    branches: [master]
   workflow_dispatch:
     inputs:
       environment:

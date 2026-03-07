@@ -2,7 +2,7 @@ name: E2E — Active Scan Worker Tools
 
 on:
   push:
-    branches: [main, dev-*]
+    branches: [master, dev-*]
     paths:
       - 'docker/Dockerfile.active-scanner'
       - 'docker/Dockerfile.base'
@@ -10,7 +10,7 @@ on:
       - 'modules/sfp_tool_*.py'
       - '.github/workflows/e2e-tools.yml'
   pull_request:
-    branches: [main]
+    branches: [master]
     paths:
       - 'docker/Dockerfile.active-scanner'
       - 'docker/Dockerfile.base'

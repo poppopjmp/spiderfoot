@@ -2,9 +2,9 @@ name: Build and Upload Artifacts
 
 on:
   push:
-    branches: [main, "b*"]
+    branches: [master, "b*"]
   pull_request:
-    branches: [main, "b*"]
+    branches: [master, "b*"]
   workflow_dispatch:
 permissions:
   id-token: write

@@ -2,7 +2,7 @@ name: Deployment Validation — Full Stack
 
 on:
   push:
-    branches: [main]
+    branches: [master]
     paths:
       - "Dockerfile"
       - "docker-compose.yml"
@@ -12,7 +12,7 @@ on:
       - "cli/**"
       - ".github/workflows/deploy-test.yml"
   pull_request:
-    branches: [main]
+    branches: [master]
   workflow_dispatch:
 
 permissions:

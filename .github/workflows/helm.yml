@@ -4,7 +4,7 @@ on:
   push:
     paths:
       - "helm/**"
-    branches: [main]
+    branches: [master]
     tags: ["v*"]
   workflow_dispatch:
 

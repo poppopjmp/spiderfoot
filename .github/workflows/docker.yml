@@ -3,7 +3,7 @@ name: Docker Build & Push
 on:
   push:
     tags: ["v*"]
-    branches: [dev*]
+    branches: [dev*,"master"]
   workflow_dispatch:
     inputs:
       tag:
