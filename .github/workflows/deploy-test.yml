@@ -244,13 +244,13 @@ jobs:
         run: sf version
 
       - name: CLI status
-        run: sf status --json || true
+        run: sf status -o json || true
 
       - name: CLI modules
-        run: sf modules --json | head -20
+        run: sf modules -o json | head -20
 
       - name: CLI stealth levels
-        run: sf stealth levels --json
+        run: sf stealth levels -o json
 
       - name: Cleanup
         if: always()
