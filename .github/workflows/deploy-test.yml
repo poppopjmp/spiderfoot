@@ -105,15 +105,9 @@ jobs:
           docker run -d \
             --name sf-api \
             --network host \
-            -e SF_DB_TYPE=postgresql \
-            -e SF_DB_HOST=localhost \
-            -e SF_DB_PORT=5432 \
-            -e SF_DB_NAME=spiderfoot \
-            -e SF_DB_USER=spiderfoot \
-            -e SF_DB_PASSWORD=testpass \
+            -e SF_POSTGRES_DSN=postgresql://spiderfoot:testpass@localhost:5432/spiderfoot \
             -e SF_REDIS_URL=redis://localhost:6379/0 \
-            spiderfoot:test \
-            python sf.py --api --api-listen 0.0.0.0:8001
+            spiderfoot:test
 
       - name: Wait for API
         run: |
@@ -217,15 +211,9 @@ jobs:
           docker run -d \
             --name sf-api \
             --network host \
-            -e SF_DB_TYPE=postgresql \
-            -e SF_DB_HOST=localhost \
-            -e SF_DB_PORT=5432 \
-            -e SF_DB_NAME=spiderfoot \
-            -e SF_DB_USER=spiderfoot \
-            -e SF_DB_PASSWORD=testpass \
+            -e SF_POSTGRES_DSN=postgresql://spiderfoot:testpass@localhost:5432/spiderfoot \
             -e SF_REDIS_URL=redis://localhost:6379/0 \
-            spiderfoot:test \
-            python sf.py --api --api-listen 0.0.0.0:8001
+            spiderfoot:test
 
       - name: Wait for API
         run: |
@@ -283,15 +271,16 @@ jobs:
 
       - name: Verify bundle
         run: |
+          BUILD_DIR="../spiderfoot/static/react"
           echo "=== Build output ==="
-          ls -lah dist/
-          ls -lah dist/assets/ || true
+          ls -lah "$BUILD_DIR/"
+          ls -lah "$BUILD_DIR/assets/" || true
 
           # Ensure index.html exists
-          test -f dist/index.html || (echo "FAIL: index.html missing" && exit 1)
+          test -f "$BUILD_DIR/index.html" || (echo "FAIL: index.html missing" && exit 1)
 
           # Check bundle size is reasonable (< 5MB)
-          TOTAL=$(du -sb dist/ | awk '{print $1}')
+          TOTAL=$(du -sb "$BUILD_DIR/" | awk '{print $1}')
           echo "Total bundle size: ${TOTAL} bytes"
           if [ "$TOTAL" -gt 5242880 ]; then
             echo "WARNING: Bundle exceeds 5MB"

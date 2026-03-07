@@ -236,7 +236,10 @@ jobs:
           ./syft . -o syft-json > packaging/SBOM-syft.json
       - name: Security scan (trivy)
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.10'
-        run: |
-          sudo apt-get install -y wget
-          wget -qO- https://github.com/aquasecurity/trivy/releases/download/v0.63.0/trivy_0.63.0_Linux-64bit.tar.gz | tar xz
-          ./trivy fs --exit-code 0 --severity HIGH,CRITICAL --scanners vuln,secret,config .
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          scan-ref: .
+          exit-code: "0"
+          severity: HIGH,CRITICAL
+          scanners: vuln,secret,config
