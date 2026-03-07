@@ -226,6 +226,7 @@ jobs:
             --network host \
             -e SF_POSTGRES_DSN=postgresql://spiderfoot:testpass@localhost:5432/spiderfoot \
             -e SF_REDIS_URL=redis://localhost:6379/0 \
+            -e SF_AUTH_REQUIRED=false \
             spiderfoot:test
 
       - name: Wait for API
