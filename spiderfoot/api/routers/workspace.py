@@ -12,9 +12,7 @@ from ..dependencies import get_app_config, get_api_key, optional_auth, safe_file
 from ..models import WorkspaceRequest, TargetRequest, MultiScanRequest
 from ..pagination import PaginationParams, paginate
 from ..schemas import (
-    WorkspaceCreateResponse, WorkspaceDetailResponse, WorkspaceUpdateResponse,
-    WorkspaceDeleteResponse, WorkspaceCloneResponse,
-    TargetAddResponse, TargetDeleteResponse,
+    WorkspaceCreateResponse, WorkspaceDetailResponse,
 )
 import logging
 

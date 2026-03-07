@@ -467,7 +467,6 @@ async def get_module_dependencies(
 
     Use ``?format=mermaid`` to get a Mermaid diagram string.
     """
-    from fastapi import Query as Q
     from spiderfoot import SpiderFootHelpers
     from spiderfoot.sflib.core import SpiderFoot
 

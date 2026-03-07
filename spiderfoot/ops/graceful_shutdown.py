@@ -182,7 +182,7 @@ class ShutdownCoordinator:
         except (OSError, ValueError) as exc:
             log.warning("Could not install signal handlers: %s", exc)
 
-    def _signal_handler(self, signum: int, frame: Any) -> None:
+    def _signal_handler(self, signum: int, _frame: Any) -> None:
         """Handle SIGTERM/SIGINT."""
         sig_name = signal.Signals(signum).name if hasattr(signal, "Signals") else str(signum)
         log.info("Received %s — initiating graceful shutdown", sig_name)

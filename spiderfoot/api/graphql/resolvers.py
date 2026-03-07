@@ -15,11 +15,11 @@ from typing import Optional, AsyncGenerator
 from collections import Counter, defaultdict
 
 import strawberry
-from strawberry.types import Info
+from strawberry.types import Info as _Info  # noqa: F401 – kept for future resolver context injection
 
 from .types import (
     ScanType, EventType, EventTypeSummary, CorrelationType,
-    ScanLogType, ModuleType, EventTypeInfo, WorkspaceType,
+    ScanLogType, EventTypeInfo, WorkspaceType,
     GraphNode, GraphEdge, ScanGraph, TimelineEntry,
     RiskDistribution, ScanStatistics, ModuleEventCount,
     EventFilter, PaginationInput, PaginatedEvents, PaginatedScans,
@@ -27,7 +27,7 @@ from .types import (
     MutationResult, ScanCreateResult, FalsePositiveResult,
     VectorSearchHit, VectorSearchResult, VectorCollectionInfo,
 )
-from .dataloaders import create_dataloaders
+from .dataloaders import create_dataloaders as _create_dataloaders  # noqa: F401
 
 _log = logging.getLogger("spiderfoot.api.graphql")
 

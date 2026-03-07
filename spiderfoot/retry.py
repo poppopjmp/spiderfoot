@@ -366,8 +366,8 @@ class RetryContext:
     def __exit__(
         self,
         exc_type: type[BaseException] | None,
-        exc_val: BaseException | None,
-        exc_tb: types_mod.TracebackType | None,
+        _exc_val: BaseException | None,
+        _exc_tb: types_mod.TracebackType | None,
     ) -> bool:
         """Exit the retry context."""
         return False

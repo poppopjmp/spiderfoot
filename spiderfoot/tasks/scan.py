@@ -22,7 +22,7 @@ import time
 import traceback
 from typing import Any
 
-from celery import current_task, states
+from celery import states
 from celery.exceptions import SoftTimeLimitExceeded
 
 from spiderfoot.celery_app import celery_app
