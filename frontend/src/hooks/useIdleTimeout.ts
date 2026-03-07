@@ -56,8 +56,8 @@ export function useIdleTimeout(options: IdleTimeoutOptions): void {
     disabled = false,
   } = options;
 
-  const warningRef = useRef<ReturnType<typeof setTimeout>>();
-  const idleRef = useRef<ReturnType<typeof setTimeout>>();
+  const warningRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const idleRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const warnedRef = useRef(false);
   const lastActivityRef = useRef(Date.now());
 

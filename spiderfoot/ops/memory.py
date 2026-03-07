@@ -934,7 +934,7 @@ class AllocationTracker:
             self._start_time = time.time()
             return self
 
-        def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+        def __exit__(self, exc_type: Any, _exc_val: Any, _exc_tb: Any) -> None:
             gc.collect()
             end_objects = len(gc.get_objects())
             end_rss = CeleryMemoryGuard._get_rss_mb()
@@ -1136,7 +1136,7 @@ class GCTuner:
             gc.disable()
             return self
 
-        def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+        def __exit__(self, exc_type: Any, _exc_val: Any, _exc_tb: Any) -> None:
             if self._was_enabled:
                 gc.enable()
             self._tuner.collect_now(2)

@@ -453,7 +453,7 @@ class TestErrorHandling:
     """Verify standardised error response structure."""
 
     def test_error_response_shape(self):
-        from spiderfoot.api.error_handling import error_response
+        from spiderfoot.api.error_handlers import error_response
         resp = error_response(404, "NOT_FOUND", "Resource not found", request_id="req-123")
         body = json.loads(resp.body)
         assert body["error"]["code"] == "NOT_FOUND"
@@ -462,13 +462,13 @@ class TestErrorHandling:
         assert body["error"]["request_id"] == "req-123"
 
     def test_error_response_no_request_id(self):
-        from spiderfoot.api.error_handling import error_response
+        from spiderfoot.api.error_handlers import error_response
         resp = error_response(500, "INTERNAL_ERROR", "Something broke")
         body = json.loads(resp.body)
         assert "request_id" not in body["error"]
 
     def test_error_response_with_details(self):
-        from spiderfoot.api.error_handling import error_response
+        from spiderfoot.api.error_handlers import error_response
         resp = error_response(
             422, "VALIDATION_ERROR", "Bad input",
             details={"fields": [{"field": "name", "message": "too long"}]}
@@ -478,13 +478,13 @@ class TestErrorHandling:
         assert body["error"]["details"]["fields"][0]["field"] == "name"
 
     def test_api_error_creates_exception(self):
-        from spiderfoot.api.error_handling import api_error
+        from spiderfoot.api.error_handlers import api_error
         exc = api_error(404, "SCAN_NOT_FOUND", "No such scan")
         assert exc.status_code == 404
         assert exc.detail["code"] == "SCAN_NOT_FOUND"
 
     def test_error_codes_defined(self):
-        from spiderfoot.api.error_handling import ErrorCode
+        from spiderfoot.api.error_handlers import ErrorCode
         assert ErrorCode.INTERNAL_ERROR == "INTERNAL_ERROR"
         assert ErrorCode.VALIDATION_ERROR == "VALIDATION_ERROR"
         assert ErrorCode.NOT_FOUND == "NOT_FOUND"

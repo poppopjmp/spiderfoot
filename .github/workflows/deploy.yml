@@ -81,6 +81,16 @@ jobs:
         with:
           version: v3.14.0
 
+      - name: Check k8s credentials (staging)
+        run: |
+          if [ -z "$KUBECONFIG_DATA" ]; then
+            echo "ERROR: Secret KUBE_CONFIG_STAGING is not set."
+            echo "Configure it under: Settings → Secrets and variables → Actions"
+            exit 1
+          fi
+        env:
+          KUBECONFIG_DATA: ${{ secrets.KUBE_CONFIG_STAGING }}
+
       - name: Configure kubectl
         uses: azure/k8s-set-context@v4
         with:
@@ -133,6 +143,16 @@ jobs:
       - uses: azure/setup-helm@v4
         with:
           version: v3.14.0
+
+      - name: Check k8s credentials (production)
+        run: |
+          if [ -z "$KUBECONFIG_DATA" ]; then
+            echo "ERROR: Secret KUBE_CONFIG_PRODUCTION is not set."
+            echo "Configure it under: Settings → Secrets and variables → Actions"
+            exit 1
+          fi
+        env:
+          KUBECONFIG_DATA: ${{ secrets.KUBE_CONFIG_PRODUCTION }}
 
       - name: Configure kubectl
         uses: azure/k8s-set-context@v4

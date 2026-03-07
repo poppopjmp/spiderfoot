@@ -20,7 +20,6 @@ from __future__ import annotations
 
 import logging
 from typing import Any
-from urllib.parse import urljoin
 
 from spiderfoot.data_service.base import DataService, DataServiceConfig
 

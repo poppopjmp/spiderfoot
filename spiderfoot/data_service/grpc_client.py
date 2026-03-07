@@ -88,7 +88,6 @@ class GrpcDataService(DataService):
         except ImportError:
             pass
         return metadata or None
-        return self._stub
 
     # ------------------------------------------------------------------
     # Helpers

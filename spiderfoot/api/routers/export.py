@@ -11,6 +11,8 @@ Endpoints:
 """
 from __future__ import annotations
 
+import asyncio
+import itertools
 import json
 import logging
 from enum import Enum
@@ -213,38 +215,43 @@ async def export_scan_stream(
             if dbh is None:
                 return
 
-            # Get events in chunks to limit memory
+            # Get events and yield in chunk_size batches to avoid blocking the event loop
             all_events = dbh.scanResultEvent(scan_id) or []
+            event_iter = iter(all_events)
 
             yielded = 0
-            for event_row in all_events:
-                if isinstance(event_row, (list, tuple)):
-                    record = {
-                        "generated": event_row[0] if len(event_row) > 0 else None,
-                        "data": str(event_row[1]) if len(event_row) > 1 else "",
-                        "source_data": str(event_row[2]) if len(event_row) > 2 else "",
-                        "module": str(event_row[3]) if len(event_row) > 3 else "",
-                        "event_type": str(event_row[4]) if len(event_row) > 4 else "",
-                        "confidence": event_row[5] if len(event_row) > 5 else None,
-                        "visibility": event_row[6] if len(event_row) > 6 else None,
-                        "risk": event_row[7] if len(event_row) > 7 else None,
-                        "hash": str(event_row[8]) if len(event_row) > 8 else None,
-                        "source_event_hash": str(event_row[9]) if len(event_row) > 9 else None,
-                    }
-                elif isinstance(event_row, dict):
-                    record = event_row
-                else:
-                    continue
+            batch = list(itertools.islice(event_iter, chunk_size))
+            while batch:
+                for event_row in batch:
+                    if isinstance(event_row, (list, tuple)):
+                        record = {
+                            "generated": event_row[0] if len(event_row) > 0 else None,
+                            "data": str(event_row[1]) if len(event_row) > 1 else "",
+                            "source_data": str(event_row[2]) if len(event_row) > 2 else "",
+                            "module": str(event_row[3]) if len(event_row) > 3 else "",
+                            "event_type": str(event_row[4]) if len(event_row) > 4 else "",
+                            "confidence": event_row[5] if len(event_row) > 5 else None,
+                            "visibility": event_row[6] if len(event_row) > 6 else None,
+                            "risk": event_row[7] if len(event_row) > 7 else None,
+                            "hash": str(event_row[8]) if len(event_row) > 8 else None,
+                            "source_event_hash": str(event_row[9]) if len(event_row) > 9 else None,
+                        }
+                    elif isinstance(event_row, dict):
+                        record = event_row
+                    else:
+                        continue
 
-                # Apply event_type filter
-                et = record.get("event_type", "")
-                if event_type and et != event_type:
-                    continue
-                if et == "ROOT":
-                    continue
+                    # Apply event_type filter
+                    et = record.get("event_type", "")
+                    if event_type and et != event_type:
+                        continue
+                    if et == "ROOT":
+                        continue
 
-                yield json.dumps(record, default=str) + "\n"
-                yielded += 1
+                    yield json.dumps(record, default=str) + "\n"
+                    yielded += 1
+                await asyncio.sleep(0)  # yield control between chunks
+                batch = list(itertools.islice(event_iter, chunk_size))
 
             log.info("Streamed %d events for scan %s", yielded, scan_id)
         except Exception as exc:

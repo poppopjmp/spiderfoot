@@ -54,8 +54,8 @@ class AbstractRepository(ABC):
     def __exit__(
         self,
         exc_type: type[BaseException] | None,
-        exc_val: BaseException | None,
-        exc_tb: types.TracebackType | None,
+        _exc_val: BaseException | None,
+        _exc_tb: types.TracebackType | None,
     ) -> bool:
         """Exit the repository context manager."""
         self.close()

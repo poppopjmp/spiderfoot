@@ -185,7 +185,7 @@ def _run_scanner(port: int, config: dict) -> None:
     # Keep alive
     shutdown_event = threading.Event()
 
-    def _sig_handler(signum, frame):
+    def _sig_handler(signum, _frame):
         log.info("Received signal %d, shutting down scanner", signum)
         scheduler.shutdown()
         pool.shutdown()
