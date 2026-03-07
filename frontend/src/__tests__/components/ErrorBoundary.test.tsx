@@ -5,6 +5,7 @@
  * and recovery (Try Again) functionality.
  */
 import { render, screen, fireEvent } from '@testing-library/react';
+import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import ErrorBoundary from '../../components/ErrorBoundary';
 
@@ -19,7 +20,7 @@ function ThrowingChild() {
 }
 
 /* A simpler component that always throws */
-function AlwaysThrows(): JSX.Element {
+function AlwaysThrows(): React.ReactElement {
   throw new Error('Boom!');
 }
 
