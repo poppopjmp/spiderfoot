@@ -1,49 +1,54 @@
 {
-  "annotations": {
-    "list": []
-  },
-  "description": "Celery task queue monitoring — workers, tasks, queues, and performance",
+  "uid": "sf-celery",
+  "title": "SpiderFoot — Celery Task Queue",
+  "description": "Task queue monitoring using verified Flower metrics: events, runtime histograms, and prefetch",
+  "tags": ["spiderfoot", "celery", "tasks"],
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": null,
+  "refresh": "30s",
+  "time": { "from": "now-3h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "annotations": { "list": [] },
   "links": [],
   "panels": [
     {
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
       "id": 1,
-      "title": "Workers Overview",
+      "title": "📊  Task Counters",
       "type": "row"
     },
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
-          "thresholds": {
-            "steps": [
-              { "color": "red", "value": null },
-              { "color": "green", "value": 1 }
-            ]
-          }
-        }
+          "color": { "mode": "fixed", "fixedColor": "green" },
+          "unit": "short",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+        },
+        "overrides": []
       },
       "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
       "id": 2,
       "options": {
         "colorMode": "background",
-        "graphMode": "none",
+        "graphMode": "area",
         "justifyMode": "center",
         "reduceOptions": { "calcs": ["lastNotNull"] },
         "textMode": "auto"
       },
-      "title": "Active Workers",
+      "title": "Tasks Succeeded (total)",
       "type": "stat",
       "targets": [
         {
-          "expr": "flower_worker_online",
-          "legendFormat": "Online Workers"
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(flower_events_total{type=\"task-succeeded\"})",
+          "legendFormat": "Succeeded",
+          "instant": true,
+          "refId": "A"
         }
       ]
     },
@@ -52,12 +57,17 @@
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
+          "unit": "short",
           "thresholds": {
+            "mode": "absolute",
             "steps": [
-              { "color": "blue", "value": null }
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 10 },
+              { "color": "red", "value": 50 }
             ]
           }
-        }
+        },
+        "overrides": []
       },
       "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
       "id": 3,
@@ -65,14 +75,18 @@
         "colorMode": "background",
         "graphMode": "area",
         "justifyMode": "center",
-        "reduceOptions": { "calcs": ["lastNotNull"] }
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "textMode": "auto"
       },
-      "title": "Tasks Completed (Total)",
+      "title": "Tasks Failed (total)",
       "type": "stat",
       "targets": [
         {
-          "expr": "sum(flower_worker_completed_tasks)",
-          "legendFormat": "Completed"
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(flower_events_total{type=\"task-failed\"})",
+          "legendFormat": "Failed",
+          "instant": true,
+          "refId": "A"
         }
       ]
     },
@@ -80,15 +94,11 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
-          "thresholds": {
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 5 },
-              { "color": "red", "value": 20 }
-            ]
-          }
-        }
+          "color": { "mode": "fixed", "fixedColor": "blue" },
+          "unit": "short",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] }
+        },
+        "overrides": []
       },
       "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 },
       "id": 4,
@@ -96,14 +106,18 @@
         "colorMode": "background",
         "graphMode": "area",
         "justifyMode": "center",
-        "reduceOptions": { "calcs": ["lastNotNull"] }
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "textMode": "auto"
       },
-      "title": "Active Tasks",
+      "title": "Tasks Received (total)",
       "type": "stat",
       "targets": [
         {
-          "expr": "sum(flower_worker_executing_tasks)",
-          "legendFormat": "Active"
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(flower_events_total{type=\"task-received\"})",
+          "legendFormat": "Received",
+          "instant": true,
+          "refId": "A"
         }
       ]
     },
@@ -112,29 +126,36 @@
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
+          "unit": "short",
           "thresholds": {
+            "mode": "absolute",
             "steps": [
               { "color": "green", "value": null },
-              { "color": "orange", "value": 1 },
-              { "color": "red", "value": 5 }
+              { "color": "yellow", "value": 10 },
+              { "color": "red", "value": 50 }
             ]
           }
-        }
+        },
+        "overrides": []
       },
       "gridPos": { "h": 4, "w": 6, "x": 18, "y": 1 },
       "id": 5,
       "options": {
         "colorMode": "background",
-        "graphMode": "area",
+        "graphMode": "none",
         "justifyMode": "center",
-        "reduceOptions": { "calcs": ["lastNotNull"] }
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "textMode": "auto"
       },
-      "title": "Failed Tasks",
+      "title": "Prefetched Tasks (workers)",
       "type": "stat",
       "targets": [
         {
-          "expr": "sum(flower_events_total{type=\"task-failed\"})",
-          "legendFormat": "Failed"
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(flower_worker_prefetched_tasks)",
+          "legendFormat": "Prefetched",
+          "instant": true,
+          "refId": "A"
         }
       ]
     },
@@ -142,7 +163,7 @@
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
       "id": 10,
-      "title": "Task Throughput",
+      "title": "📈  Task Throughput",
       "type": "row"
     },
     {
@@ -152,28 +173,61 @@
           "custom": {
             "drawStyle": "line",
             "lineInterpolation": "smooth",
-            "fillOpacity": 20
+            "fillOpacity": 20,
+            "spanNulls": true,
+            "showPoints": "never",
+            "lineWidth": 2
           },
-          "unit": "ops"
-        }
+          "unit": "short",
+          "color": { "mode": "palette-classic" }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Failed/s" },
+            "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Retried/s" },
+            "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "orange" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Succeeded/s" },
+            "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "green" } }]
+          }
+        ]
       },
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
       "id": 11,
-      "options": { "tooltip": { "mode": "multi" } },
-      "title": "Task Events Rate",
+      "options": {
+        "tooltip": { "mode": "multi", "sort": "desc" },
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      },
+      "title": "Task Event Rate",
       "type": "timeseries",
       "targets": [
         {
-          "expr": "rate(flower_events_total{type=\"task-succeeded\"}[5m])",
-          "legendFormat": "Succeeded/s"
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(rate(flower_events_total{type=\"task-succeeded\"}[5m]))",
+          "legendFormat": "Succeeded/s",
+          "refId": "A"
         },
         {
-          "expr": "rate(flower_events_total{type=\"task-failed\"}[5m])",
-          "legendFormat": "Failed/s"
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(rate(flower_events_total{type=\"task-failed\"}[5m]))",
+          "legendFormat": "Failed/s",
+          "refId": "B"
         },
         {
-          "expr": "rate(flower_events_total{type=\"task-received\"}[5m])",
-          "legendFormat": "Received/s"
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(rate(flower_events_total{type=\"task-received\"}[5m]))",
+          "legendFormat": "Received/s",
+          "refId": "C"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(rate(flower_events_total{type=\"task-retried\"}[5m]))",
+          "legendFormat": "Retried/s",
+          "refId": "D"
         }
       ]
     },
@@ -184,28 +238,30 @@
           "custom": {
             "drawStyle": "line",
             "lineInterpolation": "smooth",
-            "fillOpacity": 10
+            "fillOpacity": 10,
+            "spanNulls": true,
+            "showPoints": "never",
+            "lineWidth": 2
           },
-          "unit": "s"
-        }
+          "unit": "short",
+          "color": { "mode": "palette-classic" }
+        },
+        "overrides": []
       },
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
       "id": 12,
-      "options": { "tooltip": { "mode": "multi" } },
-      "title": "Task Runtime Distribution",
+      "options": {
+        "tooltip": { "mode": "multi", "sort": "desc" },
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      },
+      "title": "Cumulative Event Totals",
       "type": "timeseries",
       "targets": [
         {
-          "expr": "flower_task_runtime_seconds{quantile=\"0.5\"}",
-          "legendFormat": "p50 {{task}}"
-        },
-        {
-          "expr": "flower_task_runtime_seconds{quantile=\"0.95\"}",
-          "legendFormat": "p95 {{task}}"
-        },
-        {
-          "expr": "flower_task_runtime_seconds{quantile=\"0.99\"}",
-          "legendFormat": "p99 {{task}}"
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum by (type) (flower_events_total{type=~\"task-succeeded|task-failed|task-received|task-retried\"})",
+          "legendFormat": "{{type}}",
+          "refId": "A"
         }
       ]
     },
@@ -213,7 +269,7 @@
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
       "id": 20,
-      "title": "Queue Depths",
+      "title": "⏱️  Task Runtime Histograms",
       "type": "row"
     },
     {
@@ -221,40 +277,78 @@
       "fieldConfig": {
         "defaults": {
           "custom": {
-            "drawStyle": "bars",
-            "fillOpacity": 80
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 10,
+            "spanNulls": true,
+            "showPoints": "never",
+            "lineWidth": 2
           },
+          "unit": "s",
           "color": { "mode": "palette-classic" }
-        }
+        },
+        "overrides": []
       },
-      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 15 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 15 },
       "id": 21,
-      "title": "Queue Message Counts",
+      "options": {
+        "tooltip": { "mode": "multi", "sort": "desc" },
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      },
+      "title": "Task Runtime — p50/p95/p99 (all tasks)",
       "type": "timeseries",
       "targets": [
         {
-          "expr": "flower_queue_length{queue=\"default\"}",
-          "legendFormat": "default"
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "histogram_quantile(0.50, sum(rate(flower_task_runtime_seconds_bucket[5m])) by (le))",
+          "legendFormat": "p50",
+          "refId": "A"
         },
         {
-          "expr": "flower_queue_length{queue=\"scan\"}",
-          "legendFormat": "scan"
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "histogram_quantile(0.95, sum(rate(flower_task_runtime_seconds_bucket[5m])) by (le))",
+          "legendFormat": "p95",
+          "refId": "B"
         },
         {
-          "expr": "flower_queue_length{queue=\"report\"}",
-          "legendFormat": "report"
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "histogram_quantile(0.99, sum(rate(flower_task_runtime_seconds_bucket[5m])) by (le))",
+          "legendFormat": "p99",
+          "refId": "C"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 10,
+            "spanNulls": true,
+            "showPoints": "never",
+            "lineWidth": 2
+          },
+          "unit": "s",
+          "color": { "mode": "palette-classic" }
         },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 15 },
+      "id": 22,
+      "options": {
+        "tooltip": { "mode": "multi", "sort": "desc" },
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      },
+      "title": "p95 Runtime by Task Name",
+      "type": "timeseries",
+      "targets": [
         {
-          "expr": "flower_queue_length{queue=\"export\"}",
-          "legendFormat": "export"
-        },
-        {
-          "expr": "flower_queue_length{queue=\"agents\"}",
-          "legendFormat": "agents"
-        },
-        {
-          "expr": "flower_queue_length{queue=\"monitor\"}",
-          "legendFormat": "monitor"
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "histogram_quantile(0.95, sum(rate(flower_task_runtime_seconds_bucket[5m])) by (le, task))",
+          "legendFormat": "{{task}} p95",
+          "refId": "A"
         }
       ]
     },
@@ -262,7 +356,7 @@
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 23 },
       "id": 30,
-      "title": "Worker Details",
+      "title": "⏳  Prefetch & Wait Times",
       "type": "row"
     },
     {
@@ -270,49 +364,103 @@
       "fieldConfig": {
         "defaults": {
           "custom": {
-            "align": "auto",
-            "displayMode": "auto"
-          }
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 15,
+            "spanNulls": true,
+            "showPoints": "never",
+            "lineWidth": 2
+          },
+          "unit": "short",
+          "color": { "mode": "fixed", "fixedColor": "blue" }
         },
-        "overrides": [
-          {
-            "matcher": { "id": "byName", "options": "Status" },
-            "properties": [
-              {
-                "id": "custom.displayMode",
-                "value": "color-background-solid"
-              },
-              {
-                "id": "mappings",
-                "value": [
-                  { "options": { "online": { "color": "green", "text": "ONLINE" } }, "type": "value" },
-                  { "options": { "offline": { "color": "red", "text": "OFFLINE" } }, "type": "value" }
-                ]
-              }
-            ]
-          }
-        ]
+        "overrides": []
       },
-      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 24 },
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 24 },
       "id": 31,
-      "title": "Worker Status Table",
-      "type": "table",
+      "options": {
+        "tooltip": { "mode": "single", "sort": "none" },
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      },
+      "title": "Worker Prefetched Tasks",
+      "type": "timeseries",
       "targets": [
         {
-          "expr": "flower_worker_online",
-          "format": "table",
-          "legendFormat": "{{worker}}"
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(flower_worker_prefetched_tasks)",
+          "legendFormat": "Prefetched",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 10,
+            "spanNulls": true,
+            "showPoints": "never",
+            "lineWidth": 2
+          },
+          "unit": "s",
+          "color": { "mode": "fixed", "fixedColor": "orange" }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 24 },
+      "id": 32,
+      "options": {
+        "tooltip": { "mode": "single", "sort": "none" },
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      },
+      "title": "Task Prefetch Time (avg)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "avg(flower_task_prefetch_time_seconds)",
+          "legendFormat": "Prefetch wait (s)",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 31 },
+      "id": 40,
+      "title": "📋  Worker & Task Logs",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "loki", "uid": "loki" },
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 32 },
+      "id": 41,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": true,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "title": "Celery Worker & Beat Logs",
+      "type": "logs",
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "{service=\"spiderfoot\", job=~\"sf-celery-worker|sf-celery-beat\"}",
+          "legendFormat": "",
+          "refId": "A"
         }
       ]
     }
   ],
   "schemaVersion": 39,
-  "tags": ["celery", "spiderfoot", "tasks"],
-  "templating": { "list": [] },
-  "time": { "from": "now-1h", "to": "now" },
-  "timepicker": {},
-  "timezone": "browser",
-  "title": "SpiderFoot — Celery Task Queue",
-  "uid": "sf-celery-tasks",
   "version": 1
 }

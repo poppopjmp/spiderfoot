@@ -1,17 +1,44 @@
 {
-  "annotations": { "list": [] },
-  "description": "Container log exploration and analysis via Loki — powered by Vector.dev pipeline",
+  "uid": "sf-logs",
+  "title": "SpiderFoot — Service Logs",
+  "description": "Container log exploration via Loki — volumes, errors, and full log stream per service",
+  "tags": ["spiderfoot", "logs", "loki"],
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": null,
+  "refresh": "30s",
+  "time": { "from": "now-3h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "annotations": { "list": [] },
   "links": [],
+  "templating": {
+    "list": [
+      {
+        "current": {},
+        "datasource": { "type": "loki", "uid": "loki" },
+        "definition": "label_values(job)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Service",
+        "multi": true,
+        "name": "service",
+        "options": [],
+        "query": "label_values(job)",
+        "refresh": 2,
+        "regex": "",
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
   "panels": [
     {
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
       "id": 1,
-      "title": "Log Pipeline Health",
+      "title": "📊  Log Pipeline Health",
       "type": "row"
     },
     {
@@ -19,13 +46,10 @@
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "fixed", "fixedColor": "green" },
-          "thresholds": {
-            "steps": [
-              { "color": "red", "value": null },
-              { "color": "green", "value": 1 }
-            ]
-          }
-        }
+          "unit": "short",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+        },
+        "overrides": []
       },
       "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
       "id": 2,
@@ -33,14 +57,17 @@
         "colorMode": "background",
         "graphMode": "area",
         "justifyMode": "center",
-        "reduceOptions": { "calcs": ["sum"] }
+        "reduceOptions": { "calcs": ["sum"] },
+        "textMode": "auto"
       },
       "title": "Total Log Lines (24h)",
       "type": "stat",
       "targets": [
         {
+          "datasource": { "type": "loki", "uid": "loki" },
           "expr": "sum(count_over_time({service=\"spiderfoot\"} [24h]))",
-          "legendFormat": "Lines"
+          "legendFormat": "Lines",
+          "refId": "A"
         }
       ]
     },
@@ -48,15 +75,18 @@
       "datasource": { "type": "loki", "uid": "loki" },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "fixed", "fixedColor": "red" },
+          "color": { "mode": "thresholds" },
+          "unit": "short",
           "thresholds": {
+            "mode": "absolute",
             "steps": [
               { "color": "green", "value": null },
               { "color": "orange", "value": 10 },
               { "color": "red", "value": 50 }
             ]
           }
-        }
+        },
+        "overrides": []
       },
       "gridPos": { "h": 4, "w": 4, "x": 4, "y": 1 },
       "id": 3,
@@ -64,14 +94,17 @@
         "colorMode": "background",
         "graphMode": "area",
         "justifyMode": "center",
-        "reduceOptions": { "calcs": ["sum"] }
+        "reduceOptions": { "calcs": ["sum"] },
+        "textMode": "auto"
       },
       "title": "Error Lines (1h)",
       "type": "stat",
       "targets": [
         {
+          "datasource": { "type": "loki", "uid": "loki" },
           "expr": "sum(count_over_time({service=\"spiderfoot\", level=~\"ERROR|CRITICAL\"} [1h]))",
-          "legendFormat": "Errors"
+          "legendFormat": "Errors",
+          "refId": "A"
         }
       ]
     },
@@ -79,14 +112,18 @@
       "datasource": { "type": "loki", "uid": "loki" },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "fixed", "fixedColor": "yellow" },
+          "color": { "mode": "thresholds" },
+          "unit": "short",
           "thresholds": {
+            "mode": "absolute",
             "steps": [
               { "color": "green", "value": null },
-              { "color": "yellow", "value": 50 }
+              { "color": "yellow", "value": 20 },
+              { "color": "orange", "value": 100 }
             ]
           }
-        }
+        },
+        "overrides": []
       },
       "gridPos": { "h": 4, "w": 4, "x": 8, "y": 1 },
       "id": 4,
@@ -94,14 +131,17 @@
         "colorMode": "background",
         "graphMode": "area",
         "justifyMode": "center",
-        "reduceOptions": { "calcs": ["sum"] }
+        "reduceOptions": { "calcs": ["sum"] },
+        "textMode": "auto"
       },
       "title": "Warning Lines (1h)",
       "type": "stat",
       "targets": [
         {
+          "datasource": { "type": "loki", "uid": "loki" },
           "expr": "sum(count_over_time({service=\"spiderfoot\", level=\"WARNING\"} [1h]))",
-          "legendFormat": "Warnings"
+          "legendFormat": "Warnings",
+          "refId": "A"
         }
       ]
     },
@@ -110,12 +150,10 @@
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "fixed", "fixedColor": "blue" },
-          "thresholds": {
-            "steps": [
-              { "color": "green", "value": null }
-            ]
-          }
-        }
+          "unit": "short",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] }
+        },
+        "overrides": []
       },
       "gridPos": { "h": 4, "w": 4, "x": 12, "y": 1 },
       "id": 5,
@@ -123,14 +161,18 @@
         "colorMode": "background",
         "graphMode": "area",
         "justifyMode": "center",
-        "reduceOptions": { "calcs": ["lastNotNull"] }
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "textMode": "auto"
       },
-      "title": "Vector Events/s",
+      "title": "OTel Spans Sent / s",
       "type": "stat",
       "targets": [
         {
-          "expr": "sum(rate(spiderfoot_component_sent_events_total[5m]))",
-          "legendFormat": "Events/s"
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(rate(otelcol_exporter_sent_spans[5m]))",
+          "legendFormat": "Spans/s",
+          "instant": true,
+          "refId": "A"
         }
       ]
     },
@@ -139,8 +181,10 @@
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "fixed", "fixedColor": "purple" },
-          "unit": "bytes"
-        }
+          "unit": "short",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "purple", "value": null }] }
+        },
+        "overrides": []
       },
       "gridPos": { "h": 4, "w": 4, "x": 16, "y": 1 },
       "id": 6,
@@ -148,14 +192,18 @@
         "colorMode": "background",
         "graphMode": "area",
         "justifyMode": "center",
-        "reduceOptions": { "calcs": ["lastNotNull"] }
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "textMode": "auto"
       },
-      "title": "Vector Bytes/s",
+      "title": "OTel Spans Received / s",
       "type": "stat",
       "targets": [
         {
-          "expr": "sum(rate(spiderfoot_component_sent_bytes_total[5m]))",
-          "legendFormat": "Bytes/s"
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(rate(otelcol_receiver_accepted_spans[5m]))",
+          "legendFormat": "Spans/s",
+          "instant": true,
+          "refId": "A"
         }
       ]
     },
@@ -164,28 +212,29 @@
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
-          "thresholds": {
-            "steps": [
-              { "color": "red", "value": null },
-              { "color": "green", "value": 1 }
-            ]
-          }
-        }
+          "unit": "bytes",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+        },
+        "overrides": []
       },
       "gridPos": { "h": 4, "w": 4, "x": 20, "y": 1 },
       "id": 7,
       "options": {
         "colorMode": "background",
-        "graphMode": "none",
+        "graphMode": "area",
         "justifyMode": "center",
-        "reduceOptions": { "calcs": ["lastNotNull"] }
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "textMode": "auto"
       },
-      "title": "Vector Errors",
+      "title": "OTel Collector Memory",
       "type": "stat",
       "targets": [
         {
-          "expr": "sum(rate(spiderfoot_component_errors_total[5m]))",
-          "legendFormat": "Errors/s"
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "otelcol_process_memory_rss",
+          "legendFormat": "RSS",
+          "instant": true,
+          "refId": "A"
         }
       ]
     },
@@ -193,7 +242,7 @@
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
       "id": 10,
-      "title": "Log Volume & Distribution",
+      "title": "📈  Log Volume",
       "type": "row"
     },
     {
@@ -203,7 +252,9 @@
           "custom": {
             "drawStyle": "bars",
             "fillOpacity": 80,
-            "stacking": { "mode": "normal" }
+            "spanNulls": false,
+            "lineWidth": 1,
+            "stacking": { "mode": "normal", "group": "A" }
           },
           "color": { "mode": "palette-classic" }
         },
@@ -214,7 +265,7 @@
           },
           {
             "matcher": { "id": "byName", "options": "WARNING" },
-            "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "yellow" } }]
+            "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "orange" } }]
           },
           {
             "matcher": { "id": "byName", "options": "INFO" },
@@ -228,13 +279,18 @@
       },
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
       "id": 11,
-      "options": { "tooltip": { "mode": "multi" } },
-      "title": "Log Volume by Level",
+      "options": {
+        "tooltip": { "mode": "multi", "sort": "desc" },
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      },
+      "title": "Log Rate by Level",
       "type": "timeseries",
       "targets": [
         {
+          "datasource": { "type": "loki", "uid": "loki" },
           "expr": "sum by (level) (count_over_time({service=\"spiderfoot\"} | json [1m]))",
-          "legendFormat": "{{ level }}"
+          "legendFormat": "{{level}}",
+          "refId": "A"
         }
       ]
     },
@@ -245,20 +301,28 @@
           "custom": {
             "drawStyle": "bars",
             "fillOpacity": 60,
-            "stacking": { "mode": "normal" }
+            "spanNulls": false,
+            "lineWidth": 1,
+            "stacking": { "mode": "normal", "group": "A" }
           },
           "color": { "mode": "palette-classic" }
-        }
+        },
+        "overrides": []
       },
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
       "id": 12,
-      "options": { "tooltip": { "mode": "multi" } },
-      "title": "Log Volume by Service",
+      "options": {
+        "tooltip": { "mode": "multi", "sort": "desc" },
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      },
+      "title": "Log Rate by Service (job)",
       "type": "timeseries",
       "targets": [
         {
+          "datasource": { "type": "loki", "uid": "loki" },
           "expr": "sum by (job) (count_over_time({service=\"spiderfoot\"} [1m]))",
-          "legendFormat": "{{ job }}"
+          "legendFormat": "{{job}}",
+          "refId": "A"
         }
       ]
     },
@@ -266,62 +330,73 @@
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
       "id": 20,
-      "title": "Error Log Stream",
+      "title": "🚨  Error Log Stream",
       "type": "row"
     },
     {
       "datasource": { "type": "loki", "uid": "loki" },
+      "fieldConfig": { "defaults": {}, "overrides": [] },
       "gridPos": { "h": 8, "w": 24, "x": 0, "y": 15 },
       "id": 21,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": true,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
       "title": "Errors & Warnings",
       "type": "logs",
       "targets": [
         {
+          "datasource": { "type": "loki", "uid": "loki" },
           "expr": "{service=\"spiderfoot\", level=~\"ERROR|CRITICAL|WARNING\"}",
-          "legendFormat": ""
+          "legendFormat": "",
+          "refId": "A"
         }
-      ],
-      "options": {
-        "showTime": true,
-        "sortOrder": "Descending",
-        "enableLogDetails": true,
-        "prettifyLogMessage": true,
-        "wrapLogMessage": true
-      }
+      ]
     },
     {
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 23 },
       "id": 30,
-      "title": "All Logs Explorer",
+      "title": "🔍  Log Explorer  (filter by service)",
       "type": "row"
     },
     {
       "datasource": { "type": "loki", "uid": "loki" },
-      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 24 },
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "gridPos": { "h": 14, "w": 24, "x": 0, "y": 24 },
       "id": 31,
-      "title": "All Service Logs",
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": true,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": false
+      },
+      "title": "All Service Logs  ($service)",
       "type": "logs",
       "targets": [
         {
-          "expr": "{service=\"spiderfoot\"}",
-          "legendFormat": ""
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "{service=\"spiderfoot\", job=~\"$service\"}",
+          "legendFormat": "",
+          "refId": "A"
         }
-      ],
-      "options": {
-        "showTime": true,
-        "sortOrder": "Descending",
-        "enableLogDetails": true,
-        "prettifyLogMessage": true,
-        "wrapLogMessage": true,
-        "showCommonLabels": true
-      }
+      ]
     },
     {
       "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 36 },
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 38 },
       "id": 40,
-      "title": "Vector Pipeline Metrics",
+      "title": "🔭  OTel Tracing Pipeline",
       "type": "row"
     },
     {
@@ -331,21 +406,36 @@
           "custom": {
             "drawStyle": "line",
             "lineInterpolation": "smooth",
-            "fillOpacity": 20
+            "fillOpacity": 15,
+            "spanNulls": true,
+            "showPoints": "never",
+            "lineWidth": 2
           },
-          "unit": "ops",
+          "unit": "short",
           "color": { "mode": "palette-classic" }
-        }
+        },
+        "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 37 },
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 39 },
       "id": 41,
-      "options": { "tooltip": { "mode": "multi" } },
-      "title": "Vector Sink Throughput",
+      "options": {
+        "tooltip": { "mode": "multi", "sort": "desc" },
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      },
+      "title": "Span Throughput (OTel Collector)",
       "type": "timeseries",
       "targets": [
         {
-          "expr": "rate(spiderfoot_component_sent_events_total{component_kind=\"sink\"}[5m])",
-          "legendFormat": "{{ component_id }}"
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "rate(otelcol_receiver_accepted_spans[5m])",
+          "legendFormat": "Accepted / s",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "rate(otelcol_exporter_sent_spans[5m])",
+          "legendFormat": "Exported / s",
+          "refId": "B"
         }
       ]
     },
@@ -356,32 +446,34 @@
           "custom": {
             "drawStyle": "line",
             "lineInterpolation": "smooth",
-            "fillOpacity": 10
+            "fillOpacity": 10,
+            "spanNulls": true,
+            "showPoints": "never",
+            "lineWidth": 2
           },
-          "unit": "ops",
-          "color": { "mode": "palette-classic" }
-        }
+          "unit": "percentunit",
+          "color": { "mode": "fixed", "fixedColor": "teal" }
+        },
+        "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 37 },
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 39 },
       "id": 42,
-      "options": { "tooltip": { "mode": "multi" } },
-      "title": "Vector Source Ingestion",
+      "options": {
+        "tooltip": { "mode": "single", "sort": "none" },
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      },
+      "title": "OTel Collector CPU",
       "type": "timeseries",
       "targets": [
         {
-          "expr": "rate(spiderfoot_component_received_events_total{component_kind=\"source\"}[5m])",
-          "legendFormat": "{{ component_id }}"
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "rate(otelcol_process_cpu_seconds[5m])",
+          "legendFormat": "CPU rate",
+          "refId": "A"
         }
       ]
     }
   ],
   "schemaVersion": 39,
-  "tags": ["spiderfoot", "logs", "vector", "loki"],
-  "templating": { "list": [] },
-  "time": { "from": "now-1h", "to": "now" },
-  "timepicker": {},
-  "timezone": "browser",
-  "title": "SpiderFoot — Service Logs",
-  "uid": "sf-service-logs",
   "version": 1
 }

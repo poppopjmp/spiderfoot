@@ -1,8 +1,8 @@
 {
-  "uid": "sf-overview",
-  "title": "SpiderFoot — Platform Overview",
-  "description": "Real-time platform health: HTTP traffic, AI agents, storage, and service logs",
-  "tags": ["spiderfoot", "overview"],
+  "uid": "sf-scans",
+  "title": "SpiderFoot — Scan Operations",
+  "description": "API process health, Celery worker pipeline, and scan-related logs. Scan metric panels will auto-populate once the SpiderFoot API exports sf_scans_* Prometheus metrics.",
+  "tags": ["spiderfoot", "scans", "operations"],
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -18,8 +18,84 @@
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
       "id": 1,
-      "title": "🌐  HTTP Traffic  (Traefik)",
+      "title": "⚡  API & Worker Health",
       "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.5 },
+              { "color": "red", "value": 0.9 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
+      "id": 2,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "textMode": "auto"
+      },
+      "title": "API CPU Rate",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "rate(process_cpu_seconds_total{job=\"spiderfoot-api\"}[5m])",
+          "legendFormat": "CPU",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "unit": "bytes",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 268435456 },
+              { "color": "red", "value": 536870912 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 1 },
+      "id": 3,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "textMode": "auto"
+      },
+      "title": "API Memory (RSS)",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "process_resident_memory_bytes{job=\"spiderfoot-api\"}",
+          "legendFormat": "RSS",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
     },
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
@@ -34,8 +110,8 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
-      "id": 2,
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 1 },
+      "id": 4,
       "options": {
         "colorMode": "background",
         "graphMode": "area",
@@ -43,7 +119,7 @@
         "reduceOptions": { "calcs": ["lastNotNull"] },
         "textMode": "auto"
       },
-      "title": "Requests / s",
+      "title": "HTTP Requests / s",
       "type": "stat",
       "targets": [
         {
@@ -59,21 +135,14 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
-          "unit": "ms",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 500 },
-              { "color": "red", "value": 2000 }
-            ]
-          }
+          "color": { "mode": "fixed", "fixedColor": "green" },
+          "unit": "short",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
         },
         "overrides": []
       },
-      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 1 },
-      "id": 3,
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 1 },
+      "id": 5,
       "options": {
         "colorMode": "background",
         "graphMode": "area",
@@ -81,13 +150,13 @@
         "reduceOptions": { "calcs": ["lastNotNull"] },
         "textMode": "auto"
       },
-      "title": "p95 Latency",
+      "title": "Tasks Succeeded (total)",
       "type": "stat",
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "histogram_quantile(0.95, sum(rate(traefik_entrypoint_request_duration_seconds_bucket[5m])) by (le)) * 1000",
-          "legendFormat": "p95 ms",
+          "expr": "sum(flower_events_total{type=\"task-succeeded\"})",
+          "legendFormat": "Succeeded",
           "instant": true,
           "refId": "A"
         }
@@ -103,15 +172,15 @@
             "mode": "absolute",
             "steps": [
               { "color": "green", "value": null },
-              { "color": "orange", "value": 1 },
-              { "color": "red", "value": 10 }
+              { "color": "orange", "value": 5 },
+              { "color": "red", "value": 20 }
             ]
           }
         },
         "overrides": []
       },
-      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 1 },
-      "id": 4,
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 1 },
+      "id": 6,
       "options": {
         "colorMode": "background",
         "graphMode": "area",
@@ -119,13 +188,13 @@
         "reduceOptions": { "calcs": ["lastNotNull"] },
         "textMode": "auto"
       },
-      "title": "5xx Errors / s",
+      "title": "Tasks Failed (total)",
       "type": "stat",
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "sum(rate(traefik_entrypoint_requests_total{code=~\"5..\"}[5m]))",
-          "legendFormat": "5xx/s",
+          "expr": "sum(flower_events_total{type=\"task-failed\"})",
+          "legendFormat": "Failed",
           "instant": true,
           "refId": "A"
         }
@@ -148,8 +217,8 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 1 },
-      "id": 5,
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 1 },
+      "id": 7,
       "options": {
         "colorMode": "background",
         "graphMode": "none",
@@ -170,42 +239,11 @@
       ]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "thresholds" },
-          "unit": "short",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "orange", "value": 1 },
-              { "color": "red", "value": 10 }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 1 },
-      "id": 6,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "area",
-        "justifyMode": "center",
-        "reduceOptions": { "calcs": ["lastNotNull"] },
-        "textMode": "auto"
-      },
-      "title": "Agent Errors / s",
-      "type": "stat",
-      "targets": [
-        {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "sum(rate(sf_agent_errors_total[5m]))",
-          "legendFormat": "errors/s",
-          "instant": true,
-          "refId": "A"
-        }
-      ]
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "id": 10,
+      "title": "📊  Scan Metrics  (ready when API exports sf_scans_* )",
+      "type": "row"
     },
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
@@ -213,27 +251,20 @@
         "defaults": {
           "color": { "mode": "thresholds" },
           "unit": "short",
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "1": { "text": "Healthy", "color": "green", "index": 0 },
-                "0": { "text": "Unhealthy", "color": "red", "index": 1 }
-              }
-            }
-          ],
+          "noValue": "—",
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "red", "value": null },
-              { "color": "green", "value": 1 }
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 5 },
+              { "color": "red", "value": 10 }
             ]
           }
         },
         "overrides": []
       },
-      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 1 },
-      "id": 7,
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 6 },
+      "id": 11,
       "options": {
         "colorMode": "background",
         "graphMode": "none",
@@ -241,13 +272,13 @@
         "reduceOptions": { "calcs": ["lastNotNull"] },
         "textMode": "auto"
       },
-      "title": "MinIO Cluster Health",
+      "title": "Active Scans",
       "type": "stat",
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "minio_cluster_health_status",
-          "legendFormat": "Health",
+          "expr": "sf_active_scans",
+          "legendFormat": "Active",
           "instant": true,
           "refId": "A"
         }
@@ -257,61 +288,31 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
-          "custom": {
-            "drawStyle": "line",
-            "lineInterpolation": "smooth",
-            "fillOpacity": 15,
-            "spanNulls": true,
-            "pointSize": 5,
-            "showPoints": "never",
-            "lineWidth": 2
-          },
-          "unit": "reqps",
-          "color": { "mode": "palette-classic" }
+          "color": { "mode": "fixed", "fixedColor": "blue" },
+          "unit": "short",
+          "noValue": "—",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] }
         },
-        "overrides": [
-          {
-            "matcher": { "id": "byRegexp", "options": "5xx.*" },
-            "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }]
-          },
-          {
-            "matcher": { "id": "byRegexp", "options": "4xx.*" },
-            "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "orange" } }]
-          }
-        ]
+        "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 5 },
-      "id": 10,
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 6 },
+      "id": 12,
       "options": {
-        "tooltip": { "mode": "multi", "sort": "desc" },
-        "legend": { "displayMode": "list", "placement": "bottom" }
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "textMode": "auto"
       },
-      "title": "Request Rate by HTTP Status Class",
-      "type": "timeseries",
+      "title": "Scans Started (total)",
+      "type": "stat",
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "sum(rate(traefik_entrypoint_requests_total{code=~\"2..\"}[5m]))",
-          "legendFormat": "2xx (success)",
+          "expr": "sf_scans_started_total",
+          "legendFormat": "Started",
+          "instant": true,
           "refId": "A"
-        },
-        {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "sum(rate(traefik_entrypoint_requests_total{code=~\"3..\"}[5m]))",
-          "legendFormat": "3xx (redirects)",
-          "refId": "B"
-        },
-        {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "sum(rate(traefik_entrypoint_requests_total{code=~\"4..\"}[5m]))",
-          "legendFormat": "4xx (client errors)",
-          "refId": "C"
-        },
-        {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "sum(rate(traefik_entrypoint_requests_total{code=~\"5..\"}[5m]))",
-          "legendFormat": "5xx (server errors)",
-          "refId": "D"
         }
       ]
     },
@@ -319,53 +320,87 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
-          "custom": {
-            "drawStyle": "line",
-            "lineInterpolation": "smooth",
-            "fillOpacity": 10,
-            "spanNulls": true,
-            "showPoints": "never",
-            "lineWidth": 2
-          },
-          "unit": "ms",
-          "color": { "mode": "palette-classic" }
+          "color": { "mode": "fixed", "fixedColor": "green" },
+          "unit": "short",
+          "noValue": "—",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 5 },
-      "id": 11,
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 6 },
+      "id": 13,
       "options": {
-        "tooltip": { "mode": "multi", "sort": "none" },
-        "legend": { "displayMode": "list", "placement": "bottom" }
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "textMode": "auto"
       },
-      "title": "Request Latency Percentiles",
-      "type": "timeseries",
+      "title": "Scans Completed (total)",
+      "type": "stat",
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "histogram_quantile(0.50, sum(rate(traefik_entrypoint_request_duration_seconds_bucket[5m])) by (le)) * 1000",
-          "legendFormat": "p50",
+          "expr": "sf_scans_completed_total",
+          "legendFormat": "Completed",
+          "instant": true,
           "refId": "A"
-        },
-        {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "histogram_quantile(0.95, sum(rate(traefik_entrypoint_request_duration_seconds_bucket[5m])) by (le)) * 1000",
-          "legendFormat": "p95",
-          "refId": "B"
-        },
-        {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "histogram_quantile(0.99, sum(rate(traefik_entrypoint_request_duration_seconds_bucket[5m])) by (le)) * 1000",
-          "legendFormat": "p99",
-          "refId": "C"
         }
       ]
     },
     {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "unit": "short",
+          "noValue": "—",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 1 },
+              { "color": "red", "value": 5 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 6 },
+      "id": 14,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "textMode": "auto"
+      },
+      "title": "Scans Failed (total)",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sf_scans_failed_total",
+          "legendFormat": "Failed",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "content": "## ℹ️  Scan Metrics Not Yet Available\n\nThe four panels above will display data automatically once the **SpiderFoot API** exports a `/metrics` endpoint with the following Prometheus metrics:\n\n| Metric | Type | Description |\n|--------|------|-------------|\n| `sf_active_scans` | Gauge | Currently running scans |\n| `sf_scans_started_total` | Counter | Total scans started |\n| `sf_scans_completed_total` | Counter | Total scans completed |\n| `sf_scans_failed_total` | Counter | Total scans failed |\n| `sf_events_produced_total` | Counter | Total OSINT events produced |\n\nAll other panels on this dashboard use **live metrics** from Traefik, Flower, and process exporters.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 10 },
+      "id": 15,
+      "options": { "code": { "language": "plaintext", "showLineNumbers": false }, "mode": "markdown" },
+      "title": "",
+      "type": "text"
+    },
+    {
       "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 13 },
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 16 },
       "id": 20,
-      "title": "🤖  AI Agents",
+      "title": "📈  API & Task Pipeline",
       "type": "row"
     },
     {
@@ -380,79 +415,44 @@
             "showPoints": "never",
             "lineWidth": 2
           },
-          "unit": "short",
+          "unit": "reqps",
           "color": { "mode": "palette-classic" }
         },
         "overrides": [
           {
-            "matcher": { "id": "byName", "options": "Errors / s" },
+            "matcher": { "id": "byName", "options": "Failed/s" },
             "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }]
           }
         ]
       },
-      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 14 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 17 },
       "id": 21,
       "options": {
         "tooltip": { "mode": "multi", "sort": "desc" },
         "legend": { "displayMode": "list", "placement": "bottom" }
       },
-      "title": "Agent Throughput",
+      "title": "HTTP Request Rate (Traefik)",
       "type": "timeseries",
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "rate(sf_agent_processed_total[5m])",
-          "legendFormat": "Processed / s",
+          "expr": "sum(rate(traefik_entrypoint_requests_total{code=~\"2..\"}[5m]))",
+          "legendFormat": "2xx / s",
           "refId": "A"
         },
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "rate(sf_agent_errors_total[5m])",
-          "legendFormat": "Errors / s",
+          "expr": "sum(rate(traefik_entrypoint_requests_total{code=~\"4..\"}[5m]))",
+          "legendFormat": "4xx / s",
           "refId": "B"
-        }
-      ]
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "drawStyle": "line",
-            "lineInterpolation": "smooth",
-            "fillOpacity": 10,
-            "spanNulls": true,
-            "showPoints": "never",
-            "lineWidth": 2
-          },
-          "unit": "ms",
-          "color": { "mode": "fixed", "fixedColor": "purple" }
         },
-        "overrides": []
-      },
-      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 14 },
-      "id": 22,
-      "options": {
-        "tooltip": { "mode": "single", "sort": "none" },
-        "legend": { "displayMode": "list", "placement": "bottom" }
-      },
-      "title": "Agent Avg Processing Time",
-      "type": "timeseries",
-      "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "sf_agent_avg_processing_time_ms",
-          "legendFormat": "Avg ms",
-          "refId": "A"
+          "expr": "sum(rate(traefik_entrypoint_requests_total{code=~\"5..\"}[5m]))",
+          "legendFormat": "5xx / s",
+          "refId": "C"
         }
       ]
-    },
-    {
-      "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 21 },
-      "id": 30,
-      "title": "🖥️  Service Process Health  (API + Agents)",
-      "type": "row"
     },
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
@@ -466,31 +466,83 @@
             "showPoints": "never",
             "lineWidth": 2
           },
-          "unit": "percentunit",
+          "unit": "short",
+          "color": { "mode": "palette-classic" }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Failed/s" },
+            "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }]
+          }
+        ]
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 17 },
+      "id": 22,
+      "options": {
+        "tooltip": { "mode": "multi", "sort": "desc" },
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      },
+      "title": "Celery Task Events Rate",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(rate(flower_events_total{type=\"task-succeeded\"}[5m]))",
+          "legendFormat": "Succeeded/s",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(rate(flower_events_total{type=\"task-failed\"}[5m]))",
+          "legendFormat": "Failed/s",
+          "refId": "B"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(rate(flower_events_total{type=\"task-received\"}[5m]))",
+          "legendFormat": "Received/s",
+          "refId": "C"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 25 },
+      "id": 30,
+      "title": "🧠  Python GC & Process Resources",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 10,
+            "spanNulls": true,
+            "showPoints": "never",
+            "lineWidth": 2
+          },
+          "unit": "short",
           "color": { "mode": "palette-classic" }
         },
         "overrides": []
       },
-      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 22 },
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 26 },
       "id": 31,
       "options": {
         "tooltip": { "mode": "multi", "sort": "desc" },
         "legend": { "displayMode": "list", "placement": "bottom" }
       },
-      "title": "CPU Usage Rate (Python Services)",
+      "title": "Python GC Collections / s (API)",
       "type": "timeseries",
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "rate(process_cpu_seconds_total{job=\"spiderfoot-api\"}[5m])",
-          "legendFormat": "API",
+          "expr": "rate(python_gc_collections_total{job=\"spiderfoot-api\"}[5m])",
+          "legendFormat": "gen{{generation}}",
           "refId": "A"
-        },
-        {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "rate(process_cpu_seconds_total{job=\"spiderfoot-agents\"}[5m])",
-          "legendFormat": "Agents",
-          "refId": "B"
         }
       ]
     },
@@ -511,13 +563,13 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 22 },
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 26 },
       "id": 32,
       "options": {
         "tooltip": { "mode": "multi", "sort": "desc" },
         "legend": { "displayMode": "list", "placement": "bottom" }
       },
-      "title": "Resident Memory (Python Services)",
+      "title": "Process RSS Memory",
       "type": "timeseries",
       "targets": [
         {
@@ -536,63 +588,16 @@
     },
     {
       "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 29 },
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 33 },
       "id": 40,
-      "title": "📡  Network Throughput  (Traefik)",
-      "type": "row"
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "drawStyle": "line",
-            "lineInterpolation": "smooth",
-            "fillOpacity": 20,
-            "spanNulls": true,
-            "showPoints": "never",
-            "lineWidth": 2
-          },
-          "unit": "Bps",
-          "color": { "mode": "palette-classic" }
-        },
-        "overrides": []
-      },
-      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 30 },
-      "id": 41,
-      "options": {
-        "tooltip": { "mode": "multi", "sort": "desc" },
-        "legend": { "displayMode": "list", "placement": "bottom" }
-      },
-      "title": "Inbound / Outbound Bytes Rate",
-      "type": "timeseries",
-      "targets": [
-        {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "sum(rate(traefik_entrypoint_requests_bytes_total[5m]))",
-          "legendFormat": "Inbound",
-          "refId": "A"
-        },
-        {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "sum(rate(traefik_entrypoint_responses_bytes_total[5m]))",
-          "legendFormat": "Outbound",
-          "refId": "B"
-        }
-      ]
-    },
-    {
-      "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 37 },
-      "id": 50,
-      "title": "📋  Recent Error Logs",
+      "title": "📋  Scan-Related Logs",
       "type": "row"
     },
     {
       "datasource": { "type": "loki", "uid": "loki" },
       "fieldConfig": { "defaults": {}, "overrides": [] },
-      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 38 },
-      "id": 51,
+      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 34 },
+      "id": 41,
       "options": {
         "dedupStrategy": "none",
         "enableLogDetails": true,
@@ -603,12 +608,38 @@
         "sortOrder": "Descending",
         "wrapLogMessage": true
       },
-      "title": "Error & Warning Log Stream",
+      "title": "API Logs",
       "type": "logs",
       "targets": [
         {
           "datasource": { "type": "loki", "uid": "loki" },
-          "expr": "{service=\"spiderfoot\", level=~\"ERROR|CRITICAL|WARNING\"}",
+          "expr": "{service=\"spiderfoot\", job=\"sf-api\"}",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "loki", "uid": "loki" },
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 34 },
+      "id": 42,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": true,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "title": "Worker Logs",
+      "type": "logs",
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "{service=\"spiderfoot\", job=\"sf-celery-worker\"}",
           "legendFormat": "",
           "refId": "A"
         }
