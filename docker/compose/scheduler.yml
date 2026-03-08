@@ -86,7 +86,7 @@ services:
     - "spiderfoot.celery_app:celery_app"
     - "flower"
     - "--port=5555"
-    - "--url_prefix=flower"
+    - "--url_prefix=/flower"
     - "--broker_api=redis://redis:6379/0"
     depends_on:
       redis:

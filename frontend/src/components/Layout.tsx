@@ -1,5 +1,7 @@
 import { Outlet, NavLink } from 'react-router-dom';
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { healthApi } from '../lib/api';
 import {
   LayoutDashboard,
   Radar,
@@ -51,14 +53,24 @@ const navItems: NavItem[] = [
   { name: 'Settings', to: '/settings', icon: Settings },
 ];
 
-const SERVICE_LINKS = [
-  { name: 'AI Agents', url: '/agents', internal: true, desc: 'AI agent management' },
-  { name: 'Grafana', url: '/grafana/', internal: false, desc: 'Metrics & dashboards' },
-  { name: 'Jaeger', url: '/jaeger/', internal: false, desc: 'Distributed tracing' },
-  { name: 'Prometheus', url: '/prometheus/', internal: false, desc: 'Metrics collection' },
-  { name: 'Traefik', url: '/dashboard/', internal: false, desc: 'Reverse proxy' },
-  { name: 'MinIO', url: '/minio/', internal: false, desc: 'Object storage' },
-  { name: 'Flower', url: '/flower/', internal: false, desc: 'Celery monitor' },
+interface ServiceLink {
+  name: string;
+  url: string;
+  internal: boolean;
+  desc: string;
+  /** Key in health.components from /health/dashboard — shows a live status dot when set */
+  healthKey?: string;
+}
+
+const SERVICE_LINKS: ServiceLink[] = [
+  { name: 'AI Agents',  url: '/agents',       internal: true,  desc: 'AI agent management'                     },
+  { name: 'Grafana',    url: '/grafana/',      internal: false, desc: 'Metrics & dashboards'                    },
+  { name: 'Jaeger',     url: '/jaeger/',       internal: false, desc: 'Distributed tracing'                     },
+  { name: 'Prometheus', url: '/prometheus/',   internal: false, desc: 'Metrics collection'                      },
+  { name: 'Traefik',    url: '/dashboard/',    internal: false, desc: 'Reverse proxy'                           },
+  { name: 'MinIO',      url: '/minio/',        internal: false, desc: 'Object storage',  healthKey: 'minio'    },
+  { name: 'Flower',     url: '/flower/',       internal: false, desc: 'Celery monitor'                          },
+  { name: 'Vector',     url: '/health/vector', internal: false, desc: 'Data pipeline',   healthKey: 'vector'   },
 ];
 
 const APP_VERSION = '6.0.0';
@@ -69,6 +81,15 @@ export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const { user, isAuthenticated, logout, hasPermission } = useAuthStore();
   const { theme, setTheme } = useTheme();
+
+  // Poll health dashboard so the services dropdown can show live status dots.
+  // Shares the same query key as Dashboard.tsx — no extra network requests when both are mounted.
+  const { data: healthData } = useQuery({
+    queryKey: ['health-dashboard'],
+    queryFn: ({ signal }) => healthApi.dashboard(signal),
+    refetchInterval: 30_000,
+    staleTime: 15_000,
+  });
 
   const themeOptions: { key: Theme; icon: typeof Sun; label: string }[] = [
     { key: 'light', icon: Sun, label: 'Light' },
@@ -255,11 +276,22 @@ export default function Layout() {
                     href={svc.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    title={svc.desc}
+                    title={`${svc.desc}${svc.healthKey ? ` — ${(healthData as any)?.components?.[svc.healthKey]?.status ?? 'unknown'}` : ''}`}
                     className="flex items-center gap-2 px-3 py-1.5 text-xs text-dark-400 hover:text-dark-200 hover:bg-dark-800 rounded-lg transition-colors"
                   >
-                    <ExternalLink className="h-3 w-3" />
+                    <ExternalLink className="h-3 w-3 flex-shrink-0" />
                     <span className="flex-1">{svc.name}</span>
+                    {svc.healthKey && (
+                      <span
+                        className={clsx(
+                          'h-1.5 w-1.5 rounded-full flex-shrink-0',
+                          (healthData as any)?.components?.[svc.healthKey]?.status === 'up'       && 'bg-green-400',
+                          (healthData as any)?.components?.[svc.healthKey]?.status === 'degraded' && 'bg-yellow-400',
+                          (healthData as any)?.components?.[svc.healthKey]?.status === 'down'     && 'bg-red-400',
+                          !(healthData as any)?.components?.[svc.healthKey]?.status              && 'bg-dark-500',
+                        )}
+                      />
+                    )}
                   </a>
                 ),
               )}

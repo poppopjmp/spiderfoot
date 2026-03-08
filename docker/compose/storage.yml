@@ -40,7 +40,7 @@ services:
     - minio-data:/data
     command: server /data --console-address ":9001"
     healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:9000/minio/health/live || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 5

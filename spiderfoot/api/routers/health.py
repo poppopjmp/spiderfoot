@@ -44,8 +44,8 @@ def _check_vector() -> dict[str, Any]:
     """Vector.dev log pipeline health."""
     try:
         from spiderfoot.observability.vector_bootstrap import VectorBootstrap, VectorBootstrapConfig
-        # Use VECTOR_API_URL env or Docker service name 'vector' on API port 8687
-        api_url = os.environ.get("VECTOR_API_URL", "http://vector:8687")
+        # Use VECTOR_API_URL env or Docker service name 'vector' on API port 8686
+        api_url = os.environ.get("VECTOR_API_URL", "http://vector:8686")
         cfg = VectorBootstrapConfig(
             vector_api_url=api_url,
             vector_graphql_url=f"{api_url}/graphql",

@@ -37,12 +37,13 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
+        required: false    # minio is in 'storage' profile; not required when running only 'monitor'
       loki:
         condition: service_started
       jaeger:
         condition: service_started
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:8687/health || exit 1"]
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8686/health || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 3
@@ -85,6 +86,7 @@ services:
     depends_on:
       minio:
         condition: service_healthy
+        required: false    # minio is in 'storage' profile; not required when running only 'monitor'
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://localhost:3100/ready || exit 1"]
       interval: 15s
