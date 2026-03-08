@@ -121,7 +121,17 @@ jobs:
             --cov-report=term-missing \
             -n auto
 
-      - name: Upload coverage
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        if: matrix.python-version == '3.11'
+        with:
+          files: coverage.xml
+          flags: unittests
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
         if: matrix.python-version == '3.11'
         with:

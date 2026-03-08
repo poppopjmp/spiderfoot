@@ -3,7 +3,7 @@
 </p>
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/poppopjmp/spiderfoot/master/LICENSE)
-[![Python](https://img.shields.io/badge/python-3.9+-blue)](https://www.python.org)
+[![Python](https://img.shields.io/badge/python-3.11+-blue)](https://www.python.org)
 [![Version](https://img.shields.io/badge/version-6.0.0-green)](VERSION)
 [![Docker](https://img.shields.io/badge/docker-compose-2496ED?logo=docker)](docker-compose.yml)
 [![GraphQL](https://img.shields.io/badge/GraphQL-Strawberry-E10098?logo=graphql)](spiderfoot/api/graphql/)
@@ -13,7 +13,7 @@
 
 # SpiderFoot — OSINT Automation Platform
 
-SpiderFoot is an open-source intelligence (OSINT) automation platform. It integrates with **300+ data sources** to gather intelligence on IP addresses, domain names, hostnames, network subnets, ASNs, email addresses, phone numbers, usernames, Bitcoin addresses, and more. Written in **Python 3** and **MIT-licensed**.
+SpiderFoot is an open-source intelligence (OSINT) automation platform. It integrates with **309+ data sources** to gather intelligence on IP addresses, domain names, hostnames, network subnets, ASNs, email addresses, phone numbers, usernames, Bitcoin addresses, and more. Written in **Python 3** and **MIT-licensed**.
 
 ---
 
@@ -56,7 +56,7 @@ graph TB
         Browser[Browser / Client]
     end
 
-    subgraph Docker["Docker Compose Stack (21 containers)"]
+    subgraph Docker["Docker Compose Stack (23 containers)"]
         TRAEFIK[Traefik v3 :443<br/>Reverse Proxy + TLS]
         DSPROXY[Docker Socket Proxy<br/>Secure API Access]
 
@@ -372,9 +372,9 @@ SpiderFoot includes a complete observability stack, with **Vector.dev** serving 
 | **Jaeger** | Distributed tracing (OTLP via Vector.dev) | `http://localhost:16686` |
 | **Vector.dev** | Log/metrics/traces pipeline | Internal |
 
-### Pre-built Dashboard
+### Pre-built Dashboards
 
-A 12-panel Grafana dashboard is auto-provisioned with: Active Scans, Events Processed, High-Risk Findings, API Latency, LLM Token Usage, Event Rate, Risk Level distribution, Module Execution times, Service Logs, Error Rate, and Enrichment Pipeline metrics.
+Five Grafana dashboards are auto-provisioned: Platform Overview (19 panels), Scan Operations (22 panels), Celery Task Queue (16 panels), Infrastructure (22 panels), and Service Logs (17 panels).
 
 ---
 
@@ -428,7 +428,7 @@ The active worker builds on top of the base image (which includes nmap, nuclei, 
 docker compose -f docker-compose.yml up --build -d
 
 # Or build just the active worker
-docker build -f Dockerfile.active-worker -t spiderfoot-active:latest .
+docker build -f docker/Dockerfile.active-scanner -t spiderfoot-active:latest .
 ```
 
 See [Active Scan Worker Guide](documentation/active-scan-worker.md) for full details.
@@ -753,7 +753,7 @@ All services are configured via environment variables (see `docker/env.example`)
 
 ## Modules
 
-SpiderFoot has **300+ modules**, most of which do not require API keys. Modules feed each other in a publisher/subscriber model for maximum data extraction.
+SpiderFoot has **309 modules**, most of which do not require API keys. Modules feed each other in a publisher/subscriber model for maximum data extraction.
 
 ### Module Categories
 
@@ -776,7 +776,7 @@ For the full module list, see [documentation/modules.md](documentation/modules.m
 
 ## Correlation Engine
 
-SpiderFoot includes a YAML-configurable rule engine with **94 pre-defined correlation rules**.
+SpiderFoot includes a YAML-configurable rule engine with **95 pre-defined correlation rules**.
 
 ```bash
 # View all rules
@@ -1005,8 +1005,8 @@ infra/                    # Infrastructure configs
 ├── loki/                 # Loki local config (MinIO S3 backend)
 ├── litellm/              # LiteLLM model config
 └── prometheus/           # Scrape targets config
-modules/                  # 283 OSINT modules
-correlations/             # 94 YAML correlation rules
+modules/                  # 309 OSINT modules
+correlations/             # 95 YAML correlation rules
 documentation/            # Comprehensive docs
 scripts/                  # Utility and maintenance scripts
 docker/                   # Docker build files + nginx config
@@ -1051,5 +1051,5 @@ SpiderFoot is licensed under the [MIT License](LICENSE).
 
 ---
 
-*Actively developed since 2012 — 300+ modules, 38+ API routers, 94 correlation rules, 21-service Docker deployment, Go CLI, 247 frontend tests, comprehensive security hardening (9.0+ score), AI agents, vector search, and full observability.*
+*Actively developed since 2012 — 309 modules, 38+ API routers, 95 correlation rules, 23-service Docker deployment, Go CLI, 282 frontend tests, comprehensive security hardening (9.0+ score), AI agents, vector search, and full observability.*
 
