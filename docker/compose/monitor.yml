@@ -33,6 +33,7 @@ services:
     depends_on:
       docker-socket-proxy:
         condition: service_started
+        required: false    # docker-socket-proxy is in 'proxy' profile; not required for 'monitor' alone
       api:
         condition: service_healthy
       minio:
@@ -43,7 +44,7 @@ services:
       jaeger:
         condition: service_started
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:8686/health || exit 1"]
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8687/health || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 3
@@ -79,6 +80,7 @@ services:
     - sf-backend
     volumes:
     - ../../infra/loki/local-config.yaml:/etc/loki/local-config.yaml:ro
+    - loki-data:/loki
     command: -config.file=/etc/loki/local-config.yaml -config.expand-env=true
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
@@ -293,6 +295,7 @@ networks:
 volumes:
   traefik-logs:
   grafana-data:
+  loki-data:
   vector-data:
   prometheus-data:
   vector-logs:
