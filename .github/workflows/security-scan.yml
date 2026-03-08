@@ -6,7 +6,8 @@ on:
     paths:
       - "requirements.txt"
       - "Pipfile"
-      - "Dockerfile"
+      - "docker/Dockerfile.base"
+      - "docker/Dockerfile.api"
       - "docker-compose*.yml"
 
   pull_request:
@@ -63,7 +64,10 @@ jobs:
 
       - name: Build image for scanning
         run: |
-          docker build -t spiderfoot:scan-target .
+          docker build -f docker/Dockerfile.base -t spiderfoot-base:latest .
+          docker build -f docker/Dockerfile.api \
+            --build-arg BASE_IMAGE=spiderfoot-base:latest \
+            -t spiderfoot:scan-target .
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
