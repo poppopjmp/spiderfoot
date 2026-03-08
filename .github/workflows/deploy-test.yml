@@ -4,7 +4,8 @@ on:
   push:
     branches: [master]
     paths:
-      - "Dockerfile"
+      - "docker/Dockerfile.base"
+      - "docker/Dockerfile.api"
       - "docker-compose.yml"
       - "docker/**"
       - "requirements.txt"
@@ -36,13 +37,26 @@ jobs:
         id: meta
         run: echo "version=$(cat VERSION)" >> $GITHUB_OUTPUT
 
-      - name: Build image
+      - name: Build base image
         uses: docker/build-push-action@v5
         with:
           context: .
+          file: docker/Dockerfile.base
+          push: false
+          load: true
+          tags: spiderfoot-base:latest
+          cache-from: type=gha,scope=deploy-test-base
+          cache-to: type=gha,scope=deploy-test-base,mode=max
+
+      - name: Build API image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/Dockerfile.api
           push: false
           load: true
           tags: spiderfoot:test
+          build-args: BASE_IMAGE=spiderfoot-base:latest
           cache-from: type=gha,scope=deploy-test
           cache-to: type=gha,scope=deploy-test,mode=max
 
