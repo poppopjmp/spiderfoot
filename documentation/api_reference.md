@@ -192,7 +192,7 @@ entity_relationships = correlator.get_entity_relationships()
 
 ## Available Module Categories
 
-SpiderFoot v5.3.3 includes 277 modules organized into the following categories:
+SpiderFoot v6.0.0 includes 309 modules organized into the following categories:
 
 ### Core Categories
 
@@ -203,7 +203,7 @@ SpiderFoot v5.3.3 includes 277 modules organized into the following categories:
 - **Email/Communication**: 18+ modules for email investigation
 - **Cryptocurrency/Blockchain**: 12+ modules for financial investigation
 
-### Enhanced Categories (New in v5.3.3)
+### Additional Categories
 
 - **AI-Powered Analysis**: Machine learning and AI summarization
 - **Performance Optimization**: Caching and resource management

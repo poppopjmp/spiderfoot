@@ -153,7 +153,7 @@ A full, detailed description for each module is available in the `documentation/
 
 ## Enhanced Module Troubleshooting
 
-SpiderFoot v5.3.3 includes enhanced modules that may require specific troubleshooting approaches:
+SpiderFoot v6.0.0 includes enhanced modules that may require specific troubleshooting approaches:
 
 ### TikTok OSINT Module Issues
 - **Rate Limiting**: TikTok has strict rate limits; adjust delay settings in module configuration

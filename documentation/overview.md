@@ -6,7 +6,7 @@ SpiderFoot is a powerful open source intelligence (OSINT) automation platform de
 
 ## What is SpiderFoot?
 
-SpiderFoot automates the process of collecting OSINT by leveraging over **283 modules** to gather information about IP addresses, domains, subdomains, emails, usernames, cryptocurrency addresses, social media profiles, and more. It is suitable for:
+SpiderFoot automates the process of collecting OSINT by leveraging over **309 modules** to gather information about IP addresses, domains, subdomains, emails, usernames, cryptocurrency addresses, social media profiles, and more. It is suitable for:
 
 - **Threat intelligence and digital footprinting:** Gain visibility into your organization's or target's online presence, uncovering exposed data and potential risks.
 - **Attack surface mapping and asset discovery:** Identify all internet-facing assets, including forgotten or shadow IT, to reduce your exposure to attacks.
@@ -25,16 +25,16 @@ SpiderFoot is designed for both beginners and advanced users, offering a modern 
 ## Key Features
 
 - **Automated OSINT Collection:** Schedule and run scans to collect intelligence from a wide range of sources with minimal manual effort. SpiderFoot can run unattended, making it ideal for continuous monitoring.
-- **283+ Data Gathering Modules:** Integrate with threat feeds, search engines, social media, DNS, WHOIS, breach databases, paste sites, blockchain analytics, dark web sources, and more. Modules are regularly updated and community contributions are welcome.
+- **309+ Data Gathering Modules:** Integrate with threat feeds, search engines, social media, DNS, WHOIS, breach databases, paste sites, blockchain analytics, dark web sources, and more. Modules are regularly updated and community contributions are welcome.
 - **Enhanced OSINT Capabilities:** Advanced modules for TikTok intelligence, blockchain analytics, advanced correlation, and performance optimization provide cutting-edge OSINT capabilities.
 - **AI-Powered Analysis:** Built-in AI agents and LLM-generated CTI reports using configurable models via LiteLLM (OpenAI, Anthropic, Ollama, OpenRouter).
 - **Modern Web UI:** Dark-themed React SPA with real-time updates, interactive graph visualization, geographic mapping, and comprehensive scan management.
-- **94 Correlation Rules:** YAML-configurable correlation engine for automated finding and risk identification.
+- **95 Correlation Rules**: YAML-configurable correlation engine for automated finding and risk identification.
 - **Web UI and CLI:** Use the intuitive web interface for interactive investigations, visualization, and reporting, or the command-line interface for automation, scripting, and integration with other tools.
 - **Enterprise Security Features:** Comprehensive security implementation including CSRF protection, input validation, rate limiting, session management, API security, and structured security logging.
 - **Workspaces and Multi-Target Support:** Organize scans, targets, and results into workspaces for collaborative investigations and large-scale assessments. Workspaces allow you to manage multiple projects and share findings with your team.
 - **API for Integration:** Integrate SpiderFoot with SIEM, SOAR, and other security tools using the RESTful API with enterprise-grade security features. Automate scans, retrieve results, and trigger actions based on findings.
-- **Correlation and Analysis:** Built-in correlation engine with 94 YAML-based rules to identify relationships, patterns, and risks across collected data. Advanced correlation engine provides cross-platform identity resolution, temporal analysis, and geospatial clustering. Visualize connections between entities and uncover hidden threats.
+- **Correlation and Analysis:** Built-in correlation engine with 95 YAML-based rules to identify relationships, patterns, and risks across collected data. Advanced correlation engine provides cross-platform identity resolution, temporal analysis, and geospatial clustering. Visualize connections between entities and uncover hidden threats.
 - **Custom Module Support:** Easily extend SpiderFoot with your own modules to support new data sources, custom logic, or proprietary integrations. The modular architecture makes development and maintenance straightforward.
 - **Notifications and Alerts:** Receive real-time notifications for critical findings, such as data breaches, exposed credentials, or new assets discovered.
 - **Export and Reporting:** Export scan results in multiple formats (CSV, JSON, HTML) for further analysis or reporting to stakeholders.
@@ -45,15 +45,15 @@ SpiderFoot is designed for both beginners and advanced users, offering a modern 
 
 ## Current Version and Capabilities
 
-**SpiderFoot v5.9.2** represents a significant advancement in OSINT automation with the following enhanced capabilities:
+**SpiderFoot v6.0.0** represents a significant advancement in OSINT automation with the following enhanced capabilities:
 
 ### Module Count and Categories
-- **283 Total Modules**: Comprehensive coverage across all major OSINT categories
+- **309 Total Modules**: Comprehensive coverage across all major OSINT categories
 - **Core Investigation Modules**: DNS/Network (45+), Threat Intelligence (35+), Social Media (25+)
 - **Enhanced Modules**: TikTok OSINT, Blockchain Analytics, Hudson Rock, AI Analysis, Advanced Correlation
 - **Performance Modules**: Caching optimization, rate limiting, resource management
 
-### Microservices Architecture (21 containers)
+### Microservices Architecture (23 containers)
 - **REST + GraphQL API**: FastAPI with Strawberry GraphQL (queries, mutations, subscriptions)
 - **Vector Search**: Qdrant-powered semantic search over scan events
 - **Object Storage**: MinIO S3-compatible storage for reports, exports, backups

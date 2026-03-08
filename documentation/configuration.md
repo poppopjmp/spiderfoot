@@ -2,7 +2,7 @@
 
 *Author: poppopjmp*
 
-SpiderFoot can be configured via the web UI, configuration file, and environment variables. Proper configuration ensures you get the most out of all 277 modules and integrations, including the enhanced TikTok OSINT, blockchain analytics, AI analysis, and performance optimization features, and helps tailor SpiderFoot to your environment and use case.
+SpiderFoot can be configured via the web UI, configuration file, and environment variables. Proper configuration ensures you get the most out of all 309 modules and integrations, including TikTok OSINT, blockchain analytics, AI analysis, and performance optimization features, and helps tailor SpiderFoot to your environment and use case.
 
 ---
 
@@ -259,7 +259,7 @@ This will check:
 
 ## Enhanced Module Configuration
 
-SpiderFoot v5.3.3 includes new configuration options for enhanced modules:
+SpiderFoot v6.0.0 includes configuration options for enhanced modules:
 
 ### Performance Optimization
 

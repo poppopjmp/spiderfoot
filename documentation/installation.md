@@ -2,13 +2,13 @@
 
 *Author: poppopjmp*
 
-This guide will walk you through installing SpiderFoot v5.3.3 on Linux, macOS, or Windows, as well as deploying with Docker for easy setup and portability. The enhanced SpiderFoot includes 277 modules with advanced capabilities for TikTok OSINT, blockchain analytics, performance optimization, and AI-powered analysis.
+This guide will walk you through installing SpiderFoot v6.0.0 on Linux, macOS, or Windows, as well as deploying with Docker for easy setup and portability. SpiderFoot includes 309 modules with advanced capabilities for TikTok OSINT, blockchain analytics, performance optimization, and AI-powered analysis.
 
 ---
 
 ## Requirements
 
-- **Python 3.8 or higher** (recommended: Python 3.11+)
+- **Python 3.11 or higher** (recommended: Python 3.11+)
 - **pip** (Python package manager)
 - **Git** (for cloning the repository)
 - **Memory**: Minimum 2GB RAM (4GB+ recommended for enhanced features)

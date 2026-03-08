@@ -65,23 +65,47 @@ SpiderFoot v6.0.0 implements a microservices-only architecture:
 └───────────────────────────────────────────────────────────────────────┘
 ```
 
-## Package Structure (v5.245.0+)
+## Package Structure (v6.0.0)
 
-The `spiderfoot/` package is organized into **8 domain sub-packages**:
+The `spiderfoot/` package is organized into **23 domain sub-packages** plus several top-level modules:
 
 | Sub-package | Purpose | Key modules |
 |---|---|---|
-| `spiderfoot/config/` | Configuration management | `constants`, `app_config`, `config_schema` |
-| `spiderfoot/events/` | Event types and processing | `event`, `event_relay`, `event_dedup`, `event_pipeline`, `event_taxonomy` |
-| `spiderfoot/scan/` | Scan lifecycle and orchestration | `scan_state`, `scan_coordinator`, `scan_scheduler`, `scan_queue`, `scan_workflow` |
-| `spiderfoot/plugins/` | Module loading and management | `plugin`, `modern_plugin`, `module_loader`, `module_registry`, `module_resolver` |
-| `spiderfoot/security/` | Authentication, CSRF, middleware | `auth`, `csrf_protection`, `security_middleware`, `security_logging` |
-| `spiderfoot/observability/` | Logging, metrics, auditing | `logger`, `metrics`, `structured_logging`, `audit_log`, `health` |
-| `spiderfoot/services/` | External service integrations | `cache_service`, `dns_service`, `http_service`, `grpc_service`, `websocket_service` |
-| `spiderfoot/reporting/` | Report generation and export | `report_generator`, `export_service`, `report_formatter`, `visualization_service` |
 | `spiderfoot/agents/` | AI analysis agents (LLM-powered) | `base`, `finding_validator`, `credential_analyzer`, `text_summarizer`, `report_generator`, `document_analyzer`, `threat_intel`, `service` |
+| `spiderfoot/ai/` | AI model abstraction and helpers | LLM client wrappers, prompt templates |
+| `spiderfoot/api/` | FastAPI application and routers | REST endpoints, GraphQL, middleware |
+| `spiderfoot/auth/` | Authentication and authorization | JWT, API key, RBAC, session management |
+| `spiderfoot/config/` | Configuration management | `constants`, `app_config`, `config_schema` |
+| `spiderfoot/core/` | Core engine and orchestration | Engine, scheduler, coordinator |
+| `spiderfoot/correlation/` | Correlation rule engine | `rule_executor`, `rule_loader`, YAML rule processing |
+| `spiderfoot/data_service/` | Database abstraction layer | Local/HTTP/gRPC backends for scans, events |
+| `spiderfoot/db/` | PostgreSQL data access layer | Models, queries, migrations |
+| `spiderfoot/dicts/` | Data dictionaries and taxonomies | Event type mappings, category lists |
+| `spiderfoot/ecosystem/` | Ecosystem and plugin marketplace | Registry, versioning, discovery |
 | `spiderfoot/enrichment/` | Document enrichment pipeline | `converter`, `extractor`, `pipeline`, `service` |
+| `spiderfoot/eventbus/` | Pub/sub messaging | Memory/Redis/NATS backends |
+| `spiderfoot/events/` | Event types and processing | `event`, `event_relay`, `event_dedup`, `event_pipeline`, `event_taxonomy` |
+| `spiderfoot/export/` | Export service (JSON/CSV/STIX/SARIF) | `export_service`, format adapters |
+| `spiderfoot/iac/` | Infrastructure-as-Code mapping | IaC resource detection and visualization |
+| `spiderfoot/module_mgmt/` | Module lifecycle management | Loader, registry, resolver (distinct from `plugins/`) |
+| `spiderfoot/notifications/` | Notification service | Slack, webhook, email dispatchers |
+| `spiderfoot/observability/` | Logging, metrics, auditing | `logger`, `metrics`, `structured_logging`, `audit_log`, `health`, `tracing` |
+| `spiderfoot/ops/` | Operational utilities | Health checks, maintenance tasks |
+| `spiderfoot/plugins/` | Plugin base classes | `plugin`, `modern_plugin` |
+| `spiderfoot/recon/` | Reconnaissance utilities | Active recon helpers and tool wrappers |
+| `spiderfoot/reporting/` | Report generation | `report_generator`, `export_service`, `report_formatter`, `visualization_service` |
+| `spiderfoot/research/` | Research and investigation helpers | Research workflow utilities |
+| `spiderfoot/scan/` | Scan lifecycle and orchestration | `scan_state`, `scan_coordinator`, `scan_scheduler`, `scan_queue`, `scan_workflow` |
+| `spiderfoot/scan_service/` | Scan service layer | Service wrapper around scan orchestration |
+| `spiderfoot/security/` | Authentication, CSRF, middleware | `auth`, `csrf_protection`, `security_middleware`, `security_logging` |
+| `spiderfoot/services/` | External service integrations | `cache_service`, `dns_service`, `http_service`, `grpc_service`, `websocket_service`, `embedding_service` |
+| `spiderfoot/sflib/` | Legacy library shim | Backward-compat wrappers for old `SpiderFoot` god object |
+| `spiderfoot/storage/` | Storage backends | MinIO S3 client, file storage |
+| `spiderfoot/tasks/` | Celery task definitions | Async scan tasks, scheduled jobs |
 | `spiderfoot/user_input/` | User-defined input ingestion | `service` |
+| `spiderfoot/webhooks/` | Webhook handlers | Inbound/outbound webhook processing |
+
+**Top-level modules:** `celery_app.py`, `helpers.py`, `result_cache.py`, `retry.py`, `service_integration.py`, `service_registry.py`, `service_runner.py`, `target.py`, `threadpool.py`, `workspace.py`
 
 ### Import Patterns
 
@@ -152,7 +176,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 │                     Module Layer                                   │
 │  ┌──────────────────────┐ ┌──────────────────────┐                 │
 │  │ SpiderFootPlugin     │ │SpiderFootModernPlugin│                 │
-│  │ (legacy, 283         │ │(service-aware, new   │                 │
+│  │ (legacy, 309         │ │(service-aware, new   │                 │
 │  │  modules)            │ │ modules)             │                 │
 │  └──────────────────────┘ └──────────────────────┘                 │
 └───────────────────────────────────────────────────────────────────┘
@@ -295,31 +319,33 @@ Inter-service communication:
 
 ## Docker Microservices
 
-The `docker-compose.yml` defines 21 containers:
+The `docker-compose.yml` defines **23 containers** across 8 profiles:
 
-| Container | Image | Purpose |
-|---|---|---|
-| sf-traefik | traefik:v3 | Reverse proxy + auto-TLS + routing (:443) |
-| sf-docker-proxy | tecnativa/docker-socket-proxy | Secure Docker API access for Traefik |
-| sf-frontend-ui | spiderfoot-frontend | React SPA served by Nginx (:80) |
-| sf-api | spiderfoot-micro | REST API + GraphQL (:8001) |
-| sf-agents | spiderfoot-micro | AI analysis agents — 6 agents (:8100) |
-| sf-celery-worker | spiderfoot-micro | Celery distributed task workers |
-| sf-celery-beat | spiderfoot-micro | Celery periodic task scheduler |
-| sf-flower | spiderfoot-micro | Celery monitoring dashboard (:5555) |
-| sf-tika | apache/tika | Document parsing — PDF, DOCX, XLSX (:9998) |
-| sf-litellm | ghcr.io/berriai/litellm | Unified LLM gateway (:4000) |
-| sf-postgres | postgres:15-alpine | Primary database (:5432) |
-| sf-redis | redis:7-alpine | Event bus + cache + Celery broker (:6379) |
-| sf-qdrant | qdrant/qdrant | Vector similarity search (:6333) |
-| sf-minio | minio/minio | S3-compatible object storage (:9000/9001) |
-| sf-minio-init | minio/mc | One-shot bucket provisioner |
-| sf-pg-backup | postgres:15-alpine | Scheduled PG backup → MinIO |
-| sf-vector | timberio/vector | Telemetry pipeline (:8686/:4317/:9598) |
-| sf-loki | grafana/loki | Log aggregation (:3100) |
-| sf-grafana | grafana/grafana | Dashboards & visualization (:3000) |
-| sf-prometheus | prom/prometheus | Metrics collection (:9090) |
-| sf-jaeger | jaegertracing/jaeger | Distributed tracing (:16686) |
+| Container | Profile | Image | Purpose |
+|---|---|---|---|
+| sf-postgres | *(core)* | postgres:15-alpine | Primary database (:5432) |
+| sf-redis | *(core)* | redis:7-alpine | Event bus + cache + Celery broker (:6379) |
+| sf-api | *(core)* | spiderfoot-micro | REST API + GraphQL (:8001) |
+| sf-celery-worker | *(core)* | spiderfoot-micro | Celery distributed task workers |
+| sf-frontend-ui | *(core)* | spiderfoot-frontend | React SPA served by Nginx (:80) |
+| sf-celery-worker-active | `scan` | spiderfoot-active | Active recon worker (nmap, nuclei, httpx, …) |
+| sf-traefik | `proxy` | traefik:v3 | Reverse proxy + auto-TLS + routing (:443) |
+| sf-docker-proxy | `proxy` | tecnativa/docker-socket-proxy | Secure Docker API access for Traefik |
+| sf-minio | `storage` | minio/minio | S3-compatible object storage (:9000/9001) |
+| sf-minio-init | `storage` | minio/mc | One-shot bucket provisioner |
+| sf-qdrant | `storage` | qdrant/qdrant | Vector similarity search (:6333) |
+| sf-tika | `storage` | apache/tika | Document parsing — PDF, DOCX, XLSX (:9998) |
+| sf-pg-backup | `storage` | postgres:15-alpine | Scheduled PG backup → MinIO |
+| sf-vector | `monitor` | timberio/vector | Telemetry pipeline (:8686/:4317/:9598) |
+| sf-loki | `monitor` | grafana/loki | Log aggregation (:3100) |
+| sf-grafana | `monitor` | grafana/grafana | Dashboards & visualization (:3000) |
+| sf-prometheus | `monitor` | prom/prometheus | Metrics collection (:9090) |
+| sf-jaeger | `monitor` | jaegertracing/jaeger | Distributed tracing (:16686) |
+| sf-agents | `ai` | spiderfoot-micro | AI analysis agents — 6 agents (:8100) |
+| sf-litellm | `ai` | ghcr.io/berriai/litellm | Unified LLM gateway (:4000) |
+| sf-celery-beat | `scheduler` | spiderfoot-micro | Celery periodic task scheduler |
+| sf-flower | `scheduler` | spiderfoot-micro | Celery monitoring dashboard (:5555) |
+| sf-keycloak | `sso` | keycloak | OIDC / SAML identity provider (:9080) |
 
 ### Networks
 
@@ -479,10 +505,15 @@ unified telemetry pipeline:
 
 ### Grafana Dashboards
 
-Pre-provisioned 12-panel SpiderFoot Overview dashboard:
-Active Scans, Total Scans, Events Processed, High-Risk Findings,
-API Latency, LLM Token Usage, Event Rate, Risk Level distribution,
-Module Execution, Service Logs, Error Rate, Enrichment Pipeline.
+Five pre-provisioned dashboards in `infra/grafana/dashboards/`:
+
+| Dashboard | Panels | Focus |
+|---|---|---|
+| SpiderFoot — Platform Overview | 19 | Scan counts, event rates, risk distribution, API latency |
+| SpiderFoot — Scan Operations | 22 | Active scans, module execution, queue depths, throughput |
+| SpiderFoot — Celery Task Queue | 16 | Task success/failure rates, queue lengths, worker concurrency |
+| SpiderFoot — Infrastructure | 22 | Container CPU/memory, PostgreSQL, Redis, Qdrant, MinIO health |
+| SpiderFoot — Service Logs | 17 | Structured log explorer, error rates, log volume per service |
 
 ### Prometheus Scrape Targets
 
@@ -630,7 +661,7 @@ Protocols: `graphql-transport-ws`, `graphql-ws`
 
 ### Legacy Modules (`SpiderFootPlugin`)
 
-All 283 existing modules continue to work unchanged. They use `self.sf`
+All 309 existing modules continue to work unchanged. They use `self.sf`
 (the SpiderFoot god object) for HTTP, DNS, and other operations.
 
 ### Modern Modules (`SpiderFootModernPlugin`)
@@ -655,10 +686,11 @@ class sfp_example(SpiderFootModernPlugin):
 See [MODULE_MIGRATION_GUIDE.md](MODULE_MIGRATION_GUIDE.md) for step-by-step
 migration instructions.
 
-## Version History (v5.4.0 – v5.246.0)
+## Version History (v5.4.0 – v6.0.0)
 
 | Version | Change |
 |---|---|
+| **6.0.0** | Microservices-only architecture — monolith mode removed. 23-container compose stack, profile-based activation (`scan`, `proxy`, `storage`, `monitor`, `ai`, `scheduler`, `sso`, `full`). IaC Map feature (`spiderfoot/iac/`). 309 modules. 95 correlation rules. 5 Grafana dashboards. |
 | 5.246.0 | GraphQL mutations (5), subscriptions (2, WebSocket), Qdrant semantic search resolver, query depth limiter, MinIO object storage (5 buckets), PG backup sidecar, complete documentation overhaul |
 | 5.245.0 | Complete shim removal — 79 backward-compat files deleted, 470 imports rewritten to 8 domain sub-packages |
 | 5.244.0 | Fix circular imports across all 8 sub-packages (relative imports) |

@@ -2,7 +2,7 @@
 
 *Author: poppopjmp*
 
-SpiderFoot includes **300+ modules** for data gathering, enrichment, and analysis, including **36 external tool integrations** for active reconnaissance. Modules can be combined to create powerful OSINT workflows tailored to your needs.
+SpiderFoot includes **309 modules** for data gathering, enrichment, and analysis, including **36 external tool integrations** for active reconnaissance. Modules can be combined to create powerful OSINT workflows tailored to your needs.
 
 ---
 

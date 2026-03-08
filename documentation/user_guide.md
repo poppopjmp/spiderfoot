@@ -118,7 +118,7 @@ Configure global settings, module API keys, and monitor the 6 AI-powered analysi
 
 ## Module Categories & Usage Patterns
 
-SpiderFoot v5.3.3 includes 277 modules organized into enhanced categories:
+SpiderFoot v6.0.0 includes 309 modules organized into the following categories:
 
 ### Core Investigation Modules
 - **DNS/Network**: sfp_dnsresolve, sfp_whois, sfp_ssl, sfp_portscan_tcp, sfp_banner
@@ -127,7 +127,7 @@ SpiderFoot v5.3.3 includes 277 modules organized into enhanced categories:
 - **Social Media**: sfp_twitter, sfp_github, sfp_linkedin, sfp_instagram, **sfp_tiktok_osint**
 - **Data Breach**: sfp_haveibeen, sfp_hunter, sfp_emailrep
 
-### Enhanced Investigation Modules (New in v5.3.3)
+### Additional Investigation Modules
 - **Blockchain Analytics**: sfp_blockchain_analytics (Bitcoin, Ethereum, Litecoin analysis)
 - **Advanced Correlation**: sfp_advanced_correlation (entity resolution, pattern detection)
 - **Performance Optimization**: sfp_performance_optimizer (caching, rate limiting)
@@ -165,7 +165,7 @@ python sf.py -s multiple_targets.txt -t FILE -m sfp_dnsresolve,sfp_ssl,sfp_block
 
 ## Result Interpretation
 
-SpiderFoot v5.3.3 provides enhanced result analysis and interpretation:
+SpiderFoot v6.0.0 provides enhanced result analysis and interpretation:
 
 ### Event Types
 - **Traditional Types**: IP_ADDRESS, DOMAIN_NAME, TCP_PORT_OPEN, SSL_CERTIFICATE_ISSUED, VULNERABILITY, MALICIOUS_DOMAIN, EMAILADDR, SOCIAL_MEDIA

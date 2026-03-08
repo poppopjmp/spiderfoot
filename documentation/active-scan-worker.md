@@ -69,7 +69,7 @@ docker-compose level by assigning different `--queues` flags.
 | trufflehog    | `sfp_tool_trufflehog`    | pip        |
 | wafw00f       | `sfp_tool_wafw00f`       | pip        |
 
-### Added by the active worker (`Dockerfile.active-worker`)
+### Added by the active worker (`docker/Dockerfile.active-scanner`)
 
 #### DNS & Subdomain Enumeration
 
@@ -147,7 +147,7 @@ Modules can find wordlists via `SF_WORDLISTS_PATH` environment variable
 
 | File | Action | Description |
 |------|--------|-------------|
-| `Dockerfile.active-worker` | **Created** | Multi-stage build: Go builder → C builder → wordlists → runtime |
+| `docker/Dockerfile.active-scanner` | **Created** | Multi-stage build: Go builder → C builder → wordlists → runtime |
 | `docker-compose.yml` | **Modified** | Added `celery-worker-active` service with `scan` profile + `x-sf-active-build` anchor; general worker no longer handles `scan` queue |
 | `documentation/active-scan-worker.md` | **Created** | This file |
 
@@ -169,7 +169,7 @@ docker compose -f docker-compose.yml --profile scan up -d
 
 ### Build order note
 
-`Dockerfile.active-worker` uses `FROM spiderfoot-micro:latest` — the base image
+`docker/Dockerfile.active-scanner` uses `FROM spiderfoot-micro:latest` — the base image
 must be built before the active worker image.  Running `docker compose build api`
 first (or `docker compose up --build`) ensures this.
 
@@ -207,7 +207,7 @@ fair scheduling (`worker_prefetch_multiplier=1`, `task_acks_late=True`).
 
 ## Extending with New Tools
 
-1. Add the tool installation to `Dockerfile.active-worker` (in the appropriate
+1. Add the tool installation to `docker/Dockerfile.active-scanner` (in the appropriate
    builder stage).
 2. Create a new `sfp_tool_<name>.py` module in `modules/`.
 3. The module should look for the binary in `PATH` (the `/tools/bin/` directory
@@ -345,10 +345,10 @@ end-to-end testing of the active scan worker:
 4. **Smoke Test** — Runs live tool tests against `example.com` (httpx, subfinder,
    dnsx, gau, katana, tlsx, sslscan)
 
-The workflow runs on pushes to `main`/`dev-*` that modify `Dockerfile.active-worker`
+The workflow runs on pushes to `main`/`dev-*` that modify `docker/Dockerfile.active-scanner`
 or `modules/sfp_tool_*.py`, and can be triggered manually via `workflow_dispatch`.
 
-## Docker Build — `Dockerfile.active-worker`
+## Docker Build — `docker/Dockerfile.active-scanner`
 
 The image uses a **4-stage multi-stage build**:
 
@@ -362,8 +362,8 @@ The image uses a **4-stage multi-stage build**:
 The `BASE_IMAGE` build argument allows CI to pass a GHCR image tag:
 
 ```bash
-docker build -f Dockerfile.active-worker \
-  --build-arg BASE_IMAGE=ghcr.io/org/spiderfoot-base:v5.9.0 \
+docker build -f docker/Dockerfile.active-scanner \
+  --build-arg BASE_IMAGE=ghcr.io/org/spiderfoot-base:6.0.0 \
   -t spiderfoot-active:latest .
 ```
 
