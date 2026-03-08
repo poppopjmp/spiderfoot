@@ -64,7 +64,7 @@ COPY --chown=spiderfoot:spiderfoot setup.cfg    setup.cfg
 COPY --chown=spiderfoot:spiderfoot config/      config/
 
 # Copy entrypoint
-COPY --chown=root:root docker-entrypoint.sh /usr/local/bin/
+COPY --chown=root:root docker/docker-entrypoint.sh /usr/local/bin/
 RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh && \
     chmod +x /usr/local/bin/docker-entrypoint.sh
 

@@ -35,7 +35,7 @@ test_schema*.py
 *_out.txt
 *_results.txt
 xdist_stability_results.json
-
+cookies.txt
 # Stock/temp image files at repo root
 *.jpg
 *.jpeg
