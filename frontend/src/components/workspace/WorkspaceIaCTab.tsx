@@ -353,62 +353,200 @@ function FileCard({ category, filename, content }: { category: string; filename:
   );
 }
 
-// ── IaC panel for one selected scan ───────────────────────────
+// ── Workspace IaC helpers ─────────────────────────────────────
 
-function ScanIaCPanel({ scan }: { scan: Scan }) {
+function sanitizeTarget(s: string): string {
+  return (s || 'target')
+    .replace(/[^a-zA-Z0-9]/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_|_$/g, '')
+    .slice(0, 20)
+    .toLowerCase() || 'target';
+}
+
+interface ScanPair { scan: Scan; data: IaCResponse }
+interface ScanFail { scan: Scan; error: string }
+interface MergedResult {
+  provider:    string;
+  scan_count:  number;
+  bundle:      IaCResponse['bundle'];
+  files:       IaCResponse['files'];
+  validation:  IaCValidationResult[];
+  all_valid:   boolean;
+  profile_summary: {
+    ip_count: number; port_count: number; service_count: number;
+    web_server?: string; os_detected?: string;
+  };
+}
+
+function buildMerged(pairs: ScanPair[], provider: string): MergedResult {
+  const bundle: IaCResponse['bundle'] = {};
+  const files:  IaCResponse['files']  = {};
+  const validations: IaCValidationResult[] = [];
+  const summaries: IaCResponse['profile_summary'][] = [];
+
+  for (const { scan, data } of pairs) {
+    const pfx = sanitizeTarget(scan.target ?? scan.name ?? scan.scan_id);
+    for (const [cat, catFiles] of Object.entries(data.bundle ?? {})) {
+      bundle[cat] ??= {};
+      files[cat]  ??= [];
+      for (const [fname, content] of Object.entries(catFiles ?? {})) {
+        const nfn = `${pfx}__${fname}`;
+        bundle[cat][nfn] = content;
+        files[cat].push(nfn);
+      }
+    }
+    for (const v of data.validation ?? [])
+      validations.push({ ...v, file_name: `${pfx}__${v.file_name}` });
+    summaries.push(data.profile_summary);
+  }
+
+  const ws = [...new Set(summaries.map(s => s.web_server).filter(Boolean) as string[])];
+  const os = [...new Set(summaries.map(s => s.os_detected).filter(Boolean) as string[])];
+  return {
+    provider,
+    scan_count: pairs.length,
+    bundle, files,
+    validation: validations,
+    all_valid:  validations.length === 0 || validations.every(v => v.valid),
+    profile_summary: {
+      ip_count:      summaries.reduce((a, p) => a + (p.ip_count      ?? 0), 0),
+      port_count:    summaries.reduce((a, p) => a + (p.port_count    ?? 0), 0),
+      service_count: summaries.reduce((a, p) => a + (p.service_count ?? 0), 0),
+      web_server:    ws.join(' / ') || undefined,
+      os_detected:   os.join(' / ') || undefined,
+    },
+  };
+}
+
+// ── Workspace IaC panel ────────────────────────────────────────
+
+function WorkspaceIaCPanel({ scans }: { scans: Scan[] }) {
   const [provider,         setProvider]         = useState<Provider>('aws');
   const [includeTerraform, setIncludeTerraform] = useState(true);
   const [includeAnsible,   setIncludeAnsible]   = useState(true);
   const [includeDocker,    setIncludeDocker]    = useState(true);
   const [includePacker,    setIncludePacker]    = useState(false);
   const [runValidate,      setRunValidate]      = useState(true);
-  const [result,           setResult]           = useState<IaCResponse | null>(null);
-  const [review,           setReview]           = useState<IaCReviewData | null>(null);
+  const [includedIds,      setIncludedIds]      = useState<Set<string>>(
+    () => new Set(scans.map(s => s.scan_id))
+  );
+  const [generating, setGenerating] = useState(false);
+  const [progress,   setProgress]   = useState({ done: 0, total: 0 });
+  const [result,     setResult]     = useState<MergedResult | null>(null);
+  const [successes,  setSuccesses]  = useState<ScanPair[]>([]);
+  const [failures,   setFailures]   = useState<ScanFail[]>([]);
+  const [review,     setReview]     = useState<IaCReviewData | null>(null);
 
-  const generate = useMutation({
-    mutationFn: (req: IaCRequest) => iacApi.generate(scan.scan_id, req),
-    onSuccess: (data) => { setResult(data); setReview(null); },
-  });
   const reviewMut = useMutation({
-    mutationFn: (res: IaCResponse) => iacApi.review({
-      scan_id: scan.scan_id, target: scan.target ?? '',
-      provider: res.provider, bundle: res.bundle, files: res.files,
+    mutationFn: (r: MergedResult) => iacApi.review({
+      provider: r.provider, bundle: r.bundle, files: r.files,
     }),
     onSuccess: (data) => setReview(data.data),
   });
 
-  const handleGenerate = useCallback(() => generate.mutate({
-    provider, include_terraform: includeTerraform, include_ansible: includeAnsible,
-    include_docker: includeDocker, include_packer: includePacker, validate: runValidate,
-  }), [generate, provider, includeTerraform, includeAnsible, includeDocker, includePacker, runValidate]);
+  const included = scans.filter(s => includedIds.has(s.scan_id));
+
+  const handleGenerate = useCallback(async () => {
+    if (included.length === 0) return;
+    setGenerating(true);
+    setProgress({ done: 0, total: included.length });
+    setResult(null); setSuccesses([]); setFailures([]); setReview(null);
+
+    const req: IaCRequest = {
+      provider, include_terraform: includeTerraform, include_ansible: includeAnsible,
+      include_docker: includeDocker, include_packer: includePacker, validate: runValidate,
+    };
+
+    const settled = await Promise.allSettled(
+      included.map(scan =>
+        iacApi.generate(scan.scan_id, req).then(data => {
+          setProgress(p => ({ ...p, done: p.done + 1 }));
+          return { scan, data };
+        })
+      )
+    );
+
+    const ok: ScanPair[] = [];
+    const err: ScanFail[] = [];
+    settled.forEach((r, i) => {
+      if (r.status === 'fulfilled') ok.push(r.value);
+      else err.push({ scan: included[i], error: (r.reason as Error)?.message ?? 'Generation failed' });
+    });
+
+    setSuccesses(ok); setFailures(err);
+    if (ok.length > 0) setResult(buildMerged(ok, provider));
+    setGenerating(false);
+  }, [included, provider, includeTerraform, includeAnsible, includeDocker, includePacker, runValidate]);
+
+  const toggleScan = (scanId: string) =>
+    setIncludedIds(prev => { const n = new Set(prev); n.has(scanId) ? n.delete(scanId) : n.add(scanId); return n; });
 
   const allFiles = result
-    ? Object.entries(result.bundle).flatMap(([cat, files]) =>
-        Object.entries(files ?? {}).map(([filename, content]) => ({ category: cat, filename, content })))
+    ? Object.entries(result.bundle).flatMap(([cat, catFiles]) =>
+        Object.entries(catFiles ?? {}).map(([filename, content]) => ({ category: cat, filename, content })))
     : [];
-
-  const isFinished = ['FINISHED', 'COMPLETE', 'COMPLETED'].includes((scan.status ?? '').toUpperCase());
 
   return (
     <div className="space-y-4">
+      {/* Config card */}
       <div className="card p-5 space-y-5">
         <div className="flex items-center gap-2">
           <Server className="h-4 w-4 text-spider-400" />
-          <h4 className="font-semibold text-foreground">IaC Generator</h4>
-          {!isFinished && (
-            <span className="text-xs text-yellow-400 bg-yellow-900/20 border border-yellow-800/30 rounded px-2 py-0.5 ml-auto">
-              Scan not finished — results may be incomplete
-            </span>
-          )}
+          <h4 className="font-semibold text-foreground">Workspace IaC Generator</h4>
+          <span className="ml-auto text-xs text-dark-400 bg-dark-800 rounded px-2 py-0.5">
+            {included.length}/{scans.length} scan{scans.length !== 1 ? 's' : ''} included
+          </span>
         </div>
         <p className="text-sm text-dark-400">
-          Generates Terraform, Ansible, Docker Compose, and Packer configurations
-          that replicate the target's discovered infrastructure.
+          Runs IaC generation across all selected scans in parallel and merges the results into a
+          single unified bundle. Files are namespaced by target to avoid naming collisions.
         </p>
+
+        {/* Scan inclusion list */}
+        <div>
+          <label className="block text-xs font-medium text-dark-300 mb-2 uppercase tracking-wide">Include Scans</label>
+          <div className="space-y-1 max-h-44 overflow-y-auto pr-1">
+            {scans.map(s => {
+              const finished = ['FINISHED', 'COMPLETE', 'COMPLETED'].includes((s.status ?? '').toUpperCase());
+              return (
+                <label key={s.scan_id} className="flex items-center gap-2.5 cursor-pointer text-sm py-1.5 px-2 rounded hover:bg-dark-800 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={includedIds.has(s.scan_id)}
+                    onChange={() => toggleScan(s.scan_id)}
+                    className="accent-spider-500 flex-shrink-0"
+                  />
+                  <span className="flex-1 text-dark-200 truncate min-w-0">{s.name || 'Untitled'}</span>
+                  <span className="text-dark-500 text-xs font-mono truncate max-w-[160px]">{s.target}</span>
+                  <span className={`text-xs px-1.5 py-0.5 rounded flex-shrink-0 ${
+                    finished ? 'bg-green-900/30 text-green-400' : 'bg-yellow-900/30 text-yellow-400'
+                  }`}>{s.status ?? 'unknown'}</span>
+                </label>
+              );
+            })}
+          </div>
+          <div className="flex gap-3 mt-2 text-xs">
+            <button className="text-spider-400 hover:text-spider-300"
+              onClick={() => setIncludedIds(new Set(scans.map(s => s.scan_id)))}>
+              Select all
+            </button>
+            <span className="text-dark-600">·</span>
+            <button className="text-spider-400 hover:text-spider-300"
+              onClick={() => setIncludedIds(new Set(
+                scans.filter(s => ['FINISHED','COMPLETE','COMPLETED'].includes((s.status ?? '').toUpperCase())).map(s => s.scan_id)
+              ))}>
+              Completed only
+            </button>
+            <span className="text-dark-600">·</span>
+            <button className="text-dark-500 hover:text-dark-400" onClick={() => setIncludedIds(new Set())}>Clear</button>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div>
             <label className="block text-xs font-medium text-dark-300 mb-1.5 uppercase tracking-wide">Cloud Provider</label>
-            <select value={provider} onChange={(e) => setProvider(e.target.value as Provider)} className="input w-full text-sm">
+            <select value={provider} onChange={e => setProvider(e.target.value as Provider)} className="input w-full text-sm">
               {PROVIDERS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
             </select>
           </div>
@@ -423,50 +561,99 @@ function ScanIaCPanel({ scan }: { scan: Scan }) {
             </div>
           </div>
         </div>
+
         <div className="flex items-center gap-3 pt-1 flex-wrap">
-          <button className="btn-primary flex items-center gap-2" onClick={handleGenerate} disabled={generate.isPending}>
-            {generate.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Code2 className="h-4 w-4" />}
-            {generate.isPending ? 'Generating…' : 'Generate IaC'}
+          <button
+            className="btn-primary flex items-center gap-2"
+            onClick={handleGenerate}
+            disabled={generating || included.length === 0}
+          >
+            {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Code2 className="h-4 w-4" />}
+            {generating
+              ? `Generating… ${progress.done}/${progress.total}`
+              : `Generate Workspace IaC (${included.length} scan${included.length !== 1 ? 's' : ''})`
+            }
           </button>
-          {result && (
+          {result && !generating && (
             <>
-              <button className="btn-secondary flex items-center gap-2 text-sm" onClick={handleGenerate} disabled={generate.isPending}>
+              <button className="btn-secondary flex items-center gap-2 text-sm" onClick={handleGenerate}>
                 <RefreshCw className="h-4 w-4" /> Regenerate
               </button>
-              <button className="btn-secondary flex items-center gap-2 text-sm" onClick={() => reviewMut.mutate(result)} disabled={reviewMut.isPending}>
+              <button
+                className="btn-secondary flex items-center gap-2 text-sm"
+                onClick={() => reviewMut.mutate(result)}
+                disabled={reviewMut.isPending}
+              >
                 {reviewMut.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Bot className="h-4 w-4" />}
                 AI Review
               </button>
             </>
           )}
         </div>
-        {generate.isError && (
-          <div className="flex items-center gap-2 text-sm text-red-400 bg-red-900/20 border border-red-800/30 rounded-lg px-3 py-2">
-            <XCircle className="h-4 w-4 flex-shrink-0" />
-            {(generate.error as Error)?.message ?? 'IaC generation failed. Ensure the scan has finished and contains events.'}
+
+        {/* Progress bar */}
+        {generating && (
+          <div>
+            <div className="flex justify-between text-xs text-dark-400 mb-1">
+              <span>Processing scans in parallel…</span>
+              <span>{progress.done}/{progress.total}</span>
+            </div>
+            <div className="h-1.5 bg-dark-700 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-spider-500 rounded-full transition-all duration-300"
+                style={{ width: progress.total > 0 ? `${(progress.done / progress.total) * 100}%` : '0%' }}
+              />
+            </div>
           </div>
         )}
       </div>
 
-      {result?.message && !result.bundle && (
-        <div className="card p-5 flex items-center gap-3 text-dark-400 text-sm">
-          <AlertTriangle className="h-5 w-5 text-yellow-500 flex-shrink-0" />{result.message}
+      {/* Per-scan result badges */}
+      {(successes.length > 0 || failures.length > 0) && !generating && (
+        <div className="card p-4">
+          <p className="text-xs font-medium text-dark-400 uppercase tracking-wide mb-3">Scan Results</p>
+          <div className="flex flex-wrap gap-2">
+            {successes.map(({ scan }) => (
+              <span key={scan.scan_id} className="flex items-center gap-1.5 text-xs bg-green-900/20 border border-green-800/30 text-green-300 rounded-full px-2.5 py-1">
+                <CheckCircle2 className="h-3 w-3 flex-shrink-0" />
+                {scan.target ?? scan.name ?? 'Untitled'}
+              </span>
+            ))}
+            {failures.map(({ scan, error }) => (
+              <span key={scan.scan_id} title={error} className="flex items-center gap-1.5 text-xs bg-red-900/20 border border-red-800/30 text-red-300 rounded-full px-2.5 py-1">
+                <XCircle className="h-3 w-3 flex-shrink-0" />
+                {scan.target ?? scan.name ?? 'Untitled'}
+              </span>
+            ))}
+          </div>
+          {failures.length > 0 && (
+            <div className="mt-3 space-y-1">
+              {failures.map(({ scan, error }) => (
+                <p key={scan.scan_id} className="text-xs text-red-400">
+                  <span className="font-mono">{scan.target ?? scan.name}</span>: {error}
+                </p>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
       {result && Object.keys(result.bundle ?? {}).length > 0 && (
         <>
+          {/* Aggregated profile */}
           <div className="card p-5">
             <h4 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
-              <Server className="h-4 w-4 text-spider-400" /> Target Profile
-              <span className="ml-auto text-xs text-dark-400 font-normal capitalize">{result.provider}</span>
+              <Server className="h-4 w-4 text-spider-400" /> Aggregated Profile
+              <span className="ml-auto text-xs text-dark-400 font-normal">
+                {result.scan_count} scan{result.scan_count !== 1 ? 's' : ''} · {result.provider}
+              </span>
             </h4>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
               {[
                 { label: 'IP Addresses', value: result.profile_summary.ip_count },
                 { label: 'Open Ports',   value: result.profile_summary.port_count },
                 { label: 'Services',     value: result.profile_summary.service_count },
-                { label: 'Web Server',   value: result.profile_summary.web_server ?? '—' },
+                { label: 'Web Servers',  value: result.profile_summary.web_server ?? '—' },
                 { label: 'OS Detected',  value: result.profile_summary.os_detected ?? '—' },
               ].map(({ label, value }) => (
                 <div key={label} className="bg-dark-800 rounded-lg p-3 text-center">
@@ -487,7 +674,9 @@ function ScanIaCPanel({ scan }: { scan: Scan }) {
                   }
                   Validation Results
                 </h4>
-                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${result.all_valid ? 'bg-green-900/40 text-green-300' : 'bg-red-900/40 text-red-300'}`}>
+                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                  result.all_valid ? 'bg-green-900/40 text-green-300' : 'bg-red-900/40 text-red-300'
+                }`}>
                   {result.validation.filter(v => v.valid).length}/{result.validation.length} passed
                 </span>
               </div>
@@ -502,7 +691,7 @@ function ScanIaCPanel({ scan }: { scan: Scan }) {
               {reviewMut.isPending && (
                 <div className="card p-5 flex items-center gap-3 text-dark-400 text-sm">
                   <Loader2 className="h-4 w-4 animate-spin text-spider-400" />
-                  IaC Advisor is reviewing the bundle…
+                  IaC Advisor is reviewing the workspace bundle…
                 </div>
               )}
               {reviewMut.isError && (
@@ -528,10 +717,10 @@ function ScanIaCPanel({ scan }: { scan: Scan }) {
               </button>
             </div>
             <div className="flex flex-wrap gap-2 mb-4">
-              {Object.entries(result.files).map(([cat, files]) => (
+              {Object.entries(result.files).map(([cat, catFiles]) => (
                 <span key={cat} className="text-xs px-2 py-0.5 rounded-full bg-dark-700 text-dark-200">
                   <span className={CATEGORY_COLORS[cat] ?? 'text-dark-300'}>{CATEGORY_LABELS[cat] ?? cat}</span>
-                  <span className="text-dark-400 ml-1">({files.length})</span>
+                  <span className="text-dark-400 ml-1">({catFiles.length})</span>
                 </span>
               ))}
             </div>
@@ -555,14 +744,9 @@ function WorkspaceIaCTab({ workspace, workspaceId, targets, scans }: WorkspaceIa
   const [renderErr, setRenderErr]   = useState<string | null>(null);
   const [loading, setLoading]       = useState(true);
   const [copied,  setCopied]        = useState(false);
-  const [showSrc,        setShowSrc]        = useState(false);
-  const [selectedScanId, setSelectedScanId] = useState('');
+  const [showSrc, setShowSrc] = useState(false);
 
-  const source         = buildDiagram(workspace, targets, scans);
-  const completedScans = scans.filter(s =>
-    ['FINISHED', 'COMPLETE', 'COMPLETED'].includes((s.status ?? '').toUpperCase())
-  );
-  const selectedScan = scans.find(s => s.scan_id === selectedScanId);
+  const source = buildDiagram(workspace, targets, scans);
 
   // (re-)render whenever the diagram source changes
   useEffect(() => {
@@ -730,16 +914,16 @@ function WorkspaceIaCTab({ workspace, workspaceId, targets, scans }: WorkspaceIa
         </div>
       )}
 
-      {/* ── Section 2: IaC Package Generator ── */}
+      {/* ── Section 2: Workspace IaC Package Generator ── */}
       <div className="border-t border-dark-700 pt-6">
         <div className="flex items-center gap-2 mb-2">
           <Server className="h-5 w-5 text-spider-400" />
           <h2 className="text-lg font-semibold text-foreground">IaC Package Generator</h2>
         </div>
         <p className="text-sm text-dark-400 mb-5">
-          Generate Terraform, Ansible, Docker Compose and Packer bundles from any scan in this
-          workspace. Select a scan, configure provider and artifacts, then generate and optionally
-          run an LLM-powered security review with deterministic validation.
+          Generates a single unified Terraform / Ansible / Docker / Packer bundle by running IaC
+          generation across every selected scan in this workspace in parallel and merging the
+          results. Includes deterministic validation and an optional LLM-powered security review.
         </p>
 
         {scans.length === 0 ? (
@@ -749,38 +933,7 @@ function WorkspaceIaCTab({ workspace, workspaceId, targets, scans }: WorkspaceIa
             <p className="text-dark-500 text-sm mt-1">Run a scan first, then come back to generate IaC.</p>
           </div>
         ) : (
-          <>
-            <div className="card p-4 mb-4">
-              <label className="block text-xs font-medium text-dark-300 mb-1.5 uppercase tracking-wide">Select Scan</label>
-              <select
-                className="input w-full text-sm"
-                value={selectedScanId}
-                onChange={(e) => setSelectedScanId(e.target.value)}
-              >
-                <option value="">— pick a scan —</option>
-                {scans.map(s => (
-                  <option key={s.scan_id} value={s.scan_id}>
-                    {s.name || 'Untitled'} · {s.target} · {s.status}
-                    {['FINISHED', 'COMPLETE', 'COMPLETED'].includes((s.status ?? '').toUpperCase()) ? '' : ' ⚠'}
-                  </option>
-                ))}
-              </select>
-              {completedScans.length < scans.length && (
-                <p className="text-xs text-yellow-400 mt-1.5">
-                  ⚠ {scans.length - completedScans.length} scan(s) not yet finished — IaC output will be partial.
-                </p>
-              )}
-            </div>
-
-            {selectedScan
-              ? <ScanIaCPanel key={selectedScan.scan_id} scan={selectedScan} />
-              : (
-                <div className="card text-center py-10 text-dark-500 text-sm">
-                  Select a scan above to configure and generate an IaC bundle.
-                </div>
-              )
-            }
-          </>
+          <WorkspaceIaCPanel key={workspaceId} scans={scans} />
         )}
       </div>
     </div>
