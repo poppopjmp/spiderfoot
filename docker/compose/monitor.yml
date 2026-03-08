@@ -159,8 +159,7 @@ services:
       prometheus:
         condition: service_started
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:3000/grafana/api/health
-          || exit 1"]
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:3000/grafana/api/health || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 5
