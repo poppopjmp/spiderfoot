@@ -29,37 +29,19 @@ def _read_yaml(path: str) -> dict:
 # ── Dockerfile Security ─────────────────────────────────────────────────────
 
 class TestDockerfileAPI:
-    """Verify API Dockerfile security best practices."""
+    """Verify API Dockerfile security best practices.
+
+    Dockerfile.api is a thin single-stage extension of spiderfoot-base.
+    Security hardening (USER, SUID, pip, etc.) lives in Dockerfile.base
+    and is tested by TestDockerfileBase.
+    """
 
     @pytest.fixture(autouse=True)
     def setup(self):
-        self.content = _read(os.path.join(ROOT, "Dockerfile"))
-
-    def test_uses_non_root_user(self):
-        assert "USER spiderfoot" in self.content
-
-    def test_uses_multi_stage_build(self):
-        assert self.content.count("FROM ") >= 2
+        self.content = _read(os.path.join(DOCKER_DIR, "Dockerfile.api"))
 
     def test_has_healthcheck(self):
         assert "HEALTHCHECK" in self.content
-
-    def test_removes_suid_binaries(self):
-        assert "find / -perm -4000" in self.content
-        assert "chmod u-s" in self.content
-
-    def test_removes_sgid_binaries(self):
-        assert "find / -perm -2000" in self.content
-        assert "chmod g-s" in self.content
-
-    def test_removes_package_managers(self):
-        assert "apt-get purge" in self.content or "rm -f /usr/bin/apt" in self.content
-
-    def test_removes_unnecessary_network_tools(self):
-        assert "rm -f /usr/bin/wget" in self.content
-
-    def test_entrypoint_owned_by_root(self):
-        assert "COPY --chown=root:root docker-entrypoint.sh" in self.content
 
     def test_no_env_secrets(self):
         """No hardcoded secrets in ENV directives."""
@@ -67,15 +49,6 @@ class TestDockerfileAPI:
         for line in env_lines:
             assert "password" not in line.lower() or "changeme" not in line.lower()
             assert "secret" not in line.lower() or "=" not in line
-
-    def test_slim_base_image(self):
-        assert "slim" in self.content.lower() or "alpine" in self.content.lower()
-
-    def test_pip_no_cache(self):
-        assert "--no-cache-dir" in self.content
-
-    def test_pinned_pip_version(self):
-        assert re.search(r"pip==\d+\.\d+", self.content)
 
 
 class TestDockerfileFrontend:
@@ -117,11 +90,41 @@ class TestDockerfileBase:
     def test_uses_non_root_user(self):
         assert "USER spiderfoot" in self.content
 
+    def test_uses_multi_stage_build(self):
+        assert self.content.count("FROM ") >= 2
+
+    def test_slim_base_image(self):
+        assert "slim" in self.content.lower() or "alpine" in self.content.lower()
+
     def test_removes_suid_binaries(self):
         assert "find / -perm -4000" in self.content
+        assert "chmod u-s" in self.content
+
+    def test_removes_sgid_binaries(self):
+        assert "find / -perm -2000" in self.content
+        assert "chmod g-s" in self.content
 
     def test_removes_package_managers(self):
         assert "apt-get purge" in self.content or "rm -f /usr/bin/apt" in self.content
+
+    def test_removes_unnecessary_network_tools(self):
+        assert "rm -f /usr/bin/wget" in self.content
+
+    def test_entrypoint_owned_by_root(self):
+        assert "COPY --chown=root:root docker/docker-entrypoint.sh" in self.content
+
+    def test_no_env_secrets(self):
+        """No hardcoded secrets in ENV directives."""
+        env_lines = [l for l in self.content.splitlines() if l.strip().startswith("ENV ")]
+        for line in env_lines:
+            assert "password" not in line.lower() or "changeme" not in line.lower()
+            assert "secret" not in line.lower() or "=" not in line
+
+    def test_pip_no_cache(self):
+        assert "--no-cache-dir" in self.content
+
+    def test_pinned_pip_version(self):
+        assert re.search(r"pip==\d+\.\d+", self.content)
 
     def test_has_entrypoint(self):
         assert "ENTRYPOINT" in self.content
@@ -437,7 +440,7 @@ class TestDockerEntrypoint:
 
     @pytest.fixture(autouse=True)
     def setup(self):
-        self.content = _read(os.path.join(ROOT, "docker-entrypoint.sh"))
+        self.content = _read(os.path.join(DOCKER_DIR, "docker-entrypoint.sh"))
 
     def test_uses_exec(self):
         """Must use exec to replace shell process with app — no zombie processes."""
