@@ -25,6 +25,7 @@
     "date-fns": "^4.1.0",
     "dompurify": "^3.3.2",
     "lucide-react": "^0.577.0",
+    "mermaid": "^11.12.3",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-router-dom": "^7.13.1",
@@ -46,7 +47,6 @@
     "@vitejs/plugin-react": "^5.1.4",
     "autoprefixer": "^10.4.27",
     "eslint": "^9.14.0",
-
     "eslint-plugin-react-hooks": "^5.2.0",
     "jsdom": "^28.1.0",
     "postcss": "^8.4.49",

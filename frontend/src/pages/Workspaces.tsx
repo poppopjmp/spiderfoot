@@ -3,12 +3,13 @@ import { workspaceApi, scanApi, formatEpoch, type Workspace, type WorkspaceTarge
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { useWorkspaceMutations } from '../hooks/useWorkspaceMutations';
 import WorkspaceReportCard from '../components/workspace/WorkspaceReportCard';
-import { Briefcase, Plus, Trash2, Target, Copy, CheckCircle2, FolderOpen, Clock, Edit2, Radar, Link2, Unlink, Brain, MapPin, BarChart3, Shield } from 'lucide-react';
+import WorkspaceIaCTab from '../components/workspace/WorkspaceIaCTab';
+import { Briefcase, Plus, Trash2, Target, Copy, CheckCircle2, FolderOpen, Clock, Edit2, Radar, Link2, Unlink, Brain, MapPin, BarChart3, Shield, GitBranch } from 'lucide-react';
 import { useState } from 'react';
 import { StatusBadge, Toast, Tabs, ConfirmDialog, ModalShell, type ToastType } from '../components/ui';
 import { Link } from 'react-router-dom';
 
-type WorkspaceTab = 'overview' | 'targets' | 'scans' | 'correlations' | 'geomap' | 'report';
+type WorkspaceTab = 'overview' | 'targets' | 'scans' | 'correlations' | 'geomap' | 'iac' | 'report';
 
 /* Map user-friendly labels to SpiderFoot internal type names */
 const TARGET_TYPES = [
@@ -65,6 +66,7 @@ export default function WorkspacesPage() {
     { key: 'scans' as const, label: 'Scans', icon: Radar },
     { key: 'correlations' as const, label: 'Correlations', icon: Shield },
     { key: 'geomap' as const, label: 'GeoMap', icon: MapPin },
+    { key: 'iac' as const, label: 'IaC Map', icon: GitBranch },
     { key: 'report' as const, label: 'AI Report', icon: Brain },
   ];
 
@@ -646,6 +648,25 @@ export default function WorkspacesPage() {
                   })()}
                 </div>
               )}
+
+              {activeTab === 'iac' && selectedWorkspace && (() => {
+                const linkedScanIds = new Set(
+                  (workspaceDetail?.scans as Array<{ scan_id: string }> ?? []).map((s) => s.scan_id)
+                );
+                const implicitScans = allScans.filter(
+                  (s) => !linkedScanIds.has(s.scan_id) && targetList.some((t) => s.target === t.value)
+                );
+                const linkedScans = allScans.filter((s) => linkedScanIds.has(s.scan_id));
+                const displayScans = [...linkedScans, ...implicitScans];
+                return (
+                  <WorkspaceIaCTab
+                    workspaceId={selectedWorkspace}
+                    workspace={workspaces.find((w) => w.workspace_id === selectedWorkspace)}
+                    targets={targetList}
+                    scans={displayScans}
+                  />
+                );
+              })()}
 
               {activeTab === 'report' && selectedWorkspace && (
                 <div className="animate-fade-in">
