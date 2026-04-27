@@ -57,6 +57,7 @@ def execute_agent_task(
             "instruction": instruction,
             "target": target,
         })
+        r.expire(status_key, 86400 * 7)
 
         self.update_state(state="RUNNING", meta={
             "agent_id": agent_id,
@@ -68,33 +69,34 @@ def execute_agent_task(
         system_prompt = _build_system_prompt()
         user_prompt = _build_user_prompt(instruction, target, context)
 
-        # Call LiteLLM proxy
-        litellm_url = os.environ.get("SF_LITELLM_URL", "http://litellm:4000")
+        # Call LiteLLM proxy via the shared retrying OpenAI-compatible client.
+        litellm_url = os.environ.get(
+            "SF_LITELLM_URL",
+            os.environ.get("SF_LLM_API_BASE", "http://litellm:4000"),
+        ).rstrip("/")
+        if not litellm_url.endswith("/v1"):
+            litellm_url = f"{litellm_url}/v1"
         model_name = model or os.environ.get("SF_AGENT_MODEL", "openrouter/google/gemini-2.0-flash-001")
 
-        import urllib.request
+        from spiderfoot.ai.llm_client import LLMClient, LLMConfig, LLMProvider
 
-        payload = json.dumps({
-            "model": model_name,
-            "messages": [
+        client = LLMClient(LLMConfig(
+            api_base=litellm_url,
+            api_key=os.environ.get("SF_LLM_API_KEY", ""),
+            model=model_name,
+            provider=LLMProvider.OPENAI,
+            temperature=0.3,
+            max_tokens=4096,
+            timeout=120,
+            max_retries=int(os.environ.get("SF_AGENT_LLM_MAX_RETRIES", "3")),
+        ))
+        llm_response = client.chat_messages(
+            [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
-            ],
-            "temperature": 0.3,
-            "max_tokens": 4096,
-        }).encode("utf-8")
-
-        req = urllib.request.Request(
-            f"{litellm_url}/v1/chat/completions",
-            data=payload,
-            headers={"Content-Type": "application/json"},
-            method="POST",
+            ]
         )
-
-        with urllib.request.urlopen(req, timeout=120) as resp:
-            response = json.loads(resp.read().decode("utf-8"))
-
-        assistant_message = response["choices"][0]["message"]["content"]
+        assistant_message = llm_response.content
 
         # Parse agent response for tool calls / actions
         result = {
@@ -112,6 +114,7 @@ def execute_agent_task(
             "status": "completed",
             "completed_at": str(time.time()),
         })
+        r.expire(status_key, 86400 * 7)
 
         logger.info("agents.task_completed", extra={"agent_id": agent_id, "target": target})
         return result
@@ -119,9 +122,10 @@ def execute_agent_task(
     except Exception as e:
         r.hset(status_key, mapping={
             "status": "failed",
-            "error": str(e),
+            "error": str(e)[:1000],
             "failed_at": str(time.time()),
         })
+        r.expire(status_key, 86400 * 7)
         logger.error(f"agents.task_failed: {e}", extra={"agent_id": agent_id})
         raise
 
@@ -138,6 +142,10 @@ def batch_agent_analysis(
 ) -> dict[str, Any]:
     """Submit multiple agent tasks for batch analysis."""
     import uuid
+
+    max_targets = int(os.environ.get("SF_AGENT_BATCH_MAX_TARGETS", "100"))
+    if len(targets) > max_targets:
+        raise ValueError(f"Too many targets for batch agent analysis: {len(targets)} > {max_targets}")
 
     task_ids = []
     for target in targets:

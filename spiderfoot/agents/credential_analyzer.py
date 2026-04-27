@@ -10,7 +10,6 @@ Processes leaked credential events and produces:
   - Recommended actions
 """
 
-import json
 import logging
 from typing import Any, Dict, List
 
@@ -52,7 +51,7 @@ class CredentialAnalyzerAgent(BaseAgent):
 
     async def process_event(self, event: Dict[str, Any]) -> AgentResult:
         event_type = event.get("event_type", "UNKNOWN")
-        event_data = event.get("data", "")
+        event_data = self.redact_sensitive_values(event.get("data", ""))
         source_module = event.get("source_module", "")
         target = event.get("target", "")
 
@@ -77,7 +76,7 @@ Assess the risk and provide recommendations. Do NOT reproduce any credential val
                 max_tokens=1024,
             )
 
-            result_data = json.loads(response)
+            result_data = self.parse_json_response(response)
             confidence = float(result_data.get("confidence", 0.5))
 
             return AgentResult(
@@ -89,7 +88,7 @@ Assess the risk and provide recommendations. Do NOT reproduce any credential val
                 confidence=confidence,
             )
 
-        except json.JSONDecodeError:
+        except ValueError:
             return AgentResult(
                 agent_name=self.config.name,
                 event_id=event.get("id", ""),

@@ -7,7 +7,6 @@ Analyzes indicators of compromise (IOCs) found during scans against
 known threat actor TTPs, malware families, and attack patterns.
 """
 
-import json
 import logging
 from typing import Any, Dict, List
 
@@ -74,7 +73,7 @@ class ThreatIntelAnalyzerAgent(BaseAgent):
 
     async def process_event(self, event: Dict[str, Any]) -> AgentResult:
         event_type = event.get("event_type", "UNKNOWN")
-        event_data = event.get("data", "")
+        event_data = self.redact_sensitive_values(event.get("data", ""))
         target = event.get("target", "")
         source_module = event.get("source_module", "")
         risk = event.get("risk", 0)
@@ -111,7 +110,7 @@ Cross-reference with known threat actor TTPs, malware families, and MITRE ATT&CK
                 max_tokens=2048,
             )
 
-            result_data = json.loads(response)
+            result_data = self.parse_json_response(response)
             confidence = float(result_data.get("confidence", 0.5))
 
             return AgentResult(
@@ -123,7 +122,7 @@ Cross-reference with known threat actor TTPs, malware families, and MITRE ATT&CK
                 confidence=confidence,
             )
 
-        except json.JSONDecodeError:
+        except ValueError:
             return AgentResult(
                 agent_name=self.config.name,
                 event_id=event.get("id", ""),

@@ -5,7 +5,6 @@ Summarizes large text content found during scans (web pages, documents,
 paste sites, etc.) into actionable intelligence summaries.
 """
 
-import json
 import logging
 from typing import Any, Dict, List
 
@@ -53,7 +52,7 @@ class TextSummarizerAgent(BaseAgent):
 
     async def process_event(self, event: Dict[str, Any]) -> AgentResult:
         event_type = event.get("event_type", "UNKNOWN")
-        event_data = event.get("data", "")
+        event_data = self.redact_sensitive_values(event.get("data", ""))
         target = event.get("target", "")
         source_module = event.get("source_module", "")
 
@@ -81,7 +80,7 @@ Extract security-relevant information and entities."""
                 max_tokens=2048,
             )
 
-            result_data = json.loads(response)
+            result_data = self.parse_json_response(response)
             relevance = float(result_data.get("relevance_score", 0.5))
 
             return AgentResult(
@@ -93,7 +92,7 @@ Extract security-relevant information and entities."""
                 confidence=relevance,
             )
 
-        except json.JSONDecodeError:
+        except ValueError:
             return AgentResult(
                 agent_name=self.config.name,
                 event_id=event.get("id", ""),

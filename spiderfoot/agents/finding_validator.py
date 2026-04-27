@@ -10,7 +10,6 @@ Processes events with risk >= 60 and produces:
   - Remediation suggestions
 """
 
-import json
 import logging
 from typing import Any, Dict, List
 
@@ -47,7 +46,7 @@ class FindingValidatorAgent(BaseAgent):
 
     async def process_event(self, event: Dict[str, Any]) -> AgentResult:
         event_type = event.get("event_type", "UNKNOWN")
-        event_data = event.get("data", "")
+        event_data = self.redact_sensitive_values(event.get("data", ""))
         source_module = event.get("source_module", "")
         target = event.get("target", "")
         risk = event.get("risk", 0)
@@ -74,7 +73,7 @@ Validate whether this is a genuine security finding or a false positive."""
             )
 
             # Parse JSON response
-            result_data = json.loads(response)
+            result_data = self.parse_json_response(response)
             confidence = float(result_data.get("confidence", 0.5))
 
             return AgentResult(
@@ -86,7 +85,7 @@ Validate whether this is a genuine security finding or a false positive."""
                 confidence=confidence,
             )
 
-        except json.JSONDecodeError:
+        except ValueError:
             # LLM didn't return valid JSON — store raw response
             return AgentResult(
                 agent_name=self.config.name,
