@@ -59,9 +59,7 @@ Respond in JSON format:
 class ThreatIntelAnalyzerAgent(BaseAgent):
     """Cross-references findings with threat intelligence context."""
 
-    @property
-    def event_types(self) -> List[str]:
-        return [
+    EVENT_TYPES = [
             "MALICIOUS_*",
             "BLACKLISTED_*",
             "DARKNET_*",
@@ -70,6 +68,10 @@ class ThreatIntelAnalyzerAgent(BaseAgent):
             "DOMAIN_NAME",
             "AFFILIATE_*",
         ]
+
+    @property
+    def event_types(self) -> List[str]:
+        return self.EVENT_TYPES
 
     async def process_event(self, event: Dict[str, Any]) -> AgentResult:
         event_type = event.get("event_type", "UNKNOWN")
@@ -135,5 +137,5 @@ Cross-reference with known threat actor TTPs, malware families, and MITRE ATT&CK
     @classmethod
     def create(cls) -> "ThreatIntelAnalyzerAgent":
         config = AgentConfig.from_env("threat_intel")
-        config.event_types = cls(config).event_types
+        config.event_types = cls.EVENT_TYPES
         return cls(config)

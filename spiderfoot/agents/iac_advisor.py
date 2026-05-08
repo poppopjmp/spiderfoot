@@ -69,9 +69,11 @@ class IaCAdvisorAgent(BaseAgent):
     endpoint for security, best-practice and hardening issues.
     """
 
+    EVENT_TYPES = ["IAC_GENERATED"]
+
     @property
     def event_types(self) -> List[str]:
-        return ["IAC_GENERATED"]
+        return self.EVENT_TYPES
 
     # ------------------------------------------------------------------
     # Internal helpers
@@ -236,5 +238,5 @@ Perform a thorough security review and return the JSON result."""
     @classmethod
     def create(cls) -> "IaCAdvisorAgent":
         config = AgentConfig.from_env("iac_advisor")
-        config.event_types = cls(config).event_types
+        config.event_types = cls.EVENT_TYPES
         return cls(config)

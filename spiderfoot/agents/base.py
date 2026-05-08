@@ -233,7 +233,7 @@ class BaseAgent(ABC):
                     event_id=event.get("id", ""),
                     scan_id=event.get("scan_id", ""),
                     result_type="error",
-                    error=str(exc),
+                    error="Internal processing error",
                     processing_time_ms=(time.monotonic() - start) * 1000,
                 )
             finally:

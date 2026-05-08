@@ -34,15 +34,17 @@ Respond in JSON format:
 class FindingValidatorAgent(BaseAgent):
     """Validates scan findings to reduce false positives."""
 
-    @property
-    def event_types(self) -> List[str]:
-        return [
+    EVENT_TYPES = [
             "MALICIOUS_*",
             "VULNERABILITY_*",
             "BLACKLISTED_*",
             "LEAKED_*",
             "DARKNET_*",
         ]
+
+    @property
+    def event_types(self) -> List[str]:
+        return self.EVENT_TYPES
 
     async def process_event(self, event: Dict[str, Any]) -> AgentResult:
         event_type = event.get("event_type", "UNKNOWN")
@@ -99,5 +101,5 @@ Validate whether this is a genuine security finding or a false positive."""
     @classmethod
     def create(cls) -> "FindingValidatorAgent":
         config = AgentConfig.from_env("finding_validator")
-        config.event_types = cls(config).event_types
+        config.event_types = cls.EVENT_TYPES
         return cls(config)

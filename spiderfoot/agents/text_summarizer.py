@@ -37,9 +37,7 @@ Respond in JSON format:
 class TextSummarizerAgent(BaseAgent):
     """Summarizes large text content into actionable intelligence."""
 
-    @property
-    def event_types(self) -> List[str]:
-        return [
+    EVENT_TYPES = [
             "RAW_RIR_DATA",
             "RAW_DNS_RECORDS",
             "RAW_FILE_META_DATA",
@@ -49,6 +47,10 @@ class TextSummarizerAgent(BaseAgent):
             "SOCIAL_MEDIA_*",
             "DOCUMENT_TEXT",
         ]
+
+    @property
+    def event_types(self) -> List[str]:
+        return self.EVENT_TYPES
 
     async def process_event(self, event: Dict[str, Any]) -> AgentResult:
         event_type = event.get("event_type", "UNKNOWN")
@@ -105,5 +107,5 @@ Extract security-relevant information and entities."""
     @classmethod
     def create(cls) -> "TextSummarizerAgent":
         config = AgentConfig.from_env("text_summarizer")
-        config.event_types = cls(config).event_types
+        config.event_types = cls.EVENT_TYPES
         return cls(config)

@@ -40,14 +40,16 @@ Respond in JSON format:
 class CredentialAnalyzerAgent(BaseAgent):
     """Analyzes exposed credentials for risk assessment."""
 
-    @property
-    def event_types(self) -> List[str]:
-        return [
+    EVENT_TYPES = [
             "LEAKED_CREDENTIALS",
             "PASSWORD_COMPROMISED",
             "CREDENTIAL_*",
             "API_KEY_*",
         ]
+
+    @property
+    def event_types(self) -> List[str]:
+        return self.EVENT_TYPES
 
     async def process_event(self, event: Dict[str, Any]) -> AgentResult:
         event_type = event.get("event_type", "UNKNOWN")
@@ -101,5 +103,5 @@ Assess the risk and provide recommendations. Do NOT reproduce any credential val
     @classmethod
     def create(cls) -> "CredentialAnalyzerAgent":
         config = AgentConfig.from_env("credential_analyzer")
-        config.event_types = cls(config).event_types
+        config.event_types = cls.EVENT_TYPES
         return cls(config)

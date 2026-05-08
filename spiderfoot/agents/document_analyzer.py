@@ -58,14 +58,16 @@ Respond in JSON format:
 class DocumentAnalyzerAgent(BaseAgent):
     """Analyzes uploaded documents for OSINT-relevant entities and IOCs."""
 
-    @property
-    def event_types(self) -> List[str]:
-        return [
+    EVENT_TYPES = [
             "DOCUMENT_UPLOAD",
             "USER_DOCUMENT",
             "REPORT_UPLOAD",
             "USER_INPUT_DATA",
         ]
+
+    @property
+    def event_types(self) -> List[str]:
+        return self.EVENT_TYPES
 
     async def process_event(self, event: Dict[str, Any]) -> AgentResult:
         document_text = self.redact_sensitive_values(event.get("data", ""))
@@ -209,5 +211,5 @@ Extract all security-relevant entities, IOCs, and potential scan targets."""
     @classmethod
     def create(cls) -> "DocumentAnalyzerAgent":
         config = AgentConfig.from_env("document_analyzer")
-        config.event_types = cls(config).event_types
+        config.event_types = cls.EVENT_TYPES
         return cls(config)
