@@ -17,8 +17,13 @@ services:
     - no-new-privileges:true
     read_only: true
     tmpfs:
-    - /tmp:size=512M
-    - /var/tmp:size=256M
+    - /tmp:size=512M,mode=1777
+    - /var/tmp:size=256M,mode=1777
+    - /home/spiderfoot/logs:size=64M,mode=1777
+    - /home/spiderfoot/data:size=128M,mode=1777
+    - /home/spiderfoot/cache:size=128M,mode=1777
+    - /home/spiderfoot/.spiderfoot:size=64M,mode=1777
+    - /home/spiderfoot/.local:size=32M,mode=1777
     environment:
       SF_SERVICE_ROLE: active-scanner
       SF_REDIS_URL: redis://redis:6379/0

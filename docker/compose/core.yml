@@ -76,7 +76,11 @@ services:
     cap_drop:
     - ALL
     tmpfs:
-    - /tmp:size=256M
+    - /tmp:size=256M,mode=1777
+    - /home/spiderfoot/logs:size=64M,mode=1777
+    - /home/spiderfoot/data:size=128M,mode=1777
+    - /home/spiderfoot/cache:size=64M,mode=1777
+    - /home/spiderfoot/.spiderfoot:size=32M,mode=1777
     networks:
     - sf-frontend
     - sf-backend
@@ -262,7 +266,11 @@ services:
     cap_drop:
     - ALL
     tmpfs:
-    - /tmp:size=256M
+    - /tmp:size=256M,mode=1777
+    - /home/spiderfoot/logs:size=64M,mode=1777
+    - /home/spiderfoot/data:size=128M,mode=1777
+    - /home/spiderfoot/cache:size=64M,mode=1777
+    - /home/spiderfoot/.spiderfoot:size=32M,mode=1777
     networks:
     - sf-backend
     - sf-frontend
