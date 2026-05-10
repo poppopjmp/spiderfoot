@@ -13,7 +13,9 @@ Queries the CertSpotter API for SSL/TLS certificate transparency logs related to
 - Can be run from the web UI or CLI:
 
 ```sh
-python sf.py -s example.com -t DOMAIN_NAME -m sfp_certspotter
+curl -X POST http://localhost:8001/api/v1/scans \
+  -H "Content-Type: application/json" \
+  -d '{"target": "example.com", "modules": ["sfp_certspotter"]}'
 ```
 
 ## Output Example

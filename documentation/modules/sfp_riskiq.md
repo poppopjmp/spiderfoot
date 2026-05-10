@@ -13,7 +13,9 @@ Integrates with RiskIQ (PassiveTotal) to gather passive DNS, SSL, and threat int
 - Can be run from the web UI or CLI:
 
 ```sh
-python sf.py -s example.com -t DOMAIN_NAME -m sfp_riskiq
+curl -X POST http://localhost:8001/api/v1/scans \
+  -H "Content-Type: application/json" \
+  -d '{"target": "example.com", "modules": ["sfp_riskiq"]}'
 ```
 
 ## Output Example

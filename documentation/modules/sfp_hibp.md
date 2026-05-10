@@ -13,7 +13,9 @@ Checks HaveIBeenPwned for breaches and exposures related to the target email or 
 - Can be run from the web UI or CLI:
 
 ```sh
-python sf.py -s user@example.com -t EMAILADDR -m sfp_hibp
+curl -X POST http://localhost:8001/api/v1/scans \
+  -H "Content-Type: application/json" \
+  -d '{"target": "user@example.com", "modules": ["sfp_hibp"]}'
 ```
 
 ## Output Example

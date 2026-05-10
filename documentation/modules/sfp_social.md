@@ -13,7 +13,9 @@ Searches social media platforms for mentions, profiles, and activity related to 
 - Can be run from the web UI or CLI:
 
 ```sh
-python sf.py -s johndoe -t USERNAME -m sfp_social
+curl -X POST http://localhost:8001/api/v1/scans \
+  -H "Content-Type: application/json" \
+  -d '{"target": "johndoe", "modules": ["sfp_social"]}'
 ```
 
 ## Output Example

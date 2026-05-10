@@ -4,7 +4,7 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/poppopjmp/spiderfoot/master/LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11+-blue)](https://www.python.org)
-[![Version](https://img.shields.io/badge/version-6.0.0-green)](VERSION)
+[![Version](https://img.shields.io/badge/version-6.0.1-green)](VERSION)
 [![Docker](https://img.shields.io/badge/docker-compose-2496ED?logo=docker)](docker-compose.yml)
 [![GraphQL](https://img.shields.io/badge/GraphQL-Strawberry-E10098?logo=graphql)](spiderfoot/api/graphql/)
 [![CI status](https://github.com/poppopjmp/spiderfoot/workflows/Tests/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"Tests")
@@ -287,7 +287,13 @@ The Docker Compose deployment uses two networks (`sf-frontend`, `sf-backend`) an
 
 ## Security Hardening
 
-SpiderFoot v6.0.0 includes a comprehensive security hardening initiative (80+ commits, 9.5+ composite score):
+SpiderFoot v6.0.1 builds upon the comprehensive security hardening initiative of v6.0.0, introducing extreme high-throughput stability and immutable runtime environments:
+
+### Immutable Infrastructure (v6.0.1)
+
+- **Read-Only Containers**: All core containers (`api`, `celery-worker`) are deployed with `read_only: true` and `cap_drop: ALL`, dropping all root capabilities.
+- **Ephemeral Storage**: Volatile data like Celery worker execution spaces use isolated `tmpfs` mounts, ensuring zero persistent compromise footprint.
+- **Load Optimization**: Tuned FastAPI middleware (`RateLimitMiddleware`) and expanded worker concurrency enable the stack to effortlessly process heavy concurrent polling with zero `429 Too Many Requests` errors.
 
 ### Authentication & Authorization
 

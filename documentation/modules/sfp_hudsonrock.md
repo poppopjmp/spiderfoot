@@ -13,8 +13,12 @@ Queries Hudson Rock's Cavalier OSINT API for infostealer intelligence. Searches 
 - Watches for `DOMAIN_NAME`, `INTERNET_NAME`, `EMAILADDR`, `USERNAME`, and `PHONE_NUMBER` events.
 - Can be run from the web UI or CLI:
   ```sh
-  python sf.py -s example.com -t DOMAIN_NAME -m sfp_hudsonrock
-  python sf.py -s user@example.com -t EMAILADDR -m sfp_hudsonrock
+  curl -X POST http://localhost:8001/api/v1/scans \
+  -H "Content-Type: application/json" \
+  -d '{"target": "example.com", "modules": ["sfp_hudsonrock"]}'
+  curl -X POST http://localhost:8001/api/v1/scans \
+  -H "Content-Type: application/json" \
+  -d '{"target": "user@example.com", "modules": ["sfp_hudsonrock"]}'
   ```
 
 ## Watched Events

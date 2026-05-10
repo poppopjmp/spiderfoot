@@ -11,7 +11,9 @@ Queries the Shodan API for information about the target IP, domain, or network, 
 - Enabled for IP, domain, and network targets.
 - Can be run from the web UI or CLI:
   ```sh
-  python sf.py -s 8.8.8.8 -t IP_ADDRESS -m sfp_shodan
+  curl -X POST http://localhost:8001/api/v1/scans \
+  -H "Content-Type: application/json" \
+  -d '{"target": "8.8.8.8", "modules": ["sfp_shodan"]}'
   ```
 
 ## Output Example

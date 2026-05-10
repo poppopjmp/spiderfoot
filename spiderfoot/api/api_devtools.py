@@ -62,6 +62,9 @@ class APIChangelog:
     def _load_builtin(self) -> None:
         """Load built-in changelog entries for SpiderFoot v6."""
         builtin = [
+            ChangelogEntry("6.0.1", ChangeType.FIXED,
+                           "Optimized API rate limits and connection pooling for high-throughput concurrency",
+                           date="2026-05-10"),
             ChangelogEntry("6.0.0", ChangeType.ADDED,
                            "REST API with FastAPI framework",
                            "/api/v1", date="2025-01-01"),
@@ -543,7 +546,7 @@ class OpenAPIExampleGenerator:
             },
             "GET /api/v1/changelog": {
                 "response": {
-                    "versions": ["6.2.0", "6.1.0", "6.0.0"],
+                    "versions": ["6.2.0", "6.1.0", "6.0.1", "6.0.0"],
                     "entries": [
                         {
                             "version": "6.2.0",

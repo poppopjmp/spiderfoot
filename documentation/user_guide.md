@@ -100,15 +100,17 @@ Configure global settings, module API keys, and monitor the 6 AI-powered analysi
 
 - **List modules:**
   ```sh
-  python sf.py -M
+  curl -X GET http://localhost:8001/api/v1/modules
   ```
 - **Help for a module:**
   ```sh
-  python sf.py -M sfp_dnsresolve
+  curl -X GET http://localhost:8001/api/v1/modules/sfp_dnsresolve
   ```
 - **Run scan:**
   ```sh
-  python sf.py -s example.com -t DOMAIN_NAME -m sfp_dnsresolve,sfp_ssl
+  curl -X POST http://localhost:8001/api/v1/scans \
+  -H "Content-Type: application/json" \
+  -d '{"target": "example.com", "modules": ["sfp_dnsresolve", "sfp_ssl"]}'
   ```
 - **Workspaces (CLI):**
   - Create, add targets, and run multi-target scans (see [Quick Start](quickstart.md)).
@@ -135,22 +137,34 @@ SpiderFoot v6.0.0 includes 309 modules organized into the following categories:
 **Enhanced CLI Patterns:**
 ```bash
 # Domain reconnaissance with performance optimization
-python sf.py -s example.com -t DOMAIN_NAME -m sfp_dnsresolve,sfp_subdomain_enum,sfp_ssl,sfp_whois,sfp_threatcrowd,sfp_performance_optimizer
+curl -X POST http://localhost:8001/api/v1/scans \
+  -H "Content-Type: application/json" \
+  -d '{"target": "example.com", "modules": ["sfp_dnsresolve", "sfp_subdomain_enum", "sfp_ssl", "sfp_whois", "sfp_threatcrowd", "sfp_performance_optimizer"]}'
 
 # TikTok OSINT investigation
-python sf.py -s @username -t SOCIAL_MEDIA -m sfp_tiktok_osint,sfp_advanced_correlation
+curl -X POST http://localhost:8001/api/v1/scans \
+  -H "Content-Type: application/json" \
+  -d '{"target": "@username", "modules": ["sfp_tiktok_osint", "sfp_advanced_correlation"]}'
 
 # Cryptocurrency investigation
-python sf.py -s 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa -t BITCOIN_ADDRESS -m sfp_blockchain_analytics,sfp_advanced_correlation
+curl -X POST http://localhost:8001/api/v1/scans \
+  -H "Content-Type: application/json" \
+  -d '{"target": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa", "modules": ["sfp_blockchain_analytics", "sfp_advanced_correlation"]}'
 
 # Network block analysis
-python sf.py -s 192.168.1.0/24 -t NETBLOCK -m sfp_portscan_tcp,sfp_banner,sfp_ssl
+curl -X POST http://localhost:8001/api/v1/scans \
+  -H "Content-Type: application/json" \
+  -d '{"target": "192.168.1.0/24", "modules": ["sfp_portscan_tcp", "sfp_banner", "sfp_ssl"]}'
 
 # Email investigation with enhanced correlation
-python sf.py -s user@example.com -t EMAILADDR -m sfp_hunter,sfp_haveibeen,sfp_emailrep,sfp_advanced_correlation
+curl -X POST http://localhost:8001/api/v1/scans \
+  -H "Content-Type: application/json" \
+  -d '{"target": "user@example.com", "modules": ["sfp_hunter", "sfp_haveibeen", "sfp_emailrep", "sfp_advanced_correlation"]}'
 
 # Multi-target investigation with performance optimization
-python sf.py -s multiple_targets.txt -t FILE -m sfp_dnsresolve,sfp_ssl,sfp_blockchain_analytics,sfp_performance_optimizer
+curl -X POST http://localhost:8001/api/v1/scans \
+  -H "Content-Type: application/json" \
+  -d '{"target": "multiple_targets.txt", "modules": ["sfp_dnsresolve", "sfp_ssl", "sfp_blockchain_analytics", "sfp_performance_optimizer"]}'
 ```
 
 ---
@@ -212,7 +226,7 @@ SpiderFoot v6.0.0 provides enhanced result analysis and interpretation:
 - For common issues, see the [Troubleshooting Guide](troubleshooting.md).
 - For module-specific help, see the [Modules Guide](modules.md).
 - For configuration and API keys, see the [Configuration Guide](configuration.md).
-- Use `python sf.py --help` and `python sf.py -M` for command and module help.
+- Use `curl -X GET http://localhost:8001/api/docs` and `curl -X GET http://localhost:8001/api/v1/modules` for command and module help.
 - Community support: GitHub Issues, Discord, and Wiki.
 
 ---

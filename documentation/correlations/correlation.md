@@ -80,7 +80,7 @@ headline: "Software version revealed on open port: {data}"
 To show this in practice, we can run a simple scan against a target, in this case focusing on performing a port scan:
 
 ```sh
-python3.9 ./sf.py -s www.binarypool.com -m sfp_dnsresolve,sfp_portscan_tcp
+curl -X POST http://localhost:8001/api/v1/scans -H "Content-Type: application/json" -d '{"target": "www.binarypool.com", "modules": ["sfp_dnsresolve", "sfp_portscan_tcp"]}'
 ```
 
 Example output:

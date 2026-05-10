@@ -13,7 +13,9 @@ Integrates with the VirusTotal API to check domains, IPs, and files for malware,
 - Can be run from the web UI or CLI:
 
 ```sh
-python sf.py -s example.com -t DOMAIN_NAME -m sfp_virustotal
+curl -X POST http://localhost:8001/api/v1/scans \
+  -H "Content-Type: application/json" \
+  -d '{"target": "example.com", "modules": ["sfp_virustotal"]}'
 ```
 
 ## Output Example

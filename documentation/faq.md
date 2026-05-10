@@ -7,17 +7,19 @@ This FAQ addresses common questions, troubleshooting steps, and best practices f
 ## General Usage
 
 **Q: How do I list all modules?**  
-A: Run `python sf.py -M` from the command line to see all available modules.
+A: Run `curl -X GET http://localhost:8001/api/v1/modules` from the command line to see all available modules.
 
 **Q: How do I get help for a module?**  
-A: Use `python sf.py -M <module>` to display help and usage information for a specific module.
+A: Use `curl -X GET http://localhost:8001/api/v1/modules <module>` to display help and usage information for a specific module.
 
 **Q: Where do I configure API keys?**  
 A: In the web UI, go to **Settings → Module Settings**. Each module that requires an API key will have a configuration field. See the [Configuration Guide](configuration.md) for more details.
 
 **Q: How do I run a scan from the CLI?**  
 A: Example:  
-`python sf.py -s example.com -t DOMAIN_NAME -m sfp_dnsresolve,sfp_ssl`
+`curl -X POST http://localhost:8001/api/v1/scans \
+  -H "Content-Type: application/json" \
+  -d '{"target": "example.com", "modules": ["sfp_dnsresolve", "sfp_ssl"]}'`
 
 **Q: Can I run SpiderFoot in Docker?**  
 A: Yes! See the [Docker Deployment Guide](../docs/docker_deployment.md) for details. Docker is recommended for easy setup and isolation.
@@ -79,13 +81,13 @@ A: Yes! See the [Developer Guide](developer_guide.md) for instructions and best 
 **Q: How do I enable debug logging?**  
 A:  
 - Run with the `--debug` flag:  
-  `python sf.py --debug`
+  `curl -X GET http://localhost:8001/api/docs`
 - For Docker, set the environment variable `SF_DEBUG=1`.
 
 **Q: How do I run SpiderFoot headless (no web UI)?**  
 A:  
 - Use the CLI:  
-  `python sf.py -s <target> -t <type> -m <modules>`
+  `curl -X POST http://localhost:8001/api/v1/scans -H "Content-Type: application/json" -d '{"target": "<target>", "modules": ["<modules>"]}'`
 
 **Q: Can I automate scans with scripts or CI/CD?**  
 A:  

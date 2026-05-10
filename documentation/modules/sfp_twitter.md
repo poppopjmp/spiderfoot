@@ -13,7 +13,9 @@ Searches Twitter for profiles, mentions, and activity related to the target user
 - Can be run from the web UI or CLI:
 
 ```sh
-python sf.py -s johndoe -t USERNAME -m sfp_twitter
+curl -X POST http://localhost:8001/api/v1/scans \
+  -H "Content-Type: application/json" \
+  -d '{"target": "johndoe", "modules": ["sfp_twitter"]}'
 ```
 
 ## Output Example

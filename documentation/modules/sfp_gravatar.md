@@ -13,7 +13,9 @@ Searches Gravatar for avatars, profile data, and associated emails related to th
 - Can be run from the web UI or CLI:
 
 ```sh
-python sf.py -s user@example.com -t EMAILADDR -m sfp_gravatar
+curl -X POST http://localhost:8001/api/v1/scans \
+  -H "Content-Type: application/json" \
+  -d '{"target": "user@example.com", "modules": ["sfp_gravatar"]}'
 ```
 
 ## Output Example

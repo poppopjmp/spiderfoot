@@ -49,7 +49,7 @@ For full functionality of enhanced modules:
 3. **Run SpiderFoot:**
 
    ```sh
-   python sf.py -l 127.0.0.1:5001
+   docker compose up -d
    ```
 
    - Open [http://127.0.0.1:5001](http://127.0.0.1:5001) in your browser.

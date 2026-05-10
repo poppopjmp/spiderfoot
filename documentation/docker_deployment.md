@@ -230,7 +230,12 @@ docker exec sf-pg-backup /scripts/pg_backup_minio.sh
 
 ---
 
-## Scaling
+## High-Throughput Scaling (v6.0.1)
+
+SpiderFoot v6.0.1 includes optimizations for heavy concurrency and large-scale parallel scanning. The default worker pool has been expanded:
+- `SF_API_WORKERS`: 8
+- `CELERY_WORKER_CONCURRENCY`: 16
+- API Rate limits optimized via `SF_API_RATE_LIMIT_ENDPOINTS: "/api/v1/scans=5000/60"` to prevent 429 errors under intense API polling.
 
 For horizontal scaling, increase replicas of stateless services:
 

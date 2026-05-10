@@ -78,7 +78,7 @@ This guide will help you run your first scan in minutes using either the Docker 
 
 ```bash
 pip install -r requirements.txt
-python sf.py -l 127.0.0.1:5001
+docker compose up -d
 ```
 
 Open [http://127.0.0.1:5001](http://127.0.0.1:5001) in your browser.
@@ -90,11 +90,13 @@ Open [http://127.0.0.1:5001](http://127.0.0.1:5001) in your browser.
 Run a scan directly from the CLI:
 
 ```bash
-python sf.py -s example.com -t DOMAIN_NAME -m sfp_dnsresolve,sfp_ssl,sfp_whois
+curl -X POST http://localhost:8001/api/v1/scans \
+  -H "Content-Type: application/json" \
+  -d '{"target": "example.com", "modules": ["sfp_dnsresolve", "sfp_ssl", "sfp_whois"]}'
 ```
 
-- Use `python sf.py -M` to list all modules.
-- Use `python sf.py -M <module>` for help on a specific module.
+- Use `curl -X GET http://localhost:8001/api/v1/modules` to list all modules.
+- Use `curl -X GET http://localhost:8001/api/v1/modules <module>` for help on a specific module.
 
 ---
 
