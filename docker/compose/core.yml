@@ -76,7 +76,11 @@ services:
     cap_drop:
     - ALL
     tmpfs:
-    - /tmp:size=256M
+    - /tmp:size=256M,mode=1777
+    - /home/spiderfoot/logs:size=64M,mode=1777
+    - /home/spiderfoot/data:size=128M,mode=1777
+    - /home/spiderfoot/cache:size=64M,mode=1777
+    - /home/spiderfoot/.spiderfoot:size=32M,mode=1777
     networks:
     - sf-frontend
     - sf-backend
@@ -105,9 +109,10 @@ services:
         postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-spiderfoot}
       SF_API_HOST: "0.0.0.0"
       SF_API_PORT: "8001"
-      SF_API_WORKERS: ${SF_API_WORKERS:-2}
+      SF_API_WORKERS: ${SF_API_WORKERS:-8}
       SF_LOG_LEVEL: ${SF_LOG_LEVEL:-INFO}
       SF_API_KEY: ${SF_API_KEY:-}
+      SF_API_RATE_LIMIT_ENDPOINTS: "/api/v1/scans=5000/60"
       SF_VECTOR_URL: "${SF_VECTOR_URL:-}"
       # Apache Tika for document analysis (used by sfp_document_analyzer module)
       SF_TIKA_URL: "${SF_TIKA_URL:-}"
@@ -262,7 +267,11 @@ services:
     cap_drop:
     - ALL
     tmpfs:
-    - /tmp:size=256M
+    - /tmp:size=256M,mode=1777
+    - /home/spiderfoot/logs:size=64M,mode=1777
+    - /home/spiderfoot/data:size=128M,mode=1777
+    - /home/spiderfoot/cache:size=64M,mode=1777
+    - /home/spiderfoot/.spiderfoot:size=32M,mode=1777
     networks:
     - sf-backend
     - sf-frontend
@@ -306,7 +315,7 @@ services:
       OTEL_EXPORTER_OTLP_ENDPOINT: "${OTEL_EXPORTER_OTLP_ENDPOINT:-}"
       OTEL_SERVICE_NAME: "spiderfoot-celery-worker"
       # Worker concurrency (default 4 — one per queue priority)
-      CELERY_WORKER_CONCURRENCY: ${CELERY_WORKER_CONCURRENCY:-4}
+      CELERY_WORKER_CONCURRENCY: ${CELERY_WORKER_CONCURRENCY:-16}
     entrypoint: ["/usr/local/bin/docker-entrypoint.sh"]
     command:
     - "python"

@@ -122,17 +122,23 @@ failure_threshold = 0.7
 
 ### Basic Performance Optimization
 ```bash
-python sf.py -s example.com -t DOMAIN_NAME -m sfp_dnsresolve,sfp_ssl,sfp_performance_optimizer
+curl -X POST http://localhost:8001/api/v1/scans \
+  -H "Content-Type: application/json" \
+  -d '{"target": "example.com", "modules": ["sfp_dnsresolve", "sfp_ssl", "sfp_performance_optimizer"]}'
 ```
 
 ### High-Volume Scanning
 ```bash
-python sf.py -s targets.txt -t FILE -m sfp_portscan_tcp,sfp_banner,sfp_performance_optimizer
+curl -X POST http://localhost:8001/api/v1/scans \
+  -H "Content-Type: application/json" \
+  -d '{"target": "targets.txt", "modules": ["sfp_portscan_tcp", "sfp_banner", "sfp_performance_optimizer"]}'
 ```
 
 ### API-Heavy Investigation
 ```bash
-python sf.py -s user@example.com -t EMAILADDR -m sfp_hunter,sfp_haveibeen,sfp_virustotal,sfp_performance_optimizer
+curl -X POST http://localhost:8001/api/v1/scans \
+  -H "Content-Type: application/json" \
+  -d '{"target": "user@example.com", "modules": ["sfp_hunter", "sfp_haveibeen", "sfp_virustotal", "sfp_performance_optimizer"]}'
 ```
 
 ## Performance Metrics
@@ -273,7 +279,9 @@ gc_threshold_percentage = 60.0
 ### Debugging Performance
 ```bash
 # Enable detailed performance logging
-SPIDERFOOT_LOG_LEVEL=DEBUG python sf.py -s target.com -t DOMAIN_NAME -m sfp_performance_optimizer
+curl -X POST http://localhost:8001/api/v1/scans \
+  -H "Content-Type: application/json" \
+  -d '{"target": "target.com", "modules": ["sfp_performance_optimizer"]}'
 
 # Monitor real-time performance
 tail -f performance.log | grep "PERFORMANCE"

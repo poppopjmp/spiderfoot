@@ -11,7 +11,9 @@ Resolves DNS records for the target domain or host, including A, AAAA, MX, NS, T
 - Enabled by default for domain and hostname targets.
 - Can be run from the web UI or CLI:
   ```sh
-  python sf.py -s example.com -t DOMAIN_NAME -m sfp_dnsresolve
+  curl -X POST http://localhost:8001/api/v1/scans \
+  -H "Content-Type: application/json" \
+  -d '{"target": "example.com", "modules": ["sfp_dnsresolve"]}'
   ```
 
 ## Output Example

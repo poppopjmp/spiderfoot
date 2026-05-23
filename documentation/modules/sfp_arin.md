@@ -13,7 +13,9 @@ Queries ARIN for network, ASN, and contact information related to the target IP 
 - Can be run from the web UI or CLI:
 
 ```sh
-python sf.py -s 8.8.8.8 -t IP_ADDRESS -m sfp_arin
+curl -X POST http://localhost:8001/api/v1/scans \
+  -H "Content-Type: application/json" \
+  -d '{"target": "8.8.8.8", "modules": ["sfp_arin"]}'
 ```
 
 ## Output Example

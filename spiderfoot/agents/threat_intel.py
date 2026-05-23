@@ -7,7 +7,6 @@ Analyzes indicators of compromise (IOCs) found during scans against
 known threat actor TTPs, malware families, and attack patterns.
 """
 
-import json
 import logging
 from typing import Any, Dict, List
 
@@ -60,9 +59,7 @@ Respond in JSON format:
 class ThreatIntelAnalyzerAgent(BaseAgent):
     """Cross-references findings with threat intelligence context."""
 
-    @property
-    def event_types(self) -> List[str]:
-        return [
+    EVENT_TYPES = [
             "MALICIOUS_*",
             "BLACKLISTED_*",
             "DARKNET_*",
@@ -72,9 +69,13 @@ class ThreatIntelAnalyzerAgent(BaseAgent):
             "AFFILIATE_*",
         ]
 
+    @property
+    def event_types(self) -> List[str]:
+        return self.EVENT_TYPES
+
     async def process_event(self, event: Dict[str, Any]) -> AgentResult:
         event_type = event.get("event_type", "UNKNOWN")
-        event_data = event.get("data", "")
+        event_data = self.redact_sensitive_values(event.get("data", ""))
         target = event.get("target", "")
         source_module = event.get("source_module", "")
         risk = event.get("risk", 0)
@@ -111,7 +112,7 @@ Cross-reference with known threat actor TTPs, malware families, and MITRE ATT&CK
                 max_tokens=2048,
             )
 
-            result_data = json.loads(response)
+            result_data = self.parse_json_response(response)
             confidence = float(result_data.get("confidence", 0.5))
 
             return AgentResult(
@@ -123,7 +124,7 @@ Cross-reference with known threat actor TTPs, malware families, and MITRE ATT&CK
                 confidence=confidence,
             )
 
-        except json.JSONDecodeError:
+        except ValueError:
             return AgentResult(
                 agent_name=self.config.name,
                 event_id=event.get("id", ""),
@@ -136,5 +137,5 @@ Cross-reference with known threat actor TTPs, malware families, and MITRE ATT&CK
     @classmethod
     def create(cls) -> "ThreatIntelAnalyzerAgent":
         config = AgentConfig.from_env("threat_intel")
-        config.event_types = cls(config).event_types
+        config.event_types = cls.EVENT_TYPES
         return cls(config)

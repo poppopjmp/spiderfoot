@@ -11,8 +11,8 @@
 #
 # Usage:
 #   ./docker/build.sh                          # build all, tag :latest
-#   ./docker/build.sh --tag v6.0.0             # build all, tag :v6.0.0
-#   ./docker/build.sh --push --tag v6.0.0      # build + push to registry
+#   ./docker/build.sh --tag v6.0.1             # build all, tag :v6.0.1
+#   ./docker/build.sh --push --tag v6.0.1      # build + push to registry
 #   REGISTRY=ghcr.io/org/ ./docker/build.sh    # custom registry prefix
 # =============================================================================
 

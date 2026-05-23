@@ -13,7 +13,9 @@ Performs DNS brute-forcing to discover subdomains and hidden infrastructure rela
 - Can be run from the web UI or CLI:
 
 ```sh
-python sf.py -s example.com -t DOMAIN_NAME -m sfp_dnsbrute
+curl -X POST http://localhost:8001/api/v1/scans \
+  -H "Content-Type: application/json" \
+  -d '{"target": "example.com", "modules": ["sfp_dnsbrute"]}'
 ```
 
 ## Output Example

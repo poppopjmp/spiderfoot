@@ -13,7 +13,9 @@ Queries the ThreatCrowd API for information about domains, IPs, and emails, incl
 - Can be run from the web UI or CLI:
 
 ```sh
-python sf.py -s example.com -t DOMAIN_NAME -m sfp_threatcrowd
+curl -X POST http://localhost:8001/api/v1/scans \
+  -H "Content-Type: application/json" \
+  -d '{"target": "example.com", "modules": ["sfp_threatcrowd"]}'
 ```
 
 ## Output Example

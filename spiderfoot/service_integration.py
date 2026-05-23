@@ -184,13 +184,19 @@ def complete_scan_services(scan_id: str, status: str = "FINISHED",
         from spiderfoot.service_registry import get_registry, SERVICE_EVENT_BUS
         registry = get_registry()
         if registry.has(SERVICE_EVENT_BUS):
+            from spiderfoot.eventbus.base import EventEnvelope
             bus = registry.get(SERVICE_EVENT_BUS)
-            bus.publish(f"scan.{status.lower()}", {
-                "scan_id": scan_id,
-                "status": status,
-                "duration": duration,
-                "timestamp": time.time(),
-            })
+            bus.publish_sync(EventEnvelope(
+                topic=f"scan.{status.lower()}",
+                scan_id=scan_id,
+                event_type=f"scan.{status.lower()}",
+                module="spiderfoot.service_integration",
+                data={
+                    "status": status,
+                    "duration": duration,
+                    "timestamp": time.time(),
+                }
+            ))
     except ImportError:
         log.debug("EventBus not available — scan completion event not published")
     except Exception as e:
@@ -354,11 +360,18 @@ def _wire_scan_eventbus(scan_id: str) -> None:
         from spiderfoot.service_registry import get_registry, SERVICE_EVENT_BUS
         registry = get_registry()
         if registry.has(SERVICE_EVENT_BUS):
+            from spiderfoot.eventbus.base import EventEnvelope
             bus = registry.get(SERVICE_EVENT_BUS)
-            bus.publish("scan.started", {
-                "scan_id": scan_id,
-                "timestamp": time.time(),
-            })
+            bus.publish_sync(EventEnvelope(
+                topic="scan.started",
+                scan_id=scan_id,
+                event_type="scan.started",
+                module="spiderfoot.service_integration",
+                data={
+                    "scan_id": scan_id,
+                    "timestamp": time.time(),
+                }
+            ))
     except ImportError:
         log.debug("EventBus not available — scan start event not published")
     except Exception as e:

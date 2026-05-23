@@ -16,33 +16,49 @@ be invoked directly via the REST API.
 """
 
 import asyncio
+import contextlib
+import json
 import logging
 import os
-import signal
 import sys
 import time
 from contextlib import asynccontextmanager
 from typing import Any, Dict, List, Optional
+
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import PlainTextResponse
+from pydantic import BaseModel, Field
 
 # Add project root to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 logger = logging.getLogger("sf.agents.service")
 
-# Agent registry
-_agents = {}
-_event_listener_task = None
+# Agent registry and background execution state
+_agents: Dict[str, Any] = {}
+_event_listener_task: Optional[asyncio.Task] = None
+_inflight_tasks: set[asyncio.Task] = set()
+_dispatch_semaphore: Optional[asyncio.Semaphore] = None
 
 
-def _init_agents():
+def _positive_int_env(name: str, default: int) -> int:
+    """Read a positive integer from the environment."""
+    try:
+        return max(1, int(os.environ.get(name, str(default))))
+    except (TypeError, ValueError):
+        logger.warning("Invalid integer env var %s; using %s", name, default)
+        return max(1, default)
+
+
+def _init_agents() -> None:
     """Initialize all agent instances."""
-    from spiderfoot.agents.finding_validator import FindingValidatorAgent
     from spiderfoot.agents.credential_analyzer import CredentialAnalyzerAgent
-    from spiderfoot.agents.text_summarizer import TextSummarizerAgent
-    from spiderfoot.agents.report_generator import ReportGeneratorAgent
     from spiderfoot.agents.document_analyzer import DocumentAnalyzerAgent
-    from spiderfoot.agents.threat_intel import ThreatIntelAnalyzerAgent
+    from spiderfoot.agents.finding_validator import FindingValidatorAgent
     from spiderfoot.agents.iac_advisor import IaCAdvisorAgent
+    from spiderfoot.agents.report_generator import ReportGeneratorAgent
+    from spiderfoot.agents.text_summarizer import TextSummarizerAgent
+    from spiderfoot.agents.threat_intel import ThreatIntelAnalyzerAgent
 
     agent_classes = [
         FindingValidatorAgent,
@@ -59,16 +75,22 @@ def _init_agents():
             agent = cls.create()
             if agent.config.enabled:
                 _agents[agent.config.name] = agent
-                logger.info("Agent '%s' initialized (model=%s)", agent.config.name, agent.config.llm_model)
+                logger.info(
+                    "Agent '%s' initialized (model=%s)",
+                    agent.config.name,
+                    agent.config.llm_model,
+                )
             else:
                 logger.info("Agent '%s' disabled via config", agent.config.name)
         except Exception as exc:
             logger.error("Failed to initialize agent %s: %s", cls.__name__, exc)
 
 
-async def _start_event_listener():
+async def _start_event_listener() -> None:
     """Listen for events on Redis pub/sub and dispatch to agents."""
     redis_url = os.environ.get("SF_REDIS_URL", "redis://redis:6379/0")
+    client = None
+    pubsub = None
 
     try:
         import redis.asyncio as aioredis
@@ -80,26 +102,93 @@ async def _start_event_listener():
         logger.info("Event listener started on Redis pub/sub")
 
         async for message in pubsub.listen():
-            if message["type"] != "message":
+            if message.get("type") != "message":
                 continue
 
             try:
-                import json
                 event = json.loads(message["data"])
                 event_type = event.get("event_type", "")
 
-                # Dispatch to matching agents
                 for agent in _agents.values():
                     if _matches_event_type(event_type, agent.event_types):
-                        asyncio.create_task(agent.handle_event(event))
+                        await _schedule_agent_event(agent, event, client)
 
             except Exception as exc:
                 logger.warning("Error processing event: %s", exc)
 
+    except asyncio.CancelledError:
+        logger.info("Event listener cancelled")
+        raise
     except ImportError:
         logger.warning("redis package not available — event listener disabled")
     except Exception as exc:
         logger.error("Event listener error: %s", exc)
+    finally:
+        if pubsub is not None:
+            with contextlib.suppress(Exception):
+                await pubsub.unsubscribe("sf:events", "sf:agent_requests")
+            close_pubsub = getattr(pubsub, "aclose", None) or getattr(pubsub, "close", None)
+            if close_pubsub is not None:
+                result = close_pubsub()
+                if asyncio.iscoroutine(result):
+                    await result
+
+        if client is not None:
+            with contextlib.suppress(Exception):
+                await client.aclose()
+
+
+async def _schedule_agent_event(agent: Any, event: Dict[str, Any], redis_client: Any) -> None:
+    """Schedule one agent execution with service-wide backpressure."""
+    global _dispatch_semaphore
+
+    if _dispatch_semaphore is None:
+        max_inflight = _positive_int_env("SF_AGENTS_MAX_INFLIGHT", 100)
+        _dispatch_semaphore = asyncio.Semaphore(max_inflight)
+
+    await _dispatch_semaphore.acquire()
+    task = asyncio.create_task(_run_agent_event(agent, event, redis_client))
+    _inflight_tasks.add(task)
+    task.add_done_callback(_agent_task_done)
+
+
+async def _run_agent_event(agent: Any, event: Dict[str, Any], redis_client: Any) -> None:
+    """Run an agent event and persist the result if available."""
+    try:
+        result = await agent.handle_event(event)
+        if result is not None:
+            await _persist_agent_result(result, redis_client)
+    finally:
+        if _dispatch_semaphore is not None:
+            _dispatch_semaphore.release()
+
+
+def _agent_task_done(task: asyncio.Task) -> None:
+    """Remove completed tasks and surface unexpected background failures."""
+    _inflight_tasks.discard(task)
+    if task.cancelled():
+        return
+    exc = task.exception()
+    if exc is not None:
+        logger.warning("Agent background task failed: %s", exc)
+
+
+async def _persist_agent_result(result: Any, redis_client: Any) -> None:
+    """Store agent outputs for API/UI polling and publish a result event."""
+    if redis_client is None:
+        return
+
+    ttl = _positive_int_env("SF_AGENT_RESULT_TTL_SECONDS", 86400 * 7)
+    payload = json.dumps(result.to_dict(), default=str)
+    scan_id = result.scan_id or "global"
+    event_id = result.event_id or str(int(time.time() * 1000))
+    key = f"sf:agent_result:{scan_id}:{result.agent_name}:{event_id}"
+
+    try:
+        await redis_client.set(key, payload, ex=max(60, ttl))
+        await redis_client.publish("sf:agent_results", payload)
+    except Exception as exc:
+        logger.warning("Unable to persist agent result %s: %s", key, exc)
 
 
 def _matches_event_type(event_type: str, patterns: List[str]) -> bool:
@@ -115,28 +204,37 @@ def _matches_event_type(event_type: str, patterns: List[str]) -> bool:
 
 @asynccontextmanager
 async def lifespan(app):
-    """Application lifespan — init agents and start event listener."""
-    global _event_listener_task
+    """Application lifespan — init agents, start listener, and drain on shutdown."""
+    global _dispatch_semaphore, _event_listener_task
 
     _init_agents()
     logger.info("Initialized %d agents", len(_agents))
+    max_inflight = _positive_int_env("SF_AGENTS_MAX_INFLIGHT", 100)
+    _dispatch_semaphore = asyncio.Semaphore(max_inflight)
 
-    # Start Redis event listener in background
     _event_listener_task = asyncio.create_task(_start_event_listener())
 
     yield
 
-    # Shutdown
     if _event_listener_task:
         _event_listener_task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await _event_listener_task
+
+    if _inflight_tasks:
+        _done, pending = await asyncio.wait(_inflight_tasks, timeout=10)
+        for task in pending:
+            task.cancel()
+        if pending:
+            await asyncio.gather(*pending, return_exceptions=True)
+
+    for agent in _agents.values():
+        await agent.close()
+
     logger.info("Agents service shutdown")
 
 
 # --- FastAPI Application ---
-
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import PlainTextResponse
-from pydantic import BaseModel
 
 app = FastAPI(
     title="SpiderFoot Agents Service",
@@ -147,7 +245,7 @@ app = FastAPI(
 
 
 class ProcessRequest(BaseModel):
-    events: List[Dict[str, Any]]
+    events: List[Dict[str, Any]] = Field(default_factory=list, max_length=100)
     agent_name: Optional[str] = None  # specific agent, or all matching
 
 
@@ -161,25 +259,24 @@ class DocumentRequest(BaseModel):
 
 class ReportRequest(BaseModel):
     scan_id: str = ""
-    scan_ids: List[str] = []
+    scan_ids: List[str] = Field(default_factory=list)
     target: str
     scan_name: str = ""
-    findings: List[Dict[str, Any]] = []
-    correlations: List[Dict[str, Any]] = []
-    stats: Dict[str, Any] = {}
-    agent_results: List[Dict[str, Any]] = []
-    geo_data: Dict[str, Any] = {}
+    findings: List[Dict[str, Any]] = Field(default_factory=list)
+    correlations: List[Dict[str, Any]] = Field(default_factory=list)
+    stats: Dict[str, Any] = Field(default_factory=dict)
+    agent_results: List[Dict[str, Any]] = Field(default_factory=list)
+    geo_data: Dict[str, Any] = Field(default_factory=dict)
 
 
 class IaCReviewRequest(BaseModel):
     """Request body for the IaC Advisor review endpoint."""
+
     scan_id: str = ""
     target: str = ""
     provider: str = "aws"
-    # The full bundle from POST /api/scans/{id}/iac
-    bundle: Dict[str, Any] = {}
-    # files map: category → list[filename]
-    files: Dict[str, Any] = {}
+    bundle: Dict[str, Any] = Field(default_factory=dict)
+    files: Dict[str, Any] = Field(default_factory=dict)
 
 
 @app.post("/process")
@@ -196,15 +293,7 @@ async def process_events(request: ProcessRequest):
             if _matches_event_type(event_type, agent.event_types):
                 result = await agent.handle_event(event)
                 if result:
-                    results.append({
-                        "agent": result.agent_name,
-                        "event_id": result.event_id,
-                        "result_type": result.result_type,
-                        "data": result.data,
-                        "confidence": result.confidence,
-                        "processing_time_ms": result.processing_time_ms,
-                        "error": result.error,
-                    })
+                    results.append(result.to_dict())
 
     return {"results": results, "total": len(results)}
 
@@ -230,14 +319,7 @@ async def analyze_document(request: DocumentRequest):
     if result is None:
         raise HTTPException(status_code=500, detail="Agent returned no result")
 
-    return {
-        "agent": result.agent_name,
-        "result_type": result.result_type,
-        "data": result.data,
-        "confidence": result.confidence,
-        "processing_time_ms": result.processing_time_ms,
-        "error": result.error,
-    }
+    return result.to_dict()
 
 
 @app.post("/report")
@@ -265,14 +347,7 @@ async def generate_report(request: ReportRequest):
     if result is None:
         raise HTTPException(status_code=500, detail="Agent returned no result")
 
-    return {
-        "agent": result.agent_name,
-        "result_type": result.result_type,
-        "data": result.data,
-        "confidence": result.confidence,
-        "processing_time_ms": result.processing_time_ms,
-        "error": result.error,
-    }
+    return result.to_dict()
 
 
 @app.post("/iac/review")
@@ -282,7 +357,6 @@ async def iac_review(request: IaCReviewRequest):
         raise HTTPException(status_code=503, detail="IaC Advisor agent not available")
 
     agent = _agents["iac_advisor"]
-
     result = await agent.review_bundle(
         bundle=request.bundle,
         files=request.files,
@@ -294,14 +368,7 @@ async def iac_review(request: IaCReviewRequest):
     if result is None:
         raise HTTPException(status_code=500, detail="Agent returned no result")
 
-    return {
-        "agent": result.agent_name,
-        "result_type": result.result_type,
-        "data": result.data,
-        "confidence": result.confidence,
-        "processing_time_ms": result.processing_time_ms,
-        "error": result.error,
-    }
+    return result.to_dict()
 
 
 @app.get("/status")
@@ -312,6 +379,7 @@ async def agent_status():
             name: agent.get_metrics() for name, agent in _agents.items()
         },
         "total_agents": len(_agents),
+        "inflight_tasks": len(_inflight_tasks),
     }
 
 
@@ -331,6 +399,12 @@ async def prometheus_metrics():
         m = agent.get_metrics()
         lines.append(f'sf_agent_errors_total{{agent="{name}"}} {m["errors_total"]}')
 
+    lines.append("# HELP sf_agent_llm_retries_total Total LLM retries by agent")
+    lines.append("# TYPE sf_agent_llm_retries_total counter")
+    for name, agent in _agents.items():
+        m = agent.get_metrics()
+        lines.append(f'sf_agent_llm_retries_total{{agent="{name}"}} {m["llm_retries_total"]}')
+
     lines.append("# HELP sf_agent_avg_processing_time_ms Average processing time in ms")
     lines.append("# TYPE sf_agent_avg_processing_time_ms gauge")
     for name, agent in _agents.items():
@@ -339,9 +413,19 @@ async def prometheus_metrics():
             f'sf_agent_avg_processing_time_ms{{agent="{name}"}} {m["avg_processing_time_ms"]}'
         )
 
+    lines.append("# HELP sf_agent_active_tasks Active tasks by agent")
+    lines.append("# TYPE sf_agent_active_tasks gauge")
+    for name, agent in _agents.items():
+        m = agent.get_metrics()
+        lines.append(f'sf_agent_active_tasks{{agent="{name}"}} {m["active_tasks"]}')
+
     lines.append("# HELP sf_agents_active Number of active agents")
     lines.append("# TYPE sf_agents_active gauge")
     lines.append(f"sf_agents_active {len(_agents)}")
+
+    lines.append("# HELP sf_agents_inflight_tasks Number of service-level in-flight agent tasks")
+    lines.append("# TYPE sf_agents_inflight_tasks gauge")
+    lines.append(f"sf_agents_inflight_tasks {len(_inflight_tasks)}")
 
     return PlainTextResponse("\n".join(lines) + "\n", media_type="text/plain")
 
@@ -352,7 +436,6 @@ async def health():
 
 
 # --- CLI Entry Point ---
-
 
 def main():
     import uvicorn

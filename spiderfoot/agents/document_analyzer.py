@@ -10,7 +10,6 @@ Supports:
   - User-supplied intelligence integration
 """
 
-import json
 import logging
 from typing import Any, Dict, List
 
@@ -59,17 +58,19 @@ Respond in JSON format:
 class DocumentAnalyzerAgent(BaseAgent):
     """Analyzes uploaded documents for OSINT-relevant entities and IOCs."""
 
-    @property
-    def event_types(self) -> List[str]:
-        return [
+    EVENT_TYPES = [
             "DOCUMENT_UPLOAD",
             "USER_DOCUMENT",
             "REPORT_UPLOAD",
             "USER_INPUT_DATA",
         ]
 
+    @property
+    def event_types(self) -> List[str]:
+        return self.EVENT_TYPES
+
     async def process_event(self, event: Dict[str, Any]) -> AgentResult:
-        document_text = event.get("data", "")
+        document_text = self.redact_sensitive_values(event.get("data", ""))
         document_name = event.get("filename", "unknown")
         document_type = event.get("content_type", "text/plain")
         target = event.get("target", "")
@@ -101,9 +102,9 @@ Extract all security-relevant entities, IOCs, and potential scan targets."""
                     temperature=0.2,
                     max_tokens=2048,
                 )
-                chunk_result = json.loads(response)
+                chunk_result = self.parse_json_response(response)
                 all_results.append(chunk_result)
-            except (json.JSONDecodeError, Exception) as exc:
+            except Exception as exc:
                 logger.warning("Error analyzing chunk %d: %s", i, exc)
 
         # Merge results from all chunks
@@ -210,5 +211,5 @@ Extract all security-relevant entities, IOCs, and potential scan targets."""
     @classmethod
     def create(cls) -> "DocumentAnalyzerAgent":
         config = AgentConfig.from_env("document_analyzer")
-        config.event_types = cls(config).event_types
+        config.event_types = cls.EVENT_TYPES
         return cls(config)

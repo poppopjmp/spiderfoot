@@ -11,7 +11,9 @@ Checks for data breaches and leaked credentials associated with the target email
 - Enabled for email, domain, and username targets.
 - Can be run from the web UI or CLI:
   ```sh
-  python sf.py -s user@example.com -t EMAILADDR -m sfp_breach
+  curl -X POST http://localhost:8001/api/v1/scans \
+  -H "Content-Type: application/json" \
+  -d '{"target": "user@example.com", "modules": ["sfp_breach"]}'
   ```
 
 ## Output Example

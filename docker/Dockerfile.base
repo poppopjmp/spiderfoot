@@ -44,7 +44,9 @@ COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH" \
     VIRTUAL_ENV="/opt/venv" \
     PYTHONPATH="/home/spiderfoot" \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONPYCACHEPREFIX="/tmp/__pycache__"
 
 # Create non-root user
 RUN addgroup --system spiderfoot && \
@@ -75,7 +77,8 @@ RUN mkdir -p /home/spiderfoot/data /home/spiderfoot/logs \
 
 # Ensure package init files
 RUN touch /home/spiderfoot/__init__.py \
-          /home/spiderfoot/modules/__init__.py
+          /home/spiderfoot/modules/__init__.py \
+          /home/spiderfoot/correlations/__init__.py
 
 # ── Security hardening ──────────────────────────────────────────────────────
 # Remove SUID/SGID binaries to prevent privilege escalation

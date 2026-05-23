@@ -8,7 +8,13 @@ SpiderFoot has been enhanced with enterprise-grade security features to provide 
 
 ## Security Architecture
 
-SpiderFoot's security implementation follows a layered approach with multiple protection mechanisms:
+SpiderFoot's security implementation follows a layered approach with multiple protection mechanisms, starting from the container runtime level up to the application layer.
+
+### Immutable Infrastructure (v6.0.1)
+
+- **Read-Only Containers**: All core containers (`api`, `celery-worker`) are deployed with `read_only: true` and `cap_drop: ALL`, dropping all root capabilities.
+- **Ephemeral Storage**: Volatile data like Celery worker execution spaces use isolated `tmpfs` mounts, ensuring zero persistent compromise footprint.
+- **Load Optimization**: Tuned FastAPI middleware (`RateLimitMiddleware`) and expanded worker concurrency enable the stack to effortlessly process heavy concurrent polling with zero `429 Too Many Requests` errors.
 
 ```mermaid
 graph TD

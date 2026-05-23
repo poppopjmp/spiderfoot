@@ -73,8 +73,8 @@ http:
     # --- Rate limiting: API ---
     rate-limit-api:
       rateLimit:
-        average: 50
-        burst: 100
+        average: 500
+        burst: 1000
         period: "1s"
 
     # --- Strip prefix helpers ---

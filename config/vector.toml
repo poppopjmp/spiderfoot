@@ -296,7 +296,7 @@ batch.timeout_secs = 60
 
 [sinks.minio_events.auth]
 access_key_id = "${AWS_ACCESS_KEY_ID:-spiderfoot}"
-secret_access_key = "${AWS_SECRET_ACCESS_KEY:-changeme123}"
+secret_access_key = "${AWS_SECRET_ACCESS_KEY}"
 
 # Container logs → MinIO (sf-logs bucket, partitioned by date)
 [sinks.minio_logs]
@@ -313,7 +313,7 @@ batch.timeout_secs = 60
 
 [sinks.minio_logs.auth]
 access_key_id = "${AWS_ACCESS_KEY_ID:-spiderfoot}"
-secret_access_key = "${AWS_SECRET_ACCESS_KEY:-changeme123}"
+secret_access_key = "${AWS_SECRET_ACCESS_KEY}"
 
 # High-risk events → MinIO (separate prefix for faster querying)
 [sinks.minio_alerts]
@@ -330,7 +330,7 @@ batch.timeout_secs = 30
 
 [sinks.minio_alerts.auth]
 access_key_id = "${AWS_ACCESS_KEY_ID:-spiderfoot}"
-secret_access_key = "${AWS_SECRET_ACCESS_KEY:-changeme123}"
+secret_access_key = "${AWS_SECRET_ACCESS_KEY}"
 
 # Prometheus metrics exporter — Vector internal + SpiderFoot pipeline metrics
 [sinks.prometheus_metrics]

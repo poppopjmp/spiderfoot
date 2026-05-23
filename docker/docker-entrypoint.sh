@@ -12,19 +12,19 @@
 
 set -e
 
-# Ensure runtime directories exist and are writable
+# Ensure runtime directories exist and are writable (may fail on read-only FS)
 for dir in logs cache data .spiderfoot/logs; do
-    mkdir -p "/home/spiderfoot/$dir"
+    mkdir -p "/home/spiderfoot/$dir" 2>/dev/null || true
 done
 
-# Clean stale logs on start
-rm -rf /home/spiderfoot/logs/*
+# Clean stale logs on start (may fail on read-only FS)
+rm -rf /home/spiderfoot/logs/* 2>/dev/null || true
 
 # Fix ownership (only if running as root — skipped in rootless containers)
 if [ "$(id -u)" = "0" ]; then
     chown -R spiderfoot:spiderfoot /home/spiderfoot/.spiderfoot \
-        /home/spiderfoot/logs /home/spiderfoot/cache /home/spiderfoot/data
-    chmod -R 755 /home/spiderfoot/logs
+        /home/spiderfoot/logs /home/spiderfoot/cache /home/spiderfoot/data 2>/dev/null || true
+    chmod -R 755 /home/spiderfoot/logs 2>/dev/null || true
 fi
 
 # Auto-detect service role from command arguments if not explicitly set

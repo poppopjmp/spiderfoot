@@ -10,7 +10,6 @@ Processes events with risk >= 60 and produces:
   - Remediation suggestions
 """
 
-import json
 import logging
 from typing import Any, Dict, List
 
@@ -35,9 +34,7 @@ Respond in JSON format:
 class FindingValidatorAgent(BaseAgent):
     """Validates scan findings to reduce false positives."""
 
-    @property
-    def event_types(self) -> List[str]:
-        return [
+    EVENT_TYPES = [
             "MALICIOUS_*",
             "VULNERABILITY_*",
             "BLACKLISTED_*",
@@ -45,9 +42,13 @@ class FindingValidatorAgent(BaseAgent):
             "DARKNET_*",
         ]
 
+    @property
+    def event_types(self) -> List[str]:
+        return self.EVENT_TYPES
+
     async def process_event(self, event: Dict[str, Any]) -> AgentResult:
         event_type = event.get("event_type", "UNKNOWN")
-        event_data = event.get("data", "")
+        event_data = self.redact_sensitive_values(event.get("data", ""))
         source_module = event.get("source_module", "")
         target = event.get("target", "")
         risk = event.get("risk", 0)
@@ -74,7 +75,7 @@ Validate whether this is a genuine security finding or a false positive."""
             )
 
             # Parse JSON response
-            result_data = json.loads(response)
+            result_data = self.parse_json_response(response)
             confidence = float(result_data.get("confidence", 0.5))
 
             return AgentResult(
@@ -86,7 +87,7 @@ Validate whether this is a genuine security finding or a false positive."""
                 confidence=confidence,
             )
 
-        except json.JSONDecodeError:
+        except ValueError:
             # LLM didn't return valid JSON — store raw response
             return AgentResult(
                 agent_name=self.config.name,
@@ -100,5 +101,5 @@ Validate whether this is a genuine security finding or a false positive."""
     @classmethod
     def create(cls) -> "FindingValidatorAgent":
         config = AgentConfig.from_env("finding_validator")
-        config.event_types = cls(config).event_types
+        config.event_types = cls.EVENT_TYPES
         return cls(config)

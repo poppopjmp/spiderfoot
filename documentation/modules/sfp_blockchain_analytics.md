@@ -78,17 +78,23 @@ max_concurrent_requests = 5
 
 ### Bitcoin Address Investigation
 ```bash
-python sf.py -s 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa -t BITCOIN_ADDRESS -m sfp_blockchain_analytics
+curl -X POST http://localhost:8001/api/v1/scans \
+  -H "Content-Type: application/json" \
+  -d '{"target": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa", "modules": ["sfp_blockchain_analytics"]}'
 ```
 
 ### Ethereum Address Analysis
 ```bash
-python sf.py -s 0x742d35Cc6634C0532925a3b8D400000abBAd2f3d -t ETHEREUM_ADDRESS -m sfp_blockchain_analytics
+curl -X POST http://localhost:8001/api/v1/scans \
+  -H "Content-Type: application/json" \
+  -d '{"target": "0x742d35Cc6634C0532925a3b8D400000abBAd2f3d", "modules": ["sfp_blockchain_analytics"]}'
 ```
 
 ### Multi-Address Investigation
 ```bash
-python sf.py -s crypto_addresses.txt -t FILE -m sfp_blockchain_analytics,sfp_advanced_correlation
+curl -X POST http://localhost:8001/api/v1/scans \
+  -H "Content-Type: application/json" \
+  -d '{"target": "crypto_addresses.txt", "modules": ["sfp_blockchain_analytics", "sfp_advanced_correlation"]}'
 ```
 
 ## Risk Assessment Metrics

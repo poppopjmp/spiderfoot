@@ -116,17 +116,23 @@ cross_platform_correlation = True
 
 ### Cross-Platform Identity Investigation
 ```bash
-python sf.py -s user@example.com -t EMAILADDR -m sfp_social,sfp_twitter,sfp_tiktok_osint,sfp_advanced_correlation
+curl -X POST http://localhost:8001/api/v1/scans \
+  -H "Content-Type: application/json" \
+  -d '{"target": "user@example.com", "modules": ["sfp_social", "sfp_twitter", "sfp_tiktok_osint", "sfp_advanced_correlation"]}'
 ```
 
 ### Temporal Pattern Analysis
 ```bash
-python sf.py -s target_domain.com -t DOMAIN_NAME -m sfp_dnsresolve,sfp_ssl,sfp_advanced_correlation
+curl -X POST http://localhost:8001/api/v1/scans \
+  -H "Content-Type: application/json" \
+  -d '{"target": "target_domain.com", "modules": ["sfp_dnsresolve", "sfp_ssl", "sfp_advanced_correlation"]}'
 ```
 
 ### Geospatial Correlation
 ```bash
-python sf.py -s 192.168.1.0/24 -t NETBLOCK -m sfp_geoip,sfp_portscan_tcp,sfp_advanced_correlation
+curl -X POST http://localhost:8001/api/v1/scans \
+  -H "Content-Type: application/json" \
+  -d '{"target": "192.168.1.0/24", "modules": ["sfp_geoip", "sfp_portscan_tcp", "sfp_advanced_correlation"]}'
 ```
 
 ## Correlation Rules Integration

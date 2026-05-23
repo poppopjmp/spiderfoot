@@ -12,7 +12,6 @@ Returns per-file analysis plus an aggregate security score (0-100) and a
 prioritised issue list with suggested fixes.
 """
 
-import json
 import logging
 from typing import Any, Dict, List
 
@@ -70,9 +69,11 @@ class IaCAdvisorAgent(BaseAgent):
     endpoint for security, best-practice and hardening issues.
     """
 
+    EVENT_TYPES = ["IAC_GENERATED"]
+
     @property
     def event_types(self) -> List[str]:
-        return ["IAC_GENERATED"]
+        return self.EVENT_TYPES
 
     # ------------------------------------------------------------------
     # Internal helpers
@@ -196,14 +197,7 @@ Perform a thorough security review and return the JSON result."""
                 max_tokens=3072,
             )
 
-            # Strip markdown fences if the model adds them
-            cleaned = raw.strip()
-            if cleaned.startswith("```"):
-                lines = cleaned.split("\n")
-                lines = [ln for ln in lines if not ln.strip().startswith("```")]
-                cleaned = "\n".join(lines).strip()
-
-            result_data = json.loads(cleaned)
+            result_data = self.parse_json_response(raw)
 
             # Derive confidence from score + issue severity
             score = int(result_data.get("security_score", 50))
@@ -222,7 +216,7 @@ Perform a thorough security review and return the JSON result."""
                 confidence=round(max(0.1, confidence), 3),
             )
 
-        except json.JSONDecodeError:
+        except ValueError:
             logger.warning("IaC Advisor: LLM did not return valid JSON — storing raw response")
             return AgentResult(
                 agent_name=self.config.name,
@@ -244,5 +238,5 @@ Perform a thorough security review and return the JSON result."""
     @classmethod
     def create(cls) -> "IaCAdvisorAgent":
         config = AgentConfig.from_env("iac_advisor")
-        config.event_types = cls(config).event_types
+        config.event_types = cls.EVENT_TYPES
         return cls(config)

@@ -12,6 +12,7 @@ import {
   XCircle, AlertTriangle, ChevronDown, ChevronRight,
   Code2, RefreshCw, Bot, Shield, ThumbsUp,
 } from 'lucide-react';
+import { sanitizeHTML } from '../../lib/sanitize';
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -758,14 +759,14 @@ function WorkspaceIaCTab({ workspace, workspaceId, targets, scans }: WorkspaceIa
       startOnLoad:   false,
       theme:         'dark',
       flowchart:     { curve: 'basis', useMaxWidth: true },
-      securityLevel: 'loose',
+      securityLevel: 'strict',
     });
 
     // mermaid v10+ returns a Promise<{ svg }>
     const diagramId = `ws-iac-${workspaceId.replace(/[^a-zA-Z0-9]/g, '')}`;
     (mermaid.render(diagramId, source) as Promise<{ svg: string }>)
       .then(({ svg }) => {
-        if (alive) { setSvgContent(svg); setLoading(false); }
+        if (alive) { setSvgContent(sanitizeHTML(svg)); setLoading(false); }
       })
       .catch((err: Error) => {
         if (alive) { setRenderErr(err.message); setLoading(false); }
@@ -778,7 +779,7 @@ function WorkspaceIaCTab({ workspace, workspaceId, targets, scans }: WorkspaceIa
     navigator.clipboard.writeText(source).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    });
+    }).catch(() => { /* clipboard unavailable */ });
   }, [source]);
 
   const handleDownloadSVG = useCallback(() => {

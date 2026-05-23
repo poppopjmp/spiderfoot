@@ -11,7 +11,9 @@ Analyzes SSL/TLS certificates for the target host, extracting certificate detail
 - Enabled by default for domain and hostname targets supporting HTTPS.
 - Can be run from the web UI or CLI:
   ```sh
-  python sf.py -s example.com -t DOMAIN_NAME -m sfp_ssl
+  curl -X POST http://localhost:8001/api/v1/scans \
+  -H "Content-Type: application/json" \
+  -d '{"target": "example.com", "modules": ["sfp_ssl"]}'
   ```
 
 ## Output Example
