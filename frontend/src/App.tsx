@@ -56,7 +56,13 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
  * not enforced (authRequired === false) so development isn't impacted.
  */
 function RequirePermission({ permission, children }: { permission: string; children: React.ReactNode }) {
-  const { hasPermission, authRequired } = useAuthStore();
+  const { hasPermission, authRequired, isLoading } = useAuthStore();
+
+  // Don't render protected content until auth status has resolved, otherwise a
+  // permission-gated page could flash before authRequired/permissions are known.
+  if (isLoading) {
+    return <LazyFallback />;
+  }
 
   if (authRequired && !hasPermission(permission)) {
     return <Navigate to="/" replace />;

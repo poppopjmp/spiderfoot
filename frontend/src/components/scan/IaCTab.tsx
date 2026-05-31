@@ -71,7 +71,15 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
       <div
         role="switch"
         aria-checked={checked}
+        aria-label={label}
+        tabIndex={0}
         onClick={() => onChange(!checked)}
+        onKeyDown={(e) => {
+          if (e.key === ' ' || e.key === 'Enter') {
+            e.preventDefault();
+            onChange(!checked);
+          }
+        }}
         className={`relative w-9 h-5 rounded-full transition-colors ${
           checked ? 'bg-spider-500' : 'bg-dark-700'
         } cursor-pointer`}
