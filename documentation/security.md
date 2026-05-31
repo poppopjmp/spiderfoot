@@ -239,12 +239,9 @@ security_config = {
 Set these environment variables for production:
 
 ```bash
-SPIDERFOOT_CSRF_SECRET=your-csrf-secret-key
-SPIDERFOOT_JWT_SECRET=your-jwt-secret-key
-SPIDERFOOT_SECURITY_LOG_FILE=/var/log/spiderfoot/security.log
-SPIDERFOOT_RATE_LIMIT_STORAGE=redis
-SPIDERFOOT_REDIS_HOST=localhost
-SPIDERFOOT_REDIS_PORT=6379
+SF_JWT_SECRET=your-jwt-secret-key
+SF_REDIS_URL=redis://localhost:6379/0
+SF_LOG_LEVEL=INFO
 ```
 
 ## Security Validation

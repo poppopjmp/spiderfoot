@@ -280,8 +280,7 @@ config = {
 Use environment variables for sensitive configuration:
 
 ```bash
-export SPIDERFOOT_CSRF_SECRET="your-csrf-secret"
-export SPIDERFOOT_JWT_SECRET="your-jwt-secret"
+export SF_JWT_SECRET="your-jwt-secret"
 export REDIS_URL="redis://localhost:6379"
 ```
 
@@ -289,8 +288,8 @@ export REDIS_URL="redis://localhost:6379"
 import os
 
 config = {
-    'security.csrf.secret_key': os.environ.get('SPIDERFOOT_CSRF_SECRET'),
-    'security.api_security.jwt_secret': os.environ.get('SPIDERFOOT_JWT_SECRET'),
+    'security.csrf.secret_key': os.environ.get('SF_JWT_SECRET'),
+    'security.api_security.jwt_secret': os.environ.get('SF_JWT_SECRET'),
     'security.rate_limiting.redis_url': os.environ.get('REDIS_URL', 'redis://localhost:6379')
 }
 ```

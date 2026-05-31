@@ -67,14 +67,14 @@ Results appear in real time. Click any scan to open the **Scan Detail** view wit
 
 ## 4. Using the CLI
 
-For a basic scan:
+For a basic scan (the `name` field is required; the target type is auto-detected):
 ```sh
-curl -X POST http://localhost:8001/api/v1/scans \
+curl -X POST http://localhost:8001/api/scans \
   -H "Content-Type: application/json" \
-  -d '{"target": "example.com", "modules": ["sfp_dnsresolve", "sfp_ssl", "sfp_whois"]}'
+  -d '{"name": "example.com recon", "target": "example.com", "modules": ["sfp_dnsresolve", "sfp_sslcert", "sfp_whois"]}'
 ```
-- Use `curl -X GET http://localhost:8001/api/v1/modules` to list all available modules.
-- Use `curl -X GET http://localhost:8001/api/v1/modules <module>` for help on a specific module.
+- Use `curl -X GET http://localhost:8001/api/data/modules` to list all available modules.
+- The cross-platform `spiderfoot-cli` (`scan start`, `scan list`, `modules list`, …) is also available — see [cli/README.md](../cli/README.md).
 
 ## 5. Workspaces and Multi-Target Scans
 
@@ -92,32 +92,17 @@ Organize related scans into **Workspaces** for multi-target campaigns, recurring
 For production deployments, configure security features:
 
 ```bash
-# Set strong secret keys
-export SPIDERFOOT_CSRF_SECRET=$(openssl rand -hex 32)
-export SPIDERFOOT_JWT_SECRET=$(openssl rand -hex 32)
+# Set a strong JWT signing secret (used for access/refresh tokens)
+export SF_JWT_SECRET=$(openssl rand -hex 32)
 
-# Enable security logging
-export SPIDERFOOT_SECURITY_LOG_FILE=/var/log/spiderfoot/security.log
+# Logging verbosity
+export SF_LOG_LEVEL=INFO
 ```
 
-Or via configuration file:
-```ini
-[security]
-csrf_enabled = True
-csrf_secret_key = your-strong-secret-key
-rate_limiting_enabled = True
-input_validation_enabled = True
-session_security_enabled = True
-api_security_enabled = True
-security_logging_enabled = True
-```
-
-### Security Validation
-Validate your security setup:
-```bash
-cd spiderfoot
-# Security config is validated automatically at startup (spiderfoot/security/startup_check.py)
-```
+These (and all other `SF_*` settings) are typically placed in the `.env` file —
+see [`.env.example`](../.env.example) at the repository root. Security
+configuration is validated automatically at startup
+(`spiderfoot/security/startup_check.py`).
 
 ## Troubleshooting
 - If you have issues, check the [Troubleshooting Guide](troubleshooting.md).

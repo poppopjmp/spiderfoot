@@ -363,7 +363,7 @@ The `BASE_IMAGE` build argument allows CI to pass a GHCR image tag:
 
 ```bash
 docker build -f docker/Dockerfile.active-scanner \
-  --build-arg BASE_IMAGE=ghcr.io/org/spiderfoot-base:6.0.0 \
+  --build-arg BASE_IMAGE=ghcr.io/org/spiderfoot-base:6.0.1 \
   -t spiderfoot-active:latest .
 ```
 
