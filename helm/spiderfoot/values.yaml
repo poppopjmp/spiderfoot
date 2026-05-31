@@ -163,7 +163,7 @@ vector:
   enabled: false
   image:
     repository: timberio/vector
-    tag: "0.40.0-alpine"
+    tag: "0.53.0-alpine"
   resources:
     requests:
       cpu: 50m

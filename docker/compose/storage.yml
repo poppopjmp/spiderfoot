@@ -84,6 +84,7 @@ services:
         mc --config-dir /tmp mb --ignore-existing sfminio/sf-pg-backups;
         mc --config-dir /tmp mb --ignore-existing sfminio/sf-qdrant-snapshots;
         mc --config-dir /tmp mb --ignore-existing sfminio/sf-data;
+        mc --config-dir /tmp mb --ignore-existing sfminio/sf-enrichment;
         mc --config-dir /tmp mb --ignore-existing sfminio/sf-loki-data;
         mc --config-dir /tmp mb --ignore-existing sfminio/sf-loki-ruler;
         cp /usr/bin/mc /opt/mc-share/mc && chmod +x /opt/mc-share/mc;
