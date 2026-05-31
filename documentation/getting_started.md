@@ -86,7 +86,7 @@ Organize related scans into **Workspaces** for multi-target campaigns, recurring
 
 ### Basic Configuration
 - Configure API keys for modules in the web UI under **Settings → Module Settings**.
-- Advanced options can be set in the config file or via environment variables. See the [Configuration Guide](configuration.md).
+- Advanced options are set via `SF_*` environment variables (the `.env` file). See the [Configuration Guide](configuration.md).
 
 ### Security Configuration (Recommended)
 For production deployments, configure security features:
