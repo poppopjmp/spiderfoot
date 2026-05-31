@@ -20,7 +20,7 @@ Module integration tests are excluded.
 To run all unit and integration tests, including module integration tests, run:
 
 ```
-python3 -m pytest -n auto --flake8 --dist loadfile --durations=5 --cov-report html --cov=. .
+python3 -m pytest -n auto --dist loadfile --durations=5 --cov-report html --cov=. .
 ```
 
 
@@ -31,7 +31,7 @@ The module integration tests check module integration with remote third-party da
 To run the tests:
 
 ```
-python3 -m pytest -n auto --flake8 --dist loadfile --durations=5 --cov-report html --cov=. test/integration/modules/
+python3 -m pytest -n auto --dist loadfile --durations=5 --cov-report html --cov=. test/integration/modules/
 ```
 
 
@@ -43,7 +43,7 @@ intended and that SpiderFooot is operating correctly as a whole.
 These tests use a headless browser (Firefox by default), and
 must be run with `./test/acceptance` as current working directory.
 
-Requires SpiderFoot web server to be running on default port (`5001`).
+Requires SpiderFoot web server to be running on default port (`8001`).
 
 Requires test dependencies to be installed:
 
@@ -54,7 +54,7 @@ pip3 install -r test/acceptance/requirements.txt
 To run the tests, start the SpiderFoot web interface on the default port:
 
 ```
-python3 ./sf.py -l 127.0.0.1:5001
+uvicorn sfapi:app --host 127.0.0.1 --port 8001
 ```
 
 Then run robot (override the `BROWSER` variable if necessary):
