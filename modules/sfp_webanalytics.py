@@ -116,7 +116,7 @@ class sfp_webanalytics(SpiderFootAsyncPlugin):
             # Google Tag Manager
             matches = re.findall(r"\b(GTM-[0-9a-zA-Z]{6,10})\b", eventData)
             for m in set(matches):
-                if m.lower().startswith('GTM-XXXXXX'):
+                if m.lower().startswith('gtm-xxxxxx'):
                     continue
 
                 self.debug(f"Google Tag Manager match: {m}")
