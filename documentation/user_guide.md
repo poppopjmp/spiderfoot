@@ -120,7 +120,7 @@ Configure global settings, module API keys, and monitor the 6 AI-powered analysi
 
 ## Module Categories & Usage Patterns
 
-SpiderFoot v6.0.0 includes 309 modules organized into the following categories:
+SpiderFoot v6.0.1 includes 309 modules organized into the following categories:
 
 ### Core Investigation Modules
 - **DNS/Network**: sfp_dnsresolve, sfp_whois, sfp_ssl, sfp_portscan_tcp, sfp_banner
@@ -179,7 +179,7 @@ curl -X POST http://localhost:8001/api/v1/scans \
 
 ## Result Interpretation
 
-SpiderFoot v6.0.0 provides enhanced result analysis and interpretation:
+SpiderFoot v6.0.1 provides enhanced result analysis and interpretation:
 
 ### Event Types
 - **Traditional Types**: IP_ADDRESS, DOMAIN_NAME, TCP_PORT_OPEN, SSL_CERTIFICATE_ISSUED, VULNERABILITY, MALICIOUS_DOMAIN, EMAILADDR, SOCIAL_MEDIA

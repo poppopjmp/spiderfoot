@@ -6,7 +6,7 @@ This guide covers using Pydantic-validated structured outputs for LLM responses 
 
 ## Overview
 
-SpiderFoot v6.0.0 introduces a typed AI output pipeline that forces LLMs to return JSON conforming to predefined Pydantic schemas. This eliminates brittle regex/string parsing of LLM responses and provides compile-time type safety.
+SpiderFoot v6.0.1 introduces a typed AI output pipeline that forces LLMs to return JSON conforming to predefined Pydantic schemas. This eliminates brittle regex/string parsing of LLM responses and provides compile-time type safety.
 
 ### How It Works
 

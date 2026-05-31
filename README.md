@@ -72,7 +72,7 @@ graph TB
         end
 
         subgraph Analysis["Analysis Services"]
-            AGENTS[sf-agents :8100<br/>6 AI Agents]
+            AGENTS[sf-agents :8100<br/>7 AI Agents]
             TIKA[Apache Tika :9998<br/>Document Parsing]
         end
 
@@ -252,7 +252,7 @@ The Docker Compose deployment uses two networks (`sf-frontend`, `sf-backend`) an
 | **sf-grafana** | `monitor` | grafana/grafana | 3000 | Dashboards & alerting |
 | **sf-prometheus** | `monitor` | prom/prometheus | 9090 | Metrics collection |
 | **sf-jaeger** | `monitor` | jaegertracing/jaeger | 16686 | Distributed tracing |
-| **sf-agents** | `ai` | spiderfoot-micro | 8100 | 6 AI-powered analysis agents |
+| **sf-agents** | `ai` | spiderfoot-micro | 8100 | 7 AI-powered analysis agents |
 | **sf-litellm** | `ai` | ghcr.io/berriai/litellm | 4000 | Unified LLM proxy |
 | **sf-celery-beat** | `scheduler` | spiderfoot-micro | — | Periodic task scheduler |
 | **sf-flower** | `scheduler` | spiderfoot-micro | 5555 | Celery monitoring dashboard |
@@ -297,7 +297,7 @@ SpiderFoot v6.0.1 builds upon the comprehensive security hardening initiative of
 
 ### Authentication & Authorization
 
-- **JWT authentication** on all 38+ API routers with `Depends(require_auth)`
+- **JWT authentication** on all 39 API routers with `Depends(require_auth)`
 - **WebSocket & SSE** auth validation — token verified before upgrade
 - **CSP / X-Frame-Options / X-Content-Type-Options** headers via FastAPI middleware
 - **SSO callback URL** origin validation (block open-redirect)
@@ -322,7 +322,7 @@ SpiderFoot v6.0.1 builds upon the comprehensive security hardening initiative of
 
 - **AbortSignal** on all 84+ API methods (cancel on unmount)
 - **XSS-safe MarkdownRenderer** with DOMPurify + `marked`
-- **Code splitting** — 10/12 pages lazy-loaded (reduced initial bundle)
+- **Code splitting** — 11/14 pages lazy-loaded (reduced initial bundle)
 - **Content Security Policy** enforced at Nginx and API level
 
 ---
@@ -476,7 +476,7 @@ Profiles are managed via `spiderfoot.scan.scan_profile.ProfileManager` — see [
 
 ## AI Agents
 
-Six LLM-powered agents automatically analyze high-risk findings and produce structured intelligence. They subscribe to Redis event bus topics and process events asynchronously.
+Seven LLM-powered agents automatically analyze high-risk findings and produce structured intelligence. They subscribe to Redis event bus topics and process events asynchronously.
 
 | Agent | Trigger Events | Output |
 |-------|---------------|--------|
@@ -900,7 +900,7 @@ Configure global application settings, module API keys, notification preferences
 
 ### Agents
 
-Monitor and manage the 6 AI-powered analysis agents. View agent status, processed event counts, and recent analysis results.
+Monitor and manage the 7 AI-powered analysis agents. View agent status, processed event counts, and recent analysis results.
 
 <p align="center">
 <img src="documentation/images/agents.png" alt="Agents" width="800" />
@@ -975,12 +975,12 @@ IP addresses · domains · subdomains · hostnames · CIDR subnets · ASNs · em
 
 ```
 spiderfoot/
-├── api/                  # FastAPI application (38+ routers)
+├── api/                  # FastAPI application (39 routers)
 │   ├── graphql/          # Strawberry GraphQL (queries, mutations, subscriptions)
 │   ├── routers/          # REST endpoint routers
 │   ├── schemas.py        # Pydantic v2 contracts
 │   └── versioning.py     # /api/v1/ prefix
-├── agents/               # AI analysis agents (6 LLM-powered)
+├── agents/               # AI analysis agents (7 LLM-powered)
 ├── enrichment/           # Document enrichment pipeline
 ├── user_input/           # User-defined input ingestion
 ├── config/               # App configuration
@@ -1058,5 +1058,5 @@ SpiderFoot is licensed under the [MIT License](LICENSE).
 
 ---
 
-*Actively developed since 2012 — 309 modules, 38+ API routers, 95 correlation rules, 23-service Docker deployment, Go CLI, 300 frontend tests, comprehensive security hardening (9.0+ score), AI agents, vector search, and full observability.*
+*Actively developed since 2012 — 309 modules, 39 API routers, 94 correlation rules, 23-service Docker deployment, Go CLI, 300 frontend tests, comprehensive security hardening (9.0+ score), AI agents, vector search, and full observability.*
 

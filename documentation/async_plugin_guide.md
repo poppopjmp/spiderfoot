@@ -6,7 +6,7 @@ This guide covers writing SpiderFoot modules that use native async I/O for high-
 
 ## Overview
 
-SpiderFoot v6.0.0 introduces `SpiderFootAsyncPlugin`, a base class that provides native `aiohttp` HTTP requests and `aiodns` DNS resolution — no `run_in_executor` wrapping needed. Sync modules using `SpiderFootPlugin` are unaffected.
+SpiderFoot v6.0.1 introduces `SpiderFootAsyncPlugin`, a base class that provides native `aiohttp` HTTP requests and `aiodns` DNS resolution — no `run_in_executor` wrapping needed. Sync modules using `SpiderFootPlugin` are unaffected.
 
 ### When to Use Async
 

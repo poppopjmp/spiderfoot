@@ -260,7 +260,7 @@ This will check:
 
 ## Enhanced Module Configuration
 
-SpiderFoot v6.0.0 includes configuration options for enhanced modules:
+SpiderFoot v6.0.1 includes configuration options for enhanced modules:
 
 ### Performance Optimization
 

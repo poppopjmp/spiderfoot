@@ -192,7 +192,7 @@ entity_relationships = correlator.get_entity_relationships()
 
 ## Available Module Categories
 
-SpiderFoot v6.0.0 includes 309 modules organized into the following categories:
+SpiderFoot v6.0.1 includes 309 modules organized into the following categories:
 
 ### Core Categories
 

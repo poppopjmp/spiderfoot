@@ -1,6 +1,6 @@
 # Streaming Export Guide
 
-This guide covers the JSONL streaming export and SSE live event stream endpoints introduced in SpiderFoot v6.0.0.
+This guide covers the JSONL streaming export and SSE live event stream endpoints introduced in SpiderFoot v6.0.1.
 
 ---
 
