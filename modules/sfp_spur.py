@@ -204,7 +204,11 @@ class sfp_spur(SpiderFootAsyncPlugin):
             if content is None:
                 continue
 
-            data = json.loads(content)
+            try:
+                data = json.loads(content)
+            except json.JSONDecodeError:
+                self.error("Failed to parse Spur response as JSON")
+                continue
 
             # For netblocks, create the event for the IP address to link to later
             if eventName.startswith("NETBLOCK_"):

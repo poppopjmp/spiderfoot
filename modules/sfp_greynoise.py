@@ -128,7 +128,10 @@ class sfp_greynoise(SpiderFootAsyncPlugin):
                 headers=headers,
             )
             if ip_response and str(ip_response.get("code", "")) == "200":
-                res = json.loads(ip_response["content"])
+                try:
+                    res = json.loads(ip_response["content"])
+                except json.JSONDecodeError:
+                    self.debug("Failed to parse GreyNoise IP response as JSON")
         else:
             self.debug(f"Querying GreyNoise for Netblock: {qry}")
             query_response = self.fetch_url(
@@ -138,7 +141,10 @@ class sfp_greynoise(SpiderFootAsyncPlugin):
                 headers=headers,
             )
             if query_response and str(query_response.get("code", "")) == "200":
-                res = json.loads(query_response["content"])
+                try:
+                    res = json.loads(query_response["content"])
+                except json.JSONDecodeError:
+                    self.debug("Failed to parse GreyNoise GNQL response as JSON")
 
         if not res:
             self.error(
