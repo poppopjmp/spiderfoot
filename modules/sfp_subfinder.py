@@ -17,6 +17,7 @@ import tempfile
 from typing import Any
 
 from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
+from spiderfoot import SpiderFootEvent
 
 
 class sfp_subfinder(SpiderFootAsyncPlugin):
@@ -160,7 +161,7 @@ class sfp_subfinder(SpiderFootAsyncPlugin):
                 count += 1
 
                 # Emit INTERNET_NAME for subdomains
-                evt = self.sf.SpiderFootEvent(
+                evt = SpiderFootEvent(
                     "INTERNET_NAME", subdomain, self.__name__, parent_event
                 )
                 self.notifyListeners(evt)
@@ -231,7 +232,7 @@ class sfp_subfinder(SpiderFootAsyncPlugin):
                     "subdomains_found": count,
                 }
                 raw = json.dumps(summary, indent=2)
-                evt = self.sf.SpiderFootEvent(
+                evt = SpiderFootEvent(
                     "RAW_RIR_DATA", raw, self.__name__, event
                 )
                 self.notifyListeners(evt)

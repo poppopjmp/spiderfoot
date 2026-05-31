@@ -184,7 +184,7 @@ class sfp_grep_app(SpiderFootAsyncPlugin):
                 if snippet is None:
                     continue
 
-                links = self.sf.extractUrlsFromText(
+                links = SpiderFootHelpers.extractUrlsFromText(
                     snippet.replace('<mark>', '').replace('</mark>', ''))
                 if links:
                     for link in links:

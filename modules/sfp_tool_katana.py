@@ -15,6 +15,7 @@ import subprocess
 import tempfile
 
 from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
+from spiderfoot import SpiderFootEvent
 
 
 class sfp_tool_katana(SpiderFootAsyncPlugin):
@@ -178,7 +179,7 @@ class sfp_tool_katana(SpiderFootAsyncPlugin):
                         else:
                             evt_type = "LINKED_URL_EXTERNAL"
 
-                        evt = self.sf.SpiderFootEvent(
+                        evt = SpiderFootEvent(
                             evt_type, url, self.__name__, event
                         )
                         self.notifyListeners(evt)

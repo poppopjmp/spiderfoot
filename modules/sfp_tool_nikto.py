@@ -14,6 +14,7 @@ import subprocess
 import tempfile
 
 from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
+from spiderfoot import SpiderFootEvent
 
 
 class sfp_tool_nikto(SpiderFootAsyncPlugin):
@@ -169,19 +170,19 @@ class sfp_tool_nikto(SpiderFootAsyncPlugin):
                         finding = f"{target}{uri}: {description}"
 
                         if cve_matches:
-                            evt = self.sf.SpiderFootEvent(
+                            evt = SpiderFootEvent(
                                 "VULNERABILITY_CVE_MEDIUM", finding, self.__name__, event
                             )
                         elif any(x in description.lower() for x in ("vuln", "exploit", "injection", "xss", "rce")):
-                            evt = self.sf.SpiderFootEvent(
+                            evt = SpiderFootEvent(
                                 "VULNERABILITY_GENERAL", finding, self.__name__, event
                             )
                         elif any(x in description.lower() for x in ("interesting", "backup", "config", "admin")):
-                            evt = self.sf.SpiderFootEvent(
+                            evt = SpiderFootEvent(
                                 "INTERESTING_FILE", finding, self.__name__, event
                             )
                         else:
-                            evt = self.sf.SpiderFootEvent(
+                            evt = SpiderFootEvent(
                                 "VULNERABILITY_GENERAL", finding, self.__name__, event
                             )
                         self.notifyListeners(evt)
@@ -190,7 +191,7 @@ class sfp_tool_nikto(SpiderFootAsyncPlugin):
             for line in (proc.stdout or "").splitlines():
                 if "+ Server:" in line:
                     server = line.split("+ Server:", 1)[1].strip()
-                    evt = self.sf.SpiderFootEvent(
+                    evt = SpiderFootEvent(
                         "WEBSERVER_BANNER", f"{target}: {server}", self.__name__, event
                     )
                     self.notifyListeners(evt)

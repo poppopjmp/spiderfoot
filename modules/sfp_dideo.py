@@ -6,6 +6,7 @@ from spiderfoot import SpiderFootEvent
 from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 import re
 import json
+import urllib.parse
 
 
 class sfp_dideo(SpiderFootAsyncPlugin):
@@ -82,7 +83,7 @@ class sfp_dideo(SpiderFootAsyncPlugin):
         except Exception as e:
             max_videos = 10
         for keyword in [k.strip() for k in keywords.split(",") if k.strip()]:
-            url = f"https://www.dideo.ir/search/{self.sf.urlFuzz(keyword)}"
+            url = f"https://www.dideo.ir/search/{urllib.parse.quote(keyword)}"
             self.debug(f"Searching Dideo.ir for keyword: {keyword} (URL: {url})")
             res = self.fetch_url(url, timeout=15, useragent=self.opts.get('_useragent', 'SpiderFoot'))
             if not res or not res.get('content'):

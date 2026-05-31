@@ -16,6 +16,7 @@ import subprocess
 import tempfile
 
 from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
+from spiderfoot import SpiderFootEvent
 
 
 class sfp_tool_gowitness(SpiderFootAsyncPlugin):
@@ -153,7 +154,7 @@ class sfp_tool_gowitness(SpiderFootAsyncPlugin):
                 summary["stderr"] = proc.stderr[:300] if proc.stderr else ""
 
             raw = json.dumps(summary, indent=2)
-            evt = self.sf.SpiderFootEvent(
+            evt = SpiderFootEvent(
                 "RAW_RIR_DATA", raw, self.__name__, event
             )
             self.notifyListeners(evt)

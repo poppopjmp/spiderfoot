@@ -13,6 +13,7 @@ import os
 import subprocess
 
 from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
+from spiderfoot import SpiderFootEvent
 
 
 class sfp_tool_hakrawler(SpiderFootAsyncPlugin):
@@ -139,7 +140,7 @@ class sfp_tool_hakrawler(SpiderFootAsyncPlugin):
                 else:
                     evt_type = "LINKED_URL_EXTERNAL"
 
-                evt = self.sf.SpiderFootEvent(
+                evt = SpiderFootEvent(
                     evt_type, url, self.__name__, event
                 )
                 self.notifyListeners(evt)

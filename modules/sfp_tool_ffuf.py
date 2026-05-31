@@ -15,6 +15,7 @@ import subprocess
 import tempfile
 
 from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
+from spiderfoot import SpiderFootEvent
 
 
 class sfp_tool_ffuf(SpiderFootAsyncPlugin):
@@ -179,13 +180,13 @@ class sfp_tool_ffuf(SpiderFootAsyncPlugin):
                         continue
                     self.results[url] = True
 
-                    evt = self.sf.SpiderFootEvent(
+                    evt = SpiderFootEvent(
                         "LINKED_URL_INTERNAL", url, self.__name__, event
                     )
                     self.notifyListeners(evt)
 
                     code_info = f"{url} [{status}] [Size: {length}]"
-                    evt = self.sf.SpiderFootEvent(
+                    evt = SpiderFootEvent(
                         "HTTP_CODE", code_info, self.__name__, event
                     )
                     self.notifyListeners(evt)

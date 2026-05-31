@@ -16,6 +16,7 @@ import tempfile
 from typing import Any
 
 from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
+from spiderfoot import SpiderFootEvent
 
 
 class sfp_httpx(SpiderFootAsyncPlugin):
@@ -176,7 +177,7 @@ class sfp_httpx(SpiderFootAsyncPlugin):
 
         # URL
         if url:
-            evt = self.sf.SpiderFootEvent("URL_WEB", url, self.__name__, parent_event)
+            evt = SpiderFootEvent("URL_WEB", url, self.__name__, parent_event)
             self.notifyListeners(evt)
 
         # HTTP status code
@@ -184,12 +185,12 @@ class sfp_httpx(SpiderFootAsyncPlugin):
             data = f"{url} [{status_code}]"
             if title:
                 data += f" [{title}]"
-            evt = self.sf.SpiderFootEvent("HTTP_CODE", data, self.__name__, parent_event)
+            evt = SpiderFootEvent("HTTP_CODE", data, self.__name__, parent_event)
             self.notifyListeners(evt)
 
         # Web server
         if web_server:
-            evt = self.sf.SpiderFootEvent(
+            evt = SpiderFootEvent(
                 "WEBSERVER_BANNER", f"{host}: {web_server}", self.__name__, parent_event
             )
             self.notifyListeners(evt)
@@ -197,21 +198,21 @@ class sfp_httpx(SpiderFootAsyncPlugin):
         # Technologies
         if technologies:
             for tech in technologies:
-                evt = self.sf.SpiderFootEvent(
+                evt = SpiderFootEvent(
                     "WEBSERVER_TECHNOLOGY", f"{host}: {tech}", self.__name__, parent_event
                 )
                 self.notifyListeners(evt)
 
         # Open port
         if port:
-            evt = self.sf.SpiderFootEvent(
+            evt = SpiderFootEvent(
                 "TCP_PORT_OPEN", f"{host}:{port}", self.__name__, parent_event
             )
             self.notifyListeners(evt)
 
         # CDN detection
         if cdn and cdn_name:
-            evt = self.sf.SpiderFootEvent(
+            evt = SpiderFootEvent(
                 "CDN_DETECTED", f"{host}: {cdn_name}", self.__name__, parent_event
             )
             self.notifyListeners(evt)
@@ -219,14 +220,14 @@ class sfp_httpx(SpiderFootAsyncPlugin):
         # TLS certificate info
         if tls and tls.get("subject_dn"):
             tls_data = json.dumps(tls, indent=2)
-            evt = self.sf.SpiderFootEvent(
+            evt = SpiderFootEvent(
                 "SSL_CERTIFICATE_RAW", tls_data, self.__name__, parent_event
             )
             self.notifyListeners(evt)
 
         # Raw data for full record
         raw = json.dumps(result, indent=2)
-        evt = self.sf.SpiderFootEvent("RAW_RIR_DATA", raw, self.__name__, parent_event)
+        evt = SpiderFootEvent("RAW_RIR_DATA", raw, self.__name__, parent_event)
         self.notifyListeners(evt)
 
     def handleEvent(self, event):

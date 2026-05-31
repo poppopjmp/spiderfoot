@@ -14,6 +14,7 @@ import subprocess
 import tempfile
 
 from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
+from spiderfoot import SpiderFootEvent
 
 
 class sfp_tool_massdns(SpiderFootAsyncPlugin):
@@ -133,20 +134,20 @@ class sfp_tool_massdns(SpiderFootAsyncPlugin):
 
                         if rtype == "A" and value not in self.results:
                             self.results[value] = True
-                            evt = self.sf.SpiderFootEvent(
+                            evt = SpiderFootEvent(
                                 "IP_ADDRESS", value, self.__name__, event
                             )
                             self.notifyListeners(evt)
 
                             # Promote the unresolved name to resolved
-                            evt = self.sf.SpiderFootEvent(
+                            evt = SpiderFootEvent(
                                 "INTERNET_NAME", data, self.__name__, event
                             )
                             self.notifyListeners(evt)
 
                         elif rtype == "AAAA" and value not in self.results:
                             self.results[value] = True
-                            evt = self.sf.SpiderFootEvent(
+                            evt = SpiderFootEvent(
                                 "IPV6_ADDRESS", value, self.__name__, event
                             )
                             self.notifyListeners(evt)

@@ -168,7 +168,7 @@ class sfp_stackoverflow(SpiderFootAsyncPlugin):
             return ips
 
         for m in matches:
-            if self.sf.validIP(m) and not self.sf.isValidLocalOrLoopbackIP(m):
+            if self.sf.validIP(m) and not self.sf.isValidLocalOrLoopbackIp(m):
                 ips.add(m)
 
         return list(set(ips))
@@ -183,7 +183,7 @@ class sfp_stackoverflow(SpiderFootAsyncPlugin):
             return ips
 
         for m in matches:
-            if self.sf.validIP6(m) and not self.sf.isValidLocalOrLoopbackIP(m):
+            if self.sf.validIP6(m) and not self.sf.isValidLocalOrLoopbackIp(m):
                 ips.add(m)
 
         return list(set(ips))
