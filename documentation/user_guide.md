@@ -173,7 +173,7 @@ curl -X POST http://localhost:8001/api/v1/scans \
 
 - **Workspace management, multi-target scanning, correlation, CTI reports, and automation:**
   - See [Quick Start](quickstart.md) and [Developer Guide](developer_guide.md) for scripting, batch operations, and CI/CD integration.
-  - Use `sfworkflow.py` for advanced workspace and scan management.
+  - Use the `spiderfoot-cli` workspace commands for advanced workspace and scan management.
 
 ---
 
@@ -233,7 +233,7 @@ SpiderFoot v6.0.1 provides enhanced result analysis and interpretation:
 
 ## Automation & Integration
 
-- Use CLI and `sfworkflow.py` for scripting, batch scans, and automation
+- Use CLI and the `spiderfoot-cli` workspace commands for scripting, batch scans, and automation
 - Integrate with CI/CD (see examples in the old CLI guide)
 - Use environment variables for configuration and API keys
 

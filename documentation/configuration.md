@@ -247,7 +247,7 @@ Validate your security configuration:
 
 ```bash
 cd spiderfoot
-python security_validator.py /path/to/spiderfoot
+# Security config is validated automatically at startup (spiderfoot/security/startup_check.py)
 ```
 
 This will check:

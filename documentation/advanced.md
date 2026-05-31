@@ -65,7 +65,7 @@ SpiderFoot includes a comprehensive security validator:
 
 ```bash
 cd spiderfoot
-python security_validator.py /path/to/spiderfoot
+# Security config is validated automatically at startup (spiderfoot/security/startup_check.py)
 ```
 
 This validates all security components and provides a detailed security report.

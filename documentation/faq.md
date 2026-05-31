@@ -22,7 +22,7 @@ A: Example:
   -d '{"target": "example.com", "modules": ["sfp_dnsresolve", "sfp_ssl"]}'`
 
 **Q: Can I run SpiderFoot in Docker?**  
-A: Yes! See the [Docker Deployment Guide](../docs/docker_deployment.md) for details. Docker is recommended for easy setup and isolation.
+A: Yes! See the [Docker Deployment Guide](docker_deployment.md) for details. Docker is recommended for easy setup and isolation.
 
 **Q: How do I update SpiderFoot?**  
 A: Pull the latest code from GitHub and reinstall dependencies as needed. For Docker, pull the latest image and recreate your container.
@@ -31,7 +31,7 @@ A: Pull the latest code from GitHub and reinstall dependencies as needed. For Do
 A: Logs are stored in the `logs/` directory by default. For Docker, use `docker logs <container>`.
 
 **Q: How do I reset my admin password?**  
-A: Stop SpiderFoot, delete the `spiderfoot.db` file, and restart. You will be prompted to create a new admin account.  
+A: Stop SpiderFoot, reset the admin credentials via the `SF_ADMIN_USERNAME`/`SF_ADMIN_PASSWORD` environment variables and restart the stack. You will be prompted to create a new admin account.  
 **Warning:** This deletes all data, including scan results and settings.
 
 **Q: Where can I get more help?**  
@@ -68,7 +68,7 @@ A:
 
 **Q: How do I back up my data?**  
 A:  
-- Back up the `spiderfoot.db` file and the `logs/` directory.
+- Use `pg_dump` to back up the PostgreSQL database; stored artefacts live in MinIO.
 - For Docker, use `docker cp` to copy files from the container.
 
 ---

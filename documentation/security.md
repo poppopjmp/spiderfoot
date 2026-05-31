@@ -39,7 +39,7 @@ graph TD
 
 The unified security middleware integrates all security components and provides:
 
-- **CherryPy/FastAPI Integration:** Seamless web and API protection
+- **FastAPI Integration:** Seamless web and API protection
 - **Request Processing:** CSRF, input validation, rate limiting
 - **Response Security:** Security headers, content sanitization
 - **Performance Monitoring:** Security operation metrics
@@ -253,7 +253,7 @@ SpiderFoot includes a comprehensive security validator:
 
 ```bash
 cd spiderfoot
-python security_validator.py /path/to/spiderfoot
+# Security config is validated automatically at startup (spiderfoot/security/startup_check.py)
 ```
 
 **Validation Features:**
@@ -305,7 +305,7 @@ from spiderfoot.security import SpiderFootSecurityMiddleware
 # Initialize security middleware
 security_middleware = SpiderFootSecurityMiddleware(config)
 
-# CherryPy integration is automatic
+# Middleware is wired into the FastAPI app
 ```
 
 ### API Integration
@@ -451,8 +451,8 @@ Security middleware adds minimal overhead:
 
 ### Security Resources
 
-- Security validation tool: `python security_validator.py`
-- Integration guide: `SECURITY_INTEGRATION_GUIDE.md`
+- Security validation tool: `# Security config is validated automatically at startup (spiderfoot/security/startup_check.py)`
+- Integration guide: `security_integration.md`
 - Validation summary: `SECURITY_VALIDATION_SUMMARY.md`
 
 ### Getting Help
@@ -500,7 +500,7 @@ Comprehensive input sanitization and validation system.
 - `sanitize_scan_input(target)` - Scan target validation
 - `validate_file_upload(filename, content)` - File upload validation
 
-### 4. Rate Limiting (`rate_limiting.py`)
+### 4. Rate Limiting (`rate_limiter.py`)
 
 Advanced rate limiting system for API and web endpoints.
 
@@ -540,7 +540,7 @@ Secure session management with Redis and memory backend support.
 - `invalidate_user_sessions(user_id)` - Invalidate all user sessions
 - `cleanup_expired_sessions()` - Remove expired sessions
 
-### 6. API Security (`api_security.py`)
+### 6. API Security (`api_auth.py`)
 
 Comprehensive API security including JWT tokens and API key management.
 
@@ -596,7 +596,7 @@ Comprehensive security event logging and monitoring system.
 - `log_unauthorized_access(endpoint, user_id, ip_address)` - Log unauthorized access
 - `log_rate_limit_exceeded(endpoint, limit_type, ip_address)` - Log rate limit violations
 
-### 8. Secure Configuration (`secure_config.py`)
+### 8. Secure Configuration (`config_encryption.py`)
 
 Enhanced secure configuration management with encryption and key rotation.
 
@@ -717,7 +717,7 @@ Use the security validator to test all security components:
 
 ```bash
 cd spiderfoot/spiderfoot
-python security_validator.py /path/to/spiderfoot
+# Security config is validated automatically at startup (spiderfoot/security/startup_check.py)
 ```
 
 ### Validation Results
@@ -757,7 +757,7 @@ The validator tests:
 
 ## Migration Guide
 
-For existing installations, see the [Security Integration Guide](SECURITY_INTEGRATION_GUIDE.md) for detailed migration steps.
+For existing installations, see the [Security Integration Guide](security_integration.md) for detailed migration steps.
 
 ## Performance Impact
 

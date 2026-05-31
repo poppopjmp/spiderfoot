@@ -12,7 +12,7 @@ First, verify that all security modules are properly installed:
 
 ```bash
 cd spiderfoot/spiderfoot
-python security_validator.py /path/to/spiderfoot
+# Security config is validated automatically at startup (spiderfoot/security/startup_check.py)
 ```
 
 Expected output:
@@ -303,7 +303,7 @@ Run comprehensive security tests:
 
 ```bash
 cd spiderfoot/spiderfoot
-python security_validator.py /path/to/spiderfoot --verbose
+# Security config is validated automatically at startup (spiderfoot/security/startup_check.py)
 ```
 
 ### Manual Testing

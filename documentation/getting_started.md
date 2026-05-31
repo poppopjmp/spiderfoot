@@ -116,7 +116,7 @@ security_logging_enabled = True
 Validate your security setup:
 ```bash
 cd spiderfoot
-python security_validator.py .
+# Security config is validated automatically at startup (spiderfoot/security/startup_check.py)
 ```
 
 ## Troubleshooting
