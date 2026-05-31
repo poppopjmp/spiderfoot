@@ -145,7 +145,6 @@ Below is a complete list of all documented modules. Click a module name to view 
 | [sfp_pastebin](modules/sfp_pastebin.md) | Searches Pastebin for leaks, credentials, and mentions. |
 | [sfp_performance_optimizer](modules/sfp_performance_optimizer.md) | Performance optimization with intelligent caching, rate limiting, and resource monitoring. |
 | [sfp_portscan_tcp](modules/sfp_portscan_tcp.md) | Performs TCP port scanning on the target host. |
-| [sfp_riskiq](modules/sfp_riskiq.md) | Integrates with RiskIQ (PassiveTotal) for passive DNS, SSL, and threat intelligence. |
 | [sfp_securitytrails](modules/sfp_securitytrails.md) | Integrates with SecurityTrails for passive DNS, WHOIS, and infrastructure data. |
 | [sfp_shodan](modules/sfp_shodan.md) | Queries Shodan for open ports, banners, vulnerabilities, and geolocation. |
 | [sfp_social](modules/sfp_social.md) | Searches social media platforms for mentions, profiles, and activity. |
