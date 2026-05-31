@@ -931,7 +931,7 @@ class SpiderFootWorkspace:
                     from spiderfoot import SpiderFoot
                     cfg = self.config.copy()
                     import multiprocessing as mp
-                    from sflib import startSpiderFootScanner
+                    from spiderfoot.scan.scanner import startSpiderFootScanner
                     lq = mp.Queue()
                     startSpiderFootScanner(
                         lq, scan_name, scan_id, target, target_type,

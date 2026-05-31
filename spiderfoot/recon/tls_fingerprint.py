@@ -218,7 +218,7 @@ class JA3Calculator:
         ]
 
         raw_string = ",".join(parts)
-        ja3_hash = hashlib.md5(raw_string.encode()).hexdigest()
+        ja3_hash = hashlib.md5(raw_string.encode(), usedforsecurity=False).hexdigest()
 
         return JA3Fingerprint(
             raw_string=raw_string,

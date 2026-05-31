@@ -315,7 +315,7 @@ def _get_collection_manager():
     global _collection_mgr
     if _collection_mgr is None:
         try:
-            from spiderfoot.correlations.vector_collection_manager import (
+            from spiderfoot.correlation.vector_collection_manager import (
                 get_collection_manager,
             )
             _collection_mgr = get_collection_manager()

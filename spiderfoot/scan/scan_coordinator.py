@@ -464,7 +464,7 @@ class ScanCoordinator:
             return candidates[idx]
 
         if self._strategy == DistributionStrategy.HASH_BASED:
-            h = int(hashlib.md5(work.target.encode()).hexdigest(), 16)
+            h = int(hashlib.md5(work.target.encode(), usedforsecurity=False).hexdigest(), 16)
             return candidates[h % len(candidates)]
 
         if self._strategy == DistributionStrategy.RANDOM:

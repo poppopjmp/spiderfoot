@@ -100,7 +100,7 @@ class TcpProbe(DependencyProbe):
 
     async def check(self) -> bool:
         """Check TCP connectivity to the configured host and port."""
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.settimeout(self.timeout)
@@ -125,7 +125,7 @@ class HttpProbe(DependencyProbe):
 
     async def check(self) -> bool:
         """Check that the HTTP endpoint returns a 2xx status."""
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         try:
             import urllib.request
             req = urllib.request.Request(self.url, method="GET")
@@ -150,7 +150,7 @@ class PostgresProbe(DependencyProbe):
         """Verify connectivity to the Postgres database."""
         if not self.dsn:
             return False
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         try:
             import psycopg2
             conn = await loop.run_in_executor(
@@ -177,7 +177,7 @@ class RedisProbe(DependencyProbe):
         """Verify connectivity to the Redis server."""
         if not self.url:
             return False
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         try:
             import redis
             r = redis.Redis.from_url(self.url, socket_timeout=5)
@@ -363,7 +363,7 @@ class StartupSequencer:
     def wait_for_ready_sync(self, timeout: float = 120.0) -> StartupResult:
         """Synchronous wrapper for wait_for_ready()."""
         try:
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
             if loop.is_running():
                 import concurrent.futures
                 with concurrent.futures.ThreadPoolExecutor(1) as pool:

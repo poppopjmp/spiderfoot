@@ -176,8 +176,8 @@ class EventManager:
 
     def scanResultEvent(
         self, instanceId: str, eventType: str = 'ALL',
-        srcModule: str = None, data: list = None,
-        sourceId: list = None, correlationId: str = None,
+        srcModule: str = None, data: "list | None" = None,
+        sourceId: "list | None" = None, correlationId: str = None,
         filterFp: bool = False,
     ) -> list:
         """Retrieve scan result events matching the given filters."""
@@ -221,8 +221,6 @@ class EventManager:
             else:
                 qry += f" AND c.source_event_hash = {self._ph}"
                 qvars.append(sourceId)
-        # Special case: include events where c.source_event_hash = 'ROOT'
-        qry += " AND (c.source_event_hash = 'ROOT' OR c.source_event_hash != 'ROOT')"
         qry += " ORDER BY c.data"
         with self.dbhLock:
             try:

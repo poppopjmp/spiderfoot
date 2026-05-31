@@ -245,7 +245,7 @@ def _index_scan_events_to_qdrant(scan_id: str) -> None:
         return
 
     try:
-        from spiderfoot.correlations.vector_collection_manager import get_collection_manager
+        from spiderfoot.correlation.vector_collection_manager import get_collection_manager
         from spiderfoot.ai.qdrant_client import VectorPoint
 
         mgr = get_collection_manager()

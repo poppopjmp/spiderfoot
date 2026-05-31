@@ -601,7 +601,7 @@ class DoHResolver:
         """
         start = time.time()
         # Simulate resolution with deterministic hash
-        h = hashlib.md5(f"{name}:{record_type}".encode()).hexdigest()
+        h = hashlib.md5(f"{name}:{record_type}".encode(), usedforsecurity=False).hexdigest()
 
         records: list[DNSRecord] = []
         if record_type.upper() == "A":
@@ -802,7 +802,7 @@ class DoTResolver:
             List of DNSRecord entries (simulated).
         """
         start = time.time()
-        h = hashlib.md5(f"{name}:{record_type}:dot".encode()).hexdigest()
+        h = hashlib.md5(f"{name}:{record_type}:dot".encode(), usedforsecurity=False).hexdigest()
 
         records: list[DNSRecord] = []
         if record_type.upper() == "A":

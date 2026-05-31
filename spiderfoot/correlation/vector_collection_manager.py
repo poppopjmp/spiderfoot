@@ -28,7 +28,7 @@ from spiderfoot.ai.qdrant_client import (
     VectorPoint, Filter, create_vector_store,
 )
 
-log = logging.getLogger("spiderfoot.correlations.vector_collection_manager")
+log = logging.getLogger("spiderfoot.correlation.vector_collection_manager")
 
 # Default vector dimensions for all-MiniLM-L6-v2
 DEFAULT_DIMENSIONS = 384
