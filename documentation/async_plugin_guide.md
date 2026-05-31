@@ -77,12 +77,13 @@ class sfp_example_async(SpiderFootAsyncPlugin):
         # Native async HTTP — no executor wrapping
         result = await self.async_fetch_url(f"https://api.example.com/lookup/{domain}")
         if result['code'] == "200":
-            self.produce_event(result['content'], "RAW_RIR_DATA", event)
+            # Emit events via sendEvent(eventType, eventData, parentEvent)
+            self.sendEvent("RAW_RIR_DATA", result['content'], event)
 
         # Native async DNS
         ips = await self.async_resolve_host(domain)
         for ip in ips:
-            self.produce_event(ip, "IP_ADDRESS", event)
+            self.sendEvent("IP_ADDRESS", ip, event)
 ```
 
 ### 2. Key Differences from Sync Modules
@@ -112,9 +113,15 @@ ipv6s = await self.async_resolve_host6(hostname)
 
 # Reverse DNS
 hostnames = await self.async_reverse_resolve(ip_address)
+```
 
-# DNS wildcard check
-is_wildcard = await self.async_check_dns_wildcard(domain)
+A DNS wildcard helper is available as a module-level function (not a plugin
+method):
+
+```python
+from spiderfoot.sflib.async_network import async_check_dns_wildcard
+
+is_wildcard = await async_check_dns_wildcard(domain)
 ```
 
 From `async_network` (lower-level):

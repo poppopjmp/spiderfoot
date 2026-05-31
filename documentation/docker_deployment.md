@@ -240,7 +240,7 @@ SpiderFoot v6.0.1 includes optimizations for heavy concurrency and large-scale p
 For horizontal scaling, increase replicas of stateless services:
 
 ```bash
-docker compose -f docker-compose.yml up -d --scale sf-api=3
+docker compose -f docker-compose.yml up -d --scale api=3
 ```
 
 ### Active Scan Worker Scaling
