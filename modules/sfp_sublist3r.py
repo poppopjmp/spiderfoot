@@ -97,6 +97,8 @@ class sfp_sublist3r(SpiderFootAsyncPlugin):
 
     def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
+        if self.errorState:
+            return
         query = str(event.data).lower()
 
         self.debug(f"Received event, {event.eventType}, from {event.module}")

@@ -53,6 +53,8 @@ class sfp_instagram(SpiderFootAsyncPlugin):
     def handleEvent(self, event: SpiderFootEvent) -> None:
         # Stub for Instagram monitoring logic
         """Handle an event received by this module."""
+        if self.errorState:
+            return
         pass
 
     def shutdown(self) -> None:

@@ -53,6 +53,8 @@ class sfp_whatsapp(SpiderFootAsyncPlugin):
     def handleEvent(self, event: SpiderFootEvent) -> None:
         # Stub for WhatsApp monitoring logic
         """Handle an event received by this module."""
+        if self.errorState:
+            return
         pass
 
     def shutdown(self) -> None:

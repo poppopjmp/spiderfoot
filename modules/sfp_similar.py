@@ -108,6 +108,8 @@ class sfp_similar(SpiderFootAsyncPlugin):
     # Search for similar sounding domains
     def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
+        if self.errorState:
+            return
         eventData = event.data
 
         dom = self.sf.domainKeyword(eventData, self.opts['_internettlds'])

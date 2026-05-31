@@ -71,6 +71,8 @@ class sfp_bnb(SpiderFootAsyncPlugin):
 
     def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
+        if self.errorState:
+            return
         self.debug(f"Received event: {event.eventType} from {event.module}")
         # Optionally filter by event_types (stub logic)
         allowed_types = [t.strip() for t in self.opts.get("event_types", "").split(",") if t.strip()]

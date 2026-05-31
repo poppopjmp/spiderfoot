@@ -185,6 +185,8 @@ class sfp_tool_phoneinfoga(SpiderFootAsyncPlugin):
 
     def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle PHONE_NUMBER events and query PhoneInfoga API."""
+        if self.errorState:
+            return
         eventData = event.data
         if eventData in self.results:
             return

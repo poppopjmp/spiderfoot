@@ -88,6 +88,8 @@ class sfp_dns_for_family(SpiderFootAsyncPlugin):
 
     def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
+        if self.errorState:
+            return
         eventName = event.eventType
         eventData = event.data
 

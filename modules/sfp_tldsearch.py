@@ -162,6 +162,8 @@ class sfp_tldsearch(SpiderFootAsyncPlugin):
     # Search for similar sounding domains
     def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
+        if self.errorState:
+            return
         eventData = event.data
 
         if eventData in self.results:

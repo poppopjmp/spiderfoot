@@ -165,6 +165,8 @@ class sfp_telegram(SpiderFootAsyncPlugin):
     def handleEvent(self, event: SpiderFootEvent) -> None:
         # This module is passive and does not process incoming events
         """Handle an event received by this module."""
+        if self.errorState:
+            return
         pass
 
     def finish(self) -> None:

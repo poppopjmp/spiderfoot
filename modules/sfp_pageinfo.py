@@ -75,6 +75,8 @@ class sfp_pageinfo(SpiderFootAsyncPlugin):
         # because the spidering module will always provide events with the
         # event.sourceEvent.data set to the URL of the source.
         """Handle an event received by this module."""
+        if self.errorState:
+            return
         if "sfp_spider" not in event.module:
             self.debug("Ignoring web content from " + event.module)
             return

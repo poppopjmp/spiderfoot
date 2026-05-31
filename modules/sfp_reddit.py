@@ -56,6 +56,8 @@ class sfp_reddit(SpiderFootAsyncPlugin):
     def handleEvent(self, event: SpiderFootEvent) -> None:
         # This is a stub. Actual implementation would use praw or similar.
         """Handle an event received by this module."""
+        if self.errorState:
+            return
         pass
 
     def shutdown(self) -> None:

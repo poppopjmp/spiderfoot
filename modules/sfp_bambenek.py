@@ -206,6 +206,8 @@ class sfp_bambenek(SpiderFootAsyncPlugin):
         Args:
             event (SpiderFootEvent): The event to handle.
         """
+        if self.errorState:
+            return
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

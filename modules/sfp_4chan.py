@@ -83,6 +83,8 @@ class sfp_4chan(SpiderFootAsyncPlugin):
         Handle the incoming event and monitor 4chan boards for new posts.
         :param event: SpiderFootEvent
         """
+        if self.errorState:
+            return
         boards = [b.strip() for b in self.opts.get("boards", "").split(",") if b.strip()]
         max_threads = int(self.opts.get("max_threads", 10))
         if not boards:
