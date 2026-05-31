@@ -81,7 +81,7 @@ pip install -r requirements.txt
 docker compose up -d
 ```
 
-Open [http://127.0.0.1:5001](http://127.0.0.1:5001) in your browser.
+Open [http://127.0.0.1:3000](http://127.0.0.1:3000) in your browser.
 
 ---
 

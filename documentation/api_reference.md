@@ -131,17 +131,17 @@ The REST API allows you to manage scans, retrieve results, and interact with Spi
 
 ```sh
 # Basic scan with new modules
-curl -X POST http://127.0.0.1:5001/api/scans \
+curl -X POST http://127.0.0.1:8001/api/scans \
   -H "Content-Type: application/json" \
   -d '{"target": "example.com", "type": "DOMAIN_NAME", "modules": ["sfp_dnsresolve", "sfp_ssl", "sfp_performance_optimizer"]}'
 
 # TikTok OSINT scan
-curl -X POST http://127.0.0.1:5001/api/scans \
+curl -X POST http://127.0.0.1:8001/api/scans \
   -H "Content-Type: application/json" \
   -d '{"target": "@username", "type": "SOCIAL_MEDIA", "modules": ["sfp_tiktok_osint", "sfp_advanced_correlation"]}'
 
 # Blockchain investigation
-curl -X POST http://127.0.0.1:5001/api/scans \
+curl -X POST http://127.0.0.1:8001/api/scans \
   -H "Content-Type: application/json" \
   -d '{"target": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa", "type": "BITCOIN_ADDRESS", "modules": ["sfp_blockchain_analytics"]}'
 ```

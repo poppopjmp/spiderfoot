@@ -3,6 +3,19 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [6.0.1] — 2026-05-31
+
+### Added
+- **Containerized microservices architecture**: Docker Compose split into domain service files with service-integration support for running the scanner, API, agents, and workers as independent services.
+- **Helm chart**: Kubernetes deployment chart (`helm/spiderfoot`) plus expanded per-module documentation.
+- **Modular LLM analysis agents**: refactored AI analysis agents with an IaC advisor agent (`spiderfoot/agents/iac_advisor.py`) and structured-output integration.
+- **E2E testing framework**: end-to-end test scaffolding, Docker Compose core-services profile, and supporting automation scripts.
+- **CI**: Codecov coverage upload on every test run.
+
+### Fixed
+- Codebase audit & alignment pass (see `AUDIT.md`): corrected broken internal imports (`spiderfoot.correlations` → `spiderfoot.correlation`, `sflib` scanner import), removed a tautological SQL clause, made non-security `hashlib.md5` calls FIPS-safe, switched async handlers to `asyncio.get_running_loop()`, fixed a case-inverted GTM analytics filter, added a missing HTTP timeout in `sfp_zoomeye`, closed a leaked file handle in `sfp_tool_cmseek`, and removed an unused `pickle` import.
+- Documentation alignment: removed stale `sfwebui.py` / port `:5001` references, corrected repository URLs and version strings, and fixed the malformed README header image.
+
 ## [6.0.0] — 2026-02-21
 
 ### Added (Batches 40–45)

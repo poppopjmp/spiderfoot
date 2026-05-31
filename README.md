@@ -1,5 +1,5 @@
 <p align="center">
-<img src="[https://raw.githubusercontent.com/poppopjmp/spiderfoot/master/spiderfoot/documentation/images/spiderfoot-header.png](https://github.com/poppopjmp/spiderfoot/blob/42bf4d7be0014a9194e512860fb3d02507de5ad9/documentation/images/spiderfoot-wide.png)" />
+<img src="https://raw.githubusercontent.com/poppopjmp/spiderfoot/master/documentation/images/spiderfoot-wide.png" />
 </p>
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/poppopjmp/spiderfoot/master/LICENSE)
@@ -922,7 +922,7 @@ The UI applies **emotional design principles** for a richer developer experience
 
 ## Frontend Testing
 
-The React frontend includes **282 tests** across 27 test files, powered by Vitest 3 and Testing Library:
+The React frontend includes **300 tests** across 27 test files, powered by Vitest 3 and Testing Library:
 
 | Suite | Tests | Coverage |
 |-------|-------|----------|
@@ -1004,7 +1004,7 @@ frontend/                 # React SPA (TypeScript + Vite + Tailwind)
 ├── src/pages/            # 14 pages (Dashboard, Scans, ScanDetail, Schedules, ...)
 ├── src/hooks/            # Custom hooks (useScanProgress SSE)
 ├── src/lib/              # API client, auth, notifications store
-├── src/__tests__/        # 270 tests — Vitest + Testing Library
+├── src/__tests__/        # 300 tests — Vitest + Testing Library
 └── vite.config.ts        # Build config
 infra/                    # Infrastructure configs
 ├── grafana/              # Dashboards + datasource provisioning
@@ -1026,7 +1026,7 @@ helm/                     # Kubernetes Helm chart
 pip install -r requirements.txt
 pytest --tb=short -q
 
-# Frontend tests (282 tests, 27 files)
+# Frontend tests (300 tests, 27 files)
 cd frontend && npx vitest run
 
 # Go CLI tests
@@ -1037,9 +1037,10 @@ cd cli && go test ./...
 
 ```bash
 cat VERSION                            # Check current version
-python update_version.py --set 5.247.0 # Update all references
-python update_version.py --check       # Validate consistency
 ```
+
+The single source of truth for the version is the `VERSION` file (read at build
+time by the Go CLI via `-ldflags` and surfaced by the API/frontend).
 
 ---
 
@@ -1057,5 +1058,5 @@ SpiderFoot is licensed under the [MIT License](LICENSE).
 
 ---
 
-*Actively developed since 2012 — 309 modules, 38+ API routers, 95 correlation rules, 23-service Docker deployment, Go CLI, 282 frontend tests, comprehensive security hardening (9.0+ score), AI agents, vector search, and full observability.*
+*Actively developed since 2012 — 309 modules, 38+ API routers, 95 correlation rules, 23-service Docker deployment, Go CLI, 300 frontend tests, comprehensive security hardening (9.0+ score), AI agents, vector search, and full observability.*
 

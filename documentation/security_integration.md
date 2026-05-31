@@ -40,7 +40,7 @@ config = {
 Start SpiderFoot normally - security middleware will automatically activate:
 
 ```bash
-python sfwebui.py
+uvicorn sfapi:app --host 127.0.0.1 --port 8001
 ```
 
 ## Detailed Integration Steps
@@ -225,7 +225,7 @@ headers = {
     'Content-Type': 'application/json'
 }
 
-response = requests.get('http://localhost:5001/api/scanlist', headers=headers)
+response = requests.get('http://localhost:8001/api/scanlist', headers=headers)
 ```
 
 ### Step 6: Security Logging Configuration
@@ -338,7 +338,7 @@ Test security components under load:
 npm install -g artillery
 
 # Run load test
-artillery quick --count 50 --num 10 http://localhost:5001/api/scanlist
+artillery quick --count 50 --num 10 http://localhost:8001/api/scanlist
 ```
 
 ## Troubleshooting

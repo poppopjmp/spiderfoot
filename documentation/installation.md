@@ -52,7 +52,7 @@ For full functionality of enhanced modules:
    docker compose up -d
    ```
 
-   - Open [http://127.0.0.1:5001](http://127.0.0.1:5001) in your browser.
+   - Open [http://127.0.0.1:3000](http://127.0.0.1:3000) in your browser.
    - The default admin account will be created on first launch. Set a strong password.
    - You can change the listening address and port as needed.
 

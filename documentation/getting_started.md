@@ -38,7 +38,7 @@ pip install -r requirements.txt
 docker compose up -d
 ```
 
-Access at [http://127.0.0.1:5001](http://127.0.0.1:5001).
+Access at [http://127.0.0.1:3000](http://127.0.0.1:3000).
 
 ## 2. Launching the Web Interface
 

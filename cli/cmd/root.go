@@ -11,7 +11,7 @@ import (
 	"github.com/spiderfoot/spiderfoot-cli/internal/client"
 )
 
-var version = "6.0.0"
+var version = "6.0.1"
 
 const defaultAddr = "http://127.0.0.1:8001"
 

@@ -29,15 +29,16 @@ Many modules require API keys for external services. Configure these in the web 
 
 ## Configuration File
 
-Advanced options can be set in `spiderfoot.conf` (or `spiderfoot.cfg`):
+> **v6 note:** SpiderFoot is primarily configured through environment variables
+> (see [`.env.example`](../.env.example) at the repository root). The API server
+> binds to port `8001` and the frontend to `3000` by default; persistence uses
+> PostgreSQL (there is no SQLite database file in v6). The illustrative block
+> below documents the available option *names*.
 
 ```ini
-[webui]
+[api]
 host = 127.0.0.1
-port = 5001
-
-[database]
-path = spiderfoot.db
+port = 8001
 
 [security]
 # CSRF Protection

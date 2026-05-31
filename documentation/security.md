@@ -299,7 +299,7 @@ python security_validator.py /path/to/spiderfoot
 The security middleware is automatically integrated into the SpiderFoot web UI:
 
 ```python
-# In sfwebui.py
+# In sfapi.py (FastAPI entrypoint)
 from spiderfoot.security import SpiderFootSecurityMiddleware
 
 # Initialize security middleware
@@ -618,7 +618,7 @@ Enhanced secure configuration management with encryption and key rotation.
 
 ## Integration Points
 
-### Web Interface Integration (`sfwebui.py`)
+### Web Interface Integration (`sfapi.py`)
 
 The security middleware is integrated into the web interface:
 
