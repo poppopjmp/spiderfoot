@@ -7,12 +7,34 @@ the auth service, API routes, and middleware.
 """
 from __future__ import annotations
 
+import logging
 import os
 import secrets
 import time
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Optional
+
+log = logging.getLogger("spiderfoot.auth.models")
+
+
+def _resolve_jwt_secret() -> str:
+    """Return the configured JWT secret, or an ephemeral one with a loud warning.
+
+    A per-process random secret invalidates all sessions on restart and — more
+    importantly in the microservice deployment — means tokens minted by one API
+    replica are rejected by every other replica. Production must set
+    ``SF_JWT_SECRET``.
+    """
+    secret = os.environ.get("SF_JWT_SECRET", "")
+    if secret:
+        return secret
+    log.critical(
+        "SF_JWT_SECRET is not set — using an EPHEMERAL per-process secret. JWTs "
+        "will not survive a restart and will not validate across multiple API "
+        "replicas. Set SF_JWT_SECRET for any non-local deployment."
+    )
+    return secrets.token_hex(32)
 
 
 class AuthMethod(str, Enum):
@@ -191,9 +213,7 @@ class SSOProvider:
 class AuthConfig:
     """Authentication configuration sourced from environment variables."""
     # JWT
-    jwt_secret: str = field(default_factory=lambda: os.environ.get(
-        "SF_JWT_SECRET", secrets.token_hex(32)
-    ))
+    jwt_secret: str = field(default_factory=_resolve_jwt_secret)
     jwt_algorithm: str = "HS256"
     jwt_expiry_hours: int = int(os.environ.get("SF_JWT_EXPIRY_HOURS", "24"))
     jwt_refresh_expiry_days: int = int(os.environ.get("SF_JWT_REFRESH_EXPIRY_DAYS", "30"))

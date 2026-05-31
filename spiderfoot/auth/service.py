@@ -860,22 +860,26 @@ class AuthService:
     )
 
     def _row_to_sso_provider(self, row: tuple) -> SSOProvider:
+        # Map by column name derived from _SSO_COLS (the exact SELECT order),
+        # rather than hardcoded positional indices, so the mapping stays correct
+        # if the column list is ever reordered or extended.
+        cols = [c.strip() for c in self._SSO_COLS.replace("\n", " ").split(",")]
+        m = dict(zip(cols, row))
         return SSOProvider(
-            id=row[0], name=row[1], protocol=row[2], enabled=bool(row[3]),
-            client_id=row[4], client_secret=row[5],
-            authorization_url=row[6], token_url=row[7],
-            userinfo_url=row[8], jwks_uri=row[9], scopes=row[10],
-            idp_entity_id=row[11], idp_sso_url=row[12], idp_slo_url=row[13],
-            idp_certificate=row[14], sp_entity_id=row[15], sp_acs_url=row[16],
-            ldap_url=row[17], ldap_bind_dn=row[18], ldap_bind_password=row[19],
-            ldap_base_dn=row[20], ldap_user_filter=row[21],
-            ldap_group_filter=row[22], ldap_tls=bool(row[23]),
-            default_role=row[24], allowed_domains=row[25],
-            auto_create_users=bool(row[26]), attribute_mapping=row[27],
-            group_attribute=row[28] if len(row) > 30 else "groups",
-            admin_group=row[29] if len(row) > 30 else "",
-            created_at=row[30] if len(row) > 30 else row[28],
-            updated_at=row[31] if len(row) > 30 else row[29],
+            id=m["id"], name=m["name"], protocol=m["protocol"], enabled=bool(m["enabled"]),
+            client_id=m["client_id"], client_secret=m["client_secret"],
+            authorization_url=m["authorization_url"], token_url=m["token_url"],
+            userinfo_url=m["userinfo_url"], jwks_uri=m["jwks_uri"], scopes=m["scopes"],
+            idp_entity_id=m["idp_entity_id"], idp_sso_url=m["idp_sso_url"], idp_slo_url=m["idp_slo_url"],
+            idp_certificate=m["idp_certificate"], sp_entity_id=m["sp_entity_id"], sp_acs_url=m["sp_acs_url"],
+            ldap_url=m["ldap_url"], ldap_bind_dn=m["ldap_bind_dn"], ldap_bind_password=m["ldap_bind_password"],
+            ldap_base_dn=m["ldap_base_dn"], ldap_user_filter=m["ldap_user_filter"],
+            ldap_group_filter=m["ldap_group_filter"], ldap_tls=bool(m["ldap_tls"]),
+            default_role=m["default_role"], allowed_domains=m["allowed_domains"],
+            auto_create_users=bool(m["auto_create_users"]), attribute_mapping=m["attribute_mapping"],
+            group_attribute=m.get("group_attribute", "groups"),
+            admin_group=m.get("admin_group", ""),
+            created_at=m["created_at"], updated_at=m["updated_at"],
         )
 
     def list_sso_providers(self) -> list[SSOProvider]:
@@ -942,9 +946,22 @@ class AuthService:
         return self.get_sso_provider(provider_id)
 
     def update_sso_provider(self, provider_id: str, updates: dict[str, Any]) -> SSOProvider | None:
-        """Update an SSO provider."""
-        blocked = {"id", "created_at"}
-        valid = {k: v for k, v in updates.items() if k not in blocked}
+        """Update an SSO provider.
+
+        Only the explicitly-allowed columns below may be updated. Using an
+        allowlist (rather than a blocklist) prevents a caller from injecting
+        arbitrary ``tbl_sso_providers`` column names via the request body.
+        """
+        allowed = {
+            "name", "protocol", "enabled", "client_id", "client_secret",
+            "authorization_url", "token_url", "userinfo_url", "jwks_uri", "scopes",
+            "idp_entity_id", "idp_sso_url", "idp_slo_url", "idp_certificate",
+            "sp_entity_id", "sp_acs_url", "ldap_url", "ldap_bind_dn",
+            "ldap_bind_password", "ldap_base_dn", "ldap_user_filter",
+            "ldap_group_filter", "ldap_tls", "default_role", "allowed_domains",
+            "auto_create_users", "attribute_mapping", "group_attribute", "admin_group",
+        }
+        valid = {k: v for k, v in updates.items() if k in allowed}
         if not valid:
             return self.get_sso_provider(provider_id)
 

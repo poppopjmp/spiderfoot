@@ -21,7 +21,7 @@ from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Query
 from fastapi.responses import RedirectResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from spiderfoot.auth.rbac import UserContext, require_permission
 
@@ -41,7 +41,10 @@ def _get_redis():
         return _redis_client
     redis_url = os.environ.get("SF_REDIS_URL", "")
     if not redis_url:
-        log.warning("SF_REDIS_URL not set — OAuth2 state validation disabled")
+        log.critical(
+            "SF_REDIS_URL not set — OAuth2/OIDC CSRF state validation is DISABLED. "
+            "Do not enable SSO logins in production without a Redis state store."
+        )
         return None
     try:
         import redis
@@ -152,6 +155,46 @@ class SSOProviderRequest(BaseModel):
     attribute_mapping: str = "{}"
     group_attribute: str = "groups"
     admin_group: str = ""
+
+
+class UpdateSSOProviderRequest(BaseModel):
+    """Partial update for an SSO provider.
+
+    Every field is optional; only fields explicitly supplied are applied.
+    ``extra="forbid"`` rejects unknown keys so a caller cannot smuggle
+    arbitrary column names through to the SET clause.
+    """
+    model_config = ConfigDict(extra="forbid")
+
+    name: str | None = Field(None, min_length=1, max_length=255)
+    protocol: str | None = Field(None, pattern="^(oauth2|saml|ldap)$")
+    enabled: bool | None = None
+    client_id: str | None = None
+    client_secret: str | None = None
+    authorization_url: str | None = None
+    token_url: str | None = None
+    userinfo_url: str | None = None
+    jwks_uri: str | None = None
+    scopes: str | None = None
+    idp_entity_id: str | None = None
+    idp_sso_url: str | None = None
+    idp_slo_url: str | None = None
+    idp_certificate: str | None = None
+    sp_entity_id: str | None = None
+    sp_acs_url: str | None = None
+    ldap_url: str | None = None
+    ldap_bind_dn: str | None = None
+    ldap_bind_password: str | None = None
+    ldap_base_dn: str | None = None
+    ldap_user_filter: str | None = None
+    ldap_group_filter: str | None = None
+    ldap_tls: bool | None = None
+    default_role: str | None = None
+    allowed_domains: str | None = None
+    auto_create_users: bool | None = None
+    attribute_mapping: str | None = None
+    group_attribute: str | None = None
+    admin_group: str | None = None
 
 
 class CreateApiKeyRequest(BaseModel):
@@ -698,12 +741,12 @@ async def get_sso_provider(
 @router.patch("/sso/providers/{provider_id}")
 async def update_sso_provider(
     provider_id: str,
-    body: dict,
+    body: UpdateSSOProviderRequest,
     user: UserContext = Depends(require_permission("config:write")),
 ):
     """Update an SSO provider (admin only)."""
     svc = _get_auth_svc()
-    provider = svc.update_sso_provider(provider_id, body)
+    provider = svc.update_sso_provider(provider_id, body.model_dump(exclude_unset=True))
     if not provider:
         raise HTTPException(status_code=404, detail="Provider not found")
     return provider.to_dict(include_secrets=True)
