@@ -80,10 +80,10 @@ class sfp_mattermost(SpiderFootAsyncPlugin):
         return ["MATTERMOST_MESSAGE"]
 
     def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         if self.errorState:
             return
 
-        """Handle an event received by this module."""
         self.debug(f"[handleEvent] Received event: {event.eventType}")
         allowed_types = [t.strip() for t in self.opts.get("event_types", "").split(",") if t.strip()]
         if event.eventType.lower() not in [t.lower() for t in allowed_types]:

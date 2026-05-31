@@ -70,12 +70,12 @@ class sfp_discord(SpiderFootAsyncPlugin):
         return ["DISCORD_MESSAGE"]
 
     def handleEvent(self, event: SpiderFootEvent) -> None:
-        if self.errorState:
-            return
-
         """
         Handle event: fetch Discord messages for each channel and emit DISCORD_MESSAGE events.
         """
+        if self.errorState:
+            return
+
         self.debug(f"[handleEvent] Received event: {event.eventType}")
         bot_token = self.opts.get("bot_token")
         channel_ids = [cid.strip() for cid in self.opts.get("channel_ids", "").split(",") if cid.strip()]

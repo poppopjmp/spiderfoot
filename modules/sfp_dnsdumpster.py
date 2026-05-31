@@ -136,10 +136,10 @@ class sfp_dnsdumpster(SpiderFootAsyncPlugin):
         self.notifyListeners(e)
 
     def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         if self.errorState:
             return
 
-        """Handle an event received by this module."""
         query = str(event.data).lower()
 
         self.debug(f"Received event, {event.eventType}, from {event.module}")
