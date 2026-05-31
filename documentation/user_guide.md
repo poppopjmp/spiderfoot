@@ -124,10 +124,10 @@ SpiderFoot v6.0.1 includes 309 modules organized into the following categories:
 
 ### Core Investigation Modules
 - **DNS/Network**: sfp_dnsresolve, sfp_whois, sfp_ssl, sfp_portscan_tcp, sfp_banner
-- **Threat Intelligence**: sfp_threatcrowd, sfp_virustotal, sfp_alienvault, sfp_malware
+- **Threat Intelligence**: sfp_threatcrowd, sfp_virustotal, sfp_alienvault, sfp_malwarepatrol
 - **Search Engines**: sfp_google, sfp_bing, sfp_duckduckgo, sfp_yandex
 - **Social Media**: sfp_twitter, sfp_github, sfp_linkedin, sfp_instagram, **sfp_tiktok_osint**
-- **Data Breach**: sfp_haveibeen, sfp_hunter, sfp_emailrep
+- **Data Breach**: sfp_haveibeenpwned, sfp_hunter, sfp_emailrep
 
 ### Additional Investigation Modules
 - **Blockchain Analytics**: sfp_blockchain_analytics (Bitcoin, Ethereum, Litecoin analysis)
@@ -159,7 +159,7 @@ curl -X POST http://localhost:8001/api/v1/scans \
 # Email investigation with enhanced correlation
 curl -X POST http://localhost:8001/api/v1/scans \
   -H "Content-Type: application/json" \
-  -d '{"target": "user@example.com", "modules": ["sfp_hunter", "sfp_haveibeen", "sfp_emailrep", "sfp_advanced_correlation"]}'
+  -d '{"target": "user@example.com", "modules": ["sfp_hunter", "sfp_haveibeenpwned", "sfp_emailrep", "sfp_advanced_correlation"]}'
 
 # Multi-target investigation with performance optimization
 curl -X POST http://localhost:8001/api/v1/scans \

@@ -21,7 +21,7 @@ SpiderFoot v6.0.0 uses [`@hey-api/openapi-ts`](https://heyapi.dev/) to generate 
 frontend/src/api/generated/
 ├── index.ts          # Barrel export
 ├── types.gen.ts      # Request/response TypeScript interfaces
-├── services.gen.ts   # API method implementations
+├── sdk.gen.ts   # API method implementations
 └── core/
     ├── client.ts     # Fetch client configuration
     └── request.ts    # Request builder
@@ -174,7 +174,7 @@ console.log(scan.status); // Autocomplete: RUNNING | COMPLETED | FAILED | ABORTE
 1. Add the FastAPI route in `spiderfoot/api/routers/`
 2. Restart the API server
 3. Run `npm run generate:api`
-4. The new method and types appear automatically in `services.gen.ts` and `types.gen.ts`
+4. The new method and types appear automatically in `sdk.gen.ts` and `types.gen.ts`
 
 ### Post-Processing Operation Names
 

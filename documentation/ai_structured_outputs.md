@@ -79,13 +79,13 @@ print(result.findings[0].title)   # str — fully typed
 print(result.recommendations)     # list[Recommendation]
 ```
 
-### With `AgentBase`
+### With `BaseAgent`
 
 ```python
-from spiderfoot.agents.base import AgentBase
+from spiderfoot.agents.base import BaseAgent
 from spiderfoot.ai.schemas import ExecutiveSummaryOutput
 
-class ReportAgent(AgentBase):
+class ReportAgent(BaseAgent):
     async def generate_summary(self, scan_data: dict) -> ExecutiveSummaryOutput:
         messages = [
             {"role": "system", "content": "Generate an executive summary."},
