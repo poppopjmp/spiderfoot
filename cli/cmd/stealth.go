@@ -45,7 +45,7 @@ var stealthStatsCmd = &cobra.Command{
 var stealthGlobalCmd = &cobra.Command{
 	Use:   "global",
 	Short: "Show global stealth statistics",
-	RunE:  simpleGet("/stealth-stats"),
+	RunE:  simpleGet("/api/stealth-stats"),
 }
 
 var stealthLevelsCmd = &cobra.Command{

@@ -100,13 +100,13 @@ var modulesStatsCmd = &cobra.Command{
 var modulesCategoriesCmd = &cobra.Command{
 	Use:   "categories",
 	Short: "List module categories",
-	RunE:  simpleGet("/api/data/categories"),
+	RunE:  simpleGet("/api/data/module-categories"),
 }
 
 var modulesTypesCmd = &cobra.Command{
 	Use:   "types",
 	Short: "List event types produced by modules",
-	RunE:  simpleGet("/api/data/types"),
+	RunE:  simpleGet("/api/data/module-types"),
 }
 
 var modulesEnableCmd = &cobra.Command{

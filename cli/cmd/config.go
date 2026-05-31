@@ -83,7 +83,7 @@ var configRemoteShowCmd = &cobra.Command{
 var configRemoteModulesCmd = &cobra.Command{
 	Use:   "modules",
 	Short: "Show module configuration",
-	RunE:  simpleGet("/api/config/modules"),
+	RunE:  simpleGet("/api/modules"),
 }
 
 var configRemoteKeysCmd = &cobra.Command{
