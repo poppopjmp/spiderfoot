@@ -13,6 +13,62 @@ change (too large, too risky, or requiring product decisions).
 
 ---
 
+## Second pass — deferred items tackled (with verification)
+
+A follow-up pass worked through the deferred backlog. Each change was verified
+(unit tests / tsc / vitest / go build+vet+test / import smokes) before commit.
+
+### Fixed
+- **Core auth (security):** `update_sso_provider` blocklist → explicit column
+  allowlist; PATCH `/sso/providers/{id}` now uses a typed `UpdateSSOProviderRequest`
+  (`extra="forbid"`); JWT secret routed through `_resolve_jwt_secret()` (CRITICAL
+  log when `SF_JWT_SECRET` unset); OAuth2-CSRF "Redis missing" log → CRITICAL;
+  `_row_to_sso_provider` maps by column name (no magic indices).
+- **Core db:** consolidated the two event-type catalogs — 95 entries in
+  `db_core.py` aligned to the canonical `db/__init__.py` catalog (0 conflicts;
+  zero runtime change since `__init__` is upserted last); added opt-in
+  `limit`/`offset` to `scanResultEvent`.
+- **Modules:** `json.loads` guards (6 modules); relocated 20 misplaced
+  `handleEvent` docstrings; added top-of-`handleEvent` `errorState` guard to 97
+  modules (storage modules excluded). Full module suite: 1372 passed, 0 failures.
+- **CLI:** URL-escape query params (scan search/summary, report list), validate
+  `compare` scan IDs, read password from `SF_PASSWORD`.
+- **Frontend:** `RequirePermission` gated on `isLoading`; keyboard-accessible IaC
+  toggles; fixed a version-assertion test regression from the 6.0.1 bump.
+- **Infra:** Vector image tag aligned (helm ↔ compose); `sf-enrichment` MinIO
+  bucket pre-created.
+
+### Investigated — verified NON-issues (no change needed)
+- **`sfp_tool_phoneinfoga` "7 unregistered events":** all 7 are already in the
+  canonical `db/__init__.py` catalog (the agent only checked `db_core.py`).
+- **Webhook SSRF on DNS failure:** the dispatcher already re-resolves and
+  **fail-closes** at delivery time (`_is_ssrf_target` returns True on
+  `gaierror`); registration leniency is harmless.
+- **CI `spiderfoot-webui` references:** the helm chart still ships a
+  `webui-deployment.yaml`, so `deploy.yml`'s rollout check is correct — not a
+  stale reference.
+- **`sf-enrichment` bucket "missing":** the enrichment pipeline auto-creates it
+  on first use (still added to `minio-init` for consistency).
+- **`tsconfig "types":["node"]`, frontend `workspaceApi.update`, `refreshPromise`:**
+  re-confirmed correct (tsc clean with deps installed; backend reads query
+  params; `finally` resets the promise).
+- **`sfp_tool_phoneinfoga` `json.loads`:** already inside a `try/except`.
+
+### Deferred (require product decision / infra / large refactor)
+- JWT logout revocation (Redis `jti` denylist) — needs Redis + token-lifecycle design.
+- Frontend tokens `localStorage` → `sessionStorage` — auth-persistence UX
+  tradeoff (sessionStorage is equally XSS-readable; only narrows the window).
+- `test_sfp_abusech` "live HTTP": it's an **integration** test (not in the unit
+  CI path) and the module fetches via `self.fetch_url`, not `requests.get`, so a
+  correct fix is a fetch_url-based rewrite — deferred.
+- gRPC fixed test ports → `port=0`: only matters under pytest-xdist, which isn't
+  used here; needs a coordinated server/test change.
+- Frontend generated-SDK consolidation; eliminating 916 broad `except Exception`;
+  implementing/removing the 6 stubbed social modules; `verify=False` on clearnet
+  module requests; test coverage for the 84 untested modules / `spiderfoot/tasks/`.
+
+---
+
 ## Segment 1 — Core (`spiderfoot/`, 339 files + `sfapi.py`)
 
 ### Fixed
