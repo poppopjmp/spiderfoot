@@ -16,9 +16,6 @@ Below are some of the key built-in rules included with SpiderFoot. Each rule is 
 | Data from Base64 | Finds interesting data in base64-encoded content | [data_from_base64.yaml](../../../../correlations/data_from_base64.yaml) |
 | Data from Document Meta | Finds interesting data in document/image metadata | [data_from_docmeta.yaml](../../../../correlations/data_from_docmeta.yaml) |
 | Internal Service Exposed | Finds internal services exposed to the Internet | [internal_service_exposed.yaml](../../../../correlations/internal_service_exposed.yaml) |
-| Exposed Services (Fofa) | Finds services exposed using Fofa | [fofa_exposed_services.yaml](../../../../correlations/fofa_exposed_services.yaml) |
-| Exposed Contacts (RocketReach) | Finds exposed contacts using RocketReach | [rocketreach_exposed_contacts.yaml](../../../../correlations/rocketreach_exposed_contacts.yaml) |
-| Exposed Services (ZoomEye) | Finds services exposed using ZoomEye | [zoomeye_exposed_services.yaml](../../../../correlations/zoomeye_exposed_services.yaml) |
 
 For a full list, see the `/correlations` folder in your installation.
 

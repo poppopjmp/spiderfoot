@@ -1,4 +1,4 @@
-# sfp_hibp
+# sfp_haveibeenpwned
 
 **Purpose:**
 Checks HaveIBeenPwned for breaches and exposures related to the target email or domain. Useful for identifying compromised accounts and risk assessment.
@@ -15,7 +15,7 @@ Checks HaveIBeenPwned for breaches and exposures related to the target email or 
 ```sh
 curl -X POST http://localhost:8001/api/v1/scans \
   -H "Content-Type: application/json" \
-  -d '{"target": "user@example.com", "modules": ["sfp_hibp"]}'
+  -d '{"target": "user@example.com", "modules": ["sfp_haveibeenpwned"]}'
 ```
 
 ## Output Example
@@ -34,7 +34,7 @@ Details: Passwords, personal info exposed
 ## Tips
 
 - Use to assess breach exposure for users and organizations.
-- Combine with sfp_email and sfp_breach for comprehensive risk analysis.
+- Combine with sfp_email and sfp_dehashed for comprehensive risk analysis.
 
 ---
 

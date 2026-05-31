@@ -33,7 +33,7 @@ None (public API)
 ## Tips
 
 - Use to monitor for unauthorized certificate issuance.
-- Combine with sfp_ssl and sfp_dnsresolve for full context.
+- Combine with sfp_sslcert and sfp_dnsresolve for full context.
 
 ---
 

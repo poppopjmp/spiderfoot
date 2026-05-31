@@ -33,7 +33,7 @@ None
 ## Tips
 
 - Use to enrich person and email investigations.
-- Combine with sfp_email and sfp_username for full context.
+- Combine with sfp_email and sfp_social for full context.
 
 ---
 

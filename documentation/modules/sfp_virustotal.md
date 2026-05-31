@@ -34,7 +34,7 @@ Categories: phishing, malware
 ## Tips
 
 - Use to quickly check if a domain, IP, or file is flagged as malicious.
-- Combine with sfp_shodan and sfp_breach for comprehensive threat context.
+- Combine with sfp_shodan and sfp_dehashed for comprehensive threat context.
 
 ---
 

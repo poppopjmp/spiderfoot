@@ -190,7 +190,7 @@ Below is a complete list of all documented modules. Click a module name to view 
 | sfp_tool_wappalyzer | Technology stack detection via Wappalyzer rules. |
 
 | [sfp_twitter](modules/sfp_twitter.md) | Searches Twitter for profiles, mentions, and activity. |
-| [sfp_username](modules/sfp_username.md) | Searches for usernames related to the target across social media and forums. |
+| [sfp_social](modules/sfp_social.md) | Searches for usernames and profiles related to the target across social media and forums. |
 | [sfp_virustotal](modules/sfp_virustotal.md) | Integrates with VirusTotal to check domains, IPs, and files for malware and reputation. |
 | [sfp_whois](modules/sfp_whois.md) | Performs WHOIS lookups for domains and IP addresses. |
 

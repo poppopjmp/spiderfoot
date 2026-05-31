@@ -1,4 +1,4 @@
-# sfp_btc
+# sfp_bitcoin
 
 **Purpose:**
 Identifies and analyzes Bitcoin addresses related to the target, checking for transactions, balances, and exposure in breaches or dark web sources.
@@ -15,7 +15,7 @@ Identifies and analyzes Bitcoin addresses related to the target, checking for tr
 ```sh
 curl -X POST http://localhost:8001/api/v1/scans \
   -H "Content-Type: application/json" \
-  -d '{"target": "example.com", "modules": ["sfp_btc"]}'
+  -d '{"target": "example.com", "modules": ["sfp_bitcoin"]}'
 ```
 
 ## Output Example
@@ -34,7 +34,7 @@ None (uses public blockchain APIs)
 ## Tips
 
 - Use to track cryptocurrency exposure and risk.
-- Combine with sfp_breach and sfp_email for full threat context.
+- Combine with sfp_dehashed and sfp_email for full threat context.
 
 ---
 

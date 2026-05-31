@@ -124,7 +124,7 @@ failure_threshold = 0.7
 ```bash
 curl -X POST http://localhost:8001/api/v1/scans \
   -H "Content-Type: application/json" \
-  -d '{"target": "example.com", "modules": ["sfp_dnsresolve", "sfp_ssl", "sfp_performance_optimizer"]}'
+  -d '{"target": "example.com", "modules": ["sfp_dnsresolve", "sfp_sslcert", "sfp_performance_optimizer"]}'
 ```
 
 ### High-Volume Scanning
@@ -180,13 +180,13 @@ curl -X POST http://localhost:8001/api/v1/scans \
 ### Recommended Usage
 ```bash
 # Always include performance optimizer for large scans
--m sfp_dnsresolve,sfp_ssl,sfp_whois,sfp_performance_optimizer
+-m sfp_dnsresolve,sfp_sslcert,sfp_whois,sfp_performance_optimizer
 
 # API-heavy investigations
 -m sfp_virustotal,sfp_shodan,sfp_hunter,sfp_performance_optimizer
 
 # Multi-target scanning
--m sfp_portscan_tcp,sfp_banner,sfp_ssl,sfp_performance_optimizer
+-m sfp_portscan_tcp,sfp_banner,sfp_sslcert,sfp_performance_optimizer
 ```
 
 ### Module Compatibility

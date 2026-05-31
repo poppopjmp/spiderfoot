@@ -28,7 +28,7 @@ TXT record: v=spf1 include:_spf.example.com ~all
 None
 
 ## Tips
-- Combine with other modules (e.g., sfp_ssl, sfp_whois) for deeper asset mapping.
+- Combine with other modules (e.g., sfp_sslcert, sfp_whois) for deeper asset mapping.
 - Useful for identifying mail servers, SPF/DKIM records, and infrastructure relationships.
 
 ---
