@@ -29,7 +29,7 @@ Modules are plugins that collect, enrich, or analyze data from various sources. 
 - **sfp_threatcrowd**: ThreatCrowd API queries
 - **sfp_virustotal**: VirusTotal API integration
 - **sfp_alienvault**: AlienVault OTX integration
-- **sfp_malware**: Malware analysis platforms
+- **sfp_malwarepatrol**: Malware analysis platforms
 
 ### Search Engines
 - **sfp_google**: Google search results

@@ -2,7 +2,7 @@
 
 ## Overview
 
-SpiderFoot v6.0.0 implements a microservices-only architecture:
+SpiderFoot v6.0.1 implements a microservices-only architecture:
 
 - **23 containers** behind a Traefik v3 reverse proxy with full observability, AI agents, Celery task processing, and React SPA frontend
 - **Native async I/O** via aiohttp + aiodns for high-throughput scanner modules
@@ -12,7 +12,7 @@ SpiderFoot v6.0.0 implements a microservices-only architecture:
 
 > **Note**: Monolith mode was removed in v6.0.0 (Batches 34–36). SpiderFoot now requires Docker Compose or Kubernetes.
 
-## Service Topology (v6.0.0)
+## Service Topology (v6.0.1)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -65,7 +65,7 @@ SpiderFoot v6.0.0 implements a microservices-only architecture:
 └───────────────────────────────────────────────────────────────────────┘
 ```
 
-## Package Structure (v6.0.0)
+## Package Structure (v6.0.1)
 
 The `spiderfoot/` package is organized into **23 domain sub-packages** plus several top-level modules:
 

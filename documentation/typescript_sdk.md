@@ -6,7 +6,7 @@ This guide covers the auto-generated TypeScript API client used by SpiderFoot's 
 
 ## Overview
 
-SpiderFoot v6.0.0 uses [`@hey-api/openapi-ts`](https://heyapi.dev/) to generate a fully typed, fetch-based API client from the FastAPI OpenAPI specification. The generated SDK provides:
+SpiderFoot v6.0.1 uses [`@hey-api/openapi-ts`](https://heyapi.dev/) to generate a fully typed, fetch-based API client from the FastAPI OpenAPI specification. The generated SDK provides:
 
 - **Full type safety** — request parameters, response types, and error types
 - **Native fetch** — no Axios dependency
