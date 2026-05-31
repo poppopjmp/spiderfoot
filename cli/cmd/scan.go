@@ -345,13 +345,13 @@ var scanSearchCmd = &cobra.Command{
 
 		path := fmt.Sprintf("/api/scans/search?limit=%d", limit)
 		if target != "" {
-			path += "&target=" + target
+			path += "&target=" + url.QueryEscape(target)
 		}
 		if status != "" {
-			path += "&status=" + status
+			path += "&status=" + url.QueryEscape(status)
 		}
 		if tag != "" {
-			path += "&tag=" + tag
+			path += "&tag=" + url.QueryEscape(tag)
 		}
 
 		var resp interface{}
@@ -378,7 +378,7 @@ var scanSummaryCmd = &cobra.Command{
 		}
 		c := client.New()
 		by, _ := cmd.Flags().GetString("by")
-		path := fmt.Sprintf("/api/scans/%s/summary?by=%s", args[0], by)
+		path := fmt.Sprintf("/api/scans/%s/summary?by=%s", args[0], url.QueryEscape(by))
 
 		var resp interface{}
 		if err := c.Get(path, &resp); err != nil {
@@ -539,6 +539,12 @@ var scanCompareCmd = &cobra.Command{
 		scanB, _ := cmd.Flags().GetString("scan-b")
 		if scanA == "" || scanB == "" {
 			return fmt.Errorf("--scan-a and --scan-b are required")
+		}
+		if err := validateSafeID(scanA, "scan A"); err != nil {
+			return err
+		}
+		if err := validateSafeID(scanB, "scan B"); err != nil {
+			return err
 		}
 		c := client.New()
 		path := fmt.Sprintf("/api/scans/compare?scan_a=%s&scan_b=%s", scanA, scanB)

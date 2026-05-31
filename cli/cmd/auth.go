@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/spiderfoot/spiderfoot-cli/internal/client"
@@ -22,8 +23,13 @@ var authLoginCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		username, _ := cmd.Flags().GetString("username")
 		password, _ := cmd.Flags().GetString("password")
+		// Prefer the SF_PASSWORD env var so the secret does not appear in the
+		// process list or shell history (passing --password is discouraged).
+		if password == "" {
+			password = os.Getenv("SF_PASSWORD")
+		}
 		if username == "" || password == "" {
-			return fmt.Errorf("--username and --password are required")
+			return fmt.Errorf("--username is required, and a password via --password or the SF_PASSWORD environment variable")
 		}
 		body := map[string]string{"username": username, "password": password}
 		payload, _ := json.Marshal(body)
@@ -114,7 +120,7 @@ var authLogoutCmd = &cobra.Command{
 
 func init() {
 	authLoginCmd.Flags().StringP("username", "u", "", "Username (required)")
-	authLoginCmd.Flags().StringP("password", "p", "", "Password (required)")
+	authLoginCmd.Flags().StringP("password", "p", "", "Password (prefer the SF_PASSWORD env var to avoid leaking via ps/history)")
 	authUsersCmd.Flags().Int("limit", 50, "Maximum users to return")
 
 	authCmd.AddCommand(authLoginCmd)
