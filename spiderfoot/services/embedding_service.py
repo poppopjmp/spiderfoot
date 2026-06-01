@@ -553,7 +553,7 @@ class _EmbeddingCache:
         self._misses = 0
 
     def _key(self, text: str, model: str) -> str:
-        return hashlib.md5(f"{model}:{text}".encode()).hexdigest()
+        return hashlib.md5(f"{model}:{text}".encode(), usedforsecurity=False).hexdigest()
 
     def get(self, text: str, model: str) -> list[float] | None:
         """Retrieve a cached embedding vector, or None on cache miss."""

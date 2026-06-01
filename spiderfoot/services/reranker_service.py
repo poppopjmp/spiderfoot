@@ -242,7 +242,7 @@ class MockRerankerBackend(RerankerBackend):
             overlap = len(query_words & doc_words)
             jaccard = overlap / len(query_words | doc_words)
             # Add hash-based component for differentiation
-            h = int(hashlib.md5(doc.encode()).hexdigest()[:8], 16)
+            h = int(hashlib.md5(doc.encode(), usedforsecurity=False).hexdigest()[:8], 16)
             noise = (h % 100) / 10000.0
             scores.append(jaccard + noise)
         return scores

@@ -1,0 +1,33 @@
+# Codacy configuration
+# https://docs.codacy.com/repositories-configure/codacy-configuration-file/
+---
+# Engines: rely on Codacy's bundled tooling plus the project's own configs.
+engines:
+  bandit:
+    enabled: true
+  pylint:
+    enabled: true
+    # Use the project's .pylintrc
+  pylintpython3:
+    enabled: true
+  eslint:
+    enabled: true
+  semgrep:
+    enabled: true
+  trivy:
+    enabled: true
+
+# Patterns/severities are managed in the Codacy UI; this file controls scope.
+exclude_paths:
+  - "test/**"
+  - "**/__tests__/**"
+  - "**/*.test.ts"
+  - "**/*.test.tsx"
+  - "frontend/src/api/generated/**"   # auto-generated OpenAPI SDK
+  - "proto/**"                         # generated protobuf stubs
+  - "**/*.gen.ts"
+  - "documentation/**"
+  - "**/migrations/**"
+  - "**/node_modules/**"
+  - "**/*.min.js"
+  - "spiderfoot/dicts/**"              # large static data dictionaries

@@ -32,14 +32,24 @@ jobs:
           pip install flake8 pylint bandit
           pip install -r requirements.txt
 
-      - name: Flake8
+      - name: Flake8 (blocking — syntax & real-bug checks)
+        run: |
+          # Gate on bug-class errors only: syntax (E9), f-string (F63), and
+          # broken-control-flow (F7) issues. Style violations remain advisory
+          # in the step below until the existing backlog is burned down.
+          flake8 spiderfoot/ modules/ --select=E9,F63,F7 --show-source --statistics
+
+      - name: Flake8 (advisory — full style report)
         continue-on-error: true
         run: |
-          # Run flake8 for informational output but do not block CI on violations
           flake8 spiderfoot/ modules/ --max-line-length=120 --count --statistics || true
 
-      - name: Bandit security scan
-        run: bandit -r spiderfoot/ -ll --skip B101,B603,B607 -f json -o bandit-report.json || true
+      - name: Bandit security scan (blocking on HIGH severity)
+        run: |
+          # Fail CI on HIGH-severity findings only; the full medium+ report is
+          # uploaded as an artifact below for triage without blocking.
+          bandit -r spiderfoot/ --severity-level high --skip B101,B603,B607
+          bandit -r spiderfoot/ -ll --skip B101,B603,B607 -f json -o bandit-report.json || true
 
       - name: Upload Bandit report
         uses: actions/upload-artifact@v4
@@ -130,6 +140,15 @@ jobs:
           fail_ci_if_error: false
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload coverage to Codacy
+        if: matrix.python-version == '3.11' && env.CODACY_PROJECT_TOKEN != ''
+        uses: codacy/codacy-coverage-reporter-action@v1
+        with:
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          coverage-reports: coverage.xml
+        env:
+          CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
 
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
