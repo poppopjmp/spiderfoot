@@ -20,6 +20,7 @@ class FakeRedis:
         self._zsets: dict[str, dict[str, float]] = {}
         self._sets: dict[str, set[str]] = {}
         self._lists: dict[str, list[str]] = {}
+        self.published: list[tuple[str, str]] = []
 
     @staticmethod
     def _s(value):
@@ -47,6 +48,11 @@ class FakeRedis:
 
     def expire(self, key, seconds):
         return True  # TTL is a no-op in the fake
+
+    def publish(self, channel, message):
+        """Record published messages (no subscribers in the fake)."""
+        self.published.append((channel, self._s(message)))
+        return 0
 
     def delete(self, *keys):
         for k in keys:
