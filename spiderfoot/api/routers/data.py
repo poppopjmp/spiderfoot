@@ -491,31 +491,9 @@ async def get_module_dependencies(
                 event_type_map[et]["consumers"].append(mod_name)
 
     except Exception as e:
+        # Degrade gracefully: return an empty-but-valid dependency graph rather
+        # than failing the request if module metadata cannot be loaded.
         log.error("Failed to load module dependencies: %s", e)
-        # Try a simpler approach using data service
-        try:
-            svc = get_data_service()
-            modules = svc.list_modules()
-            if isinstance(modules, dict):
-                modules = list(modules.values())
-            for mod in modules:
-                name = mod.get("name", mod.get("module", ""))
-                if not name:
-                    continue
-                produces = mod.get("produces", mod.get("producedEvents", []))
-                consumes = mod.get("consumes", mod.get("watchedEvents", []))
-                nodes[name] = {
-                    "produces": sorted(produces) if produces else [],
-                    "consumes": sorted(consumes) if consumes else [],
-                }
-                for et in (produces or []):
-                    event_type_map.setdefault(et, {"producers": [], "consumers": []})
-                    event_type_map[et]["producers"].append(name)
-                for et in (consumes or []):
-                    event_type_map.setdefault(et, {"producers": [], "consumers": []})
-                    event_type_map[et]["consumers"].append(name)
-        except (KeyError, TypeError, AttributeError):
-            pass
 
     # Build edges: producer_module -> consumer_module via event_type
     for et, info in event_type_map.items():
