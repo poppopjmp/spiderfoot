@@ -3,6 +3,7 @@ from __future__ import annotations
 """FastAPI router for scan data retrieval, entity types, and module queries."""
 
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
 
 from ..dependencies import get_app_config, optional_auth, get_api_key
 from ..pagination import PaginationParams, paginate
@@ -631,15 +632,21 @@ async def enable_module(module_name: str, api_key: str = optional_auth_dep) -> d
         raise HTTPException(status_code=500, detail="Failed to enable module") from e
 
 
+class BulkDisableRequest(BaseModel):
+    """Request body for bulk-disabling modules."""
+    module_names: list[str] = Field(default_factory=list)
+
+
 @router.post("/data/modules/bulk-disable")
 async def bulk_disable_modules(
-    module_names: list = [],
+    request: BulkDisableRequest,
     api_key: str = optional_auth_dep,
 ) -> dict:
     """Disable multiple modules at once.
 
-    Body: list of module name strings.
+    Body: ``{"module_names": ["sfp_a", "sfp_b"]}``.
     """
+    module_names = request.module_names
     if not module_names:
         raise HTTPException(status_code=400, detail="Provide a list of module names")
 
