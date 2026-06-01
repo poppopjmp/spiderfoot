@@ -75,6 +75,22 @@ Goal: raise the safety net (real tests, a coverage gate) and use the new tests
 to surface latent defects. Coverage measured at **66.6%**; `--cov-fail-under=66`
 added to CI so it cannot silently regress (to be ratcheted as tests land).
 
+### Fixed (additional defects found via deeper tests + AST sweeps)
+- **`bulk-disable` accepted no body (always 400):** `POST
+  /data/modules/bulk-disable` declared `module_names: list = []`; FastAPI binds
+  a bare `list` as a multipart form field, so JSON (and query) clients could
+  never populate it and the endpoint always 400'd. Replaced with a pydantic
+  `BulkDisableRequest` so it accepts `{"module_names": [...]}`. An AST sweep
+  confirmed all other `list[str]` handler params correctly use `Body(...)`.
+- **Intended 4xx swallowed into 500 (6 handlers):** handlers that raised a
+  specific `HTTPException` (404/422/400) in their try body but only caught
+  `except Exception` (HTTPException *is* an Exception) re-raised it as a generic
+  500 — so unknown module/entity lookups returned 500 instead of 404. Added
+  `except HTTPException: raise` in `data.py` (get_entity_type_details,
+  list_module_options, get_module_details) and `workspace.py` (start_multi_scan,
+  remove_scan_from_workspace, update_workspace_metadata). An AST sweep verified
+  no other router still has the pattern.
+
 ### Fixed (defects found via the new tests)
 - **Route shadowing (8 routers, production bug):** a parameterized
   `GET /…/{param}` route declared *before* literal sibling paths made those
