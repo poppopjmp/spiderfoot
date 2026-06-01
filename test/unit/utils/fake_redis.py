@@ -32,6 +32,15 @@ class FakeRedis:
     def get(self, key):
         return self._store.get(key)
 
+    def scan(self, cursor=0, match=None, count=100):
+        """Single-shot SCAN: returns (0, [matching keys]) across all key spaces."""
+        import fnmatch
+        all_keys = list(self._store) + list(self._hashes) + \
+            list(self._zsets) + list(self._sets) + list(self._lists)
+        if match is not None:
+            all_keys = [k for k in all_keys if fnmatch.fnmatch(k, match)]
+        return 0, all_keys
+
     def exists(self, *keys):
         return sum(1 for k in keys if k in self._store
                    or k in self._hashes or k in self._zsets)
