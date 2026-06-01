@@ -93,6 +93,21 @@ added to CI so it cannot silently regress (to be ratcheted as tests land).
 - **gRPC fixed test ports → `port=0`:** `ServiceServer.start()` now records the
   OS-assigned port (`server_address[1]`), eliminating the 19877/19878 collision
   that caused 8 cross-file test errors. (Closes a Second-pass deferred item.)
+- **`GET /data/modules/dependencies` crash:** the fallback branch called
+  `get_data_service()`, a function defined/imported nowhere; on any
+  metadata-load failure it raised `NameError` (not caught by the narrow
+  `except (KeyError, TypeError, AttributeError)`), turning a handled failure
+  into an unhandled 500. The fallback had never worked. Removed it so the
+  endpoint degrades to an empty-but-valid dependency graph.
+- **`POST /asm/ingest` crash:** `AssetInventory.ingest_event` had a
+  ternary-precedence bug — `if risk and risk.value < asset.risk.value if
+  asset.risk != UNKNOWN else True:` parses as `(…) if (asset.risk != UNKNOWN)
+  else True`, so ingesting a non-risk event for a new asset set
+  `asset.risk = None`, and `Asset.to_dict()` then crashed on `self.risk.value`.
+  Rewrote the guard around a new `_RISK_SEVERITY` rank (reused in `list_assets`).
+  Separately noted: no `_RISK_EVENTS` key maps to an asset type, so the
+  risk-upgrade branch is currently unreachable — a pre-existing design gap left
+  for follow-up.
 
 ### Added (tests)
 - API router tests via `TestClient` with auth dependency overridden:
