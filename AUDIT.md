@@ -90,6 +90,11 @@ added to CI so it cannot silently regress (to be ratcheted as tests land).
   list_module_options, get_module_details) and `workspace.py` (start_multi_scan,
   remove_scan_from_workspace, update_workspace_metadata). An AST sweep verified
   no other router still has the pattern.
+- **`POST /storage/snapshots/all` shadowed (non-GET):** declared after
+  `POST /storage/snapshots/{collection}`, so "snapshot all" was dispatched to
+  the single-collection handler with `collection="all"`. Reordered; the
+  app-wide shadowing guard was extended to cover **all** HTTP methods (not just
+  GET) to catch this class for POST/PUT/PATCH/DELETE too.
 
 ### Fixed (defects found via the new tests)
 - **Route shadowing (8 routers, production bug):** a parameterized

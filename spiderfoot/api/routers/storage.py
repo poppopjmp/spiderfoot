@@ -245,6 +245,18 @@ async def list_qdrant_snapshots(
     return [ObjectInfo(**obj) for obj in objects]
 
 
+# NOTE: the literal /snapshots/all route is declared before the parameterized
+# /snapshots/{collection} route so it is not shadowed by it (Starlette matches
+# routes in declaration order, and "all" is a valid {collection} value).
+@router.post("/snapshots/all", dependencies=[optional_auth_dep])
+async def snapshot_all_collections(req: SnapshotRequest | None = None) -> list[SnapshotResult]:
+    """Snapshot all SpiderFoot Qdrant collections to MinIO."""
+    backup = _get_qdrant_backup()
+    prefix = req.collection_prefix if req else "sf_"
+    results = backup.snapshot_all_collections(prefix=prefix)
+    return [SnapshotResult(**r) for r in results]
+
+
 @router.post("/snapshots/{collection}", dependencies=[optional_auth_dep])
 async def snapshot_collection(collection: str) -> SnapshotResult:
     """Create a snapshot of a single Qdrant collection and upload to MinIO."""
@@ -256,15 +268,6 @@ async def snapshot_collection(collection: str) -> SnapshotResult:
     except Exception as e:
         log.exception("Storage operation failed")
         raise HTTPException(status_code=500, detail="Storage operation failed")
-
-
-@router.post("/snapshots/all", dependencies=[optional_auth_dep])
-async def snapshot_all_collections(req: SnapshotRequest | None = None) -> list[SnapshotResult]:
-    """Snapshot all SpiderFoot Qdrant collections to MinIO."""
-    backup = _get_qdrant_backup()
-    prefix = req.collection_prefix if req else "sf_"
-    results = backup.snapshot_all_collections(prefix=prefix)
-    return [SnapshotResult(**r) for r in results]
 
 
 # ---------------------------------------------------------------------------

@@ -30,23 +30,28 @@ def _literal_get_paths(app):
     """All GET routes whose path has no `{param}` segment."""
     out = []
     for route in app.routes:
-        methods = getattr(route, "methods", None) or set()
+        methods = (getattr(route, "methods", None) or set()) - {"HEAD", "OPTIONS"}
         path = getattr(route, "path", "")
-        if "GET" in methods and path and "{" not in path:
-            out.append(path)
+        if path and "{" not in path:
+            for method in methods:
+                out.append((method, path))
     return out
 
 
-def test_no_literal_get_route_is_shadowed():
+def test_no_literal_route_is_shadowed():
+    """No literal route (any HTTP method) may be shadowed by a parameterized
+    sibling declared earlier — Starlette matches routes in declaration order."""
     app = _assembled_app()
     shadowed = []
-    for path in _literal_get_paths(app):
-        # Find the first route (declaration order) that fully matches this path
-        # for a GET request — that is the handler Starlette will dispatch to.
+    for method, path in _literal_get_paths(app):
+        # Find the first route (declaration order) that fully matches this
+        # method+path — that is the handler Starlette will dispatch to.
         for route in app.routes:
+            if method not in (getattr(route, "methods", None) or set()):
+                continue
             try:
                 match, _ = route.matches(
-                    {"type": "http", "method": "GET", "path": path,
+                    {"type": "http", "method": method, "path": path,
                      "path_params": {}}
                 )
             except Exception:
@@ -54,11 +59,11 @@ def test_no_literal_get_route_is_shadowed():
             if match == Match.FULL:
                 matched_path = getattr(route, "path", "")
                 if "{" in matched_path:
-                    shadowed.append((path, matched_path))
+                    shadowed.append((f"{method} {path}", matched_path))
                 break
 
     assert not shadowed, (
-        "Literal GET routes shadowed by a parameterized sibling declared "
+        "Literal routes shadowed by a parameterized sibling declared "
         "earlier (move the literal route before the {param} route):\n"
         + "\n".join(f"  {lit}  ->  shadowed by  {par}" for lit, par in shadowed)
     )

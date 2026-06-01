@@ -17,6 +17,18 @@ from spiderfoot.api.routers.storage import router
 from spiderfoot.api.dependencies import get_api_key
 
 
+class _FakeQdrantBackup:
+    def __init__(self):
+        self.snapshot_all_called = False
+
+    def snapshot_collection(self, collection):
+        return {"collection": collection, "snapshot_name": f"{collection}.snap"}
+
+    def snapshot_all_collections(self, prefix="sf_"):
+        self.snapshot_all_called = True
+        return [{"collection": "sf_events", "snapshot_name": "sf_events.snap"}]
+
+
 class _FakeStorage:
     def __init__(self, health=None, buckets_fail=False):
         self._health = health or {
@@ -92,3 +104,33 @@ class TestListings:
         client = make_client(_FakeStorage())
         resp = client.get("/snapshots", params={"collection": "events"})
         assert resp.status_code == 200
+
+
+class TestSnapshotRouteNotShadowed:
+    """Regression: POST /snapshots/all was declared after /snapshots/{collection}
+    and so was dispatched to snapshot_collection(collection='all'). The literal
+    route must now reach snapshot_all_collections."""
+
+    def test_snapshot_all_reaches_its_own_handler(self, monkeypatch):
+        backup = _FakeQdrantBackup()
+        monkeypatch.setattr(storage_mod, "_get_qdrant_backup", lambda: backup)
+        app = FastAPI()
+        app.dependency_overrides[get_api_key] = lambda: "test-key"
+        app.include_router(router)
+        client = TestClient(app)
+        resp = client.post("/snapshots/all")
+        assert resp.status_code == 200
+        # Response is a list (snapshot_all), not a single SnapshotResult object.
+        assert isinstance(resp.json(), list)
+        assert backup.snapshot_all_called is True
+
+    def test_single_collection_still_works(self, monkeypatch):
+        backup = _FakeQdrantBackup()
+        monkeypatch.setattr(storage_mod, "_get_qdrant_backup", lambda: backup)
+        app = FastAPI()
+        app.dependency_overrides[get_api_key] = lambda: "test-key"
+        app.include_router(router)
+        client = TestClient(app)
+        resp = client.post("/snapshots/sf_events")
+        assert resp.status_code == 200
+        assert resp.json()["collection"] == "sf_events"
