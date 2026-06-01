@@ -108,7 +108,7 @@ def database_vacuum(global_opts: dict[str, Any] | None = None) -> dict[str, Any]
         "",
     )
     if not dsn:
-        log.critical("SF_POSTGRES_DSN environment variable is not set.")
+        logger.critical("SF_POSTGRES_DSN environment variable is not set.")
         return {"status": "error", "message": "SF_POSTGRES_DSN not configured"}
 
     try:
