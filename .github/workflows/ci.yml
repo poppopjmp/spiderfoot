@@ -129,6 +129,7 @@ jobs:
             --cov=spiderfoot \
             --cov-report=xml:coverage.xml \
             --cov-report=term-missing \
+            --cov-fail-under=66 \
             -n auto
 
       - name: Upload coverage to Codecov
