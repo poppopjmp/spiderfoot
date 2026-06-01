@@ -91,9 +91,10 @@ class _FakeWorkspace:
         return self._scans
 
     def remove_scan(self, scan_id):
+        present = scan_id in self._scans
         self._scans = [s for s in self._scans if s != scan_id]
         self.save_workspace()
-        return True
+        return present
 
     def import_single_scan(self, scan_id):
         if scan_id in self._scans:
@@ -249,3 +250,21 @@ class TestCloneAndScans:
 
     def test_set_active_unknown_404(self, client):
         assert client.post("/workspaces/nope/set-active").status_code == 404
+
+
+class TestNotFoundStatusPreserved:
+    """Regression: these intended 4xx codes were swallowed by a broad
+    'except Exception' and returned as 500. They must keep their status."""
+
+    def test_multi_scan_no_targets_400(self, client):
+        # A workspace with no targets and an empty request -> 400, not 500.
+        wid = _create(client).json()["workspace_id"]
+        resp = client.post(f"/workspaces/{wid}/multi-scan",
+                          json={"targets": [], "modules": []})
+        assert resp.status_code == 400
+
+    def test_remove_unknown_scan_404(self, client):
+        wid = _create(client).json()["workspace_id"]
+        # Scan never linked -> remove_scan returns falsy -> 404, not 500.
+        resp = client.delete(f"/workspaces/{wid}/scans/never-linked")
+        assert resp.status_code == 404

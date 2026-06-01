@@ -249,6 +249,8 @@ async def start_multi_scan(
             "modules": multi_scan_request.modules,
             "message": f"Multi-target scan started for {len(targets)} targets"
         }
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(status_code=404, detail="Workspace not found") from e
     except Exception as e:
@@ -279,6 +281,8 @@ async def remove_scan_from_workspace(workspace_id: SafeId, scan_id: SafeId, api_
         if not success:
             raise HTTPException(status_code=404, detail="Scan not found in workspace")
         return {"message": "Scan removed from workspace successfully"}
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(status_code=404, detail="Workspace not found") from e
     except Exception as e:
@@ -371,6 +375,8 @@ async def update_workspace_metadata(
         workspace.metadata.update(metadata)
         workspace.save_workspace()
         return {"success": True, "metadata": workspace.metadata}
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(status_code=404, detail="Workspace not found") from e
     except Exception as e:

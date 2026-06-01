@@ -115,6 +115,22 @@ class TestValidateConfig:
                            json={}).status_code == 404
 
 
+class TestNotFoundStatusPreserved:
+    """Regression: unknown-resource lookups returned 500 because a broad
+    'except Exception' swallowed the intended 404 (HTTPException is an
+    Exception). They must return 404."""
+
+    def test_entity_type_unknown_404(self, client):
+        assert client.get("/data/entity-types/DEFINITELY_NOT_A_TYPE").status_code == 404
+
+    def test_module_details_unknown_404(self, client):
+        assert client.get("/data/modules/sfp_does_not_exist").status_code == 404
+
+    def test_module_options_unknown_404(self, client):
+        assert client.get(
+            "/data/modules/sfp_does_not_exist/options").status_code == 404
+
+
 class TestMetadata:
     @pytest.mark.parametrize("path", [
         "/data/module-categories",

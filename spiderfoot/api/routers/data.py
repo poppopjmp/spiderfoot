@@ -141,6 +141,8 @@ async def get_entity_type_details(type_name: str, api_key: str = optional_auth_d
             raise HTTPException(status_code=404, detail="Entity type not found")
         # Optionally, add more details if available
         return {"entity_type": type_name}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail="Failed to get entity type details") from e
 
@@ -189,6 +191,8 @@ async def list_module_options(module_name: str, api_key: str = optional_auth_dep
             raise HTTPException(status_code=404, detail="Module not found")
         options = modules[module_name].get("optdescs", {})
         return {"options": options}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail="Failed to list module options") from e
 
@@ -698,5 +702,7 @@ async def get_module_details(module_name: str, api_key: str = optional_auth_dep)
         if module_name not in modules:
             raise HTTPException(status_code=404, detail="Module not found")
         return {"module": modules[module_name]}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail="Failed to get module details") from e
