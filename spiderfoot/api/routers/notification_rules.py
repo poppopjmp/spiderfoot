@@ -80,14 +80,6 @@ async def create_rule(body: RuleCreate):
     return {"rule": r.to_dict()}
 
 
-@router.get("/notification-rules/{rule_id}", tags=["notification-rules"])
-async def get_rule(rule_id: str):
-    r = _engine.get_rule(rule_id)
-    if not r:
-        raise HTTPException(404, "Rule not found")
-    return r.to_dict()
-
-
 @router.patch("/notification-rules/{rule_id}", tags=["notification-rules"])
 async def update_rule(rule_id: str, body: RuleUpdate):
     updates = {k: v for k, v in body.model_dump().items() if v is not None}
@@ -149,3 +141,15 @@ async def list_operators():
 @router.get("/notification-rules/channels", tags=["notification-rules"])
 async def list_channels():
     return {"channels": _engine.get_channels()}
+
+
+# NOTE: the parameterized {rule_id} GET route is registered LAST so it does not
+# shadow the literal sub-paths above (history, stats, operators, channels).
+# FastAPI/Starlette match routes in declaration order, so a GET on
+# /notification-rules/{rule_id} declared earlier would swallow those paths.
+@router.get("/notification-rules/{rule_id}", tags=["notification-rules"])
+async def get_rule(rule_id: str):
+    r = _engine.get_rule(rule_id)
+    if not r:
+        raise HTTPException(404, "Rule not found")
+    return r.to_dict()
