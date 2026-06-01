@@ -131,6 +131,18 @@ _RISK_EVENTS: dict[str, AssetRisk] = {
 }
 
 
+# Severity ranking for risk levels: lower number = more severe. Used both to
+# decide whether an incoming event upgrades an asset's risk and to sort assets.
+_RISK_SEVERITY: dict[AssetRisk, int] = {
+    AssetRisk.CRITICAL: 0,
+    AssetRisk.HIGH: 1,
+    AssetRisk.MEDIUM: 2,
+    AssetRisk.LOW: 3,
+    AssetRisk.INFO: 4,
+    AssetRisk.UNKNOWN: 5,
+}
+
+
 class AssetInventory:
     """Manages the attack surface asset inventory."""
 
@@ -184,9 +196,12 @@ class AssetInventory:
             )
             self._assets[aid] = asset
 
-        # Check for risk indicators
+        # Check for risk indicators. Only events that carry a known risk may
+        # change an asset's risk, and only to upgrade it to a more severe level.
+        # (The previous expression had a ternary-precedence bug that set
+        # asset.risk = None for non-risk events, crashing Asset.to_dict().)
         risk = _RISK_EVENTS.get(event_type)
-        if risk and risk.value < asset.risk.value if asset.risk != AssetRisk.UNKNOWN else True:
+        if risk is not None and _RISK_SEVERITY[risk] < _RISK_SEVERITY.get(asset.risk, 5):
             asset.risk = risk
 
         # Persist to Redis if available
@@ -241,15 +256,7 @@ class AssetInventory:
             assets = [a for a in assets if search_lower in a.value.lower()]
 
         # Sort by risk (critical first), then last_seen
-        risk_order = {
-            AssetRisk.CRITICAL: 0,
-            AssetRisk.HIGH: 1,
-            AssetRisk.MEDIUM: 2,
-            AssetRisk.LOW: 3,
-            AssetRisk.INFO: 4,
-            AssetRisk.UNKNOWN: 5,
-        }
-        assets.sort(key=lambda a: (risk_order.get(a.risk, 5), a.last_seen), reverse=False)
+        assets.sort(key=lambda a: (_RISK_SEVERITY.get(a.risk, 5), a.last_seen), reverse=False)
 
         return assets[offset : offset + limit]
 
