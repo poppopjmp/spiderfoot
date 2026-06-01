@@ -69,6 +69,51 @@ A follow-up pass worked through the deferred backlog. Each change was verified
 
 ---
 
+## Third pass — test maturity & a routing bug class
+
+Goal: raise the safety net (real tests, a coverage gate) and use the new tests
+to surface latent defects. Coverage measured at **66.6%**; `--cov-fail-under=66`
+added to CI so it cannot silently regress (to be ratcheted as tests land).
+
+### Fixed (defects found via the new tests)
+- **Route shadowing (8 routers, production bug):** a parameterized
+  `GET /…/{param}` route declared *before* literal sibling paths made those
+  literals unreachable (Starlette matches in declaration order) — they returned
+  the param handler's 404 in production. Affected: `notification_rules`
+  (`/history,/stats,/operators,/channels`), `report_templates`
+  (`/history,/variables,/categories,/formats`), `scan_comparison`
+  (`/categories,/severity-levels`), `tag_group` (`/tags/stats,/tags/colors`),
+  `data` (`/data/modules/{stats,dependencies,status}`), `webhooks`
+  (`/webhooks/event-types`), `health` (`/health/shutdown`), `scan`
+  (`/scans/compare`, where `scan_id: SafeId` also matched the literal
+  "compare"). Each parameterized route moved after its literal siblings;
+  verified via Starlette route matching against the fully-assembled app.
+  A permanent guard test (`test_api_route_shadowing.py`) asserts no literal GET
+  route in the whole app is shadowed.
+- **gRPC fixed test ports → `port=0`:** `ServiceServer.start()` now records the
+  OS-assigned port (`server_address[1]`), eliminating the 19877/19878 collision
+  that caused 8 cross-file test errors. (Closes a Second-pass deferred item.)
+
+### Added (tests)
+- API router tests via `TestClient` with auth dependency overridden:
+  `sarif` (0→100%), `scan_metrics` (0→100%), `stix` (0→99%), `tenants` (0→96%),
+  `audit` (0→100%), `notification_rules` (0→100%) — CRUD/round-trip/404 paths.
+- `test_sfp_tool_wrappers_contract.py`: parametrized contract over the 20
+  untested `sfp_tool_*` wrappers (100 subtests) — instantiation/setup,
+  opts↔optdescs, watched/produced event types, errorState guard, and the
+  missing-binary fail-safe path (asserts no subprocess spawned, no events
+  emitted); each module 0→~40% line coverage.
+
+### Deferred (still open from this pass)
+- Reaching 85% coverage is multi-session: ~11k more statements across the
+  remaining ~16 untested routers, `tasks/`, agents, and large service files.
+- Cross-file test-isolation flakiness: several tests (scanner, event_relay,
+  module_pipeline, scan_coordinator) pass in isolation but fail under the full
+  unordered run due to shared global/DB/WebSocket state — needs fixture-level
+  isolation, not a product fix.
+
+---
+
 ## Segment 1 — Core (`spiderfoot/`, 339 files + `sfapi.py`)
 
 ### Fixed
