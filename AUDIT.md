@@ -110,9 +110,18 @@ added to CI so it cannot silently regress (to be ratcheted as tests land).
   for follow-up.
 
 ### Added (tests)
-- API router tests via `TestClient` with auth dependency overridden:
-  `sarif` (0→100%), `scan_metrics` (0→100%), `stix` (0→99%), `tenants` (0→96%),
-  `audit` (0→100%), `notification_rules` (0→100%) — CRUD/round-trip/404 paths.
+- **API router tests for all 28 previously-untested routers** via `TestClient`
+  with the auth dependency overridden — CRUD lifecycles, round-trips, 404/4xx
+  paths, and error branches. Highlights: `sarif`/`scan_metrics`/`audit`/
+  `notification_rules`/`rbac` at 100%; `stix` 99%, `tenants` 96%, `report_templates`
+  95%, `asm` 91%, `schedules` 88%, `keys` 85%, `tag_group` 84%, `rbac_roles` 83%,
+  `data_retention`/`webhook_delivery` ~80%, plus `marketplace`, `engines`,
+  `rate_limits`, `sso`, `distributed_scan`, `monitor`, `storage`, `export`,
+  `data`, `workspace`, `ai_scan_config`.
+- **Shared in-memory `FakeRedis`** (`test/unit/utils/fake_redis.py`): a
+  dependency-free Redis stand-in (strings/hashes/sorted-sets/sets/lists +
+  pipeline) extracted from `test_api_key_rotation.py` and reused to test the
+  Redis-backed routers (`keys`, `schedules`, `monitor`) without a live Redis.
 - `test_sfp_tool_wrappers_contract.py`: parametrized contract over the 20
   untested `sfp_tool_*` wrappers (100 subtests) — instantiation/setup,
   opts↔optdescs, watched/produced event types, errorState guard, and the
