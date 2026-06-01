@@ -87,14 +87,6 @@ async def tag_tree():
     return {"tree": _manager.get_tag_tree()}
 
 
-@router.get("/tags/{tag_id}", tags=["tags-groups"])
-async def get_tag(tag_id: SafeId):
-    t = _manager.get_tag(tag_id)
-    if not t:
-        raise HTTPException(404, "Tag not found")
-    return t.to_dict()
-
-
 @router.patch("/tags/{tag_id}", tags=["tags-groups"])
 async def update_tag(tag_id: SafeId, body: TagUpdate):
     updates = {k: v for k, v in body.model_dump().items() if v is not None}
@@ -217,3 +209,13 @@ async def tag_stats():
 @router.get("/tags/colors", tags=["tags-groups"])
 async def list_colors():
     return {"colors": [c.value for c in TagColor]}
+
+
+# NOTE: registered LAST so it does not shadow the literal /tags/* sub-paths
+# (stats, colors). Starlette matches routes in declaration order.
+@router.get("/tags/{tag_id}", tags=["tags-groups"])
+async def get_tag(tag_id: SafeId):
+    t = _manager.get_tag(tag_id)
+    if not t:
+        raise HTTPException(404, "Tag not found")
+    return t.to_dict()

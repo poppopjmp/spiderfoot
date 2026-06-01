@@ -167,15 +167,6 @@ async def comparison_history(
     }
 
 
-@router.get("/scan-comparison/{comparison_id}", tags=["scan-comparison"])
-async def get_comparison(comparison_id: SafeId):
-    """Get a specific comparison result by ID."""
-    result = _comparator.get_comparison(comparison_id)
-    if not result:
-        raise HTTPException(404, f"Comparison '{comparison_id}' not found")
-    return result.to_dict()
-
-
 @router.get("/scan-comparison/categories", tags=["scan-comparison"])
 async def list_event_categories():
     """List all event categories used in comparisons."""
@@ -190,3 +181,14 @@ async def list_severity_levels():
         "levels": [s.value for s in SeverityLevel],
         "event_mappings": {k: v.value for k, v in EVENT_SEVERITY.items()},
     }
+
+
+# NOTE: registered LAST so it does not shadow the literal /scan-comparison/*
+# sub-paths (categories, severity-levels). Starlette matches in declaration order.
+@router.get("/scan-comparison/{comparison_id}", tags=["scan-comparison"])
+async def get_comparison(comparison_id: SafeId):
+    """Get a specific comparison result by ID."""
+    result = _comparator.get_comparison(comparison_id)
+    if not result:
+        raise HTTPException(404, f"Comparison '{comparison_id}' not found")
+    return result.to_dict()

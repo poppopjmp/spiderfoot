@@ -84,15 +84,6 @@ async def create_template(body: TemplateCreate):
     return {"template": t.to_dict()}
 
 
-@router.get("/report-templates/{template_id}", tags=["report-templates"])
-async def get_template(template_id: str):
-    """Get a template by ID."""
-    t = _manager.get_template(template_id)
-    if not t:
-        raise HTTPException(404, "Template not found")
-    return t.to_dict()
-
-
 @router.patch("/report-templates/{template_id}", tags=["report-templates"])
 async def update_template(template_id: str, body: TemplateUpdate):
     """Update a report template."""
@@ -192,3 +183,15 @@ async def list_formats():
             for f in TemplateFormat
         ]
     }
+
+
+# NOTE: registered LAST so it does not shadow the literal /report-templates/*
+# sub-paths (history, variables, categories, formats). Starlette matches routes
+# in declaration order.
+@router.get("/report-templates/{template_id}", tags=["report-templates"])
+async def get_template(template_id: str):
+    """Get a template by ID."""
+    t = _manager.get_template(template_id)
+    if not t:
+        raise HTTPException(404, "Template not found")
+    return t.to_dict()
