@@ -18,6 +18,8 @@ class FakeRedis:
         self._store: dict[str, str] = {}
         self._hashes: dict[str, dict[str, str]] = {}
         self._zsets: dict[str, dict[str, float]] = {}
+        self._sets: dict[str, set[str]] = {}
+        self._lists: dict[str, list[str]] = {}
 
     @staticmethod
     def _s(value):
@@ -42,6 +44,56 @@ class FakeRedis:
             self._store.pop(k, None)
             self._hashes.pop(k, None)
             self._zsets.pop(k, None)
+            self._sets.pop(k, None)
+            self._lists.pop(k, None)
+
+    # -- lists -------------------------------------------------------------
+    def lpush(self, name, *values):
+        lst = self._lists.setdefault(name, [])
+        for v in values:
+            lst.insert(0, self._s(v))
+        return len(lst)
+
+    def rpush(self, name, *values):
+        lst = self._lists.setdefault(name, [])
+        for v in values:
+            lst.append(self._s(v))
+        return len(lst)
+
+    def lrange(self, name, start, end):
+        lst = self._lists.get(name, [])
+        if end == -1:
+            return lst[start:]
+        return lst[start:end + 1]
+
+    def llen(self, name):
+        return len(self._lists.get(name, []))
+
+    def ltrim(self, name, start, end):
+        lst = self._lists.get(name, [])
+        self._lists[name] = lst[start:] if end == -1 else lst[start:end + 1]
+
+    # -- sets --------------------------------------------------------------
+    def sadd(self, name, *members):
+        s = self._sets.setdefault(name, set())
+        added = 0
+        for m in members:
+            v = self._s(m)
+            if v not in s:
+                s.add(v)
+                added += 1
+        return added
+
+    def smembers(self, name):
+        return set(self._sets.get(name, set()))
+
+    def srem(self, name, *members):
+        s = self._sets.get(name, set())
+        for m in members:
+            s.discard(self._s(m))
+
+    def scard(self, name):
+        return len(self._sets.get(name, set()))
 
     # -- hashes ------------------------------------------------------------
     def hset(self, name, key=None, value=None, mapping=None):
