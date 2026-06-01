@@ -119,9 +119,20 @@ added to CI so it cannot silently regress (to be ratcheted as tests land).
   `rate_limits`, `sso`, `distributed_scan`, `monitor`, `storage`, `export`,
   `data`, `workspace`, `ai_scan_config`.
 - **Shared in-memory `FakeRedis`** (`test/unit/utils/fake_redis.py`): a
-  dependency-free Redis stand-in (strings/hashes/sorted-sets/sets/lists +
-  pipeline) extracted from `test_api_key_rotation.py` and reused to test the
-  Redis-backed routers (`keys`, `schedules`, `monitor`) without a live Redis.
+  dependency-free Redis stand-in (strings/hashes/sorted-sets/sets/lists/pubsub +
+  pipeline + `scan`) extracted from `test_api_key_rotation.py` and reused to test
+  the Redis-backed routers (`keys`, `schedules`, `monitor`) and Celery tasks
+  without a live Redis.
+- **Celery task tests** for all 7 `spiderfoot/tasks/` modules with external
+  services mocked: `maintenance` (97%), `export` (86%), `monitor` (77%),
+  `report` + the shared `_store_report` MinIO helper (52%), `scan` standalone
+  tasks/helpers (progress pubsub, abort, batch, status), and `agents` prompt
+  builders + batch guard.
+- **Concrete LLM agent tests** (`spiderfoot/agents/`): `process_event` for
+  credential_analyzer (89%), finding_validator (90%), text_summarizer (90%),
+  iac_advisor (64%), document_analyzer (42%) with `call_llm` stubbed — happy
+  path, JSON-parse-failure fallback, and a security assertion that the
+  credential analyzer redacts secrets before they reach the prompt.
 - `test_sfp_tool_wrappers_contract.py`: parametrized contract over the 20
   untested `sfp_tool_*` wrappers (100 subtests) — instantiation/setup,
   opts↔optdescs, watched/produced event types, errorState guard, and the
