@@ -130,6 +130,16 @@ added to CI so it cannot silently regress (to be ratcheted as tests land).
   risk-upgrade branch is currently unreachable — a pre-existing design gap left
   for follow-up.
 
+### AST sweeps run — clean (no defects, positive findings)
+Additional pattern sweeps across `spiderfoot/` confirmed the codebase is sound
+on these classes (no fixes needed): mutable default arguments (0), ambiguous
+nested ternaries in `if`/`while` (0 — the asm bug was the only one), `is`/`is
+not` against literals (0), bare `except:` (0), duplicate method+path route
+registrations (0), and dynamic SQL construction — `auth/service.py`'s 100+
+queries all parameterize values via `_ph()` placeholders and only interpolate
+allowlisted/constant column identifiers (no injection). Also fixed a lone
+deprecated Pydantic v1 `.dict()` call (`correlations.py`) -> `model_dump()`.
+
 ### Added (tests)
 - **API router tests for all 28 previously-untested routers** via `TestClient`
   with the auth dependency overridden — CRUD lifecycles, round-trips, 404/4xx
