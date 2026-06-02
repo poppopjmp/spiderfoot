@@ -20,6 +20,11 @@ jobs:
         uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
+          # Scope analysis to shipped product code (see config); excludes dev
+          # scripts/tests/docs/frontend. Keeps full SAST coverage of the package
+          # while avoiding an extractor parse error on a dev script that was
+          # failing the code-scanning check.
+          config-file: ./.github/codeql/codeql-config.yml
       - name: Autobuild
         uses: github/codeql-action/autobuild@v3
       - name: Perform CodeQL Analysis

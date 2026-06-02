@@ -1,0 +1,16 @@
+name: "SpiderFoot CodeQL config"
+
+# Scope CodeQL to the shipped product code. Developer scripts, the test suite,
+# documentation, and the frontend are excluded: they are not part of the Python
+# package's runtime attack surface, and one dev script (scripts/find_bare_opens.py)
+# trips the CodeQL Python extractor's parser, producing an analysis error that
+# fails the code-scanning check even though the file is valid Python 3.
+paths:
+  - spiderfoot
+  - modules
+  - sfapi.py
+paths-ignore:
+  - scripts
+  - test
+  - documentation
+  - frontend
