@@ -130,6 +130,27 @@ new tests; `--cov-fail-under` ratcheted 66 -> 70 so it cannot silently regress.
   risk-upgrade branch is currently unreachable — a pre-existing design gap left
   for follow-up.
 
+### Systematic core/barebone examination (sixth pass)
+Worked through the high-risk core data-flow systematically:
+- **Target scope matching (security):** SpiderFootTarget.matches() compared the
+  raw incoming value against lowercased names/aliases, so mixed-case in-scope
+  hosts ("Sub.Example.COM", "EXAMPLE.COM") were treated as out-of-scope ->
+  under-scanning. Lowercase the value first; the leading-dot suffix-bypass guard
+  still blocks look-alikes ("evilexample.com").
+- **URL dedup collision (scan path):** ContentNormalizer._normalize_url stripped
+  ports with naive substring replace, mangling non-default ports (:8080 -> 80)
+  and colliding distinct URLs -> real findings dropped as false duplicates.
+  Rewrote port-aware via urllib.parse. (EventDeduplicator is used in
+  scan/concurrency.py.)
+- **Pydantic/datetime hygiene:** removed 6 model .dict() -> model_dump() and a
+  datetime.utcnow() -> datetime.now(timezone.utc) for v3/3.12 forward-compat.
+- **Verified NON-issues:** fetchUrl follows redirects without SSRF blocking — by
+  design (a scanner fetches operator-chosen/discovered URLs; the server-initiated
+  SSRF surface, webhook delivery, is already fail-closed). DB layer is safe
+  (parameterized queries, allowlisted GROUP BY 'by', input type validation) —
+  genuine integration-test territory. validHost/hostDomain are thin
+  publicsuffixlist wrappers (a probe "bug" was a wrong TLD-list format, not real).
+
 ### Core/critical component hardening (fifth pass — netaddr 1.x + config)
 Turning from the HTTP surface to the engine core surfaced a silent bug class
 from the netaddr 1.x upgrade plus a config-integrity bug:
