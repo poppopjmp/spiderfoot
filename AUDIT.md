@@ -130,6 +130,23 @@ new tests; `--cov-fail-under` ratcheted 66 -> 70 so it cannot silently regress.
   risk-upgrade branch is currently unreachable — a pre-existing design gap left
   for follow-up.
 
+### Core/critical component hardening (fifth pass — netaddr 1.x + config)
+Turning from the HTTP surface to the engine core surfaced a silent bug class
+from the netaddr 1.x upgrade plus a config-integrity bug:
+- isValidLocalOrLoopbackIp returned False for ALL RFC1918 private IPs (probed
+  a is_private attribute netaddr 1.x removed; only loopback was caught) ->
+  sfp_dnsresolve mislabelled private IPs as public IP_ADDRESS (scope creep).
+- isPublicIpAddress classified link-local (169.254.169.254 cloud metadata,
+  fe80::/10) as public -> SSRF-relevant. Added is_link_local() guard.
+- sflib proxy-exclusion and services/http_service _should_proxy had the same
+  is_private misuse (the latter called the nonexistent method -> uncaught
+  AttributeError crashing proxy selection). Both rewritten with the 1.x API.
+- config bool options flipped True->False on an in-memory serialize/unserialize
+  round trip (serialize emits int 1, unserialize compared == "1"). Normalised
+  to str(value)=="1" for both global and per-module opts.
+All verified with adversarial unit tests (IP classification 41 cases incl. a
+cloud-metadata regression; config round-trip both in-memory and DB paths).
+
 ### Structural DB-bound router coverage (fourth pass)
 Every API router now has a dedicated test. The large DB/service-bound routers
 were covered with a reusable in-memory `FakeScanService`/`FakeScanRecord`
