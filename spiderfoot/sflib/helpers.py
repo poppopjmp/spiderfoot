@@ -100,26 +100,22 @@ def removeUrlCreds(url: str) -> str:
     return ret
 
 def isValidLocalOrLoopbackIp(ip: str) -> bool:
-    """Check if an IP address is private or loopback."""
+    """Check if an IP address is private, link-local, or loopback.
+
+    Uses the netaddr 1.x classification API. (The previous implementation
+    probed a ``is_private`` attribute that netaddr 1.x removed, so it silently
+    returned False for every RFC1918 address — only loopback was detected.)
+    """
     if not validIP(ip) and not validIP6(ip):
         return False
     import netaddr
     ip_obj = netaddr.IPAddress(ip)
-    # Try property (new netaddr), then method (old netaddr)
-    is_private = getattr(ip_obj, "is_private", None)
-    if callable(is_private):
-        if ip_obj.is_private():
-            return True
-    elif is_private is not None:
-        if ip_obj.is_private:
-            return True
-    is_loopback = getattr(ip_obj, "is_loopback", None)
-    if callable(is_loopback):
-        if ip_obj.is_loopback():
-            return True
-    elif is_loopback is not None:
-        if ip_obj.is_loopback:
-            return True
+    if ip_obj.is_loopback() or ip_obj.is_link_local():
+        return True
+    if ip_obj.version == 4:
+        return bool(ip_obj.is_ipv4_private_use())
+    if ip_obj.version == 6:
+        return bool(ip_obj.is_ipv6_unique_local())
     return False
 
 def domainKeyword(domain: str, tldList: list) -> str:
@@ -208,6 +204,10 @@ def isPublicIpAddress(ip: str) -> bool:
     if not ip_obj.is_unicast():
         return False
     if ip_obj.is_loopback():
+        return False
+    if ip_obj.is_link_local():
+        # Link-local (169.254.0.0/16, fe80::/10) is not publicly routable.
+        # Notably this covers the cloud metadata endpoint 169.254.169.254.
         return False
     if ip_obj.is_reserved():
         return False
