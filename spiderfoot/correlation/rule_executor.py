@@ -205,12 +205,26 @@ class DefaultRuleExecutionStrategy(RuleExecutionStrategy):
             return [e for e in events if e.get(field) == value]
         elif method == 'regex':
             import re
+            log = logging.getLogger("spiderfoot.correlation")
             patterns = value if isinstance(value, list) else [value]
+            # Pre-compile patterns once; skip (don't crash on) invalid ones so a
+            # single malformed regex in one correlation rule can't abort the
+            # entire correlation run.
+            compiled = []
+            for pattern in patterns:
+                try:
+                    compiled.append(re.compile(pattern))
+                except re.error as exc:
+                    log.warning(
+                        "Invalid regex %r in collection filter (field=%s): %s — "
+                        "skipping this pattern", pattern, field, exc)
+            if not compiled:
+                return []
             filtered = []
             for event in events:
                 event_value = str(event.get(field, ''))
-                for pattern in patterns:
-                    if re.search(pattern, event_value):
+                for rx in compiled:
+                    if rx.search(event_value):
                         filtered.append(event)
                         break
             return filtered
