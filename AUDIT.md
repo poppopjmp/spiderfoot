@@ -131,6 +131,13 @@ new tests; `--cov-fail-under` ratcheted 66 -> 70 so it cannot silently regress.
   for follow-up.
 
 ### Systematic core/barebone examination (sixth pass)
+- **Correlation rule regex crash:** _apply_collection_filter ran re.search
+  with no error handling; one malformed regex in a YAML correlation rule raised
+  re.error and aborted the entire correlation run. Now pre-compiles patterns and
+  skips invalid ones with a warning.
+- **Event routing verified sound:** plugin notifyListeners uses case-insensitive
+  ancestor loop-prevention, correct '*' wildcard + storeOnly handling (no fix
+  needed). async_network/PatternFilter checked — fail-fast at construction, OK.
 Worked through the high-risk core data-flow systematically:
 - **Target scope matching (security):** SpiderFootTarget.matches() compared the
   raw incoming value against lowercased names/aliases, so mixed-case in-scope
