@@ -100,6 +100,20 @@ class TestSpiderFootTarget(TestModuleBase):
         self.assertTrue(self.target.matches(self.target_value))
         self.assertFalse(self.target.matches("nonexistent.com"))
 
+    def test_matches_case_insensitive(self):
+        # DNS is case-insensitive — mixed-case in-scope hosts must match
+        # (regression: matches() compared raw value against lowercased names).
+        self.assertTrue(self.target.matches("EXAMPLE.COM"))
+        self.assertTrue(self.target.matches("Sub.Example.COM"))
+        self.assertTrue(self.target.matches("WWW.EXAMPLE.COM", includeChildren=True))
+
+    def test_matches_suffix_bypass_blocked(self):
+        # A look-alike domain sharing the suffix (without the dot boundary)
+        # must NOT be considered in scope, regardless of case.
+        self.assertFalse(self.target.matches("evilexample.com"))
+        self.assertFalse(self.target.matches("EvilExample.com"))
+        self.assertFalse(self.target.matches("notexample.com"))
+
     def test_matches_ip(self):
         alias_value = "192.168.1.1"
         alias_type = "IP_ADDRESS"
