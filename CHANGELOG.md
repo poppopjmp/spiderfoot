@@ -7,7 +7,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 A hardening and test-maturity release. A multi-pass audit (see `AUDIT.md`) raised
 the safety net and used it to surface and fix latent defects across the API,
-core engine, and persistence layers. No breaking changes.
+core engine, and persistence layers. No breaking changes — see
+[`UPGRADING.md`](UPGRADING.md) for the in-place adoption guide and the
+behavioural corrections (IP/scope classification, URL dedup, fixed endpoints) to
+expect.
 
 ### Fixed
 - **Core IP scope/SSRF classification (security):** the netaddr 1.x upgrade

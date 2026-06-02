@@ -137,6 +137,11 @@ graph TB
 
 ## Quick Start
 
+> **Already running SpiderFoot?** See [`UPGRADING.md`](UPGRADING.md) for the
+> v6.1.0 adoption guide — it's an in-place, no-breaking-changes upgrade, and the
+> guide lists the behavioural corrections (IP/scope classification, URL dedup,
+> fixed API endpoints) to expect.
+
 ### Option 1 — Docker Compose (Recommended)
 
 ```bash

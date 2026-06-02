@@ -45,7 +45,7 @@ SpiderFoot is designed for both beginners and advanced users, offering a modern 
 
 ## Current Version and Capabilities
 
-**SpiderFoot v6.0.1** represents a significant advancement in OSINT automation with the following enhanced capabilities:
+**SpiderFoot v6.1.0** represents a significant advancement in OSINT automation with the following enhanced capabilities:
 
 ### Module Count and Categories
 - **309 Total Modules**: Comprehensive coverage across all major OSINT categories
