@@ -96,28 +96,27 @@ The REST API allows you to manage scans, retrieve results, and interact with Spi
 ### Core Endpoints
 
 - **List scans:**
-  - `GET /api/scans` — Returns a list of all scans.
+  - `GET /api/scans` — Paginated list of scans (`{ "items": [...], "total": ... }`).
 - **Start a scan:**
-  - `POST /api/scans` — Start a new scan. JSON body: `{ "target": "example.com", "type": "DOMAIN_NAME", "modules": ["sfp_dnsresolve", "sfp_ssl"] }`
+  - `POST /api/scans` — Start a new scan. JSON body (the `name` field is required; the target type is auto-detected, so there is no `type` field): `{ "name": "My scan", "target": "example.com", "modules": ["sfp_dnsresolve", "sfp_sslcert"] }`. Optional: `type_filter`, `engine`, `profile`, `stealth_level`. The response contains the new scan `id`.
 - **Get scan results:**
-  - `GET /api/scans/{scanId}/results` — Retrieve results for a specific scan.
+  - `GET /api/scans/{scan_id}/events` — Result events (`?event_type=` to filter), returned as `{ "events": [...], "total": ... }`.
 - **Delete a scan:**
-  - `DELETE /api/scans/{scanId}` — Remove a scan and its results.
+  - `DELETE /api/scans/{scan_id}` — Remove a scan and its results.
 
-### Enhanced API Endpoints
+### Additional Endpoints
 
-- **Performance metrics:**
-  - `GET /api/performance/stats` — Get performance optimization statistics
-  - `GET /api/performance/cache/stats` — Get cache performance metrics
-- **Correlation data:**
-  - `GET /api/correlation/entities` — Get correlated entity relationships
-  - `GET /api/correlation/patterns` — Get detected patterns and anomalies
-- **Blockchain analytics:**
-  - `GET /api/blockchain/address/{address}` — Get blockchain address analysis
-  - `GET /api/blockchain/risk/{address}` — Get risk assessment for address
-- **AI analysis:**
-  - `GET /api/ai/summary/{scanId}` — Get AI-generated threat intelligence summary
-  - `POST /api/ai/analyze` — Request AI analysis of specific events
+- **Scan detail:**
+  - `GET /api/scans/{scan_id}/summary` — Per-type/module result summary.
+  - `GET /api/scans/{scan_id}/correlations` — Correlation findings.
+  - `GET /api/scans/{scan_id}/logs` — Scan log entries.
+- **Export & streaming:**
+  - `GET /api/scans/{scan_id}/export?format=json|csv|stix|sarif` — Export results.
+  - `GET /api/scans/{scan_id}/export/stream` — JSONL streaming export.
+  - `GET /api/scans/{scan_id}/events/stream` — SSE live event feed.
+- **Modules & AI:**
+  - `GET /api/data/modules`, `GET /api/data/module-categories`, `GET /api/data/module-types` — Module metadata.
+  - `POST /api/agents/report` — AI report generation; `GET /api/agents/health` — agent status.
 
 ### Authentication
 
@@ -131,19 +130,19 @@ The REST API allows you to manage scans, retrieve results, and interact with Spi
 
 ```sh
 # Basic scan with new modules
-curl -X POST http://127.0.0.1:5001/api/scans \
+curl -X POST http://127.0.0.1:8001/api/scans \
   -H "Content-Type: application/json" \
-  -d '{"target": "example.com", "type": "DOMAIN_NAME", "modules": ["sfp_dnsresolve", "sfp_ssl", "sfp_performance_optimizer"]}'
+  -d '{"name": "example.com recon", "target": "example.com", "modules": ["sfp_dnsresolve", "sfp_sslcert", "sfp_performance_optimizer"]}'
 
 # TikTok OSINT scan
-curl -X POST http://127.0.0.1:5001/api/scans \
+curl -X POST http://127.0.0.1:8001/api/scans \
   -H "Content-Type: application/json" \
-  -d '{"target": "@username", "type": "SOCIAL_MEDIA", "modules": ["sfp_tiktok_osint", "sfp_advanced_correlation"]}'
+  -d '{"name": "tiktok osint", "target": "@username", "modules": ["sfp_tiktok_osint", "sfp_advanced_correlation"]}'
 
 # Blockchain investigation
-curl -X POST http://127.0.0.1:5001/api/scans \
+curl -X POST http://127.0.0.1:8001/api/scans \
   -H "Content-Type: application/json" \
-  -d '{"target": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa", "type": "BITCOIN_ADDRESS", "modules": ["sfp_blockchain_analytics"]}'
+  -d '{"name": "btc investigation", "target": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa", "modules": ["sfp_blockchain_analytics"]}'
 ```
 
 ---
@@ -192,7 +191,7 @@ entity_relationships = correlator.get_entity_relationships()
 
 ## Available Module Categories
 
-SpiderFoot v6.0.0 includes 309 modules organized into the following categories:
+SpiderFoot v6.1.0 includes 309 modules organized into the following categories:
 
 ### Core Categories
 

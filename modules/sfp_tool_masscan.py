@@ -15,6 +15,7 @@ import subprocess
 import tempfile
 
 from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
+from spiderfoot import SpiderFootEvent
 
 
 class sfp_tool_masscan(SpiderFootAsyncPlugin):
@@ -173,14 +174,14 @@ class sfp_tool_masscan(SpiderFootAsyncPlugin):
                                 continue
 
                             port_str = f"{ip}:{port}"
-                            evt = self.sf.SpiderFootEvent(
+                            evt = SpiderFootEvent(
                                 "TCP_PORT_OPEN", port_str, self.__name__, event
                             )
                             self.notifyListeners(evt)
                             port_count += 1
 
                             if banner:
-                                evt = self.sf.SpiderFootEvent(
+                                evt = SpiderFootEvent(
                                     "WEBSERVER_BANNER",
                                     f"{port_str}: {banner}",
                                     self.__name__,

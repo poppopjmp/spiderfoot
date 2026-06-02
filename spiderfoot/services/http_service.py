@@ -151,11 +151,15 @@ class HttpService:
         if host in ("localhost", "127.0.0.1", "::1", "0.0.0.0"):
             return False
 
-        # Check for private IP ranges
+        # Check for private IP ranges. netaddr 1.x has no is_private() method
+        # (calling it raised an uncaught AttributeError here); use the 1.x
+        # classification API and never proxy private/local/link-local IPs.
         try:
             import netaddr
             ip = netaddr.IPAddress(host)
-            if ip.is_loopback() or ip.is_private() or ip.is_reserved():
+            if (ip.is_loopback() or ip.is_link_local() or ip.is_reserved()
+                    or (ip.version == 4 and ip.is_ipv4_private_use())
+                    or (ip.version == 6 and ip.is_ipv6_unique_local())):
                 return False
         except (netaddr.AddrFormatError, ValueError):
             pass  # Not an IP, it's a hostname — route through proxy

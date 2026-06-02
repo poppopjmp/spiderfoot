@@ -4,6 +4,7 @@ from __future__ import annotations
 import pytest
 import tempfile
 import os
+import sqlite3
 import psycopg2
 from unittest.mock import Mock, MagicMock, patch
 from spiderfoot import SpiderFootDb
@@ -44,8 +45,13 @@ def mock_db_config():
 
 @pytest.fixture
 def in_memory_db():
-    """Create an in-memory PostgreSQL database for testing."""
-    conn = psycopg2.connect(':memory:')
+    """Create an in-memory SQLite database connection for lightweight tests.
+
+    PostgreSQL has no in-memory mode, so the previous ``psycopg2.connect(':memory:')``
+    always raised. SQLite's ``:memory:`` provides a valid throwaway DB for tests
+    that only need a generic DB-API connection.
+    """
+    conn = sqlite3.connect(':memory:')
     yield conn
     conn.close()
 

@@ -1,6 +1,6 @@
 # Enhanced SpiderFoot OSINT Modules
 
-This document describes the new enhanced OSINT modules added to SpiderFoot dev-5.3.3 to address missing capabilities and improve the framework's effectiveness.
+This document describes the new enhanced OSINT modules added to SpiderFoot 6.0.1 to address missing capabilities and improve the framework's effectiveness.
 
 ## New Modules Overview
 

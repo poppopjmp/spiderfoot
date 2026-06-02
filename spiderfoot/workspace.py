@@ -10,7 +10,7 @@ import json
 import logging
 import time
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from spiderfoot import SpiderFootDb, SpiderFootHelpers
@@ -931,7 +931,7 @@ class SpiderFootWorkspace:
                     from spiderfoot import SpiderFoot
                     cfg = self.config.copy()
                     import multiprocessing as mp
-                    from sflib import startSpiderFootScanner
+                    from spiderfoot.scan.scanner import startSpiderFootScanner
                     lq = mp.Queue()
                     startSpiderFootScanner(
                         lq, scan_name, scan_id, target, target_type,
@@ -1112,7 +1112,7 @@ class SpiderFootWorkspace:
             'tlp_level': tlp_level,
             'workspace_id': self.workspace_id,
             'workspace_name': self.name,
-            'generated_at': datetime.utcnow().isoformat(),
+            'generated_at': datetime.now(timezone.utc).isoformat(),
             'summary': summary.get('statistics', {}),
             'targets': summary.get('targets_by_type', {}),
             'scans': summary.get('scans_by_status', {}),

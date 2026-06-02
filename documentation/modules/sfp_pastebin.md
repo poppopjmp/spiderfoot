@@ -33,7 +33,7 @@ Paste URLs: https://pastebin.com/abc123, https://pastebin.com/xyz789
 ## Tips
 
 - Use to detect credential leaks and sensitive data exposure.
-- Combine with sfp_breach and sfp_email for comprehensive risk analysis.
+- Combine with sfp_dehashed and sfp_email for comprehensive risk analysis.
 
 ---
 

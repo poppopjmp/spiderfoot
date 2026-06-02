@@ -395,6 +395,8 @@ class sfp_performance_optimizer(SpiderFootAsyncPlugin):
 
     def handleEvent(self, event: SpiderFootEvent) -> None:
         """Optimize event processing."""
+        if self.errorState:
+            return
         if self.resource_monitor and self.opts.get('auto_gc_enabled', True):
             if self.resource_monitor.should_trigger_gc():
                 self.debug("Triggering garbage collection for memory optimization")

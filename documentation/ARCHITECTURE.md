@@ -2,7 +2,7 @@
 
 ## Overview
 
-SpiderFoot v6.0.0 implements a microservices-only architecture:
+SpiderFoot v6.0.1 implements a microservices-only architecture:
 
 - **23 containers** behind a Traefik v3 reverse proxy with full observability, AI agents, Celery task processing, and React SPA frontend
 - **Native async I/O** via aiohttp + aiodns for high-throughput scanner modules
@@ -12,7 +12,7 @@ SpiderFoot v6.0.0 implements a microservices-only architecture:
 
 > **Note**: Monolith mode was removed in v6.0.0 (Batches 34–36). SpiderFoot now requires Docker Compose or Kubernetes.
 
-## Service Topology (v6.0.0)
+## Service Topology (v6.0.1)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -65,7 +65,7 @@ SpiderFoot v6.0.0 implements a microservices-only architecture:
 └───────────────────────────────────────────────────────────────────────┘
 ```
 
-## Package Structure (v6.0.0)
+## Package Structure (v6.0.1)
 
 The `spiderfoot/` package is organized into **23 domain sub-packages** plus several top-level modules:
 
@@ -161,7 +161,7 @@ from spiderfoot import SpiderFootEvent, SpiderFootPlugin
 │                    LLM Gateway                                     │
 │  ┌────────────┐ ┌────────────┐ ┌────────────┐                      │
 │  │  LiteLLM   │ │  AI Agents │ │ OTel       │                      │
-│  │(multi-LLM  │ │ (6 agents) │ │ Tracing    │                      │
+│  │(multi-LLM  │ │ (7 agents) │ │ Tracing    │                      │
 │  │  proxy)    │ │            │ │ (Vector→   │                      │
 │  └────────────┘ └────────────┘ │  Jaeger)   │                      │
 │                                 └────────────┘                      │
@@ -690,7 +690,7 @@ migration instructions.
 
 | Version | Change |
 |---|---|
-| **6.0.0** | Microservices-only architecture — monolith mode removed. 23-container compose stack, profile-based activation (`scan`, `proxy`, `storage`, `monitor`, `ai`, `scheduler`, `sso`, `full`). IaC Map feature (`spiderfoot/iac/`). 309 modules. 95 correlation rules. 5 Grafana dashboards. |
+| **6.0.0** | Microservices-only architecture — monolith mode removed. 23-container compose stack, profile-based activation (`scan`, `proxy`, `storage`, `monitor`, `ai`, `scheduler`, `sso`, `full`). IaC Map feature (`spiderfoot/iac/`). 309 modules. 94 correlation rules. 5 Grafana dashboards. |
 | 5.246.0 | GraphQL mutations (5), subscriptions (2, WebSocket), Qdrant semantic search resolver, query depth limiter, MinIO object storage (5 buckets), PG backup sidecar, complete documentation overhaul |
 | 5.245.0 | Complete shim removal — 79 backward-compat files deleted, 470 imports rewritten to 8 domain sub-packages |
 | 5.244.0 | Fix circular imports across all 8 sub-packages (relative imports) |
@@ -1181,8 +1181,8 @@ See [TypeScript SDK Guide](typescript_sdk.md) for the generation workflow.
 
 Pipeline-friendly scan result export:
 
-- **Endpoint**: `GET /api/scans/{id}/export/jsonl` — streams newline-delimited JSON
-- **SSE stream**: `GET /events/stream` — Server-Sent Events for real-time scan event delivery
+- **Endpoint**: `GET /api/scans/{scan_id}/export/stream` — streams newline-delimited JSON
+- **SSE stream**: `GET /api/scans/{scan_id}/events/stream` — Server-Sent Events for real-time scan event delivery
 - **Event enrichment**: `SpiderFootEvent.asDict()` produces full serializable event dicts
 - **Use cases**: `jq` pipelines, Elasticsearch bulk ingest, SIEM integration, real-time dashboards
 

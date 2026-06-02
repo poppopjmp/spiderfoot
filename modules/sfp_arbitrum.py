@@ -82,13 +82,13 @@ class sfp_arbitrum(SpiderFootAsyncPlugin):
         return ["ARBITRUM_ADDRESS", "ARBITRUM_TX"]
 
     def handleEvent(self, event: SpiderFootEvent) -> None:
-        if self.errorState:
-            return
-
         """
         Handle ROOT event and monitor Arbitrum blockchain for transactions for configured addresses.
         Emits ARBITRUM_TX and ARBITRUM_ADDRESS events for each relevant transaction found.
         """
+        if self.errorState:
+            return
+
         self.debug(f"[handleEvent] Received event: {event.eventType}")
         if event.eventType not in self.watchedEvents():
             self.debug(f"[handleEvent] Ignoring event type: {event.eventType}")

@@ -15,6 +15,7 @@ import subprocess
 import tempfile
 
 from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
+from spiderfoot import SpiderFootEvent
 
 
 class sfp_tool_amass(SpiderFootAsyncPlugin):
@@ -152,7 +153,7 @@ class sfp_tool_amass(SpiderFootAsyncPlugin):
                         self.results[name] = True
                         count += 1
 
-                        evt = self.sf.SpiderFootEvent(
+                        evt = SpiderFootEvent(
                             "INTERNET_NAME", name, self.__name__, event
                         )
                         self.notifyListeners(evt)
@@ -162,7 +163,7 @@ class sfp_tool_amass(SpiderFootAsyncPlugin):
                             if ip and ip not in self.results:
                                 self.results[ip] = True
                                 evt_type = "IPV6_ADDRESS" if ":" in ip else "IP_ADDRESS"
-                                evt = self.sf.SpiderFootEvent(
+                                evt = SpiderFootEvent(
                                     evt_type, ip, self.__name__, event
                                 )
                                 self.notifyListeners(evt)

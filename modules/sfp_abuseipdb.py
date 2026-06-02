@@ -282,10 +282,10 @@ class sfp_abuseipdb(SpiderFootAsyncPlugin):
         return None
 
     def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         if self.errorState:
             return
 
-        """Handle an event received by this module."""
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

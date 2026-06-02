@@ -59,9 +59,9 @@ logger.log_login_attempt("username", success=True, ip_address="192.168.1.1")
 
 **3. Rate Limiting Integration**
 ```python
-from spiderfoot.security.rate_limiter import RateLimiter
+from spiderfoot.security.rate_limiter import RateLimiterService
 
-rate_limiter = RateLimiter()
+rate_limiter = RateLimiterService()
 
 @rate_limiter.limit('api')
 def api_endpoint():
@@ -98,7 +98,7 @@ When developing security-related features:
 **1. Use the Security Validator**
 ```bash
 cd spiderfoot
-python security_validator.py .
+# Security config is validated automatically at startup (spiderfoot/security/startup_check.py)
 ```
 
 **2. Write Security Tests**
@@ -181,7 +181,7 @@ For comprehensive security information, see the [Security Guide](security.md).
 
 ## Module Development
 
-SpiderFoot's modular architecture makes it easy to add new functionality. The [Module Development Guide](../docs/developer/module_development.md) explains how to create, test, and document your own modules, including:
+SpiderFoot's modular architecture makes it easy to add new functionality. The [Module Development Guide](MODULE_MIGRATION_GUIDE.md) explains how to create, test, and document your own modules, including:
 
 - Module structure and naming conventions
 - Required and optional methods
@@ -190,15 +190,15 @@ SpiderFoot's modular architecture makes it easy to add new functionality. The [M
 
 ## API Development
 
-SpiderFoot provides a RESTful API for automation and integration. See the [API Development Guide](../docs/developer/api_development.md) for details on available endpoints, authentication, and usage examples.
+SpiderFoot provides a RESTful API for automation and integration. See the [API Development Guide](api_reference.md) for details on available endpoints, authentication, and usage examples.
 
 ## Version Management
 
-Learn how SpiderFoot manages releases, versioning, and changelogs in the [Version Management Guide](../docs/VERSION_MANAGEMENT.md). This is essential for maintaining compatibility and tracking changes.
+Learn how SpiderFoot manages releases, versioning, and changelogs in the [Version Management Guide](../README.md). This is essential for maintaining compatibility and tracking changes.
 
 ## Documentation Build
 
-Help keep the documentation up to date! The [Documentation Build Guide](../docs/DOCUMENTATION_BUILD.md) explains how to build, test, and contribute to the docs.
+Help keep the documentation up to date! The [Documentation Build Guide](../README.md) explains how to build, test, and contribute to the docs.
 
 ---
 

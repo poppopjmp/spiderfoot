@@ -166,4 +166,4 @@ SpiderFoot's correlation engine is designed for reliability, extensibility, and 
 
 ---
 
-For more advanced usage, see the [Correlation Analysis Guide](../../workflow/correlation_analysis.md) and the [Developer Guide](../../developer_guide.md).
+For more advanced usage, see the [Correlation Analysis Guide](correlations.md) and the [Developer Guide](../developer_guide.md).

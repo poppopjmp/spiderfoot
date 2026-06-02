@@ -3,6 +3,7 @@ from __future__ import annotations
 """FastAPI router for scan data retrieval, entity types, and module queries."""
 
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
 
 from ..dependencies import get_app_config, optional_auth, get_api_key
 from ..pagination import PaginationParams, paginate
@@ -117,32 +118,6 @@ async def list_sources(api_key: str = optional_auth_dep) -> dict:
         raise HTTPException(status_code=500, detail="Failed to list data sources") from e
 
 
-@router.get("/data/modules/{module_name}")
-async def get_module_details(module_name: str, api_key: str = optional_auth_dep) -> dict:
-    """
-    Get details for a specific module.
-
-    Args:
-        module_name (str): The name of the module to retrieve details for.
-        api_key (str): API key for authentication.
-
-    Returns:
-        dict: Details of the specified module.
-
-    Raises:
-        HTTPException: On error or if module not found.
-    """
-    try:
-        config = get_app_config()
-        sf = SpiderFoot(config.get_config())
-        modules = sf.getModules()
-        if module_name not in modules:
-            raise HTTPException(status_code=404, detail="Module not found")
-        return {"module": modules[module_name]}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail="Failed to get module details") from e
-
-
 @router.get("/data/entity-types/{type_name}")
 async def get_entity_type_details(type_name: str, api_key: str = optional_auth_dep) -> dict:
     """
@@ -166,6 +141,8 @@ async def get_entity_type_details(type_name: str, api_key: str = optional_auth_d
             raise HTTPException(status_code=404, detail="Entity type not found")
         # Optionally, add more details if available
         return {"entity_type": type_name}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail="Failed to get entity type details") from e
 
@@ -214,6 +191,8 @@ async def list_module_options(module_name: str, api_key: str = optional_auth_dep
             raise HTTPException(status_code=404, detail="Module not found")
         options = modules[module_name].get("optdescs", {})
         return {"options": options}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail="Failed to list module options") from e
 
@@ -517,31 +496,9 @@ async def get_module_dependencies(
                 event_type_map[et]["consumers"].append(mod_name)
 
     except Exception as e:
+        # Degrade gracefully: return an empty-but-valid dependency graph rather
+        # than failing the request if module metadata cannot be loaded.
         log.error("Failed to load module dependencies: %s", e)
-        # Try a simpler approach using data service
-        try:
-            svc = get_data_service()
-            modules = svc.list_modules()
-            if isinstance(modules, dict):
-                modules = list(modules.values())
-            for mod in modules:
-                name = mod.get("name", mod.get("module", ""))
-                if not name:
-                    continue
-                produces = mod.get("produces", mod.get("producedEvents", []))
-                consumes = mod.get("consumes", mod.get("watchedEvents", []))
-                nodes[name] = {
-                    "produces": sorted(produces) if produces else [],
-                    "consumes": sorted(consumes) if consumes else [],
-                }
-                for et in (produces or []):
-                    event_type_map.setdefault(et, {"producers": [], "consumers": []})
-                    event_type_map[et]["producers"].append(name)
-                for et in (consumes or []):
-                    event_type_map.setdefault(et, {"producers": [], "consumers": []})
-                    event_type_map[et]["consumers"].append(name)
-        except (KeyError, TypeError, AttributeError):
-            pass
 
     # Build edges: producer_module -> consumer_module via event_type
     for et, info in event_type_map.items():
@@ -679,15 +636,21 @@ async def enable_module(module_name: str, api_key: str = optional_auth_dep) -> d
         raise HTTPException(status_code=500, detail="Failed to enable module") from e
 
 
+class BulkDisableRequest(BaseModel):
+    """Request body for bulk-disabling modules."""
+    module_names: list[str] = Field(default_factory=list)
+
+
 @router.post("/data/modules/bulk-disable")
 async def bulk_disable_modules(
-    module_names: list = [],
+    request: BulkDisableRequest,
     api_key: str = optional_auth_dep,
 ) -> dict:
     """Disable multiple modules at once.
 
-    Body: list of module name strings.
+    Body: ``{"module_names": ["sfp_a", "sfp_b"]}``.
     """
+    module_names = request.module_names
     if not module_names:
         raise HTTPException(status_code=400, detail="Provide a list of module names")
 
@@ -713,3 +676,33 @@ async def bulk_disable_modules(
         "results": results,
         "disabled_count": len(_disabled_modules),
     }
+
+
+# NOTE: registered LAST so it does not shadow the literal /data/modules/* sub-paths
+# (stats, dependencies, status). Starlette matches routes in declaration order.
+@router.get("/data/modules/{module_name}")
+async def get_module_details(module_name: str, api_key: str = optional_auth_dep) -> dict:
+    """
+    Get details for a specific module.
+
+    Args:
+        module_name (str): The name of the module to retrieve details for.
+        api_key (str): API key for authentication.
+
+    Returns:
+        dict: Details of the specified module.
+
+    Raises:
+        HTTPException: On error or if module not found.
+    """
+    try:
+        config = get_app_config()
+        sf = SpiderFoot(config.get_config())
+        modules = sf.getModules()
+        if module_name not in modules:
+            raise HTTPException(status_code=404, detail="Module not found")
+        return {"module": modules[module_name]}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Failed to get module details") from e

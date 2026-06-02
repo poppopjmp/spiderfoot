@@ -440,6 +440,19 @@ else:
         }
         return result
 
+    # NOTE: declared before /health/{component_name} so the parameterized route
+    # does not shadow it (Starlette matches in declaration order).
+    @router.get(
+        "/health/shutdown",
+        summary="Shutdown manager status",
+        description="Shows registered services and shutdown state.",
+    )
+    async def shutdown_status() -> dict[str, Any]:
+        """Return shutdown manager status and registered services."""
+        from spiderfoot.ops.graceful_shutdown import get_shutdown_coordinator
+        mgr = get_shutdown_coordinator()
+        return mgr.status()
+
     @router.get(
         "/health/{component_name}",
         summary="Individual component health",
@@ -485,18 +498,6 @@ else:
         info = get_version_info()
         info["app_version"] = __version__
         return info
-
-    @router.get(
-        "/health/shutdown",
-        summary="Shutdown manager status",
-        description="Shows registered services and shutdown state.",
-    )
-    async def shutdown_status() -> dict[str, Any]:
-        """Return shutdown manager status and registered services."""
-        from spiderfoot.ops.graceful_shutdown import get_shutdown_coordinator
-        mgr = get_shutdown_coordinator()
-        return mgr.status()
-
 
 # -----------------------------------------------------------------------
 # Utility

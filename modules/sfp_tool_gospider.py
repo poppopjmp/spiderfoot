@@ -14,6 +14,7 @@ import re
 import subprocess
 
 from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
+from spiderfoot import SpiderFootEvent
 
 
 class sfp_tool_gospider(SpiderFootAsyncPlugin):
@@ -162,7 +163,7 @@ class sfp_tool_gospider(SpiderFootAsyncPlugin):
                     for email in email_re.findall(url):
                         if email not in self.results:
                             self.results[email] = True
-                            evt = self.sf.SpiderFootEvent(
+                            evt = SpiderFootEvent(
                                 "EMAILADDR", email, self.__name__, event
                             )
                             self.notifyListeners(evt)
@@ -183,7 +184,7 @@ class sfp_tool_gospider(SpiderFootAsyncPlugin):
                 else:
                     evt_type = "LINKED_URL_EXTERNAL"
 
-                evt = self.sf.SpiderFootEvent(
+                evt = SpiderFootEvent(
                     evt_type, url, self.__name__, event
                 )
                 self.notifyListeners(evt)

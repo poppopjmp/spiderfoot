@@ -172,7 +172,7 @@ class ProxyChain:
     def __post_init__(self) -> None:
         if not self.chain_id:
             self.chain_id = hashlib.md5(
-                "|".join(h.url for h in self.hops).encode()
+                "|".join(h.url for h in self.hops).encode(), usedforsecurity=False
             ).hexdigest()[:12]
 
     @property

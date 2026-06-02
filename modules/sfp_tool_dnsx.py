@@ -15,6 +15,7 @@ import subprocess
 import tempfile
 
 from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
+from spiderfoot import SpiderFootEvent
 
 
 class sfp_tool_dnsx(SpiderFootAsyncPlugin):
@@ -162,7 +163,7 @@ class sfp_tool_dnsx(SpiderFootAsyncPlugin):
                         for ip in result.get("a", []):
                             if ip not in self.results:
                                 self.results[ip] = True
-                                evt = self.sf.SpiderFootEvent(
+                                evt = SpiderFootEvent(
                                     "IP_ADDRESS", ip, self.__name__, event
                                 )
                                 self.notifyListeners(evt)
@@ -171,21 +172,21 @@ class sfp_tool_dnsx(SpiderFootAsyncPlugin):
                         for ip6 in result.get("aaaa", []):
                             if ip6 not in self.results:
                                 self.results[ip6] = True
-                                evt = self.sf.SpiderFootEvent(
+                                evt = SpiderFootEvent(
                                     "IPV6_ADDRESS", ip6, self.__name__, event
                                 )
                                 self.notifyListeners(evt)
 
                         # MX records
                         for mx in result.get("mx", []):
-                            evt = self.sf.SpiderFootEvent(
+                            evt = SpiderFootEvent(
                                 "PROVIDER_MAIL", mx, self.__name__, event
                             )
                             self.notifyListeners(evt)
 
                         # NS records
                         for ns in result.get("ns", []):
-                            evt = self.sf.SpiderFootEvent(
+                            evt = SpiderFootEvent(
                                 "PROVIDER_DNS", ns, self.__name__, event
                             )
                             self.notifyListeners(evt)
@@ -193,14 +194,14 @@ class sfp_tool_dnsx(SpiderFootAsyncPlugin):
                         # TXT records
                         for txt in result.get("txt", []):
                             evt_type = "DNS_SPF" if "v=spf1" in txt.lower() else "DNS_TEXT"
-                            evt = self.sf.SpiderFootEvent(
+                            evt = SpiderFootEvent(
                                 evt_type, txt, self.__name__, event
                             )
                             self.notifyListeners(evt)
 
                         # Raw record data
                         raw = json.dumps(result, indent=2)
-                        evt = self.sf.SpiderFootEvent(
+                        evt = SpiderFootEvent(
                             "RAW_DNS_RECORDS", raw, self.__name__, event
                         )
                         self.notifyListeners(evt)

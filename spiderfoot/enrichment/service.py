@@ -87,7 +87,7 @@ async def upload_document(
     pipeline = _get_pipeline()
 
     # Process in thread pool to avoid blocking
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     result = await loop.run_in_executor(
         None,
         pipeline.process,
@@ -112,7 +112,7 @@ async def process_text(request: TextProcessRequest):
 
     pipeline = _get_pipeline()
 
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     result = await loop.run_in_executor(
         None,
         pipeline.process,
@@ -138,7 +138,7 @@ async def batch_process(request: BatchProcessRequest):
 
     for item in request.items:
         content = item.text.encode("utf-8")
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
             None,
             pipeline.process,

@@ -34,7 +34,7 @@ Secrets Detected: Yes
 ## Tips
 
 - Use to discover code leaks, credentials, and mentions of your assets.
-- Combine with sfp_email and sfp_breach for full exposure analysis.
+- Combine with sfp_email and sfp_dehashed for full exposure analysis.
 
 ---
 

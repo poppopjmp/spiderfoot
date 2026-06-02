@@ -14,6 +14,7 @@ import subprocess
 import tempfile
 
 from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
+from spiderfoot import SpiderFootEvent
 
 
 class sfp_tool_tlsx(SpiderFootAsyncPlugin):
@@ -186,7 +187,7 @@ class sfp_tool_tlsx(SpiderFootAsyncPlugin):
                         if subject_cn:
                             names = [subject_cn] + (subject_an or [])
                             for name in names:
-                                evt = self.sf.SpiderFootEvent(
+                                evt = SpiderFootEvent(
                                     "SSL_CERTIFICATE_ISSUED",
                                     name,
                                     self.__name__,
@@ -199,7 +200,7 @@ class sfp_tool_tlsx(SpiderFootAsyncPlugin):
                             issuer_str = issuer_cn
                             if issuer_org:
                                 issuer_str = f"{issuer_cn} ({issuer_org})"
-                            evt = self.sf.SpiderFootEvent(
+                            evt = SpiderFootEvent(
                                 "SSL_CERTIFICATE_ISSUER",
                                 issuer_str,
                                 self.__name__,
@@ -209,7 +210,7 @@ class sfp_tool_tlsx(SpiderFootAsyncPlugin):
 
                         # Expired certificate
                         if expired:
-                            evt = self.sf.SpiderFootEvent(
+                            evt = SpiderFootEvent(
                                 "SSL_CERTIFICATE_EXPIRED",
                                 f"{host}: Certificate expired (not_after: {not_after})",
                                 self.__name__,
@@ -219,7 +220,7 @@ class sfp_tool_tlsx(SpiderFootAsyncPlugin):
 
                         # Weak TLS version
                         if tls_version and tls_version in ("tls10", "tls11", "ssl30"):
-                            evt = self.sf.SpiderFootEvent(
+                            evt = SpiderFootEvent(
                                 "VULNERABILITY_GENERAL",
                                 f"{host}: Weak TLS version {tls_version}",
                                 self.__name__,
@@ -229,7 +230,7 @@ class sfp_tool_tlsx(SpiderFootAsyncPlugin):
 
                         # Self-signed certificate
                         if self_signed:
-                            evt = self.sf.SpiderFootEvent(
+                            evt = SpiderFootEvent(
                                 "VULNERABILITY_GENERAL",
                                 f"{host}: Self-signed certificate",
                                 self.__name__,
@@ -239,7 +240,7 @@ class sfp_tool_tlsx(SpiderFootAsyncPlugin):
 
                         # Mismatched certificate
                         if mismatched:
-                            evt = self.sf.SpiderFootEvent(
+                            evt = SpiderFootEvent(
                                 "VULNERABILITY_GENERAL",
                                 f"{host}: Certificate hostname mismatch",
                                 self.__name__,
@@ -262,7 +263,7 @@ class sfp_tool_tlsx(SpiderFootAsyncPlugin):
                         if not_after:
                             details.append(f"Valid Until: {not_after}")
 
-                        evt = self.sf.SpiderFootEvent(
+                        evt = SpiderFootEvent(
                             "RAW_RIR_DATA",
                             "\n".join(details),
                             self.__name__,

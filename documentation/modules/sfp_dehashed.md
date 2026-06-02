@@ -1,4 +1,4 @@
-# sfp_breach
+# sfp_dehashed
 
 **Purpose:**
 Checks for data breaches and leaked credentials associated with the target email, domain, or username. Useful for identifying compromised accounts and exposure risks.
@@ -13,7 +13,7 @@ Checks for data breaches and leaked credentials associated with the target email
   ```sh
   curl -X POST http://localhost:8001/api/v1/scans \
   -H "Content-Type: application/json" \
-  -d '{"target": "user@example.com", "modules": ["sfp_breach"]}'
+  -d '{"target": "user@example.com", "modules": ["sfp_dehashed"]}'
   ```
 
 ## Output Example
@@ -30,7 +30,7 @@ Details: Passwords, personal info exposed
 
 ## Tips
 - Use to assess risk for users, domains, or organizations.
-- Combine with sfp_email, sfp_username for full coverage.
+- Combine with sfp_email, sfp_social for full coverage.
 
 ---
 

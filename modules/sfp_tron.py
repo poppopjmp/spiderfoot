@@ -83,10 +83,10 @@ class sfp_tron(SpiderFootAsyncPlugin):
         return ["TRON_ADDRESS", "TRON_TX"]
 
     def handleEvent(self, event: SpiderFootEvent) -> None:
+        """Handle an event received by this module."""
         if self.errorState:
             return
 
-        """Handle an event received by this module."""
         self.debug(f"[handleEvent] Received event: {event.eventType}")
         # Stub event filtering logic
         if event.eventType not in self.watchedEvents():

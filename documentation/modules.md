@@ -21,7 +21,7 @@ Modules are plugins that collect, enrich, or analyze data from various sources. 
 ### DNS and Network
 - **sfp_dnsresolve**: DNS resolution and reverse DNS
 - **sfp_whois**: WHOIS information lookup
-- **sfp_ssl**: SSL certificate analysis
+- **sfp_sslcert**: SSL certificate analysis
 - **sfp_portscan_tcp**: TCP port scanning
 - **sfp_banner**: Service banner grabbing
 
@@ -29,7 +29,7 @@ Modules are plugins that collect, enrich, or analyze data from various sources. 
 - **sfp_threatcrowd**: ThreatCrowd API queries
 - **sfp_virustotal**: VirusTotal API integration
 - **sfp_alienvault**: AlienVault OTX integration
-- **sfp_malware**: Malware analysis platforms
+- **sfp_malwarepatrol**: Malware analysis platforms
 
 ### Search Engines
 - **sfp_google**: Google search results
@@ -113,7 +113,7 @@ SpiderFoot integrates **36 external security tool modules** for active scanning.
 - **sfp_performance_optimizer**: Intelligent caching and performance optimization
 
 ### Data Breach
-- **sfp_haveibeen**: HaveIBeenPwned integration
+- **sfp_haveibeenpwned**: HaveIBeenPwned integration
 - **sfp_hunter**: Hunter.io email discovery
 - **sfp_emailrep**: Email reputation checking
 - **sfp_hudsonrock**: Hudson Rock Cavalier infostealer intelligence
@@ -130,8 +130,8 @@ Below is a complete list of all documented modules. Click a module name to view 
 | [sfp_alienvault](modules/sfp_alienvault.md) | Queries AlienVault OTX for threat intelligence, indicators of compromise, and reputation data. |
 | [sfp_arin](modules/sfp_arin.md) | Queries ARIN for network, ASN, and contact information. |
 | [sfp_blockchain_analytics](modules/sfp_blockchain_analytics.md) | Advanced blockchain and cryptocurrency investigation with multi-chain support and risk assessment. |
-| [sfp_breach](modules/sfp_breach.md) | Checks for data breaches and leaked credentials. |
-| [sfp_btc](modules/sfp_btc.md) | Identifies and analyzes Bitcoin addresses related to the target. |
+| [sfp_dehashed](modules/sfp_dehashed.md) | Checks for data breaches and leaked credentials. |
+| [sfp_bitcoin](modules/sfp_bitcoin.md) | Identifies and analyzes Bitcoin addresses related to the target. |
 | [sfp_certspotter](modules/sfp_certspotter.md) | Queries CertSpotter for certificate transparency logs. |
 | [sfp_dnsbrute](modules/sfp_dnsbrute.md) | Performs DNS brute-forcing to discover subdomains. |
 | [sfp_dnsdumpster](modules/sfp_dnsdumpster.md) | Queries DNSDumpster for passive DNS and subdomain enumeration. |
@@ -139,17 +139,16 @@ Below is a complete list of all documented modules. Click a module name to view 
 | [sfp_email](modules/sfp_email.md) | Extracts and analyzes email addresses related to the target. |
 | [sfp_github](modules/sfp_github.md) | Searches GitHub for code, repositories, and mentions. |
 | [sfp_gravatar](modules/sfp_gravatar.md) | Searches Gravatar for avatars, profile data, and associated emails. |
-| [sfp_hibp](modules/sfp_hibp.md) | Checks HaveIBeenPwned for breaches and exposures. |
+| [sfp_haveibeenpwned](modules/sfp_haveibeenpwned.md) | Checks HaveIBeenPwned for breaches and exposures. |
 | [sfp_hudsonrock](modules/sfp_hudsonrock.md) | Queries Hudson Rock Cavalier API for infostealer-compromised credentials and machine data. |
 | [sfp_ipinfo](modules/sfp_ipinfo.md) | Queries IPinfo for geolocation, ASN, and network information. |
 | [sfp_pastebin](modules/sfp_pastebin.md) | Searches Pastebin for leaks, credentials, and mentions. |
 | [sfp_performance_optimizer](modules/sfp_performance_optimizer.md) | Performance optimization with intelligent caching, rate limiting, and resource monitoring. |
 | [sfp_portscan_tcp](modules/sfp_portscan_tcp.md) | Performs TCP port scanning on the target host. |
-| [sfp_riskiq](modules/sfp_riskiq.md) | Integrates with RiskIQ (PassiveTotal) for passive DNS, SSL, and threat intelligence. |
 | [sfp_securitytrails](modules/sfp_securitytrails.md) | Integrates with SecurityTrails for passive DNS, WHOIS, and infrastructure data. |
 | [sfp_shodan](modules/sfp_shodan.md) | Queries Shodan for open ports, banners, vulnerabilities, and geolocation. |
 | [sfp_social](modules/sfp_social.md) | Searches social media platforms for mentions, profiles, and activity. |
-| [sfp_ssl](modules/sfp_ssl.md) | Analyzes SSL/TLS certificates for the target host. |
+| [sfp_sslcert](modules/sfp_sslcert.md) | Analyzes SSL/TLS certificates for the target host. |
 | [sfp_threatcrowd](modules/sfp_threatcrowd.md) | Queries ThreatCrowd for information about domains, IPs, and emails. |
 | [sfp_tiktok_osint](modules/sfp_tiktok_osint.md) | Comprehensive TikTok intelligence gathering including user profiles and content analysis. |
 | sfp_tool_amass | Advanced subdomain enumeration via OWASP Amass. |
@@ -190,7 +189,7 @@ Below is a complete list of all documented modules. Click a module name to view 
 | sfp_tool_wappalyzer | Technology stack detection via Wappalyzer rules. |
 
 | [sfp_twitter](modules/sfp_twitter.md) | Searches Twitter for profiles, mentions, and activity. |
-| [sfp_username](modules/sfp_username.md) | Searches for usernames related to the target across social media and forums. |
+| [sfp_social](modules/sfp_social.md) | Searches for usernames and profiles related to the target across social media and forums. |
 | [sfp_virustotal](modules/sfp_virustotal.md) | Integrates with VirusTotal to check domains, IPs, and files for malware and reputation. |
 | [sfp_whois](modules/sfp_whois.md) | Performs WHOIS lookups for domains and IP addresses. |
 
@@ -199,14 +198,14 @@ Below is a complete list of all documented modules. Click a module name to view 
 ## Module Selection Strategies
 
 - **By Use Case:**
-  - Passive: sfp_dnsresolve, sfp_whois, sfp_ssl, sfp_threatcrowd, sfp_virustotal
-  - Active: sfp_tool_subfinder, sfp_tool_httpx, sfp_tool_nuclei, sfp_tool_katana
+  - Passive: sfp_dnsresolve, sfp_whois, sfp_sslcert, sfp_threatcrowd, sfp_virustotal
+  - Active: sfp_subfinder, sfp_httpx, sfp_nuclei, sfp_tool_katana
   - Network: sfp_tool_naabu, sfp_tool_masscan, sfp_tool_sslscan, sfp_whois
   - Internet Exposure: sfp_shodan, sfp_censys, sfp_binaryedge
-  - External Tools: Use the **tools-only** scan profile for all 33 tool modules
+  - External Tools: Use the **tools-only** scan profile for all 36 tool modules
 - **By Risk Level:**
   - Low: Passive only
-  - Medium: Minimal active (sfp_tool_httpx, sfp_tool_subfinder, sfp_tool_dnsx)
+  - Medium: Minimal active (sfp_httpx, sfp_subfinder, sfp_tool_dnsx)
   - High: Full active (all sfp_tool_* modules)
 - **By Scan Profile:**
   - Use predefined profiles like `tools-only`, `full`, `passive`, or `web-audit`

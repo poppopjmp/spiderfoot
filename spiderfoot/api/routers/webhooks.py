@@ -195,6 +195,32 @@ else:
             "count": len(records),
         }
 
+    # NOTE: this literal route is declared before /webhooks/{webhook_id} so it
+    # is not shadowed by the parameterized route (Starlette matches in
+    # declaration order).
+    @router.get(
+        "/webhooks/event-types",
+        summary="List available event types",
+        description="Returns all known webhook event types that can be used for filtering.",
+    )
+    async def list_event_types() -> dict[str, Any]:
+        """Return all known webhook event types."""
+        flat = []
+        for category, types in KNOWN_EVENT_TYPES.items():
+            for et in types:
+                flat.append({
+                    "event_type": et,
+                    "category": category,
+                    "description": et.replace(".", " ").replace("_", " ").title(),
+                    "supports_wildcard": True,
+                })
+        return {
+            "event_types": flat,
+            "total": len(flat),
+            "categories": list(KNOWN_EVENT_TYPES.keys()),
+            "note": "Use category prefix with wildcard (e.g. 'scan.*') to subscribe to all events in a category.",
+        }
+
     @router.get(
         "/webhooks/{webhook_id}",
         summary="Get webhook details",
@@ -283,29 +309,6 @@ else:
             "system.api_key_rotated",
         ],
     }
-
-    @router.get(
-        "/webhooks/event-types",
-        summary="List available event types",
-        description="Returns all known webhook event types that can be used for filtering.",
-    )
-    async def list_event_types() -> dict[str, Any]:
-        """Return all known webhook event types."""
-        flat = []
-        for category, types in KNOWN_EVENT_TYPES.items():
-            for et in types:
-                flat.append({
-                    "event_type": et,
-                    "category": category,
-                    "description": et.replace(".", " ").replace("_", " ").title(),
-                    "supports_wildcard": True,
-                })
-        return {
-            "event_types": flat,
-            "total": len(flat),
-            "categories": list(KNOWN_EVENT_TYPES.keys()),
-            "note": "Use category prefix with wildcard (e.g. 'scan.*') to subscribe to all events in a category.",
-        }
 
     class EventFilterUpdateRequest(BaseModel):
         """Data model for updating a webhook's event type filter."""

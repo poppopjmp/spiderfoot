@@ -172,8 +172,8 @@ class sfp_tool_cmseek(SpiderFootAsyncPlugin):
             return
 
         try:
-            f = io.open(log_path, encoding='utf-8')
-            j = json.loads(f.read())
+            with io.open(log_path, encoding='utf-8') as f:
+                j = json.loads(f.read())
         except Exception as e:
             self.error(
                 f"Could not parse CMSeeK output file {log_path} as JSON: {e}")

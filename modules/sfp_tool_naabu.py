@@ -15,6 +15,7 @@ import subprocess
 import tempfile
 
 from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
+from spiderfoot import SpiderFootEvent
 
 
 class sfp_tool_naabu(SpiderFootAsyncPlugin):
@@ -158,7 +159,7 @@ class sfp_tool_naabu(SpiderFootAsyncPlugin):
                                 parts = line.rsplit(":", 1)
                                 if len(parts) == 2 and parts[1].isdigit():
                                     port_str = f"{parts[0]}:{parts[1]}"
-                                    evt = self.sf.SpiderFootEvent(
+                                    evt = SpiderFootEvent(
                                         "TCP_PORT_OPEN", port_str, self.__name__, event
                                     )
                                     self.notifyListeners(evt)
@@ -170,7 +171,7 @@ class sfp_tool_naabu(SpiderFootAsyncPlugin):
 
                         if port:
                             port_str = f"{host}:{port}"
-                            evt = self.sf.SpiderFootEvent(
+                            evt = SpiderFootEvent(
                                 "TCP_PORT_OPEN", port_str, self.__name__, event
                             )
                             self.notifyListeners(evt)

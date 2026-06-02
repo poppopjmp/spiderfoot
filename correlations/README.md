@@ -1,6 +1,6 @@
 # What's New in Correlations (2025 Update)
 
-- **New Correlation Rules:** Added rules for Fofa, RocketReach, and ZoomEye exposed services/contacts, and more.
+- **New Correlation Rules:** The rule set continues to expand across network, infrastructure, identity, data-leak, and cross-scan analysis.
 - **Advanced Analysis Methods:** The engine now supports additional analysis methods such as `outlier`, `first_collection_only`, and `match_all_to_first_collection`.
 - **Improved Error Handling:** If a rule contains syntax errors, SpiderFoot will now skip the invalid rule and continue loading others, providing detailed error messages at startup.
 - **Rule ID and Filename:** The `id` field in each rule must exactly match the filename (excluding `.yaml`).
@@ -93,9 +93,9 @@ In short, SpiderFoot translates the YAML rules into a combination queries agains
 
 ### The rules
 
-Each rule exists as a YAML file within the `/correlations` folder in the SpiderFoot installation path. As of v5.9.0, there are **94 correlation rules** covering network, infrastructure, identity, vulnerability, data leak, geographic, cryptocurrency, web, social media, and cross-scan workspace analysis:
+Each rule exists as a YAML file within the `/correlations` folder in the SpiderFoot installation path (plus a `template.yaml` scaffold that is not a rule). There are **94 correlation rules** covering network, infrastructure, identity, vulnerability, data leak, geographic, cryptocurrency, web, social media, and cross-scan workspace analysis:
 
-#### Scan-Scope Rules (69 rules)
+#### Scan-Scope Rules (67 rules)
 
 | Risk | Rule | Description |
 |------|------|-------------|
@@ -167,7 +167,7 @@ Each rule exists as a YAML file within the `/correlations` folder in the SpiderF
 | **INFO** | `web_form_enumeration` | Multiple web forms discovered |
 | **INFO** | `whois_domain_expiring` | Domain WHOIS data reveals registration details |
 
-#### Cross-Scan Workspace-Scope Rules (25 rules)
+#### Cross-Scan Workspace-Scope Rules (27 rules)
 
 | Risk | Rule | Description |
 |------|------|-------------|

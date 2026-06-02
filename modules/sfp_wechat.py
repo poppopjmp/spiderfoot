@@ -56,6 +56,8 @@ class sfp_wechat(SpiderFootAsyncPlugin):
         emit WECHAT_MESSAGE events, deduplicate, and handle errors.
         Event data includes user ID and message text.
         """
+        if self.errorState:
+            return
         if self.opts.get("api_key", "") == "":
             self.error("WeChat API key is required.")
             return

@@ -45,7 +45,7 @@ SpiderFoot is designed for both beginners and advanced users, offering a modern 
 
 ## Current Version and Capabilities
 
-**SpiderFoot v6.0.0** represents a significant advancement in OSINT automation with the following enhanced capabilities:
+**SpiderFoot v6.1.0** represents a significant advancement in OSINT automation with the following enhanced capabilities:
 
 ### Module Count and Categories
 - **309 Total Modules**: Comprehensive coverage across all major OSINT categories
@@ -91,7 +91,7 @@ SpiderFoot consists of the following main components:
 - **Core Engine:** Orchestrates scans, manages modules, processes results, and handles scheduling. The engine is highly extensible and supports concurrent scanning.
 - **GraphQL + REST API:** Code-first Strawberry GraphQL schema (13 queries, 5 mutations, 2 WebSocket subscriptions) alongside the full REST API. Mounted at `/api/graphql` with GraphiQL IDE.
 - **Qdrant Vector Search:** Semantic similarity search over scan events using custom HTTP-based Qdrant client with embedding service (all-MiniLM-L6-v2, 384 dims). 5 correlation strategies.
-- **MinIO Object Storage:** S3-compatible storage for reports, exports, artifacts, backups, and logs across 5 auto-provisioned buckets.
+- **MinIO Object Storage:** S3-compatible storage for reports, exports, artifacts, backups, and logs across 8 auto-provisioned buckets.
 - **Security Middleware:** Enterprise-grade security layer providing CSRF protection, input validation, rate limiting, session management, API security, and comprehensive logging.
 - **Modules:** Each module is responsible for gathering a specific type of data or integrating with a particular source. Modules can be enabled, disabled, or configured individually.
 - **Web UI:** Provides a user-friendly interface for configuring scans, viewing results, managing workspaces, and visualizing relationships between entities.

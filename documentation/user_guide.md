@@ -120,14 +120,14 @@ Configure global settings, module API keys, and monitor the 6 AI-powered analysi
 
 ## Module Categories & Usage Patterns
 
-SpiderFoot v6.0.0 includes 309 modules organized into the following categories:
+SpiderFoot v6.1.0 includes 309 modules organized into the following categories:
 
 ### Core Investigation Modules
 - **DNS/Network**: sfp_dnsresolve, sfp_whois, sfp_ssl, sfp_portscan_tcp, sfp_banner
-- **Threat Intelligence**: sfp_threatcrowd, sfp_virustotal, sfp_alienvault, sfp_malware
+- **Threat Intelligence**: sfp_threatcrowd, sfp_virustotal, sfp_alienvault, sfp_malwarepatrol
 - **Search Engines**: sfp_google, sfp_bing, sfp_duckduckgo, sfp_yandex
 - **Social Media**: sfp_twitter, sfp_github, sfp_linkedin, sfp_instagram, **sfp_tiktok_osint**
-- **Data Breach**: sfp_haveibeen, sfp_hunter, sfp_emailrep
+- **Data Breach**: sfp_haveibeenpwned, sfp_hunter, sfp_emailrep
 
 ### Additional Investigation Modules
 - **Blockchain Analytics**: sfp_blockchain_analytics (Bitcoin, Ethereum, Litecoin analysis)
@@ -159,7 +159,7 @@ curl -X POST http://localhost:8001/api/v1/scans \
 # Email investigation with enhanced correlation
 curl -X POST http://localhost:8001/api/v1/scans \
   -H "Content-Type: application/json" \
-  -d '{"target": "user@example.com", "modules": ["sfp_hunter", "sfp_haveibeen", "sfp_emailrep", "sfp_advanced_correlation"]}'
+  -d '{"target": "user@example.com", "modules": ["sfp_hunter", "sfp_haveibeenpwned", "sfp_emailrep", "sfp_advanced_correlation"]}'
 
 # Multi-target investigation with performance optimization
 curl -X POST http://localhost:8001/api/v1/scans \
@@ -173,13 +173,13 @@ curl -X POST http://localhost:8001/api/v1/scans \
 
 - **Workspace management, multi-target scanning, correlation, CTI reports, and automation:**
   - See [Quick Start](quickstart.md) and [Developer Guide](developer_guide.md) for scripting, batch operations, and CI/CD integration.
-  - Use `sfworkflow.py` for advanced workspace and scan management.
+  - Use the `spiderfoot-cli` workspace commands for advanced workspace and scan management.
 
 ---
 
 ## Result Interpretation
 
-SpiderFoot v6.0.0 provides enhanced result analysis and interpretation:
+SpiderFoot v6.1.0 provides enhanced result analysis and interpretation:
 
 ### Event Types
 - **Traditional Types**: IP_ADDRESS, DOMAIN_NAME, TCP_PORT_OPEN, SSL_CERTIFICATE_ISSUED, VULNERABILITY, MALICIOUS_DOMAIN, EMAILADDR, SOCIAL_MEDIA
@@ -233,7 +233,7 @@ SpiderFoot v6.0.0 provides enhanced result analysis and interpretation:
 
 ## Automation & Integration
 
-- Use CLI and `sfworkflow.py` for scripting, batch scans, and automation
+- Use CLI and the `spiderfoot-cli` workspace commands for scripting, batch scans, and automation
 - Integrate with CI/CD (see examples in the old CLI guide)
 - Use environment variables for configuration and API keys
 

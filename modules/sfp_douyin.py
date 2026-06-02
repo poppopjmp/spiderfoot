@@ -53,6 +53,8 @@ class sfp_douyin(SpiderFootAsyncPlugin):
         Deduplicates videos and handles errors per user.
         :param event: The triggering SpiderFootEvent (usually ROOT)
         """
+        if self.errorState:
+            return
         usernames = [u.strip() for u in self.opts.get("usernames", "").split(",") if u.strip()]
         max_videos = int(self.opts.get("max_videos", 10))
         if not usernames:

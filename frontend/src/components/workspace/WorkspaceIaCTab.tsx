@@ -190,7 +190,14 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
   return (
     <label className="flex items-center gap-2 cursor-pointer select-none">
       <div
-        role="switch" aria-checked={checked} onClick={() => onChange(!checked)}
+        role="switch" aria-checked={checked} aria-label={label} tabIndex={0}
+        onClick={() => onChange(!checked)}
+        onKeyDown={(e) => {
+          if (e.key === ' ' || e.key === 'Enter') {
+            e.preventDefault();
+            onChange(!checked);
+          }
+        }}
         className={`relative w-9 h-5 rounded-full transition-colors ${checked ? 'bg-spider-500' : 'bg-dark-700'} cursor-pointer`}
       >
         <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-4' : 'translate-x-0'}`} />

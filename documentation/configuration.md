@@ -29,15 +29,16 @@ Many modules require API keys for external services. Configure these in the web 
 
 ## Configuration File
 
-Advanced options can be set in `spiderfoot.conf` (or `spiderfoot.cfg`):
+> **v6 note:** SpiderFoot is primarily configured through environment variables
+> (see [`.env.example`](../.env.example) at the repository root). The API server
+> binds to port `8001` and the frontend to `3000` by default; persistence uses
+> PostgreSQL (there is no SQLite database file in v6). The illustrative block
+> below documents the available option *names*.
 
 ```ini
-[webui]
+[api]
 host = 127.0.0.1
-port = 5001
-
-[database]
-path = spiderfoot.db
+port = 8001
 
 [security]
 # CSRF Protection
@@ -87,19 +88,23 @@ security_headers_enabled = True
 
 You can override some settings using environment variables (useful for Docker and CI/CD):
 
+All runtime configuration uses the `SF_*` prefix (and the standard
+`POSTGRES_*`/`MINIO_*` variables for the backing services). See
+[`.env.example`](../.env.example) at the repository root for the full list.
+
 ### General Configuration
-- `SPIDERFOOT_DB_PATH` – Path to the database file
-- `SPIDERFOOT_WEBUI_PORT` – Port for the web UI
-- `SPIDERFOOT_WEBUI_HOST` – Host address for the web UI
+- `SF_POSTGRES_DSN` – PostgreSQL connection string (e.g. `postgresql://user:pass@postgres:5432/spiderfoot`)
+- `SF_DBTYPE` – Database backend type (`postgresql`)
+- `SF_LOG_LEVEL` – Logging verbosity (`DEBUG` | `INFO` | `WARNING` | `ERROR`)
+- `SF_HTTP_PORT` / `SF_HTTPS_PORT` – Edge HTTP/HTTPS ports (Traefik)
+- `SF_EXTERNAL_URL` – Public base URL of the deployment
 
 ### Security Configuration
-- `SPIDERFOOT_CSRF_SECRET` – CSRF protection secret key
-- `SPIDERFOOT_JWT_SECRET` – JWT token secret key
-- `SPIDERFOOT_RATE_LIMIT_STORAGE` – Rate limiting storage backend (memory/redis)
-- `SPIDERFOOT_REDIS_HOST` – Redis server host (if using Redis storage)
-- `SPIDERFOOT_REDIS_PORT` – Redis server port
-- `SPIDERFOOT_SECURITY_LOG_FILE` – Path to security log file
-- `SPIDERFOOT_SESSION_TIMEOUT` – Session timeout in seconds
+- `SF_JWT_SECRET` – Secret used to sign JWT access/refresh tokens (set a strong value in production)
+- `SF_JWT_EXPIRY_HOURS` / `SF_JWT_REFRESH_EXPIRY_HOURS` – Token lifetimes
+- `SF_ADMIN_USERNAME` / `SF_ADMIN_PASSWORD` / `SF_ADMIN_EMAIL` – Bootstrap admin account
+- `SF_MAX_LOGIN_ATTEMPTS` – Login attempts before lockout
+- `SF_REDIS_URL` – Redis URL for OAuth2/CSRF state and rate limiting (e.g. `redis://redis:6379/0`)
 
 ### API Key Environment Variables
 - `VIRUSTOTAL_API_KEY` – VirusTotal API key
@@ -107,24 +112,23 @@ You can override some settings using environment variables (useful for Docker an
 - `HUNTER_API_KEY` – Hunter.io API key
 - `SECURITYTRAILS_API_KEY` – SecurityTrails API key
 - `HIBP_API_KEY` – Have I Been Pwned API key
-- `SPIDERFOOT_LOG_LEVEL` – Logging verbosity (e.g., INFO, DEBUG)
 
 ---
 
 ## Best Practices
 
 - Always keep your API keys secure and never share them publicly.
-- Use a dedicated config file for production deployments.
+- Use a dedicated `.env` file (and a secrets manager) for production deployments.
 - Regularly review and update your API keys and module settings.
-- For Docker, use environment variables or mount a config file for persistent configuration.
+- For Docker, set configuration via environment variables / the `.env` file.
 
 ---
 
 ## Troubleshooting
 
 - If a module fails, check if its API key is set and valid.
-- For config file errors, ensure correct INI syntax and file permissions.
-- For Docker, use environment variables or mount a config file.
+- For configuration errors, verify the `SF_*` environment variables / `.env` values.
+- For Docker, set configuration via environment variables / the `.env` file.
 - See the [Troubleshooting Guide](troubleshooting.md) for more help.
 
 ---
@@ -133,11 +137,11 @@ You can override some settings using environment variables (useful for Docker an
 
 SpiderFoot uses PostgreSQL as its database backend.
 
-- **PostgreSQL** is required for all deployments (monolith and microservices).
+- **PostgreSQL** is required for all deployments.
 
 ### Configuration
 
-- Set the database connection string in your config file or environment variable (e.g., `SPIDERFOOT_DB_TYPE=postgresql` and `SPIDERFOOT_DB_PATH=postgresql://user:pass@host/dbname`).
+- Set the database connection string in your config file or environment variable (e.g., `SF_POSTGRES_DSN=postgresql://user:pass@host:5432/dbname`).
 
 ### Schema Management
 
@@ -175,8 +179,7 @@ When deploying SpiderFoot in production, follow these security configuration gui
 **1. Strong Secret Keys**
 ```bash
 # Generate cryptographically secure keys
-SPIDERFOOT_CSRF_SECRET=$(openssl rand -hex 32)
-SPIDERFOOT_JWT_SECRET=$(openssl rand -hex 32)
+SF_JWT_SECRET=$(openssl rand -hex 32)
 ```
 
 **2. Rate Limiting Configuration**
@@ -226,18 +229,14 @@ Monitor these security events:
 
 **Development Environment:**
 ```bash
-export SPIDERFOOT_CSRF_SECRET=dev-csrf-secret
-export SPIDERFOOT_JWT_SECRET=dev-jwt-secret
-export SPIDERFOOT_SECURITY_LOG_LEVEL=DEBUG
+export SF_JWT_SECRET=dev-jwt-secret
+export SF_LOG_LEVEL=DEBUG
 ```
 
 **Production Environment:**
 ```bash
-export SPIDERFOOT_CSRF_SECRET=your-production-csrf-secret
-export SPIDERFOOT_JWT_SECRET=your-production-jwt-secret
-export SPIDERFOOT_RATE_LIMIT_STORAGE=redis
-export SPIDERFOOT_REDIS_HOST=redis.production.local
-export SPIDERFOOT_SECURITY_LOG_FILE=/var/log/spiderfoot/security.log
+export SF_JWT_SECRET=your-production-jwt-secret
+export SF_REDIS_URL=redis://redis.production.local:6379/0
 ```
 
 ### Security Validation
@@ -246,7 +245,7 @@ Validate your security configuration:
 
 ```bash
 cd spiderfoot
-python security_validator.py /path/to/spiderfoot
+# Security config is validated automatically at startup (spiderfoot/security/startup_check.py)
 ```
 
 This will check:
@@ -259,7 +258,7 @@ This will check:
 
 ## Enhanced Module Configuration
 
-SpiderFoot v6.0.0 includes configuration options for enhanced modules:
+SpiderFoot v6.0.1 includes configuration options for enhanced modules:
 
 ### Performance Optimization
 

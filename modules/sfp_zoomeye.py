@@ -112,7 +112,8 @@ class sfp_zoomeye(SpiderFootAsyncPlugin):
             self.debug(
                 f"Querying ZoomEye API: {api_endpoint} for {qry} (page {page})")
             response = requests.get(
-                api_endpoint, headers=headers, params=params)
+                api_endpoint, headers=headers, params=params,
+                timeout=self.opts['_fetchtimeout'])
             time.sleep(self.opts["delay"])
 
             if response.status_code != 200:

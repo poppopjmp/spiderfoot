@@ -191,6 +191,8 @@ class sfp_gleif(SpiderFootAsyncPlugin):
 
     def handleEvent(self, event: SpiderFootEvent) -> None:
         """Handle an event received by this module."""
+        if self.errorState:
+            return
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

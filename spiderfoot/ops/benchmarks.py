@@ -874,7 +874,7 @@ class EventPipelineBenchmark:
             if seen_hashes and random.random() < duplicate_rate:
                 data = random.choice(seen_hashes)
             else:
-                data = hashlib.md5(f"event_{i}_{random.random()}".encode()).hexdigest()
+                data = hashlib.md5(f"event_{i}_{random.random()}".encode(), usedforsecurity=False).hexdigest()
                 seen_hashes.append(data)
 
             # Dedup check

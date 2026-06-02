@@ -82,13 +82,13 @@ sf scan delete <scan-id>
 
 ```bash
 # List all modules
-sf modules
+sf modules list
 
 # Filter by type
-sf modules --filter passive
+sf modules list --filter passive
 
 # Output as JSON
-sf modules -o json
+sf modules list -o json
 ```
 
 ### Export
@@ -98,7 +98,7 @@ sf modules -o json
 sf export json <scan-id>
 sf export csv <scan-id>
 sf export stix <scan-id>
-sf export excel <scan-id>
+sf export sarif <scan-id>
 
 # Specify output file
 sf export json <scan-id> --file results.json
@@ -170,7 +170,7 @@ cli/
 │   ├── health.go              Health check
 │   ├── scan.go                Scan CRUD (list, get, start, stop, delete)
 │   ├── modules.go             Module listing
-│   ├── export.go              Data export (JSON, CSV, STIX, Excel)
+│   ├── export.go              Data export (JSON, CSV, STIX, SARIF)
 │   ├── schedule.go            Schedule management
 │   └── config.go              CLI configuration
 ├── internal/

@@ -151,7 +151,11 @@ class sfp_twilio(SpiderFootAsyncPlugin):
         if content is None:
             return
 
-        data = json.loads(content)
+        try:
+            data = json.loads(content)
+        except json.JSONDecodeError:
+            self.error("Failed to parse Twilio response as JSON")
+            return
 
         evt = SpiderFootEvent("RAW_RIR_DATA", str(data), self.__name__, event)
         self.notifyListeners(evt)

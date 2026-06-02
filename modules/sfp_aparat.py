@@ -54,6 +54,8 @@ class sfp_aparat(SpiderFootAsyncPlugin):
         Args:
             event (SpiderFootEvent): The event object containing event data.
         """
+        if self.errorState:
+            return
         if event.eventType != "ROOT":
             return
 

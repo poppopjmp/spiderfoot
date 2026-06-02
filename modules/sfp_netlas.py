@@ -178,14 +178,14 @@ class sfp_netlas(SpiderFootAsyncPlugin):
         return None
 
     def handleEvent(self, event: SpiderFootEvent) -> None:
-        if self.errorState:
-            return
-
         """Handle events sent to this module.
 
         Args:
             event: SpiderFoot event
         """
+        if self.errorState:
+            return
+
         eventName = event.eventType
         srcModuleName = event.module
         eventData = event.data

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"regexp"
 	"strings"
 	"time"
@@ -35,7 +36,7 @@ type scanSummary struct {
 }
 
 type scansResp struct {
-	Scans []scanSummary `json:"scans"`
+	Items []scanSummary `json:"items"`
 }
 
 type scanDetail struct {
@@ -52,10 +53,9 @@ type scanDetail struct {
 }
 
 type scanStartReq struct {
-	Target   string   `json:"target"`
-	ScanName string   `json:"scan_name"`
-	ScanType string   `json:"scan_type"`
-	Modules  []string `json:"modules,omitempty"`
+	Target  string   `json:"target"`
+	Name    string   `json:"name"`
+	Modules []string `json:"modules,omitempty"`
 }
 
 // --- Commands ---
@@ -77,18 +77,18 @@ var scanListCmd = &cobra.Command{
 
 		switch output.Current() {
 		case output.JSON:
-			output.PrintJSON(resp.Scans)
+			output.PrintJSON(resp.Items)
 		case output.CSV:
 			header := []string{"ID", "Name", "Target", "Status", "Started"}
-			rows := make([][]string, 0, len(resp.Scans))
-			for _, s := range resp.Scans {
+			rows := make([][]string, 0, len(resp.Items))
+			for _, s := range resp.Items {
 				rows = append(rows, []string{s.ScanID, s.Name, s.Target, s.Status, formatEpoch(s.StartedAt)})
 			}
 			output.PrintCSV(header, rows)
 		default:
 			header := []string{"ID", "Name", "Target", "Status", "Started"}
-			rows := make([][]string, 0, len(resp.Scans))
-			for _, s := range resp.Scans {
+			rows := make([][]string, 0, len(resp.Items))
+			for _, s := range resp.Items {
 				rows = append(rows, []string{truncID(s.ScanID), s.Name, s.Target, colorStatus(s.Status), formatEpoch(s.StartedAt)})
 			}
 			output.PrintTable(header, rows)
@@ -137,7 +137,6 @@ var scanStartCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		target, _ := cmd.Flags().GetString("target")
 		name, _ := cmd.Flags().GetString("name")
-		scanType, _ := cmd.Flags().GetString("type")
 		modules, _ := cmd.Flags().GetString("modules")
 
 		if target == "" {
@@ -148,9 +147,8 @@ var scanStartCmd = &cobra.Command{
 		}
 
 		body := scanStartReq{
-			Target:   target,
-			ScanName: name,
-			ScanType: scanType,
+			Target: target,
+			Name:   name,
 		}
 		if modules != "" {
 			body.Modules = strings.Split(modules, ",")
@@ -170,7 +168,7 @@ var scanStartCmd = &cobra.Command{
 		case output.JSON:
 			output.PrintJSON(resp)
 		default:
-			if id, ok := resp["scan_id"]; ok {
+			if id, ok := resp["id"]; ok {
 				output.Success("Scan started: %v", id)
 			} else {
 				output.Success("Scan started")
@@ -225,14 +223,16 @@ var scanEventsCmd = &cobra.Command{
 		}
 		c := client.New()
 		eventType, _ := cmd.Flags().GetString("type")
-		limit, _ := cmd.Flags().GetInt("limit")
 
-		path := fmt.Sprintf("/api/scans/%s/events?limit=%d", args[0], limit)
+		path := fmt.Sprintf("/api/scans/%s/events", args[0])
 		if eventType != "" {
-			path += "&type=" + eventType
+			path += "?event_type=" + url.QueryEscape(eventType)
 		}
 
-		var resp interface{}
+		var resp struct {
+			Events []map[string]interface{} `json:"events"`
+			Total  int                      `json:"total"`
+		}
 		if err := c.Get(path, &resp); err != nil {
 			return err
 		}
@@ -241,27 +241,21 @@ var scanEventsCmd = &cobra.Command{
 		case output.JSON:
 			output.PrintJSON(resp)
 		default:
-			if items, ok := resp.([]interface{}); ok {
-				header := []string{"Type", "Module", "Data", "Source"}
-				rows := make([][]string, 0, len(items))
-				for _, item := range items {
-					if m, ok := item.(map[string]interface{}); ok {
-						data := fmt.Sprintf("%v", m["data"])
-						if len(data) > 60 {
-							data = data[:57] + "..."
-						}
-						rows = append(rows, []string{
-							fmt.Sprintf("%v", m["type"]),
-							fmt.Sprintf("%v", m["module"]),
-							data,
-							fmt.Sprintf("%v", m["source"]),
-						})
-					}
+			header := []string{"Type", "Module", "Data", "Source"}
+			rows := make([][]string, 0, len(resp.Events))
+			for _, m := range resp.Events {
+				data := fmt.Sprintf("%v", m["data"])
+				if len(data) > 60 {
+					data = data[:57] + "..."
 				}
-				output.PrintTable(header, rows)
-			} else {
-				printGenericResponse(resp)
+				rows = append(rows, []string{
+					fmt.Sprintf("%v", m["type"]),
+					fmt.Sprintf("%v", m["module"]),
+					data,
+					fmt.Sprintf("%v", m["source_event_hash"]),
+				})
 			}
+			output.PrintTable(header, rows)
 		}
 		return nil
 	},
@@ -351,13 +345,13 @@ var scanSearchCmd = &cobra.Command{
 
 		path := fmt.Sprintf("/api/scans/search?limit=%d", limit)
 		if target != "" {
-			path += "&target=" + target
+			path += "&target=" + url.QueryEscape(target)
 		}
 		if status != "" {
-			path += "&status=" + status
+			path += "&status=" + url.QueryEscape(status)
 		}
 		if tag != "" {
-			path += "&tag=" + tag
+			path += "&tag=" + url.QueryEscape(tag)
 		}
 
 		var resp interface{}
@@ -384,7 +378,7 @@ var scanSummaryCmd = &cobra.Command{
 		}
 		c := client.New()
 		by, _ := cmd.Flags().GetString("by")
-		path := fmt.Sprintf("/api/scans/%s/summary?by=%s", args[0], by)
+		path := fmt.Sprintf("/api/scans/%s/summary?by=%s", args[0], url.QueryEscape(by))
 
 		var resp interface{}
 		if err := c.Get(path, &resp); err != nil {
@@ -409,7 +403,10 @@ var scanLogsCmd = &cobra.Command{
 			return err
 		}
 		c := client.New()
-		var resp interface{}
+		var resp struct {
+			Logs  []map[string]interface{} `json:"logs"`
+			Total int                      `json:"total"`
+		}
 		if err := c.Get(fmt.Sprintf("/api/scans/%s/logs", args[0]), &resp); err != nil {
 			return err
 		}
@@ -417,14 +414,8 @@ var scanLogsCmd = &cobra.Command{
 		case output.JSON:
 			output.PrintJSON(resp)
 		default:
-			if items, ok := resp.([]interface{}); ok {
-				for _, item := range items {
-					if m, ok := item.(map[string]interface{}); ok {
-						fmt.Printf("[%v] %v: %v\n", m["timestamp"], m["level"], m["message"])
-					}
-				}
-			} else {
-				printGenericResponse(resp)
+			for _, m := range resp.Logs {
+				fmt.Printf("[%v] %v: %v\n", m["generated"], m["component"], m["message"])
 			}
 		}
 		return nil
@@ -549,6 +540,12 @@ var scanCompareCmd = &cobra.Command{
 		if scanA == "" || scanB == "" {
 			return fmt.Errorf("--scan-a and --scan-b are required")
 		}
+		if err := validateSafeID(scanA, "scan A"); err != nil {
+			return err
+		}
+		if err := validateSafeID(scanB, "scan B"); err != nil {
+			return err
+		}
 		c := client.New()
 		path := fmt.Sprintf("/api/scans/compare?scan_a=%s&scan_b=%s", scanA, scanB)
 		var resp interface{}
@@ -591,11 +588,11 @@ var scanHistoryCmd = &cobra.Command{
 func init() {
 	scanStartCmd.Flags().StringP("target", "t", "", "Scan target (required)")
 	scanStartCmd.Flags().StringP("name", "n", "", "Scan name")
-	scanStartCmd.Flags().String("type", "all", "Scan type: all, passive, investigate, footprint")
+	scanStartCmd.Flags().String("type", "all", "(deprecated, ignored) target type is auto-detected by the server")
 	scanStartCmd.Flags().String("modules", "", "Comma-separated list of modules to use")
 
 	scanEventsCmd.Flags().String("type", "", "Filter by event type")
-	scanEventsCmd.Flags().Int("limit", 100, "Maximum events to return")
+	scanEventsCmd.Flags().Int("limit", 100, "(deprecated, ignored) the events endpoint returns all matching events")
 
 	scanSearchCmd.Flags().String("target", "", "Filter by target")
 	scanSearchCmd.Flags().String("status", "", "Filter by status")

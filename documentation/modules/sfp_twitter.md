@@ -34,7 +34,7 @@ Followers: 1200
 ## Tips
 
 - Use to monitor social media exposure and threat actor activity.
-- Combine with sfp_social and sfp_username for full context.
+- Combine with sfp_social and sfp_email for full context.
 
 ---
 

@@ -31,7 +31,7 @@ The chart deploys SpiderFoot as three separate components:
 
 | Component | Purpose | Replicas |
 |-----------|---------|----------|
-| **WebUI** | Browser-based interface (CherryPy) | 1 |
+| **WebUI** | Browser-based interface (React/Nginx) | 1 |
 | **API** | REST API (FastAPI) | 1 |
 | **Scanner** | Scan worker processes | 2 (scalable) |
 
@@ -49,7 +49,7 @@ Supporting services:
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
-| `image.tag` | SpiderFoot version | `5.14.0` |
+| `image.tag` | SpiderFoot version | `6.0.1` |
 | `scanner.replicaCount` | Scanner workers | `2` |
 | `postgresql.auth.password` | DB password | `""` |
 | `ingress.enabled` | Enable Ingress | `false` |

@@ -34,7 +34,7 @@ None (some platforms may require keys for advanced data)
 ## Tips
 
 - Use to monitor brand or personal exposure on social media.
-- Combine with sfp_username and sfp_email for full context.
+- Combine with sfp_social and sfp_email for full context.
 
 ---
 

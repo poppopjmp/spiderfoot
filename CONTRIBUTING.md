@@ -24,7 +24,7 @@ Be respectful, constructive, and inclusive. We follow the [Contributor Covenant]
 
 ```bash
 # Clone the repository
-git clone https://github.com/smicallef/spiderfoot.git
+git clone https://github.com/poppopjmp/spiderfoot.git
 cd spiderfoot
 
 # Start core services
@@ -151,7 +151,7 @@ Example: `feat(engine): native async I/O via aiohttp + aiodns`
 
 ## Reporting Issues
 
-Use [GitHub Issues](https://github.com/smicallef/spiderfoot/issues) with the appropriate template:
+Use [GitHub Issues](https://github.com/poppopjmp/spiderfoot/issues) with the appropriate template:
 
 - **Bug Report**: Include steps to reproduce, expected vs actual behavior, environment details
 - **Feature Request**: Describe the use case, proposed solution, and alternatives considered
@@ -162,4 +162,4 @@ Use [GitHub Issues](https://github.com/smicallef/spiderfoot/issues) with the app
 
 - Check the [FAQ](documentation/faq.md)
 - Read the [Troubleshooting Guide](documentation/troubleshooting.md)
-- Open a [Discussion](https://github.com/smicallef/spiderfoot/discussions)
+- Open a [Discussion](https://github.com/poppopjmp/spiderfoot/discussions)

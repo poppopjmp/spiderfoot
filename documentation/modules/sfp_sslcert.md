@@ -1,4 +1,4 @@
-# sfp_ssl
+# sfp_sslcert
 
 **Purpose:**
 Analyzes SSL/TLS certificates for the target host, extracting certificate details, issuer, validity, and subject alternative names. Useful for identifying related domains, certificate misconfigurations, and expired certificates.
@@ -13,7 +13,7 @@ Analyzes SSL/TLS certificates for the target host, extracting certificate detail
   ```sh
   curl -X POST http://localhost:8001/api/v1/scans \
   -H "Content-Type: application/json" \
-  -d '{"target": "example.com", "modules": ["sfp_ssl"]}'
+  -d '{"target": "example.com", "modules": ["sfp_sslcert"]}'
   ```
 
 ## Output Example

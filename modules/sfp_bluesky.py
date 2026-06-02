@@ -80,12 +80,12 @@ class sfp_bluesky(SpiderFootAsyncPlugin):
         return ["BLUESKY_POST"]
 
     def handleEvent(self, event: SpiderFootEvent) -> None:
-        if self.errorState:
-            return
-
         """
         Handle event: fetch Bluesky posts for the configured username and emit BLUESKY_POST events.
         """
+        if self.errorState:
+            return
+
         self.debug(f"[handleEvent] Received event: {event.eventType}")
         allowed_types = [t.strip() for t in self.opts.get("event_types", "").split(",") if t.strip()]
         if event.eventType.lower() not in [t.lower() for t in allowed_types]:

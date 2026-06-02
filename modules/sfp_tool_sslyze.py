@@ -14,6 +14,7 @@ import subprocess
 import tempfile
 
 from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
+from spiderfoot import SpiderFootEvent
 
 
 class sfp_tool_sslyze(SpiderFootAsyncPlugin):
@@ -173,13 +174,13 @@ class sfp_tool_sslyze(SpiderFootAsyncPlugin):
                                             cn = part.strip()[3:]
                                             break
                                     if cn:
-                                        evt = self.sf.SpiderFootEvent(
+                                        evt = SpiderFootEvent(
                                             "SSL_CERTIFICATE_ISSUED", cn, self.__name__, event
                                         )
                                         self.notifyListeners(evt)
 
                                 if issuer:
-                                    evt = self.sf.SpiderFootEvent(
+                                    evt = SpiderFootEvent(
                                         "SSL_CERTIFICATE_ISSUER", issuer, self.__name__, event
                                     )
                                     self.notifyListeners(evt)
@@ -189,7 +190,7 @@ class sfp_tool_sslyze(SpiderFootAsyncPlugin):
                             verified = deployment.get("verified_certificate_chain", None)
 
                             if not verified:
-                                evt = self.sf.SpiderFootEvent(
+                                evt = SpiderFootEvent(
                                     "VULNERABILITY_GENERAL",
                                     f"{data}: Certificate chain not trusted",
                                     self.__name__,
@@ -200,7 +201,7 @@ class sfp_tool_sslyze(SpiderFootAsyncPlugin):
                     # Heartbleed
                     heartbleed = scan_result.get("heartbleed", {}).get("result", {})
                     if heartbleed.get("is_vulnerable_to_heartbleed"):
-                        evt = self.sf.SpiderFootEvent(
+                        evt = SpiderFootEvent(
                             "VULNERABILITY_CVE_CRITICAL",
                             f"{data}: Vulnerable to Heartbleed (CVE-2014-0160)",
                             self.__name__,
@@ -211,7 +212,7 @@ class sfp_tool_sslyze(SpiderFootAsyncPlugin):
                     # OpenSSL CCS
                     ccs = scan_result.get("openssl_ccs_injection", {}).get("result", {})
                     if ccs.get("is_vulnerable_to_ccs_injection"):
-                        evt = self.sf.SpiderFootEvent(
+                        evt = SpiderFootEvent(
                             "VULNERABILITY_CVE_HIGH",
                             f"{data}: Vulnerable to OpenSSL CCS Injection (CVE-2014-0224)",
                             self.__name__,
@@ -223,7 +224,7 @@ class sfp_tool_sslyze(SpiderFootAsyncPlugin):
                     robot = scan_result.get("robot", {}).get("result", {})
                     robot_result = robot.get("robot_result", "")
                     if "VULNERABLE" in str(robot_result).upper():
-                        evt = self.sf.SpiderFootEvent(
+                        evt = SpiderFootEvent(
                             "VULNERABILITY_CVE_HIGH",
                             f"{data}: Vulnerable to ROBOT attack ({robot_result})",
                             self.__name__,
@@ -236,7 +237,7 @@ class sfp_tool_sslyze(SpiderFootAsyncPlugin):
                         proto_result = scan_result.get(proto, {}).get("result", {})
                         accepted = proto_result.get("accepted_cipher_suites", [])
                         if accepted:
-                            evt = self.sf.SpiderFootEvent(
+                            evt = SpiderFootEvent(
                                 "VULNERABILITY_GENERAL",
                                 f"{data}: Accepts weak protocol {proto.replace('_', '.')} ({len(accepted)} cipher suites)",
                                 self.__name__,
@@ -253,7 +254,7 @@ class sfp_tool_sslyze(SpiderFootAsyncPlugin):
                             tls_versions.append(f"{proto}: {len(accepted)} ciphers")
 
                     if tls_versions:
-                        evt = self.sf.SpiderFootEvent(
+                        evt = SpiderFootEvent(
                             "RAW_RIR_DATA",
                             f"SSLyze scan for {data}:\n" + "\n".join(tls_versions),
                             self.__name__,

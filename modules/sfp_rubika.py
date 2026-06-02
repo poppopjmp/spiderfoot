@@ -50,6 +50,8 @@ class sfp_rubika(SpiderFootAsyncPlugin):
     def handleEvent(self, event: SpiderFootEvent) -> None:
         # Stub for Rubika monitoring logic
         """Handle an event received by this module."""
+        if self.errorState:
+            return
         pass
 
     def shutdown(self) -> None:

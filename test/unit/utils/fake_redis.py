@@ -1,0 +1,193 @@
+"""In-memory fake Redis for unit tests.
+
+A minimal, dependency-free stand-in for a Redis client supporting the string,
+hash, sorted-set, and pipeline operations used across SpiderFoot's Redis-backed
+components (API keys, schedules, etc.). Lets those code paths be tested without
+a running Redis server.
+
+Only the operations exercised by the code under test are implemented; extend as
+needed rather than reaching for a heavier dependency.
+"""
+from __future__ import annotations
+
+
+class FakeRedis:
+    """Minimal fake Redis with hash, sorted set, string, and pipeline support."""
+
+    def __init__(self):
+        self._store: dict[str, str] = {}
+        self._hashes: dict[str, dict[str, str]] = {}
+        self._zsets: dict[str, dict[str, float]] = {}
+        self._sets: dict[str, set[str]] = {}
+        self._lists: dict[str, list[str]] = {}
+        self.published: list[tuple[str, str]] = []
+
+    @staticmethod
+    def _s(value):
+        return value if isinstance(value, str) else value.decode()
+
+    # -- strings -----------------------------------------------------------
+    def set(self, key, value, ex=None, keepttl=False):
+        self._store[key] = self._s(value)
+
+    def get(self, key):
+        return self._store.get(key)
+
+    def scan(self, cursor=0, match=None, count=100):
+        """Single-shot SCAN: returns (0, [matching keys]) across all key spaces."""
+        import fnmatch
+        all_keys = list(self._store) + list(self._hashes) + \
+            list(self._zsets) + list(self._sets) + list(self._lists)
+        if match is not None:
+            all_keys = [k for k in all_keys if fnmatch.fnmatch(k, match)]
+        return 0, all_keys
+
+    def exists(self, *keys):
+        return sum(1 for k in keys if k in self._store
+                   or k in self._hashes or k in self._zsets)
+
+    def expire(self, key, seconds):
+        return True  # TTL is a no-op in the fake
+
+    def publish(self, channel, message):
+        """Record published messages (no subscribers in the fake)."""
+        self.published.append((channel, self._s(message)))
+        return 0
+
+    def delete(self, *keys):
+        for k in keys:
+            self._store.pop(k, None)
+            self._hashes.pop(k, None)
+            self._zsets.pop(k, None)
+            self._sets.pop(k, None)
+            self._lists.pop(k, None)
+
+    # -- lists -------------------------------------------------------------
+    def lpush(self, name, *values):
+        lst = self._lists.setdefault(name, [])
+        for v in values:
+            lst.insert(0, self._s(v))
+        return len(lst)
+
+    def rpush(self, name, *values):
+        lst = self._lists.setdefault(name, [])
+        for v in values:
+            lst.append(self._s(v))
+        return len(lst)
+
+    def lrange(self, name, start, end):
+        lst = self._lists.get(name, [])
+        if end == -1:
+            return lst[start:]
+        return lst[start:end + 1]
+
+    def llen(self, name):
+        return len(self._lists.get(name, []))
+
+    def ltrim(self, name, start, end):
+        lst = self._lists.get(name, [])
+        self._lists[name] = lst[start:] if end == -1 else lst[start:end + 1]
+
+    # -- sets --------------------------------------------------------------
+    def sadd(self, name, *members):
+        s = self._sets.setdefault(name, set())
+        added = 0
+        for m in members:
+            v = self._s(m)
+            if v not in s:
+                s.add(v)
+                added += 1
+        return added
+
+    def smembers(self, name):
+        return set(self._sets.get(name, set()))
+
+    def srem(self, name, *members):
+        s = self._sets.get(name, set())
+        for m in members:
+            s.discard(self._s(m))
+
+    def scard(self, name):
+        return len(self._sets.get(name, set()))
+
+    # -- hashes ------------------------------------------------------------
+    def hset(self, name, key=None, value=None, mapping=None):
+        h = self._hashes.setdefault(name, {})
+        if mapping:
+            h.update(mapping)
+        if key is not None:
+            h[key] = value
+
+    def hget(self, name, key):
+        return self._hashes.get(name, {}).get(key)
+
+    def hgetall(self, name):
+        return dict(self._hashes.get(name, {}))
+
+    def hdel(self, name, *keys):
+        h = self._hashes.get(name, {})
+        for k in keys:
+            h.pop(k, None)
+
+    # -- sorted sets -------------------------------------------------------
+    def zadd(self, name, mapping):
+        self._zsets.setdefault(name, {}).update(mapping)
+
+    def zrange(self, name, start, end):
+        members = sorted(self._zsets.get(name, {}).items(), key=lambda x: x[1])
+        keys = [m for m, _ in members]
+        if end == -1:
+            return keys[start:]
+        return keys[start:end + 1]
+
+    def zrangebyscore(self, name, _min, _max):
+        return list(self._zsets.get(name, {}).keys())
+
+    def zrem(self, name, *members):
+        z = self._zsets.get(name, {})
+        for m in members:
+            z.pop(m, None)
+
+    def zcard(self, name):
+        return len(self._zsets.get(name, {}))
+
+    # -- pipeline ----------------------------------------------------------
+    def pipeline(self, transaction=True):
+        return FakePipeline(self)
+
+
+class FakePipeline:
+    """Batches commands and executes them in sequence."""
+
+    def __init__(self, redis: FakeRedis):
+        self._redis = redis
+        self._ops: list[tuple] = []
+
+    def hset(self, name, key, value):
+        self._ops.append(("hset", name, key, value))
+        return self
+
+    def hdel(self, name, *keys):
+        self._ops.append(("hdel", name, *keys))
+        return self
+
+    def set(self, key, value, ex=None, keepttl=False):
+        self._ops.append(("set", key, value))
+        return self
+
+    def delete(self, *keys):
+        self._ops.append(("delete", *keys))
+        return self
+
+    def zadd(self, name, mapping):
+        self._ops.append(("zadd", name, mapping))
+        return self
+
+    def zrem(self, name, *members):
+        self._ops.append(("zrem", name, *members))
+        return self
+
+    def execute(self):
+        for op in self._ops:
+            getattr(self._redis, op[0])(*op[1:])
+        self._ops.clear()

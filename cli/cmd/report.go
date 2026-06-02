@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -34,7 +35,7 @@ var reportListCmd = &cobra.Command{
 
 		path := fmt.Sprintf("/api/reports?limit=%d", limit)
 		if scanID != "" {
-			path += "&scan_id=" + scanID
+			path += "&scan_id=" + url.QueryEscape(scanID)
 		}
 
 		var resp interface{}

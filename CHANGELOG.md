@@ -3,6 +3,80 @@
 All notable changes to SpiderFoot are documented in this file.  
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [6.1.0] — 2026-06-02
+
+A hardening and test-maturity release. A multi-pass audit (see `AUDIT.md`) raised
+the safety net and used it to surface and fix latent defects across the API,
+core engine, and persistence layers. No breaking changes — see
+[`UPGRADING.md`](UPGRADING.md) for the in-place adoption guide and the
+behavioural corrections (IP/scope classification, URL dedup, fixed endpoints) to
+expect.
+
+### Fixed
+- **Core IP scope/SSRF classification (security):** the netaddr 1.x upgrade
+  silently broke the IP classifiers. `isValidLocalOrLoopbackIp` returned `False`
+  for **every** RFC1918 private address (probed a removed `is_private`
+  attribute), so `sfp_dnsresolve` mislabelled private IPs as public
+  `IP_ADDRESS` (scope creep); `isPublicIpAddress` classified link-local
+  (incl. the cloud-metadata address `169.254.169.254`) as public. The proxy
+  helpers had the same misuse (one crashed with `AttributeError`). All rewritten
+  on the netaddr 1.x API with adversarial tests.
+- **Scan scope matching (security):** `SpiderFootTarget.matches()` compared the
+  raw value against lowercased aliases, so mixed-case in-scope hosts
+  (`Sub.Example.COM`) were treated as out-of-scope (under-scanning). The
+  leading-dot suffix-bypass guard is preserved.
+- **Config persistence:** boolean options flipped `True`→`False` on an in-memory
+  serialize/unserialize round trip (`int 1` vs `str "1"`); normalised for both
+  the in-memory and DB paths.
+- **Event dedup:** `ContentNormalizer._normalize_url` mangled non-default ports
+  (`:8080`→`80`) and collided distinct URLs, dropping real findings as
+  duplicates in the live scan path; rewritten port-aware.
+- **Correlation engine:** an invalid regex in any YAML correlation rule aborted
+  the entire correlation run; bad patterns are now skipped with a warning.
+- **API routing:** unreachable endpoints caused by parameterized routes
+  shadowing literal siblings — fixed across `notification_rules`,
+  `report_templates`, `scan_comparison`, `tag_group`, `data`, `webhooks`,
+  `health`, `scan`, and `storage` (`/snapshots/all`); `POST
+  /data/modules/bulk-disable` now accepts a JSON body (was always 400); and six
+  handlers that turned intended 404/422/400 responses into 500s now preserve the
+  status code.
+- **Crashes:** `GET /data/modules/dependencies` (undefined fallback →
+  `NameError`), `POST /asm/ingest` (ternary-precedence bug set `risk=None`), and
+  a maintenance task’s undefined logger.
+- Deprecation cleanup: Pydantic v1 `.dict()` → `model_dump()`,
+  `datetime.utcnow()` → `datetime.now(timezone.utc)`.
+
+### Added
+- **Test coverage** raised from 66.6% to ~71% with a CI gate
+  (`--cov-fail-under=70`). New suites cover all 28 API routers, all 7 Celery
+  task modules, the LLM agents, and a parametrized contract over the 20 untested
+  `sfp_tool_*` wrappers.
+- **Real-PostgreSQL DB integration gate** in CI exercising the full
+  scan/event/config persistence lifecycle (the DB layer is unit-untestable).
+- **App-wide route-shadowing guard** test (all HTTP methods) to prevent
+  regressions of the routing bug class.
+- Reusable in-memory `FakeRedis` / `FakeScanService` test helpers.
+
+### CI / Tooling
+- Coverage gate ratcheted 66 → 70; Codacy/Codecov coverage upload wired.
+- Fixed the integration job (wrong DB env var; un-failable `|| echo`) so the new
+  DB gate actually runs and gates.
+- Worked around a coverage C-tracer + threads `SystemError` flake via
+  `concurrency = thread` in `.coveragerc`.
+
+## [6.0.1] — 2026-05-31
+
+### Added
+- **Containerized microservices architecture**: Docker Compose split into domain service files with service-integration support for running the scanner, API, agents, and workers as independent services.
+- **Helm chart**: Kubernetes deployment chart (`helm/spiderfoot`) plus expanded per-module documentation.
+- **Modular LLM analysis agents**: refactored AI analysis agents with an IaC advisor agent (`spiderfoot/agents/iac_advisor.py`) and structured-output integration.
+- **E2E testing framework**: end-to-end test scaffolding, Docker Compose core-services profile, and supporting automation scripts.
+- **CI**: Codecov coverage upload on every test run.
+
+### Fixed
+- Codebase audit & alignment pass (see `AUDIT.md`): corrected broken internal imports (`spiderfoot.correlations` → `spiderfoot.correlation`, `sflib` scanner import), removed a tautological SQL clause, made non-security `hashlib.md5` calls FIPS-safe, switched async handlers to `asyncio.get_running_loop()`, fixed a case-inverted GTM analytics filter, added a missing HTTP timeout in `sfp_zoomeye`, closed a leaked file handle in `sfp_tool_cmseek`, and removed an unused `pickle` import.
+- Documentation alignment: removed stale `sfwebui.py` / port `:5001` references, corrected repository URLs and version strings, and fixed the malformed README header image.
+
 ## [6.0.0] — 2026-02-21
 
 ### Added (Batches 40–45)

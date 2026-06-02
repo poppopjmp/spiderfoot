@@ -96,7 +96,7 @@ describe('Layout', () => {
 
   it('renders the version in footer', () => {
     renderLayout();
-    expect(screen.getByText('SpiderFoot v6.0.0')).toBeInTheDocument();
+    expect(screen.getByText('SpiderFoot v6.0.1')).toBeInTheDocument();
   });
 
   /* ─── Outlet (children) rendering ───────────────────────── */
@@ -196,7 +196,7 @@ describe('Layout', () => {
     expect(logoArea).toBeTruthy();
     fireEvent.click(logoArea!);
     expect(screen.getByText('About SpiderFoot')).toBeInTheDocument();
-    expect(screen.getByText('v6.0.0')).toBeInTheDocument();
+    expect(screen.getByText('v6.0.1')).toBeInTheDocument();
   });
 
   /* ─── Mobile header ─────────────────────────────────────── */

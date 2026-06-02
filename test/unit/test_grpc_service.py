@@ -22,7 +22,7 @@ class TestServiceServer(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.server = ServiceServer("test", port=19877)
+        cls.server = ServiceServer("test", port=0)
         cls.server.register("Echo", lambda payload: {"echo": payload})
         cls.server.register("Add", lambda p: {"sum": p.get("a", 0) + p.get("b", 0)})
         cls.server.register("HealthCheck", lambda p: {"status": "ok"})
@@ -34,7 +34,7 @@ class TestServiceServer(unittest.TestCase):
         cls.server.stop()
 
     def _post(self, method, payload=None):
-        conn = HTTPConnection("127.0.0.1", 19877, timeout=5)
+        conn = HTTPConnection("127.0.0.1", self.server.port, timeout=5)
         body = json.dumps(payload or {}).encode()
         conn.request("POST", f"/rpc/test/{method}", body=body,
                      headers={"Content-Type": "application/json"})
@@ -71,28 +71,29 @@ class TestServiceClient(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.server = ServiceServer("client_test", port=19878)
+        cls.server = ServiceServer("client_test", port=0)
         cls.server.register("Ping", lambda p: {"pong": True})
         cls.server.register("Greet", lambda p: {"msg": f"Hello {p.get('name', 'World')}"})
         cls.server.start(background=True)
         time.sleep(0.3)
+        cls.addr = f"127.0.0.1:{cls.server.port}"
 
     @classmethod
     def tearDownClass(cls):
         cls.server.stop()
 
     def test_call(self):
-        client = ServiceClient("client_test", "127.0.0.1:19878", use_grpc=False)
+        client = ServiceClient("client_test", self.addr, use_grpc=False)
         result = client.call("Ping")
         self.assertTrue(result["pong"])
 
     def test_call_with_payload(self):
-        client = ServiceClient("client_test", "127.0.0.1:19878", use_grpc=False)
+        client = ServiceClient("client_test", self.addr, use_grpc=False)
         result = client.call("Greet", {"name": "SpiderFoot"})
         self.assertEqual(result["msg"], "Hello SpiderFoot")
 
     def test_health_check(self):
-        client = ServiceClient("client_test", "127.0.0.1:19878", use_grpc=False)
+        client = ServiceClient("client_test", self.addr, use_grpc=False)
         # HealthCheck not registered, so it should return error
         result = client.health_check()
         self.assertIn("status", result)

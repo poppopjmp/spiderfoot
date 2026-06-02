@@ -13,6 +13,7 @@ import re
 import subprocess
 
 from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
+from spiderfoot import SpiderFootEvent
 
 
 class sfp_tool_linkfinder(SpiderFootAsyncPlugin):
@@ -175,11 +176,11 @@ class sfp_tool_linkfinder(SpiderFootAsyncPlugin):
                     full_url = f"{parsed.scheme}://{parsed.netloc}/{endpoint}"
 
                 if self._is_internal(full_url, source_domain):
-                    evt = self.sf.SpiderFootEvent(
+                    evt = SpiderFootEvent(
                         "LINKED_URL_INTERNAL", full_url, self.__name__, event
                     )
                 else:
-                    evt = self.sf.SpiderFootEvent(
+                    evt = SpiderFootEvent(
                         "LINKED_URL_EXTERNAL", full_url, self.__name__, event
                     )
                 self.notifyListeners(evt)

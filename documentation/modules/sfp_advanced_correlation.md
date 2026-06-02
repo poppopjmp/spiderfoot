@@ -125,7 +125,7 @@ curl -X POST http://localhost:8001/api/v1/scans \
 ```bash
 curl -X POST http://localhost:8001/api/v1/scans \
   -H "Content-Type: application/json" \
-  -d '{"target": "target_domain.com", "modules": ["sfp_dnsresolve", "sfp_ssl", "sfp_advanced_correlation"]}'
+  -d '{"target": "target_domain.com", "modules": ["sfp_dnsresolve", "sfp_sslcert", "sfp_advanced_correlation"]}'
 ```
 
 ### Geospatial Correlation

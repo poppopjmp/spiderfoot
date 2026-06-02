@@ -12,7 +12,7 @@ First, verify that all security modules are properly installed:
 
 ```bash
 cd spiderfoot/spiderfoot
-python security_validator.py /path/to/spiderfoot
+# Security config is validated automatically at startup (spiderfoot/security/startup_check.py)
 ```
 
 Expected output:
@@ -40,7 +40,7 @@ config = {
 Start SpiderFoot normally - security middleware will automatically activate:
 
 ```bash
-python sfwebui.py
+uvicorn sfapi:app --host 127.0.0.1 --port 8001
 ```
 
 ## Detailed Integration Steps
@@ -225,7 +225,7 @@ headers = {
     'Content-Type': 'application/json'
 }
 
-response = requests.get('http://localhost:5001/api/scanlist', headers=headers)
+response = requests.get('http://localhost:8001/api/scanlist', headers=headers)
 ```
 
 ### Step 6: Security Logging Configuration
@@ -280,8 +280,7 @@ config = {
 Use environment variables for sensitive configuration:
 
 ```bash
-export SPIDERFOOT_CSRF_SECRET="your-csrf-secret"
-export SPIDERFOOT_JWT_SECRET="your-jwt-secret"
+export SF_JWT_SECRET="your-jwt-secret"
 export REDIS_URL="redis://localhost:6379"
 ```
 
@@ -289,8 +288,8 @@ export REDIS_URL="redis://localhost:6379"
 import os
 
 config = {
-    'security.csrf.secret_key': os.environ.get('SPIDERFOOT_CSRF_SECRET'),
-    'security.api_security.jwt_secret': os.environ.get('SPIDERFOOT_JWT_SECRET'),
+    'security.csrf.secret_key': os.environ.get('SF_JWT_SECRET'),
+    'security.api_security.jwt_secret': os.environ.get('SF_JWT_SECRET'),
     'security.rate_limiting.redis_url': os.environ.get('REDIS_URL', 'redis://localhost:6379')
 }
 ```
@@ -303,7 +302,7 @@ Run comprehensive security tests:
 
 ```bash
 cd spiderfoot/spiderfoot
-python security_validator.py /path/to/spiderfoot --verbose
+# Security config is validated automatically at startup (spiderfoot/security/startup_check.py)
 ```
 
 ### Manual Testing
@@ -338,7 +337,7 @@ Test security components under load:
 npm install -g artillery
 
 # Run load test
-artillery quick --count 50 --num 10 http://localhost:5001/api/scanlist
+artillery quick --count 50 --num 10 http://localhost:8001/api/scanlist
 ```
 
 ## Troubleshooting

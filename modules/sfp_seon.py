@@ -140,7 +140,11 @@ class sfp_seon(SpiderFootAsyncPlugin):
             self.error("API Endpoint not found")
             return None
 
-        return json.loads(res['content'])
+        try:
+            return json.loads(res['content'])
+        except json.JSONDecodeError as e:
+            self.error(f"Error parsing JSON response from seon.io: {e}")
+            return None
 
     # Handle events sent to this module
     def handleEvent(self, event: SpiderFootEvent) -> None:

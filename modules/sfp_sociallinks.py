@@ -121,7 +121,11 @@ class sfp_sociallinks(SpiderFootAsyncPlugin):
 
         if res['content'] is None:
             return None
-        return json.loads(res['content'])
+        try:
+            return json.loads(res['content'])
+        except json.JSONDecodeError as e:
+            self.error(f"Error parsing JSON response from Social Links: {e}")
+            return None
 
     def queryTelegram(self, qry: str, eventName: str) -> dict:
         """Query Telegram."""

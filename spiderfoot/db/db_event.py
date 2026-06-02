@@ -176,11 +176,18 @@ class EventManager:
 
     def scanResultEvent(
         self, instanceId: str, eventType: str = 'ALL',
-        srcModule: str = None, data: list = None,
-        sourceId: list = None, correlationId: str = None,
-        filterFp: bool = False,
+        srcModule: str = None, data: "list | None" = None,
+        sourceId: "list | None" = None, correlationId: str = None,
+        filterFp: bool = False, limit: "int | None" = None,
+        offset: int = 0,
     ) -> list:
-        """Retrieve scan result events matching the given filters."""
+        """Retrieve scan result events matching the given filters.
+
+        When ``limit`` is None (default) all matching rows are returned, which
+        preserves historical behaviour. Callers that may face very large scans
+        (e.g. vector indexing) should pass ``limit``/``offset`` to page through
+        results instead of loading the entire result set into memory.
+        """
         if not isinstance(instanceId, str):
             raise TypeError(f"instanceId is {type(instanceId)}; expected str()")
         if not isinstance(eventType, str) and not isinstance(eventType, list):
@@ -221,9 +228,10 @@ class EventManager:
             else:
                 qry += f" AND c.source_event_hash = {self._ph}"
                 qvars.append(sourceId)
-        # Special case: include events where c.source_event_hash = 'ROOT'
-        qry += " AND (c.source_event_hash = 'ROOT' OR c.source_event_hash != 'ROOT')"
         qry += " ORDER BY c.data"
+        if limit is not None:
+            qry += f" LIMIT {self._ph} OFFSET {self._ph}"
+            qvars.extend([int(limit), int(offset)])
         with self.dbhLock:
             try:
                 self.dbh.execute(qry, qvars)

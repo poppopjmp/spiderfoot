@@ -1,6 +1,6 @@
 # Streaming Export Guide
 
-This guide covers the JSONL streaming export and SSE live event stream endpoints introduced in SpiderFoot v6.0.0.
+This guide covers the JSONL streaming export and SSE live event stream endpoints introduced in SpiderFoot v6.0.1.
 
 ---
 
@@ -10,8 +10,8 @@ SpiderFoot provides two streaming mechanisms for scan data:
 
 | Endpoint | Format | Use Case |
 |----------|--------|----------|
-| `GET /api/scans/{id}/export/jsonl` | JSONL (Newline-Delimited JSON) | Bulk export for pipelines |
-| `GET /events/stream` | SSE (Server-Sent Events) | Real-time event delivery |
+| `GET /api/scans/{scan_id}/export/stream` | JSONL (Newline-Delimited JSON) | Bulk export for pipelines |
+| `GET /api/scans/{scan_id}/events/stream` | SSE (Server-Sent Events) | Real-time event delivery |
 
 ---
 
@@ -97,7 +97,7 @@ with httpx.stream("GET", f"{base_url}/api/scans/{scan_id}/export/jsonl",
 ### Endpoint
 
 ```
-GET /events/stream
+GET /api/scans/{scan_id}/events/stream
 Authorization: Bearer <token>
 ```
 
@@ -118,7 +118,7 @@ data: {"type": "SCAN_COMPLETE", "scanId": "abc123"}
 The React frontend uses `fetch` + `ReadableStream` (not `EventSource`) to avoid leaking JWT tokens in URLs:
 
 ```typescript
-const response = await fetch('/events/stream', {
+const response = await fetch('/api/scans/{scan_id}/events/stream', {
   headers: { 'Authorization': `Bearer ${token}` },
 });
 

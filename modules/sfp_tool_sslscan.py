@@ -13,6 +13,7 @@ import re
 import subprocess
 
 from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
+from spiderfoot import SpiderFootEvent
 
 
 class sfp_tool_sslscan(SpiderFootAsyncPlugin):
@@ -178,20 +179,20 @@ class sfp_tool_sslscan(SpiderFootAsyncPlugin):
                 # Extract CN from subject
                 cn_match = re.search(r'CN=([^\s/,]+)', subject)
                 if cn_match:
-                    evt = self.sf.SpiderFootEvent(
+                    evt = SpiderFootEvent(
                         "SSL_CERTIFICATE_ISSUED", cn_match.group(1), self.__name__, event
                     )
                     self.notifyListeners(evt)
 
             if issuer:
-                evt = self.sf.SpiderFootEvent(
+                evt = SpiderFootEvent(
                     "SSL_CERTIFICATE_ISSUER", issuer, self.__name__, event
                 )
                 self.notifyListeners(evt)
 
             # Emit vulnerabilities for weak ciphers
             if weak_ciphers:
-                evt = self.sf.SpiderFootEvent(
+                evt = SpiderFootEvent(
                     "VULNERABILITY_GENERAL",
                     f"{data}: {len(weak_ciphers)} weak cipher(s) accepted:\n" + "\n".join(weak_ciphers[:10]),
                     self.__name__,
@@ -201,7 +202,7 @@ class sfp_tool_sslscan(SpiderFootAsyncPlugin):
 
             # Emit known vulnerabilities
             for vuln in vulns:
-                evt = self.sf.SpiderFootEvent(
+                evt = SpiderFootEvent(
                     "VULNERABILITY_GENERAL",
                     f"{data}: {vuln}",
                     self.__name__,
@@ -219,7 +220,7 @@ class sfp_tool_sslscan(SpiderFootAsyncPlugin):
             if issuer:
                 summary_lines.append(f"Issuer: {issuer}")
 
-            evt = self.sf.SpiderFootEvent(
+            evt = SpiderFootEvent(
                 "RAW_RIR_DATA",
                 f"sslscan results for {data}:\n" + "\n".join(summary_lines),
                 self.__name__,

@@ -1,10 +1,10 @@
 <p align="center">
-<img src="[https://raw.githubusercontent.com/poppopjmp/spiderfoot/master/spiderfoot/documentation/images/spiderfoot-header.png](https://github.com/poppopjmp/spiderfoot/blob/42bf4d7be0014a9194e512860fb3d02507de5ad9/documentation/images/spiderfoot-wide.png)" />
+<img src="https://raw.githubusercontent.com/poppopjmp/spiderfoot/master/documentation/images/spiderfoot-wide.png" />
 </p>
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/poppopjmp/spiderfoot/master/LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11+-blue)](https://www.python.org)
-[![Version](https://img.shields.io/badge/version-6.0.1-green)](VERSION)
+[![Version](https://img.shields.io/badge/version-6.1.0-green)](VERSION)
 [![Docker](https://img.shields.io/badge/docker-compose-2496ED?logo=docker)](docker-compose.yml)
 [![GraphQL](https://img.shields.io/badge/GraphQL-Strawberry-E10098?logo=graphql)](spiderfoot/api/graphql/)
 [![CI status](https://github.com/poppopjmp/spiderfoot/workflows/Tests/badge.svg)](https://github.com/poppopjmp/spiderfoot/actions?query=workflow%3A"Tests")
@@ -72,7 +72,7 @@ graph TB
         end
 
         subgraph Analysis["Analysis Services"]
-            AGENTS[sf-agents :8100<br/>6 AI Agents]
+            AGENTS[sf-agents :8100<br/>7 AI Agents]
             TIKA[Apache Tika :9998<br/>Document Parsing]
         end
 
@@ -136,6 +136,11 @@ graph TB
 ---
 
 ## Quick Start
+
+> **Already running SpiderFoot?** See [`UPGRADING.md`](UPGRADING.md) for the
+> v6.1.0 adoption guide — it's an in-place, no-breaking-changes upgrade, and the
+> guide lists the behavioural corrections (IP/scope classification, URL dedup,
+> fixed API endpoints) to expect.
 
 ### Option 1 — Docker Compose (Recommended)
 
@@ -252,7 +257,7 @@ The Docker Compose deployment uses two networks (`sf-frontend`, `sf-backend`) an
 | **sf-grafana** | `monitor` | grafana/grafana | 3000 | Dashboards & alerting |
 | **sf-prometheus** | `monitor` | prom/prometheus | 9090 | Metrics collection |
 | **sf-jaeger** | `monitor` | jaegertracing/jaeger | 16686 | Distributed tracing |
-| **sf-agents** | `ai` | spiderfoot-micro | 8100 | 6 AI-powered analysis agents |
+| **sf-agents** | `ai` | spiderfoot-micro | 8100 | 7 AI-powered analysis agents |
 | **sf-litellm** | `ai` | ghcr.io/berriai/litellm | 4000 | Unified LLM proxy |
 | **sf-celery-beat** | `scheduler` | spiderfoot-micro | — | Periodic task scheduler |
 | **sf-flower** | `scheduler` | spiderfoot-micro | 5555 | Celery monitoring dashboard |
@@ -297,7 +302,7 @@ SpiderFoot v6.0.1 builds upon the comprehensive security hardening initiative of
 
 ### Authentication & Authorization
 
-- **JWT authentication** on all 38+ API routers with `Depends(require_auth)`
+- **JWT authentication** on all 39 API routers with `Depends(require_auth)`
 - **WebSocket & SSE** auth validation — token verified before upgrade
 - **CSP / X-Frame-Options / X-Content-Type-Options** headers via FastAPI middleware
 - **SSO callback URL** origin validation (block open-redirect)
@@ -322,7 +327,7 @@ SpiderFoot v6.0.1 builds upon the comprehensive security hardening initiative of
 
 - **AbortSignal** on all 84+ API methods (cancel on unmount)
 - **XSS-safe MarkdownRenderer** with DOMPurify + `marked`
-- **Code splitting** — 10/12 pages lazy-loaded (reduced initial bundle)
+- **Code splitting** — 11/14 pages lazy-loaded (reduced initial bundle)
 - **Content Security Policy** enforced at Nginx and API level
 
 ---
@@ -476,7 +481,7 @@ Profiles are managed via `spiderfoot.scan.scan_profile.ProfileManager` — see [
 
 ## AI Agents
 
-Six LLM-powered agents automatically analyze high-risk findings and produce structured intelligence. They subscribe to Redis event bus topics and process events asynchronously.
+Seven LLM-powered agents automatically analyze high-risk findings and produce structured intelligence. They subscribe to Redis event bus topics and process events asynchronously.
 
 | Agent | Trigger Events | Output |
 |-------|---------------|--------|
@@ -900,7 +905,7 @@ Configure global application settings, module API keys, notification preferences
 
 ### Agents
 
-Monitor and manage the 6 AI-powered analysis agents. View agent status, processed event counts, and recent analysis results.
+Monitor and manage the 7 AI-powered analysis agents. View agent status, processed event counts, and recent analysis results.
 
 <p align="center">
 <img src="documentation/images/agents.png" alt="Agents" width="800" />
@@ -922,7 +927,7 @@ The UI applies **emotional design principles** for a richer developer experience
 
 ## Frontend Testing
 
-The React frontend includes **282 tests** across 27 test files, powered by Vitest 3 and Testing Library:
+The React frontend includes **300 tests** across 27 test files, powered by Vitest 3 and Testing Library:
 
 | Suite | Tests | Coverage |
 |-------|-------|----------|
@@ -975,12 +980,12 @@ IP addresses · domains · subdomains · hostnames · CIDR subnets · ASNs · em
 
 ```
 spiderfoot/
-├── api/                  # FastAPI application (38+ routers)
+├── api/                  # FastAPI application (39 routers)
 │   ├── graphql/          # Strawberry GraphQL (queries, mutations, subscriptions)
 │   ├── routers/          # REST endpoint routers
 │   ├── schemas.py        # Pydantic v2 contracts
 │   └── versioning.py     # /api/v1/ prefix
-├── agents/               # AI analysis agents (6 LLM-powered)
+├── agents/               # AI analysis agents (7 LLM-powered)
 ├── enrichment/           # Document enrichment pipeline
 ├── user_input/           # User-defined input ingestion
 ├── config/               # App configuration
@@ -1004,7 +1009,7 @@ frontend/                 # React SPA (TypeScript + Vite + Tailwind)
 ├── src/pages/            # 14 pages (Dashboard, Scans, ScanDetail, Schedules, ...)
 ├── src/hooks/            # Custom hooks (useScanProgress SSE)
 ├── src/lib/              # API client, auth, notifications store
-├── src/__tests__/        # 270 tests — Vitest + Testing Library
+├── src/__tests__/        # 300 tests — Vitest + Testing Library
 └── vite.config.ts        # Build config
 infra/                    # Infrastructure configs
 ├── grafana/              # Dashboards + datasource provisioning
@@ -1026,7 +1031,7 @@ helm/                     # Kubernetes Helm chart
 pip install -r requirements.txt
 pytest --tb=short -q
 
-# Frontend tests (282 tests, 27 files)
+# Frontend tests (300 tests, 27 files)
 cd frontend && npx vitest run
 
 # Go CLI tests
@@ -1037,9 +1042,10 @@ cd cli && go test ./...
 
 ```bash
 cat VERSION                            # Check current version
-python update_version.py --set 5.247.0 # Update all references
-python update_version.py --check       # Validate consistency
 ```
+
+The single source of truth for the version is the `VERSION` file (read at build
+time by the Go CLI via `-ldflags` and surfaced by the API/frontend).
 
 ---
 
@@ -1057,5 +1063,5 @@ SpiderFoot is licensed under the [MIT License](LICENSE).
 
 ---
 
-*Actively developed since 2012 — 309 modules, 38+ API routers, 95 correlation rules, 23-service Docker deployment, Go CLI, 282 frontend tests, comprehensive security hardening (9.0+ score), AI agents, vector search, and full observability.*
+*Actively developed since 2012 — 309 modules, 39 API routers, 94 correlation rules, 23-service Docker deployment, Go CLI, 300 frontend tests, comprehensive security hardening (9.0+ score), AI agents, vector search, and full observability.*
 

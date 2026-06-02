@@ -14,6 +14,7 @@ import subprocess
 import tempfile
 
 from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
+from spiderfoot import SpiderFootEvent
 
 
 class sfp_tool_gitleaks(SpiderFootAsyncPlugin):
@@ -196,14 +197,14 @@ class sfp_tool_gitleaks(SpiderFootAsyncPlugin):
 
                         # API keys and passwords are high priority
                         if any(x in rule_id.lower() for x in ("password", "private-key", "secret")):
-                            evt = self.sf.SpiderFootEvent(
+                            evt = SpiderFootEvent(
                                 "PASSWORD_COMPROMISED",
                                 report,
                                 self.__name__,
                                 event,
                             )
                         else:
-                            evt = self.sf.SpiderFootEvent(
+                            evt = SpiderFootEvent(
                                 "VULNERABILITY_GENERAL",
                                 report,
                                 self.__name__,

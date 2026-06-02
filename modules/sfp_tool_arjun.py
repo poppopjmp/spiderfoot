@@ -14,6 +14,7 @@ import subprocess
 import tempfile
 
 from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
+from spiderfoot import SpiderFootEvent
 
 
 class sfp_tool_arjun(SpiderFootAsyncPlugin):
@@ -143,7 +144,7 @@ class sfp_tool_arjun(SpiderFootAsyncPlugin):
                         separator = "&" if "?" in url else "?"
                         fuzzed_url = f"{url}{separator}{param_str}"
 
-                        evt = self.sf.SpiderFootEvent(
+                        evt = SpiderFootEvent(
                             "URL_FORM", fuzzed_url, self.__name__, event
                         )
                         self.notifyListeners(evt)
@@ -155,7 +156,7 @@ class sfp_tool_arjun(SpiderFootAsyncPlugin):
                             "parameters": params,
                         }
                         raw = json.dumps(summary, indent=2)
-                        evt = self.sf.SpiderFootEvent(
+                        evt = SpiderFootEvent(
                             "RAW_RIR_DATA", raw, self.__name__, event
                         )
                         self.notifyListeners(evt)

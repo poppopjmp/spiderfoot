@@ -73,7 +73,7 @@ const SERVICE_LINKS: ServiceLink[] = [
   { name: 'Vector',     url: '/health/vector', internal: false, desc: 'Data pipeline',   healthKey: 'vector'   },
 ];
 
-const APP_VERSION = '6.0.0';
+const APP_VERSION = '6.0.1';
 
 export default function Layout() {
   const [showAbout, setShowAbout] = useState(false);

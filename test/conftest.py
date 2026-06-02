@@ -120,11 +120,11 @@ def check_resource_leaks():
     
     # Run the test
     yield
-    
-    # Give a moment for cleanup
-    time.sleep(0.1)  # Reduced sleep time
-    
+
     # Check which new threads are lingering
+    # (no sleep here: this is a best-effort diagnostic that previously added
+    #  0.1s to every test — multiplied across the suite that was minutes of
+    #  pure wall-clock wait for a warning-only check.)
     ending_threads = set(threading.enumerate())
     new_threads = ending_threads - starting_threads
     

@@ -409,13 +409,6 @@ def fetchUrl(
         'headers': None,
         'realurl': url
     }
-    url = url.strip()
-    try:
-        parsed_url = urllib.parse.urlparse(url)
-    except ValueError:
-        return result
-    if parsed_url.scheme not in ['http', 'https']:
-        return result
 
     # ── Stealth pre-request hook ──────────────────────────────────────
     proxies = None

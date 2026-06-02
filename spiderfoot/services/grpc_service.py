@@ -272,6 +272,9 @@ class ServiceServer:
         """
         factory = _make_handler_factory(self.service_name, self._handlers)
         self._server = HTTPServer(("0.0.0.0", self.port), factory)
+        # If port 0 was requested, capture the OS-assigned port so callers
+        # (notably tests) can discover the real bound port and avoid collisions.
+        self.port = self._server.server_address[1]
         self._running = True
 
         if background:

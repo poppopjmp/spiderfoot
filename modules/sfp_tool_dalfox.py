@@ -14,6 +14,7 @@ import subprocess
 import tempfile
 
 from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
+from spiderfoot import SpiderFootEvent
 
 
 class sfp_tool_dalfox(SpiderFootAsyncPlugin):
@@ -173,14 +174,14 @@ class sfp_tool_dalfox(SpiderFootAsyncPlugin):
 
                         # Reflected/stored XSS is high severity
                         if vuln_type in ("V", "verified") or severity == "high":
-                            evt = self.sf.SpiderFootEvent(
+                            evt = SpiderFootEvent(
                                 "VULNERABILITY_CVE_HIGH",
                                 finding,
                                 self.__name__,
                                 event,
                             )
                         else:
-                            evt = self.sf.SpiderFootEvent(
+                            evt = SpiderFootEvent(
                                 "VULNERABILITY_GENERAL",
                                 finding,
                                 self.__name__,
@@ -194,7 +195,7 @@ class sfp_tool_dalfox(SpiderFootAsyncPlugin):
                 for line in proc.stdout.splitlines():
                     if "[POC]" in line or "[V]" in line:
                         clean = line.strip()
-                        evt = self.sf.SpiderFootEvent(
+                        evt = SpiderFootEvent(
                             "RAW_RIR_DATA",
                             f"Dalfox finding: {clean}",
                             self.__name__,

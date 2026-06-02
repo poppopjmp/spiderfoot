@@ -30,7 +30,7 @@ None (for most TLDs; some may require keys for advanced data)
 
 ## Tips
 - Use to identify domain owners, registration changes, and expiration risks.
-- Combine with sfp_dnsresolve and sfp_ssl for full context.
+- Combine with sfp_dnsresolve and sfp_sslcert for full context.
 
 ---
 

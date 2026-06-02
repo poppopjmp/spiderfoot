@@ -72,6 +72,8 @@ class sfp_apileak(SpiderFootAsyncPlugin):
         Args:
             event (SpiderFootEvent): The event object containing event data.
         """
+        if self.errorState:
+            return
         query = event.data
         token = self.opts.get('github_token', '').strip()
         if not token:

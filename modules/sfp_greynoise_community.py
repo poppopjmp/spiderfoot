@@ -110,8 +110,10 @@ class sfp_greynoise_community(SpiderFootAsyncPlugin):
                 headers=headers,
             )
             if ip_response["code"] == "200":
-                ip_res = json.loads(ip_response["content"])
-                res = ip_res
+                try:
+                    res = json.loads(ip_response["content"])
+                except json.JSONDecodeError:
+                    self.debug("Failed to parse GreyNoise community response as JSON")
 
         if not res:
             self.error(

@@ -216,6 +216,12 @@ class SpiderFootTarget():
         if not value:
             return False
 
+        # Target names/aliases are stored lowercased (DNS is case-insensitive);
+        # lowercase the incoming value too so mixed-case hosts (e.g.
+        # "Sub.Example.COM") are not wrongly treated as out-of-scope. Harmless
+        # for IPs (IPv4 unaffected; IPv6 hex lowercasing is canonical).
+        value = value.lower()
+
         # We can't really say anything about names, username, bitcoin addresses
         # or phone numbers, so everything matches
         if self.targetType in ["HUMAN_NAME", "PHONE_NUMBER", "USERNAME", "BITCOIN_ADDRESS"]:

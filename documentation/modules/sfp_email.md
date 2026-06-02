@@ -33,7 +33,7 @@ None (some enrichment modules may require keys)
 ## Tips
 
 - Use to discover exposed or public-facing email addresses.
-- Combine with sfp_breach for breach exposure analysis.
+- Combine with sfp_dehashed for breach exposure analysis.
 
 ---
 

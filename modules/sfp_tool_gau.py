@@ -14,6 +14,7 @@ import subprocess
 import tempfile
 
 from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
+from spiderfoot import SpiderFootEvent
 
 
 class sfp_tool_gau(SpiderFootAsyncPlugin):
@@ -147,7 +148,7 @@ class sfp_tool_gau(SpiderFootAsyncPlugin):
                         count += 1
 
                         evt_type = self._classify_url(url, data)
-                        evt = self.sf.SpiderFootEvent(
+                        evt = SpiderFootEvent(
                             evt_type, url, self.__name__, event
                         )
                         self.notifyListeners(evt)
