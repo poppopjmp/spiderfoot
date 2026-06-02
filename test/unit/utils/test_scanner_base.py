@@ -12,6 +12,7 @@ from __future__ import annotations
 import unittest
 import threading
 import time
+import logging
 from contextlib import suppress
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -39,10 +40,41 @@ class TestScannerBase(unittest.TestCase):
     - Scan status tracking and cleanup
     """
     
+    @staticmethod
+    def _sanitize_leaked_logging() -> None:
+        """Repair logging handlers corrupted by other tests' leaked mocks.
+
+        Some module tests patch ``logging.getLogger`` / mock handlers and, under
+        parallel (xdist) execution, can leave a handler whose ``formatter`` is a
+        Mock on a logger in the scanner's chain ("spiderfoot", root, ...). The
+        scanner logs via ``SpiderFoot.status()/error()``, and a Mock formatter
+        makes ``Handler.format()`` return a Mock, so ``stream.write(...)`` then
+        raises ``TypeError: write() argument must be str, not Mock``. Reset any
+        such non-``Formatter`` formatter back to a real one so cross-test
+        pollution cannot break these (otherwise isolation-clean) tests.
+        """
+        loggers = [logging.getLogger()]  # root
+        loggers += [
+            logging.getLogger(name)
+            for name in list(logging.root.manager.loggerDict)
+            if name == "spiderfoot" or name.startswith("spiderfoot.") or name == "sf"
+            or name.startswith("sf.")
+        ]
+        default_fmt = logging.Formatter()
+        for lg in loggers:
+            for handler in list(getattr(lg, "handlers", [])):
+                fmt = getattr(handler, "formatter", None)
+                if fmt is not None and not isinstance(fmt, logging.Formatter):
+                    handler.setFormatter(default_fmt)
+
     def setUp(self):
         """Set up test with scanner-specific resource tracking."""
         super().setUp()
-        
+
+        # Heal any logging state leaked by other tests before we build scanners
+        # (which log via the "spiderfoot" logger chain).
+        self._sanitize_leaked_logging()
+
         # Get resource managers
         self.resource_manager = get_test_resource_manager()
         self.thread_registry = get_test_thread_registry()
