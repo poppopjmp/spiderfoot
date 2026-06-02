@@ -182,7 +182,7 @@ async def upload_document(
         },
     )
 
-    _submissions[submission_id] = response.dict()
+    _submissions[submission_id] = response.model_dump()
     return response
 
 
@@ -206,7 +206,7 @@ async def submit_iocs(request: IOCListInput):
         key = f"{ioc.type}:{ioc.value}"
         if key not in seen:
             seen.add(key)
-            valid_iocs.append(ioc.dict())
+            valid_iocs.append(ioc.model_dump())
 
     # Group by type for downstream processing
     by_type: Dict[str, List[str]] = {}
@@ -232,7 +232,7 @@ async def submit_iocs(request: IOCListInput):
         },
     )
 
-    _submissions[submission_id] = response.dict()
+    _submissions[submission_id] = response.model_dump()
     return response
 
 
@@ -295,7 +295,7 @@ async def submit_report(request: ReportInput):
         },
     )
 
-    _submissions[submission_id] = response.dict()
+    _submissions[submission_id] = response.model_dump()
     return response
 
 
@@ -326,7 +326,7 @@ async def submit_context(request: ContextInput):
         },
     )
 
-    _submissions[submission_id] = response.dict()
+    _submissions[submission_id] = response.model_dump()
     return response
 
 
@@ -357,7 +357,7 @@ async def submit_targets(request: TargetListInput):
         },
     )
 
-    _submissions[submission_id] = response.dict()
+    _submissions[submission_id] = response.model_dump()
     return response
 
 
