@@ -130,6 +130,25 @@ new tests; `--cov-fail-under` ratcheted 66 -> 70 so it cannot silently regress.
   risk-upgrade branch is currently unreachable — a pre-existing design gap left
   for follow-up.
 
+### Structural DB-bound router coverage (fourth pass)
+Every API router now has a dedicated test. The large DB/service-bound routers
+were covered with a reusable in-memory `FakeScanService`/`FakeScanRecord`
+(`test/unit/utils/`) injected via `dependency_overrides[get_scan_service]`, plus
+fakes for the visualization/correlation services and in-memory tracker/task
+registries: `scan` (0->21%, core read/mutate surface), `reports` (0->50%),
+`visualization` (0->56%), `tasks` (0->82%), `scan_progress` (0->60%),
+`correlations` (0->61%), `frontend_data` (0->83%), `data` module-management
+(26->50%), `workspace` (26->54%), `export` streaming (34->54%).
+
+### Test flakiness fixed (CI-blocking, intermittent)
+Five pre-existing `SpiderFootScanner` tests failed intermittently under CI's
+parallel (xdist) run with `TypeError: write() argument must be str, not Mock` —
+a Mock formatter leaked by other tests onto the "spiderfoot" logger chain made
+`Handler.format()` return a Mock. `TestScannerBase.setUp` now sanitizes leaked
+logging state (resets any non-`Formatter` formatter on the root/"spiderfoot"
+loggers). Verified by reproducing the exact mechanism in a simulation and
+confirming the sanitizer heals it; scanner suite stays 40/40.
+
 ### AST sweeps run — clean (no defects, positive findings)
 Additional pattern sweeps across `spiderfoot/` confirmed the codebase is sound
 on these classes (no fixes needed): mutable default arguments (0), ambiguous
