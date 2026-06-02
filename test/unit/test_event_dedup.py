@@ -98,6 +98,24 @@ class TestContentNormalizer(unittest.TestCase):
         result = ContentNormalizer.normalize("URL_WEB", "https://example.com:443/path")
         self.assertEqual(result, "https://example.com/path")
 
+    def test_normalize_url_preserves_nonstandard_port(self):
+        # Regression: naive ":80"/":443" substring stripping mangled
+        # non-default ports (:8080 -> 80), colliding distinct URLs.
+        self.assertEqual(
+            ContentNormalizer.normalize("URL_WEB", "http://a.com:8080/path"),
+            "http://a.com:8080/path",
+        )
+        self.assertEqual(
+            ContentNormalizer.normalize("URL_WEB", "https://a.com:4433/x"),
+            "https://a.com:4433/x",
+        )
+
+    def test_normalize_url_nonstandard_port_no_collision(self):
+        # Two genuinely different URLs must not normalize to the same key.
+        a = ContentNormalizer.normalize("URL_WEB", "http://a.com:8080")
+        b = ContentNormalizer.normalize("URL_WEB", "http://a.com80")
+        self.assertNotEqual(a, b)
+
     def test_normalize_domain(self):
         result = ContentNormalizer.normalize("DOMAIN_NAME", "  Example.COM.  ")
         self.assertEqual(result, "example.com")

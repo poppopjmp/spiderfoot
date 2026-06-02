@@ -10,6 +10,7 @@ import hashlib
 import logging
 import threading
 import time
+import urllib.parse
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Callable
@@ -122,14 +123,33 @@ class ContentNormalizer:
 
     @staticmethod
     def _normalize_url(url: str) -> str:
-        """Normalize URL for comparison."""
+        """Normalize URL for comparison.
+
+        Strips only the scheme's *default* port (80 for http, 443 for https),
+        the fragment, and a trailing slash. Port stripping is port-aware: the
+        previous naive ``replace(":80", "")`` mangled non-default ports
+        (``:8080`` -> ``80``, ``:4433`` -> ``3``), which could collide distinct
+        URLs and drop real findings as false duplicates.
+        """
         url = url.lower().strip()
-        # Remove default ports
-        url = url.replace(":80/", "/").replace(":443/", "/")
-        url = url.replace(":80", "").replace(":443", "")
         # Remove fragment
         if "#" in url:
             url = url.split("#")[0]
+        # Only URLs with a scheme are port-normalized; bare hostnames
+        # (e.g. INTERNET_NAME values) are left as-is apart from casing/slash.
+        if "://" in url:
+            try:
+                parts = urllib.parse.urlsplit(url)
+                netloc = parts.netloc
+                if parts.scheme == "http" and netloc.endswith(":80"):
+                    netloc = netloc[:-3]
+                elif parts.scheme == "https" and netloc.endswith(":443"):
+                    netloc = netloc[:-4]
+                url = urllib.parse.urlunsplit(
+                    (parts.scheme, netloc, parts.path, parts.query, "")
+                )
+            except ValueError:
+                pass
         # Remove trailing slash
         url = url.rstrip("/")
         return url
