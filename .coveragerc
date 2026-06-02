@@ -1,3 +1,8 @@
 [run]
+# Tests (and SpiderFoot itself) spawn threads; tell coverage so it manages the
+# trace function per-thread. Without this, the C tracer can intermittently
+# raise "SystemError: bad argument to internal function" under concurrent
+# tests (e.g. test_tls_fingerprint thread-safety tests) on parallel CI runs.
+concurrency = thread
 omit =
     */spiderfoot_templates_*_tmpl
