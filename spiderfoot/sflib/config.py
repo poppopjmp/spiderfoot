@@ -73,7 +73,11 @@ def configUnserialize(opts: dict, referencePoint: dict, filterSystem: bool = Tru
         if opt not in opts:
             continue
         if isinstance(referencePoint[opt], bool):
-            returnOpts[opt] = True if opts[opt] == "1" else False
+            # configSerialize emits an int 1/0; the DB returns it as str "1"/"0".
+            # Normalise to str so both the in-memory round trip (int 1) and the
+            # DB round trip (str "1") map True correctly. (Comparing the raw int
+            # 1 to "1" is always False, which silently flipped True -> False.)
+            returnOpts[opt] = str(opts[opt]) == "1"
             continue
         if isinstance(referencePoint[opt], str):
             returnOpts[opt] = str(opts[opt])
@@ -118,7 +122,11 @@ def configUnserialize(opts: dict, referencePoint: dict, filterSystem: bool = Tru
                 if isinstance(ref_mod, list) and len(ref_mod) == 0:
                     continue
                 if isinstance(ref_mod, bool):
-                    returnOpts['__modules__'][modName]['opts'][opt] = opts[f"{modName}:{opt}"] == "1"
+                    # Normalise to str: handles both int 1 (in-memory round
+                    # trip) and str "1" (from the DB). See note above.
+                    returnOpts['__modules__'][modName]['opts'][opt] = (
+                        str(opts[f"{modName}:{opt}"]) == "1"
+                    )
                     continue
                 if isinstance(ref_mod, str):
                     returnOpts['__modules__'][modName]['opts'][opt] = str(opts[f"{modName}:{opt}"])
