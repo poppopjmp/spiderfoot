@@ -332,28 +332,15 @@ def useProxyForUrl(self, url: str) -> bool:
     except Exception as e:
         ip_obj = None
 
-    # If host is a valid IPv4 or IPv6 address, or netaddr parsed it, check for private/local/loopback
+    # If host is a valid IP address, never proxy private/local/loopback/link-local
+    # traffic. Uses the netaddr 1.x classification API (the previous
+    # getattr('is_private') probe was a no-op on netaddr 1.x and left IPv6
+    # private/link-local addresses being proxied).
     if ip_obj is not None:
-        is_private = getattr(ip_obj, 'is_private', None)
-        if callable(is_private):
-            if ip_obj.is_private():
-                return False
-        elif is_private:
+        if ip_obj.is_loopback() or ip_obj.is_link_local():
             return False
-        is_loopback = getattr(ip_obj, 'is_loopback', None)
-        if callable(is_loopback):
-            if ip_obj.is_loopback():
-                return False
-        elif is_loopback:
+        if ip_obj.version == 4 and ip_obj.is_ipv4_private_use():
             return False
-        # Always run explicit private IPv4 range checks
-        if ip_obj.version == 4:
-            if ip_obj in netaddr.IPNetwork('127.0.0.0/8'):
-                return False
-            if ip_obj in netaddr.IPNetwork('10.0.0.0/8'):
-                return False
-            if ip_obj in netaddr.IPNetwork('192.168.0.0/16'):
-                return False
-            if ip_obj in netaddr.IPNetwork('172.16.0.0/12'):
-                return False
+        if ip_obj.version == 6 and ip_obj.is_ipv6_unique_local():
+            return False
     return True
