@@ -53,19 +53,26 @@ class TestScannerBase(unittest.TestCase):
         such non-``Formatter`` formatter back to a real one so cross-test
         pollution cannot break these (otherwise isolation-clean) tests.
         """
+        # Scan every logger (root + all registered), not just the spiderfoot
+        # chain: a leaked handler with a Mock formatter anywhere in the
+        # propagation path corrupts emit. Resetting a non-Formatter formatter to
+        # a real one is always safe, so be exhaustive.
         loggers = [logging.getLogger()]  # root
-        loggers += [
-            logging.getLogger(name)
-            for name in list(logging.root.manager.loggerDict)
-            if name == "spiderfoot" or name.startswith("spiderfoot.") or name == "sf"
-            or name.startswith("sf.")
-        ]
+        for name in list(logging.root.manager.loggerDict):
+            lg = logging.root.manager.loggerDict.get(name)
+            if isinstance(lg, logging.Logger):
+                loggers.append(lg)
         default_fmt = logging.Formatter()
         for lg in loggers:
             for handler in list(getattr(lg, "handlers", [])):
                 fmt = getattr(handler, "formatter", None)
                 if fmt is not None and not isinstance(fmt, logging.Formatter):
                     handler.setFormatter(default_fmt)
+                # A handler that is itself a Mock (or whose stream/format is
+                # mocked) can also emit non-str; drop clearly non-real handlers.
+                if not isinstance(handler, logging.Handler):
+                    with suppress(Exception):
+                        lg.removeHandler(handler)
 
     def setUp(self):
         """Set up test with scanner-specific resource tracking."""
