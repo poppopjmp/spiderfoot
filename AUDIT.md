@@ -130,6 +130,20 @@ new tests; `--cov-fail-under` ratcheted 66 -> 70 so it cannot silently regress.
   risk-upgrade branch is currently unreachable — a pre-existing design gap left
   for follow-up.
 
+### Real-PostgreSQL DB integration gate (seventh pass)
+The DB layer is PostgreSQL-only and structurally untestable in unit tests, so it
+now has a real-PG integration suite (test/integration/spiderfoot/
+test_db_integration.py, 10 tests) covering scan create/get/list/delete, event
+store + scanResultEvent/Summary (+ invalid-grouping ValueError), scan logging,
+and the global-config round trip — including the full production
+configSerialize -> configSet -> configGet -> configUnserialize path that
+end-to-end validates the bool round-trip fix. Validated locally against
+postgres:15 (10/10 pass). Fixed the CI integration job, which (a) set SF_DB_*
+but the DB layer reads SF_POSTGRES_DSN (DB tests never connected) and (b) ended
+its run with '|| echo' so it could never fail; added a dedicated gating step
+(real SF_POSTGRES_DSN, no failure swallowing), leaving the broader integration
+run non-gating.
+
 ### Systematic core/barebone examination (sixth pass)
 - **Correlation rule regex crash:** _apply_collection_filter ran re.search
   with no error handling; one malformed regex in a YAML correlation rule raised
