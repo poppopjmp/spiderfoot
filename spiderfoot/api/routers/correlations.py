@@ -135,7 +135,7 @@ async def update_correlation_rule(
     svc: CorrelationService = Depends(get_correlation_svc),
 ) -> dict[str, Any]:
     """Update a correlation rule (partial)."""
-    updates = {k: v for k, v in rule_data.dict().items() if v is not None}
+    updates = {k: v for k, v in rule_data.model_dump().items() if v is not None}
     if "risk" in updates:
         updates["risk"] = updates["risk"].upper()
     updates["modified"] = datetime.now().isoformat()
