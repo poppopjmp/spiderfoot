@@ -233,8 +233,19 @@ jobs:
           pip install -r requirements.txt
           pip install pytest
 
+      - name: Run DB integration tests (PostgreSQL, gating)
+        env:
+          SF_POSTGRES_DSN: postgresql://spiderfoot:spiderfoot_test@localhost:5432/spiderfoot_test
+          SF_REDIS_URL: redis://localhost:6379/0
+        run: |
+          # These exercise the SpiderFootDb persistence layer against the live
+          # PostgreSQL service and MUST pass — no failure swallowing.
+          pytest test/integration/spiderfoot/test_db_integration.py \
+            -v --tb=short -p no:cacheprovider
+
       - name: Run integration tests
         env:
+          SF_POSTGRES_DSN: postgresql://spiderfoot:spiderfoot_test@localhost:5432/spiderfoot_test
           SF_REDIS_URL: redis://localhost:6379/0
           SF_DB_TYPE: postgresql
           SF_DB_HOST: localhost
@@ -244,6 +255,7 @@ jobs:
           SF_DB_PASSWORD: spiderfoot_test
         run: |
           pytest test/integration/ \
+            --ignore=test/integration/spiderfoot/test_db_integration.py \
             -v \
             --tb=short \
             || echo "Integration tests completed (some may be skipped)"
