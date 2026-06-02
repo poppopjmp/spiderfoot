@@ -72,8 +72,8 @@ A follow-up pass worked through the deferred backlog. Each change was verified
 ## Third pass — test maturity & a routing bug class
 
 Goal: raise the safety net (real tests, a coverage gate) and use the new tests
-to surface latent defects. Coverage measured at **66.6%**; `--cov-fail-under=66`
-added to CI so it cannot silently regress (to be ratcheted as tests land).
+to surface latent defects. Coverage measured at **66.6%** then raised to **70.67%** (CI-reported) by the
+new tests; `--cov-fail-under` ratcheted 66 -> 70 so it cannot silently regress.
 
 ### Fixed (additional defects found via deeper tests + AST sweeps)
 - **`bulk-disable` accepted no body (always 400):** `POST
