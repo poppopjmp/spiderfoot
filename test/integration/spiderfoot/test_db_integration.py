@@ -28,6 +28,7 @@ if not DSN:
 
 from spiderfoot.db import SpiderFootDb
 from spiderfoot import SpiderFootEvent
+from spiderfoot.sflib.config import configSerialize, configUnserialize
 
 
 @pytest.fixture(scope="module")
@@ -125,3 +126,21 @@ class TestConfigRoundTrip:
         assert str(stored.get("test:int_opt")) == "42"
         assert str(stored.get("test:bool_true")) == "1"
         assert str(stored.get("test:bool_false")) == "0"
+
+    def test_full_serialize_db_unserialize_roundtrip(self, dbh):
+        # The real production path: configSerialize -> DB (configSet) ->
+        # configGet -> configUnserialize. End-to-end validation that boolean
+        # options survive the PostgreSQL round trip as their original bools
+        # (regression for the int-1-vs-str-"1" bool flip).
+        reference = {
+            "_rt_enabled": True,
+            "_rt_disabled": False,
+            "_rt_count": 7,
+            "_rt_name": "rtval",
+        }
+        dbh.configSet(configSerialize(reference, filterSystem=False))
+        restored = configUnserialize(dbh.configGet(), reference, filterSystem=False)
+        assert restored["_rt_enabled"] is True
+        assert restored["_rt_disabled"] is False
+        assert restored["_rt_count"] == 7
+        assert restored["_rt_name"] == "rtval"
