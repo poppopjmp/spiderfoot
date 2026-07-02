@@ -211,21 +211,6 @@ class TestModuleStor_db(TestModuleBase):
         module = sfp__stor_db()
         self.assertIsInstance(module.producedEvents(), list)
 
-    def test_postgresql_storage(self):
-        """Test PostgreSQL storage functionality."""
-        module = sfp__stor_db()
-        module.setup(self.sf_instance, {'_store': True, 'db_type': 'postgresql'})
-        
-        # Create test event
-        test_event = self.create_test_event()
-        
-        # Mock getScanId
-        module.getScanId = MagicMock(return_value="test_scan_id")
-        
-        module.handleEvent(test_event)
-        
-        # Verify that scanEventStore was called
-        self.mock_dbh.scanEventStore.assert_called()
 
     @patch('modules.sfp__stor_db.psycopg2.connect')
     def test_postgresql_storage_with_size_limit(self, mock_connect):

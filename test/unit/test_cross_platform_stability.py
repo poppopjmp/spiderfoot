@@ -294,7 +294,6 @@ sys.exit(0)
 
     def test_thread_safety_during_shutdown(self):
         """Test thread safety during shutdown scenarios."""
-        import threading
         import queue
         
         # Create a queue for thread communication

@@ -3,7 +3,6 @@ from __future__ import annotations
 """Tests for spiderfootthreadpool module."""
 
 import unittest
-from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import MagicMock, patch
 from spiderfoot.threadpool import SpiderFootThreadPool, ThreadPoolWorker
 import queue

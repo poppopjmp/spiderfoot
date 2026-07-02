@@ -5,7 +5,6 @@ from __future__ import annotations
 # test_spiderfoot.py
 import pytest
 import unittest
-from test.unit.utils.test_module_base import TestModuleBase
 
 from spiderfoot.sflib import SpiderFoot
 from test.unit.utils.test_base import TestModuleBase

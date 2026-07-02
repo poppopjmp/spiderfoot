@@ -14,15 +14,8 @@ from test.unit.utils.test_helpers import safe_recursion
 class TestModuleZoneFiles(TestModuleBase):
 
 
-    def setUp(self):
-        """Enhanced setUp with ThreadReaper module tracking."""
-        super().setUp()
         # ThreadReaper infrastructure is automatically initialized
         
-    def tearDown(self):
-        """Enhanced tearDown with ThreadReaper cleanup."""
-        # ThreadReaper infrastructure automatically cleans up
-        super().tearDown()
     def test_opts(self):
         module = sfp_zonefiles()
         self.assertEqual(len(module.opts), len(module.optdescs))

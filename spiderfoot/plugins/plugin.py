@@ -136,7 +136,6 @@ class SpiderFootPlugin:
     _scanId = None
     _sharedThreadPool = None
     _thread = None
-    running = False
     maxThreads = 10  # Default maximum threads for this module
 
     # Database and listeners

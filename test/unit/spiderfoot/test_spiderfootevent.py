@@ -3,7 +3,6 @@ from __future__ import annotations
 """Tests for spiderfootevent module."""
 
 import unittest
-from test.unit.utils.test_module_base import TestModuleBase
 from spiderfoot.events.event import SpiderFootEvent
 from test.unit.utils.test_base import TestModuleBase
 from test.unit.utils.resource_manager import get_test_resource_manager

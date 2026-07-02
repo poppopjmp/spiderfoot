@@ -3,7 +3,6 @@ from __future__ import annotations
 """Tests for spiderfootplugin module."""
 
 import unittest
-from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import MagicMock, patch
 from spiderfoot.plugins.plugin import SpiderFootPlugin
 from spiderfoot import SpiderFootEvent, SpiderFootTarget
