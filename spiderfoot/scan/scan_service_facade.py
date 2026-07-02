@@ -25,6 +25,10 @@ from .scan_state import (
 )
 from .scan_state_map import db_status_to_state, state_to_db_status
 from .scan_metadata_service import ScanMetadataService
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from spiderfoot import SpiderFootDb
 
 log = logging.getLogger("spiderfoot.scan_service_facade")
 

@@ -12,6 +12,10 @@ import time
 from typing import Any
 
 from spiderfoot.data_service.base import DataService, DataServiceConfig
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from spiderfoot import SpiderFootDb
 
 
 class LocalDataService(DataService):

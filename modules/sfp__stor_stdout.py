@@ -17,6 +17,10 @@ from __future__ import annotations
 import json
 
 from spiderfoot.plugins.modern_plugin import SpiderFootModernPlugin
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from spiderfoot import SpiderFoot, SpiderFootEvent
 
 
 class sfp__stor_stdout(SpiderFootModernPlugin):

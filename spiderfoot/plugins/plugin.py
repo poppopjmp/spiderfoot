@@ -41,6 +41,10 @@ from ..scan.scan_state_map import (
     DB_STATUS_ABORT_REQUESTED,
     DB_STATUS_FINISHED,
 )
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from spiderfoot import SpiderFootDb, SpiderFootTarget
 
 # begin logging overrides
 # these are copied from the python logging module

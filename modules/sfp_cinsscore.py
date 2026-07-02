@@ -18,6 +18,10 @@ from netaddr import IPAddress, IPNetwork
 
 from spiderfoot import SpiderFootEvent
 from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from spiderfoot import SpiderFoot
 
 
 class sfp_cinsscore(SpiderFootAsyncPlugin):

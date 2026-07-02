@@ -34,6 +34,11 @@ from .helpers import (
     hostDomain, validHost, isDomain, validIP, validIP6,
     validIpNetwork, isPublicIpAddress, normalizeDNS,
 )
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from spiderfoot import SpiderFootDb
+    import requests
 
 class SpiderFoot:
     """Central facade for SpiderFoot scan operations.
