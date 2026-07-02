@@ -115,14 +115,26 @@ def safeSocket(host: str, port: int, timeout: int) -> 'ssl.SSLSocket':
     return sock
 
 def safeSSLSocket(host: str, port: int, timeout: int) -> 'ssl.SSLSocket':
-    """Create a TLS-wrapped socket connection with a timeout."""
+    """Create a TLS-wrapped socket connection with a timeout.
+
+    Certificate verification is disabled on purpose: scan targets routinely
+    present self-signed, expired or hostname-mismatched certificates, and
+    this helper exists to inspect them (see sfp_sslcert). A verifying context
+    would refuse to connect to exactly those hosts.
+    """
     context = ssl.create_default_context()
     context.minimum_version = ssl.TLSVersion.TLSv1_2
+    context.check_hostname = False
+    context.verify_mode = ssl.CERT_NONE
     s = socket.socket()
     s.settimeout(int(timeout))
-    s.connect((host, int(port)))
-    sock = context.wrap_socket(s, server_hostname=host)
-    sock.do_handshake()
+    try:
+        s.connect((host, int(port)))
+        sock = context.wrap_socket(s, server_hostname=host)
+        sock.do_handshake()
+    except Exception:
+        s.close()
+        raise
     return sock
 
 def parseCert(rawcert: str, fqdn: str | None = None, expiringdays: int = 30) -> dict:

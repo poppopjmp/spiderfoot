@@ -243,7 +243,9 @@ class SpiderFootThreadPool:
         except AttributeError:
             inputThreadAlive = False
 
-        inputQueuesEmpty = [q.empty() for q in self.inputQueues.values()]
+        # Snapshot the values so a concurrent submit() adding a new task
+        # queue cannot trigger "dictionary changed size during iteration".
+        inputQueuesEmpty = [q.empty() for q in list(self.inputQueues.values())]
         return not inputThreadAlive and all(inputQueuesEmpty) and all(finishedThreads)
 
     def __enter__(self) -> SpiderFootThreadPool:

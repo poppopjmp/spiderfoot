@@ -275,10 +275,12 @@ class WorkerPool:
 
     def start(self) -> None:
         """Start the worker pool and all registered workers."""
-        if self._running:
-            return
-
         with self._lock:
+            # Re-check under the lock so two concurrent start() calls cannot
+            # both build an executor and orphan the first one.
+            if self._running:
+                return
+
             max_workers = self.config.effective_max_workers
 
             if self.config.strategy == PoolStrategy.THREAD:
