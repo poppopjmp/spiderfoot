@@ -576,6 +576,7 @@ class SpiderFootScanner():
 
         except Exception as e:
             self.__sf.error(f"Scan [{self.__scanId}] failed: {str(e)}")
+            self.__setStatus(DB_STATUS_ERROR_FAILED, None, time.time() * 1000)
 
         finally:
             scan_end_time = time.time()

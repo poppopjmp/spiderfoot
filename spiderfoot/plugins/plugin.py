@@ -418,7 +418,7 @@ class SpiderFootPlugin:
 
         # Be strict about what events to pass on, unless they are
         # the ROOT event or the event type of the target.
-        if self.__outputFilter__ and eventName not in ['ROOT', self.getTarget().targetType, self.__outputFilter__]:
+        if self.__outputFilter__ and eventName not in ['ROOT', self.getTarget().targetType, *self.__outputFilter__]:
             return
 
         storeOnly = False  # Under some conditions, only store and don't notify
@@ -480,13 +480,14 @@ class SpiderFootPlugin:
                 except Exception as e:
                     self.sf.error(
                         f"Module ({listener.__module__}) encountered an error: {e}")
-                    # set errorState
-                    self.errorState = True
-                    # clear incoming queue
-                    if self.incomingEventQueue:
+                    # Mark the listener that raised as errored (not the
+                    # producing module) so it stops receiving further events.
+                    listener.errorState = True
+                    # clear the failed listener's incoming queue
+                    if listener.incomingEventQueue:
                         with suppress(queue.Empty):
                             while 1:
-                                self.incomingEventQueue.get_nowait()
+                                listener.incomingEventQueue.get_nowait()
 
     def checkForStop(self) -> bool:
         """For modules to use to check for when they should give back control.

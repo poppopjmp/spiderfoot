@@ -819,14 +819,26 @@ class AuthService:
             for r in cur.fetchall()
         ]
 
-    def revoke_session(self, session_id: str) -> bool:
-        """Revoke a specific session."""
+    def revoke_session(self, session_id: str, user_id: str | None = None) -> bool:
+        """Revoke a specific session.
+
+        When ``user_id`` is provided, the session is only revoked if it
+        belongs to that user, preventing one user from revoking another
+        user's session by guessing/leaking its id.
+        """
         conn = self._get_conn()
         cur = conn.cursor()
-        cur.execute(
-            f"UPDATE tbl_sessions SET is_active = {self._ph()} WHERE id = {self._ph()}",
-            (False, session_id),
-        )
+        if user_id is not None:
+            cur.execute(
+                f"UPDATE tbl_sessions SET is_active = {self._ph()} "
+                f"WHERE id = {self._ph()} AND user_id = {self._ph()}",
+                (False, session_id, user_id),
+            )
+        else:
+            cur.execute(
+                f"UPDATE tbl_sessions SET is_active = {self._ph()} WHERE id = {self._ph()}",
+                (False, session_id),
+            )
         conn.commit()
         return cur.rowcount > 0
 
