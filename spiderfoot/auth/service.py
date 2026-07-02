@@ -382,8 +382,17 @@ class AuthService:
         )
 
     def token_to_user_context(self, token: str) -> UserContext:
-        """Decode a JWT and return a UserContext."""
+        """Decode a JWT access token and return a UserContext.
+
+        Rejects any token that is not an access token (e.g. a refresh
+        token) so a long-lived refresh token cannot be presented directly
+        as a bearer credential.
+        """
         payload = self.validate_token(token)
+        if payload.get("type") != "access":
+            raise jwt.InvalidTokenError(
+                f"Expected an access token, got type={payload.get('type')!r}"
+            )
         role = parse_role(payload.get("role", "viewer"))
         return UserContext(
             user_id=payload.get("sub", ""),

@@ -350,7 +350,7 @@ def require_permission(permission: str):
     """
     from fastapi import Depends, HTTPException, Request
 
-    enforce = os.environ.get("SF_RBAC_ENFORCE", "false").lower() in ("true", "1", "yes")
+    enforce = os.environ.get("SF_RBAC_ENFORCE", "true").lower() in ("true", "1", "yes")
 
     async def _check(request: Request) -> UserContext:
         # Try to get user context from request state (set by auth middleware)
@@ -392,7 +392,7 @@ def require_permission(permission: str):
 
 def get_rbac_summary() -> dict[str, Any]:
     """Return the full RBAC configuration summary."""
-    enforce = os.environ.get("SF_RBAC_ENFORCE", "false").lower() in ("true", "1", "yes")
+    enforce = os.environ.get("SF_RBAC_ENFORCE", "true").lower() in ("true", "1", "yes")
     return {
         "enforced": enforce,
         "default_role": DEFAULT_ROLE,
