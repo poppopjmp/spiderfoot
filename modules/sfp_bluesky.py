@@ -6,6 +6,10 @@ from spiderfoot import SpiderFootEvent
 from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 import json
 import requests
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from spiderfoot import SpiderFoot
 
 class sfp_bluesky(SpiderFootAsyncPlugin):
     """SpiderFoot plugin to monitor Bluesky for posts and emit events."""

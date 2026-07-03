@@ -7,6 +7,10 @@ from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 import requests
 import re
 import base64
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from spiderfoot import SpiderFoot
 
 class sfp_apileak(SpiderFootAsyncPlugin):
     """Searches for leaked API keys and secrets on GitHub and paste sites."""

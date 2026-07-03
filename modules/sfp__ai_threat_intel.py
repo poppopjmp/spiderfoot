@@ -34,6 +34,10 @@ import logging
 from datetime import datetime, timedelta
 import re
 import statistics
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from spiderfoot import SpiderFoot
 
 # Lightweight numpy-like functions for basic operations
 def mean(values: list) -> float:

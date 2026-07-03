@@ -442,7 +442,6 @@ class FastAPISecurityMiddleware:
     def _create_error_response(self, status_code: int, message: str):
         """Create error response."""
         from fastapi import Response
-        import json
 
         content = json.dumps({
             'error': message,

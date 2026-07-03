@@ -325,7 +325,6 @@ class AuthGuard:
 
     def _check_basic_auth(self, headers: dict[str, str]) -> AuthResult:
         """Validate Basic auth credentials."""
-        import base64
 
         auth_header = headers.get("Authorization", "")
         if not auth_header.startswith("Basic "):

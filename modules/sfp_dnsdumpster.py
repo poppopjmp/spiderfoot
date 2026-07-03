@@ -21,6 +21,10 @@ from bs4 import BeautifulSoup
 
 from spiderfoot import SpiderFootEvent
 from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from spiderfoot import SpiderFoot
 
 
 class sfp_dnsdumpster(SpiderFootAsyncPlugin):

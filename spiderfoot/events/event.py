@@ -458,7 +458,7 @@ class SpiderFootEvent:
         Returns:
             Creation timestamp
         """
-        return self.created
+        return self.generated
 
     def getHash(self) -> str:
         """Get event hash.
@@ -474,7 +474,7 @@ class SpiderFootEvent:
         Returns:
             Event data
         """
-        return self.eventData
+        return self.data
 
     def getType(self) -> str:
         """Get event type.

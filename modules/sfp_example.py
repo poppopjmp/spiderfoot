@@ -3,6 +3,10 @@ from __future__ import annotations
 """SpiderFoot plug-in module: example."""
 
 from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from spiderfoot import SpiderFoot, SpiderFootTarget
 
 class sfp_example(SpiderFootAsyncPlugin):
     """Example SpiderFoot plugin."""

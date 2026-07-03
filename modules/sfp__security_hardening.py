@@ -37,6 +37,10 @@ from datetime import datetime, timedelta, timezone
 from enum import Enum
 import logging
 import ipaddress
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from spiderfoot import SpiderFoot
 
 try:
     from cryptography.fernet import Fernet

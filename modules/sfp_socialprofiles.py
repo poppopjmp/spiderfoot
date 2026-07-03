@@ -19,6 +19,10 @@ import urllib.parse
 
 from spiderfoot import SpiderFootEvent
 from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from spiderfoot import SpiderFoot
 
 sites = {
     # Search string to use, domain name the profile will sit on within

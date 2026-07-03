@@ -74,6 +74,3 @@ class TestModuleCiscoUmbrella(TestModuleBase):
     def tearDown(self):
         """Clean up after each test."""
         super().tearDown()
-    def tearDown(self):
-        """Clean up after each test."""
-        super().tearDown()

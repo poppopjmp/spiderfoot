@@ -5,7 +5,6 @@ from __future__ import annotations
 # test_sflib_comprehensive.py
 import pytest
 import unittest
-from test.unit.utils.test_module_base import TestModuleBase
 import json
 import os
 import tempfile
@@ -216,7 +215,6 @@ class TestSpiderFootComprehensive(TestModuleBase):
     @patch('builtins.open', new_callable=mock_open, read_data='cached content')
     def test_cacheGet_valid_cache(self, mock_file, mock_stat, mock_cache_path):
         """Test cacheGet with valid cache."""
-        import time
         mock_cache_path.return_value = "/tmp/cache"
         mock_stat.return_value.st_size = 100
         mock_stat.return_value.st_mtime = time.time() - 1000  # Recent enough
@@ -228,7 +226,6 @@ class TestSpiderFootComprehensive(TestModuleBase):
     @patch('os.stat')
     def test_cacheGet_expired_cache(self, mock_stat, mock_cache_path):
         """Test cacheGet with expired cache."""
-        import time
         mock_cache_path.return_value = "/tmp/cache"
         mock_stat.return_value.st_size = 100
         mock_stat.return_value.st_mtime = time.time() - 100000  # Too old

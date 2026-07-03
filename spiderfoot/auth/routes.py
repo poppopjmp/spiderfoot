@@ -492,7 +492,7 @@ async def revoke_session(session_id: str, request: Request):
         raise HTTPException(status_code=401, detail="Not authenticated")
 
     svc = _get_auth_svc()
-    if not svc.revoke_session(session_id):
+    if not svc.revoke_session(session_id, user_id=user.user_id):
         raise HTTPException(status_code=404, detail="Session not found")
     return {"message": "Session revoked"}
 

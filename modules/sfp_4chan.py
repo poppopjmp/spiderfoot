@@ -6,6 +6,10 @@ from spiderfoot import SpiderFootEvent
 from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 import requests
 import time
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from spiderfoot import SpiderFoot
 
 class sfp_4chan(SpiderFootAsyncPlugin):
     """

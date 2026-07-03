@@ -192,7 +192,6 @@ class TestReportStore:
 
 def _make_mock_report(executive_summary="No findings to report."):
     """Create a fake GeneratedReport-like object for tests."""
-    from unittest.mock import MagicMock
     mock_report = MagicMock()
     mock_report.title = "Mock Report"
     mock_report.executive_summary = executive_summary
@@ -323,7 +322,6 @@ class TestAPIEndpoints:
     @pytest.fixture
     def client(self):
         from spiderfoot.api.dependencies import get_scan_service, get_api_key
-        from unittest.mock import MagicMock
         app = FastAPI()
         app.include_router(router, prefix="/api")
         # Override DB-dependent services so tests don't need a real PostgreSQL

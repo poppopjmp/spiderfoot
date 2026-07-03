@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import pytest
 import unittest
-from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch, MagicMock
 
 from modules.sfp_tool_wappalyzer import sfp_tool_wappalyzer

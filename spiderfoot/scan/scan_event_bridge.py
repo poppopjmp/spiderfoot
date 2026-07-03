@@ -45,6 +45,10 @@ import threading
 import time
 from collections import defaultdict
 from typing import Any
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from spiderfoot.events.event_relay import EventRelay
 
 log = logging.getLogger("spiderfoot.scan_event_bridge")
 

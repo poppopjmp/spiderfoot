@@ -7,6 +7,10 @@ from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
 import re
 import json
 import urllib.parse
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from spiderfoot import SpiderFoot
 
 
 class sfp_dideo(SpiderFootAsyncPlugin):

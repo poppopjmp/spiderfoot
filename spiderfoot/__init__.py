@@ -87,7 +87,6 @@ def get_modules_path() -> str:
     return os.path.join(PROJECT_ROOT, "modules")
 
 import importlib.util
-from .helpers import SpiderFootHelpers
 
 # Module import hook removed — loadModules() handles discovery via importlib
 

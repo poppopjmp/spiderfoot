@@ -421,8 +421,11 @@ class ScanCoordinator:
             if a.retries <= a.work.max_retries:
                 # Retry on a different node
                 a.state = WorkState.REASSIGNED
+                failed_node_id = a.node_id
                 a.node_id = None
-                node = self._select_node(a.work, exclude={a.node_id} if a.node_id else set())
+                node = self._select_node(
+                    a.work, exclude={failed_node_id} if failed_node_id else set()
+                )
                 if node:
                     self._assign(a, node)
                 else:

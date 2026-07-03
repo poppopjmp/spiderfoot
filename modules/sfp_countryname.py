@@ -22,6 +22,10 @@ from phonenumbers.phonenumberutil import region_code_for_country_code
 
 from spiderfoot import SpiderFootEvent, SpiderFootHelpers
 from spiderfoot.plugins.async_plugin import SpiderFootAsyncPlugin
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from spiderfoot import SpiderFoot
 
 
 class sfp_countryname(SpiderFootAsyncPlugin):

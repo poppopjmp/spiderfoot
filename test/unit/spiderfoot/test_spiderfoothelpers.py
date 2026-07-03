@@ -3,7 +3,6 @@ from __future__ import annotations
 """Tests for spiderfoothelpers module."""
 
 import unittest
-from test.unit.utils.test_module_base import TestModuleBase
 from unittest.mock import patch, MagicMock, mock_open
 from spiderfoot.helpers import SpiderFootHelpers
 from test.unit.utils.test_base import TestModuleBase
@@ -172,7 +171,7 @@ class TestSpiderFootHelpers(TestModuleBase):
 
     def test_dictionaryWordsFromWordlists(self):
         import importlib
-        from unittest.mock import patch, mock_open, MagicMock
+        from unittest.mock import patch, MagicMock
         with patch('spiderfoot.helpers.resources.files') as mock_files:
             mock_joinpath = MagicMock()
             mock_open_file = mock_open(read_data='word1\nword2\nword3')()
@@ -187,7 +186,7 @@ class TestSpiderFootHelpers(TestModuleBase):
 
     def test_humanNamesFromWordlists(self):
         import importlib
-        from unittest.mock import patch, mock_open, MagicMock
+        from unittest.mock import patch, MagicMock
         with patch('spiderfoot.helpers.resources.files') as mock_files:
             mock_joinpath = MagicMock()
             mock_open_file = mock_open(read_data='name1\nname2\nname3')()
@@ -202,7 +201,7 @@ class TestSpiderFootHelpers(TestModuleBase):
 
     def test_usernamesFromWordlists(self):
         import importlib
-        from unittest.mock import patch, mock_open, MagicMock
+        from unittest.mock import patch, MagicMock
         with patch('spiderfoot.helpers.resources.files') as mock_files:
             mock_joinpath = MagicMock()
             mock_open_file = mock_open(read_data='user1\nuser2\nuser3')()

@@ -52,7 +52,6 @@ class TestModuleArchiveorgExtended(TestModuleBase):
             # Re-instantiate plugin for each event type to reset results
             module = sfp_archiveorg()
             module.setup(self.sf, self.default_opts)
-            mock_notify = None
             evt = SpiderFootEvent(event_type, 'example.com', 'sfp_archiveorg', None)
             self.sf.fetchUrl = MagicMock(return_value=fake_response)
             with patch.object(module, 'notifyListeners') as mock_notify:

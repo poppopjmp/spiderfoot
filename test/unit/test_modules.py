@@ -6,7 +6,6 @@ from __future__ import annotations
 import os
 import pytest
 import unittest
-from test.unit.utils.test_module_base import TestModuleBase
 
 from spiderfoot.sflib import SpiderFoot
 from spiderfoot import SpiderFootDb
@@ -209,7 +208,6 @@ class TestSpiderFootModuleLoading(TestModuleBase):
 
     def test_module_watched_events_are_valid(self):
         sf = SpiderFoot(self.default_options)
-        from spiderfoot.db import SpiderFootDb
         valid_events = [e[0] for e in SpiderFootDb.eventDetails]
 
         sfModules = self.load_modules(sf)
@@ -223,7 +221,6 @@ class TestSpiderFootModuleLoading(TestModuleBase):
 
     def test_module_produced_events_are_valid(self):
         sf = SpiderFoot(self.default_options)
-        from spiderfoot.db import SpiderFootDb
         valid_events = [e[0] for e in SpiderFootDb.eventDetails]
 
         sfModules = self.load_modules(sf)
