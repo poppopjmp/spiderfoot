@@ -18,7 +18,10 @@ const api = axios.create({
     'Content-Type': 'application/json',
     'X-Requested-With': 'XMLHttpRequest',
   },
-  timeout: 30_000,
+  // Matches build-spiderfoot.sh's prod patch (client stays above nginx's
+  // 630s so a genuine hang surfaces as a 504, not a silent client abort).
+  // Report generation is legitimately slow, not hung.
+  timeout: 660_000,
 });
 
 // Request interceptor — attach JWT token if available

@@ -60,13 +60,44 @@ def _get_export_service():
 
 
 def _get_dbh():
-    """Try to obtain a database handle from ServiceRegistry."""
+    """Obtain a database handle.
+
+    FIX (part 1): this previously called the nonexistent
+    ServiceRegistry.instance() (AttributeError, silently swallowed) and,
+    even with that corrected, .get("db")/.get("dbh") raise
+    ServiceNotFoundError for keys nothing ever registers under those names
+    — uncaught here since it's not an AttributeError, so it propagated
+    straight past this function and past export_scan()'s own try/except as
+    an unhandled 500.
+
+    FIX (part 2, the actual root cause): SERVICE_DATA ("data") is only ever
+    registered by initialize_services(), which service_runner.py calls
+    exclusively from _run_scanner() — never from _run_api(), and main.py's
+    FastAPI _lifespan() doesn't call it either (it only inits auth and a
+    separate SpiderFootDb/RepositoryFactory pair for schema setup). So in
+    every API process, ServiceRegistry is permanently empty regardless of
+    the accessor fix above — "data" can never be found here; it only ever
+    exists in the separate scanner/celery-worker process's own memory.
+    Construct a real SpiderFootDb directly instead, mirroring exactly what
+    main.py's lifespan already does successfully for schema init.
+    """
     try:
-        from spiderfoot.service_registry import ServiceRegistry
-        registry = ServiceRegistry.instance()
-        return registry.get("db") or registry.get("dbh")
+        from spiderfoot.service_registry import get_registry
+        registry = get_registry()
+        found = registry.get_optional("db") or registry.get_optional("dbh")
+        if found:
+            return found
     except (ImportError, AttributeError):
         pass
+
+    try:
+        import os
+        from spiderfoot.db import SpiderFootDb
+        dsn = os.environ.get("SF_POSTGRES_DSN")
+        if dsn:
+            return SpiderFootDb({"__database": dsn, "__dbtype": "postgresql"})
+    except Exception as e:
+        log.error("Failed to construct SpiderFootDb for export fallback: %s", e)
     return None
 
 
@@ -224,17 +255,24 @@ async def export_scan_stream(
             while batch:
                 for event_row in batch:
                     if isinstance(event_row, (list, tuple)):
+                        # FIX: this mapping was wrong — it was the assumed
+                        # "canonical" reference other fixes were built on
+                        # tonight, but never actually checked against the
+                        # real query. Ground truth from spiderfoot/db/
+                        # db_event.py's scanResultEvent() SQL comment:
+                        # "generated, data, module, hash, type,
+                        # source_event_hash, confidence, visibility, risk".
+                        # No separate "source_data" column exists.
                         record = {
                             "generated": event_row[0] if len(event_row) > 0 else None,
                             "data": str(event_row[1]) if len(event_row) > 1 else "",
-                            "source_data": str(event_row[2]) if len(event_row) > 2 else "",
-                            "module": str(event_row[3]) if len(event_row) > 3 else "",
+                            "module": str(event_row[2]) if len(event_row) > 2 else "",
+                            "hash": str(event_row[3]) if len(event_row) > 3 else None,
                             "event_type": str(event_row[4]) if len(event_row) > 4 else "",
-                            "confidence": event_row[5] if len(event_row) > 5 else None,
-                            "visibility": event_row[6] if len(event_row) > 6 else None,
-                            "risk": event_row[7] if len(event_row) > 7 else None,
-                            "hash": str(event_row[8]) if len(event_row) > 8 else None,
-                            "source_event_hash": str(event_row[9]) if len(event_row) > 9 else None,
+                            "source_event_hash": str(event_row[5]) if len(event_row) > 5 else None,
+                            "confidence": event_row[6] if len(event_row) > 6 else None,
+                            "visibility": event_row[7] if len(event_row) > 7 else None,
+                            "risk": event_row[8] if len(event_row) > 8 else None,
                         }
                     elif isinstance(event_row, dict):
                         record = event_row
@@ -355,15 +393,18 @@ async def stream_scan_events_sse(
                     return
 
                 if isinstance(event_row, (list, tuple)):
+                    # FIX: same wrong mapping as export_scan_stream() above —
+                    # see the correction there for the ground-truth source.
                     record = {
                         "generated": event_row[0] if len(event_row) > 0 else None,
                         "data": str(event_row[1]) if len(event_row) > 1 else "",
-                        "source_data": str(event_row[2]) if len(event_row) > 2 else "",
-                        "module": str(event_row[3]) if len(event_row) > 3 else "",
+                        "module": str(event_row[2]) if len(event_row) > 2 else "",
+                        "hash": str(event_row[3]) if len(event_row) > 3 else None,
                         "event_type": str(event_row[4]) if len(event_row) > 4 else "",
-                        "confidence": event_row[5] if len(event_row) > 5 else None,
-                        "visibility": event_row[6] if len(event_row) > 6 else None,
-                        "risk": event_row[7] if len(event_row) > 7 else None,
+                        "source_event_hash": str(event_row[5]) if len(event_row) > 5 else None,
+                        "confidence": event_row[6] if len(event_row) > 6 else None,
+                        "visibility": event_row[7] if len(event_row) > 7 else None,
+                        "risk": event_row[8] if len(event_row) > 8 else None,
                     }
                 elif isinstance(event_row, dict):
                     record = event_row

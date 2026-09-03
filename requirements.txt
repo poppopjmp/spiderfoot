@@ -74,3 +74,9 @@ flower>=2.0.0,<3.0.0
 # PDF report generation
 weasyprint>=62.0,<69.0.0
 jinja2>=3.1.0,<4.0.0
+
+# Local embeddings for vector correlation / RAG (spiderfoot.services.embedding_service's
+# SentenceTransformer backend does `from sentence_transformers import SentenceTransformer`
+# lazily and silently falls back to mock embeddings if this isn't installed — it never
+# was. CPU-only torch is pulled in transitively; no GPU/CUDA needed for all-MiniLM-L6-v2.
+sentence-transformers>=3.0.0,<4.0.0
