@@ -36,6 +36,11 @@ services:
       SF_AGENTS_WORKERS: ${SF_AGENTS_WORKERS:-1}
       SF_LOG_LEVEL: ${SF_LOG_LEVEL:-INFO}
       SF_REDIS_URL: redis://redis:6379/0
+      # Needed for report_generator.py's Qdrant backfill (reads a scan's
+      # events from Postgres) - was missing entirely, which silently
+      # degraded every AI report back to empty/generic. See PR #393.
+      SF_POSTGRES_DSN:
+        postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-spiderfoot}
       # LLM via LiteLLM proxy
       SF_LLM_PROVIDER: ${SF_LLM_PROVIDER:-mock}
       SF_LLM_API_BASE: ${SF_LLM_API_BASE:-http://litellm:4000}
@@ -65,6 +70,8 @@ services:
     command: ["python", "-m", "spiderfoot.agents.service"]
     depends_on:
       redis:
+        condition: service_healthy
+      postgres:
         condition: service_healthy
       litellm:
         condition: service_started
