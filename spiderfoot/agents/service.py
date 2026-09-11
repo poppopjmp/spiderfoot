@@ -39,6 +39,7 @@ _agents: Dict[str, Any] = {}
 _event_listener_task: Optional[asyncio.Task] = None
 _inflight_tasks: set[asyncio.Task] = set()
 _dispatch_semaphore: Optional[asyncio.Semaphore] = None
+_event_indexer: Optional[Any] = None  # real-time Qdrant indexing, see lifespan()
 
 
 def _positive_int_env(name: str, default: int) -> int:
@@ -205,7 +206,7 @@ def _matches_event_type(event_type: str, patterns: List[str]) -> bool:
 @asynccontextmanager
 async def lifespan(app):
     """Application lifespan — init agents, start listener, and drain on shutdown."""
-    global _dispatch_semaphore, _event_listener_task
+    global _dispatch_semaphore, _event_listener_task, _event_indexer
 
     _init_agents()
     logger.info("Initialized %d agents", len(_agents))
@@ -214,7 +215,49 @@ async def lifespan(app):
 
     _event_listener_task = asyncio.create_task(_start_event_listener())
 
+    # Real-time Qdrant indexing: one long-lived EventIndexer, subscribed to
+    # the same EventBus that scanner.py publishes scan events to (see
+    # SpiderFootScanner.__start_index_publisher there). Previously this was
+    # complete, correct code that nothing ever started - report_generator.py
+    # still backfills from Postgres on demand at report time as a safety
+    # net (events published before this started, or a Redis blip), this
+    # just means Qdrant is populated live during the scan instead of only
+    # at report time. Disabled (same as the publisher side) unless
+    # SF_EVENTBUS_BACKEND is set to something other than "memory".
+    backend = os.environ.get("SF_EVENTBUS_BACKEND", "memory").lower()
+    if backend != "memory":
+        try:
+            from spiderfoot.eventbus.factory import create_event_bus
+            from spiderfoot.eventbus.base import EventBus, EventBusConfig, EventBusBackend
+            from spiderfoot.events.event_indexer import EventIndexer
+
+            bus_config = EventBusConfig(
+                backend=EventBusBackend(backend),
+                redis_url=os.environ.get("SF_EVENTBUS_REDIS_URL", "redis://redis:6379/0"),
+            )
+            bus = create_event_bus(bus_config)
+            # Connect via the same shared background loop that
+            # EventIndexer.start() -> bus.subscribe_sync() will use below,
+            # rather than this coroutine's own (different) running loop -
+            # keeps every operation on this bus on one consistent loop
+            # instead of two, for no real reason.
+            bg_loop = EventBus._get_bg_loop()
+            asyncio.run_coroutine_threadsafe(bus.connect(), bg_loop).result(timeout=10)
+
+            _event_indexer = EventIndexer(event_bus=bus)
+            _event_indexer.start()
+            logger.info("Event indexer started (backend=%s)", backend)
+        except Exception as exc:
+            logger.warning("Event indexer failed to start, Qdrant stays report-time-only: %s", exc)
+            _event_indexer = None
+
     yield
+
+    if _event_indexer is not None:
+        try:
+            _event_indexer.stop()
+        except Exception as exc:
+            logger.debug("Event indexer stop failed: %s", exc)
 
     if _event_listener_task:
         _event_listener_task.cancel()
