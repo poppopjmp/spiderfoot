@@ -91,6 +91,12 @@ class ConfigManager:
                             retval[opt] = val
                         else:
                             retval[f"{scope}:{opt}"] = val
+                    # configSet()/configClear() both commit after their write -
+                    # this SELECT never did, which on Postgres (non-autocommit)
+                    # leaves the connection sitting "idle in transaction"
+                    # forever. Harmless to commit a read; matches this file's
+                    # own convention everywhere else.
+                    self.conn.commit()
                     return retval
                 except Exception as e:
                     self._log_db_error("SQL error encountered when fetching configuration", e)
@@ -170,6 +176,10 @@ class ConfigManager:
                             retval[opt] = val
                         else:
                             retval[f"{component}:{opt}"] = val
+                    # Same fix as configGet() above - this SELECT never
+                    # committed, leaving the connection "idle in transaction"
+                    # forever on Postgres.
+                    self.conn.commit()
                     return retval
                 except Exception as e:
                     self._log_db_error("SQL error encountered when fetching configuration", e)
