@@ -12,9 +12,7 @@ from __future__ import annotations
 
 """Core scan orchestration including module loading, event processing, and scan lifecycle management."""
 
-import asyncio
 import socket
-import threading
 import time
 import queue
 from typing import Any
@@ -97,12 +95,6 @@ class SpiderFootScanner():
         self.__moduleInstances = {}
         self.__modconfig = {}
         self.__scanName = None
-        # Real-time event indexing (Qdrant, via EventBus) - see
-        # __start_index_publisher()/__stop_index_publisher(). None means
-        # disabled (no _eventbus_backend configured, or setup failed) -
-        # every use site below checks for that before touching it.
-        self.__index_queue: queue.Queue | None = None
-        self.__index_thread: threading.Thread | None = None
 
         if not isinstance(globalOpts, dict):
             raise TypeError(
@@ -545,7 +537,6 @@ class SpiderFootScanner():
                 return
 
             self.__setStatus(DB_STATUS_RUNNING)
-            self.__start_index_publisher()
 
             psMod = SpiderFootPlugin()
             psMod.__name__ = "SpiderFoot UI"
@@ -602,8 +593,6 @@ class SpiderFootScanner():
             except Exception as e:
                 log.debug("complete_scan_services failed for scan %s: %s", self.__scanId, e)
 
-            self.__stop_index_publisher()
-
             self.__dbh.close()
 
     def runCorrelations(self) -> None:
@@ -629,96 +618,6 @@ class SpiderFootScanner():
         aggregator = ResultAggregator()
         agg_count = aggregator.aggregate(list(results.values()), method='count')
         self.__sf.status(f"Correlated {agg_count} results for scan {self.__scanId}")
-
-    def __start_index_publisher(self) -> None:
-        """Start the background thread that publishes events to the
-        real-time Qdrant indexing pipeline (EventBus -> EventIndexer,
-        running in sf-agents). Disabled unless SF_EVENTBUS_BACKEND is set
-        (-> _eventbus_backend in config) to something other than the
-        default "memory", which is process-local and useless here since
-        the indexer runs in a different container entirely.
-
-        This never touches the actual scan: __index_queue stays None on
-        any failure, and every use of it elsewhere checks for that.
-        """
-        backend = str(self.__config.get('_eventbus_backend', 'memory') or 'memory').lower()
-        if backend == 'memory':
-            return
-
-        self.__index_queue = queue.Queue(maxsize=50000)
-        self.__index_thread = threading.Thread(
-            target=self.__run_index_publisher,
-            daemon=True,
-            name=f"eventbus-pub-{self.__scanId}",
-        )
-        self.__index_thread.start()
-
-    def __stop_index_publisher(self) -> None:
-        """Signal the publisher thread to flush and exit, and wait briefly."""
-        if self.__index_queue is None:
-            return
-        try:
-            self.__index_queue.put(None, timeout=5)
-        except queue.Full:
-            pass
-        if self.__index_thread is not None:
-            self.__index_thread.join(timeout=10)
-
-    def __run_index_publisher(self) -> None:
-        """Background thread body: owns one EventBus connection and one
-        asyncio loop for the life of the scan, so publishing an event is
-        just scheduling a coroutine on an already-running loop rather than
-        the create/run/close-per-call cost of asyncio.run(). Reads
-        SpiderFootEvent objects off __index_queue (put there from
-        waitForThreads()'s hot loop) until it sees the None sentinel from
-        __stop_index_publisher().
-        """
-        try:
-            from spiderfoot.eventbus.factory import create_event_bus_from_config
-            from spiderfoot.eventbus.base import EventEnvelope
-            from spiderfoot.events.event_indexer import INDEX_TOPIC
-        except Exception as exc:
-            log.debug("Event indexing unavailable for scan %s: %s", self.__scanId, exc)
-            return
-
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        bus = None
-        try:
-            bus = create_event_bus_from_config(self.__config)
-            loop.run_until_complete(bus.connect())
-        except Exception as exc:
-            log.debug("EventBus connect failed for scan %s: %s", self.__scanId, exc)
-            loop.close()
-            return
-
-        try:
-            while True:
-                sfEvent = self.__index_queue.get()
-                if sfEvent is None:
-                    break
-                try:
-                    envelope = EventEnvelope(
-                        topic=INDEX_TOPIC,
-                        scan_id=self.__scanId,
-                        event_type=sfEvent.eventType,
-                        module=sfEvent.module,
-                        data=sfEvent.data,
-                        source_event_hash=getattr(sfEvent, 'sourceEventHash', 'ROOT') or 'ROOT',
-                        confidence=sfEvent.confidence,
-                        visibility=sfEvent.visibility,
-                        risk=sfEvent.risk,
-                        timestamp=sfEvent.generated,
-                    )
-                    loop.run_until_complete(bus.publish(envelope))
-                except Exception as exc:
-                    log.debug("Event publish failed for scan %s: %s", self.__scanId, exc)
-        finally:
-            try:
-                loop.run_until_complete(bus.disconnect())
-            except Exception:
-                pass
-            loop.close()
 
     def waitForThreads(self) -> None:
         """Dispatch events to modules and block until all processing is complete."""
@@ -787,20 +686,6 @@ class SpiderFootScanner():
                         bridge.forward(sfEvent)
                 except Exception as e:
                     log.debug("Event bridge forwarding failed: %s", e)
-
-                # Hand off to the real-time Qdrant indexing pipeline (see
-                # __start_index_publisher()). A single put_nowait() onto an
-                # already-created queue.Queue - never blocks this loop, and
-                # a full/absent queue is silently skipped, same as a
-                # disabled feature. The actual EventBus publish happens on
-                # a dedicated background thread, off this hot path entirely.
-                try:
-                    if self.__index_queue is not None:
-                        self.__index_queue.put_nowait(sfEvent)
-                except queue.Full:
-                    pass
-                except Exception as e:
-                    log.debug("Event index queue failed: %s", e)
 
         finally:
             for mod in self.__moduleInstances.values():

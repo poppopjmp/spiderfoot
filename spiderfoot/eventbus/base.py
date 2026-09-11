@@ -229,23 +229,3 @@ class EventBus(ABC):
             return future.result(timeout=10)
         else:
             return asyncio.run(self.subscribe(topic, callback))
-
-    def unsubscribe_sync(self, subscription_id: str) -> None:
-        """Synchronous wrapper around unsubscribe().
-
-        Was missing entirely - every caller of it (e.g. EventIndexer.stop())
-        was hitting AttributeError, silently swallowed by their own
-        try/except, so subscriptions were never actually torn down.
-        """
-        try:
-            loop = asyncio.get_running_loop()
-        except RuntimeError:
-            loop = None
-
-        if loop and loop.is_running():
-            future = asyncio.run_coroutine_threadsafe(
-                self.unsubscribe(subscription_id), self._get_bg_loop()
-            )
-            future.result(timeout=10)
-        else:
-            asyncio.run(self.unsubscribe(subscription_id))

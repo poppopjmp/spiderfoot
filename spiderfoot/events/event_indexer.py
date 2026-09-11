@@ -55,20 +55,6 @@ INDEXABLE_TYPES: set[str] = {
     "SOFTWARE_USED", "OPERATING_SYSTEM",
 }
 
-# Single well-known topic that every scan's events are published to for
-# indexing purposes, and that this module subscribes to. Deliberately NOT
-# a per-scan/per-type topic ("sf.<scan_id>.<event_type>", built via
-# EventBus._make_topic()) - this used to subscribe with the NATS wildcard
-# pattern "sf.*.>", which only NATS understands. RedisEventBus.subscribe()
-# treats its topic argument as a literal Redis Streams key with no
-# wildcard support at all, so that subscription was listening on a stream
-# named literally "sf:sf.*.>" that nothing ever publishes to - silent,
-# no errors, just zero events indexed, forever. A single shared topic
-# works identically on every backend; filtering by scan_id/event_type
-# still happens per-event in _on_event() below, from the envelope's own
-# fields, exactly as it already did.
-INDEX_TOPIC = "index.events"
-
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -266,7 +252,7 @@ class EventIndexer:
 
         # Subscribe to all scan events
         try:
-            sub_id = bus.subscribe_sync(INDEX_TOPIC, self._on_event)
+            sub_id = bus.subscribe_sync("sf.*.>", self._on_event)
             self._sub_ids.append(sub_id)
             log.info("Event indexer subscribed to EventBus")
         except Exception as exc:
