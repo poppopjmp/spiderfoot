@@ -33,6 +33,26 @@ class ScanServiceError(Exception):
     """Raised when a scan operation fails."""
 
 
+def _delete_scan_vectors(scan_id: str) -> None:
+    """Best-effort cleanup of a scan's indexed vectors in Qdrant.
+
+    Added 2026-09-12 - neither delete path previously touched Qdrant at all,
+    leaving every scan's vectors in the shared ``osint_events`` collection
+    behind forever (confirmed live: 653 stale points survived deleting every
+    scan). Failures here are logged and swallowed rather than raised - a
+    scan delete should still succeed even if Qdrant is unreachable or
+    unconfigured (default backend is in-memory/MEMORY, not Qdrant), matching
+    the existing best-effort pattern used for scan-deletion hooks elsewhere.
+    """
+    try:
+        from spiderfoot.correlation.vector_collection_manager import (
+            VectorCollectionManager,
+        )
+        VectorCollectionManager().delete_scan_events(scan_id)
+    except Exception as exc:
+        log.debug("Vector cleanup skipped for scan %s: %s", scan_id, exc)
+
+
 class ScanService:
     """High-level scan lifecycle management.
 
@@ -79,6 +99,7 @@ class ScanService:
         result = self._repo.delete_scan(scan_id)
         with self._lock:
             self._machines.pop(scan_id, None)
+        _delete_scan_vectors(scan_id)
         return result
 
     def delete_scan_full(self, scan_id: str) -> None:
@@ -87,6 +108,7 @@ class ScanService:
         dbh.scanResultDelete(scan_id)
         dbh.scanConfigDelete(scan_id)
         dbh.scanInstanceDelete(scan_id)
+        _delete_scan_vectors(scan_id)
         with self._lock:
             self._machines.pop(scan_id, None)
 

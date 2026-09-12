@@ -1,15 +1,15 @@
 import { memo, useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { safeSetItem } from '../../lib/safeStorage';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { safeSetItem, safeRemoveItem } from '../../lib/safeStorage';
 import {
-  scanApi, agentsApi, formatDuration,
+  scanApi, agentsApi, reportsApi, formatDuration,
   type Scan, type ScanEvent, type ScanCorrelation, type EventSummaryDetail,
 } from '../../lib/api';
 import {
   Brain, Edit3, Save, Sparkles, Loader2, FileText,
-  AlertTriangle, BarChart3, Shield, MapPin, Download,
+  AlertTriangle, BarChart3, Shield, MapPin, Download, Trash2,
 } from 'lucide-react';
-import { DropdownMenu, DropdownItem, EmptyState } from '../ui';
+import { DropdownMenu, DropdownItem, EmptyState, ConfirmDialog } from '../ui';
 import { sanitizeHTML } from '../../lib/sanitize';
 import { renderMarkdownToHTML } from '../MarkdownRenderer';
 import { COUNTRY_NAME_TO_CODE } from '../../lib/geo';
@@ -154,13 +154,70 @@ function ReportTab({ scanId, scan }: { scanId: string; scan?: Scan }) {
   const [reportContent, setReportContent] = useState<string>('');
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState('');
+  const [serverReportId, setServerReportId] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const editorRef = useRef<HTMLTextAreaElement>(null);
+  const queryClient = useQueryClient();
 
   const storageKey = `sf_report_${scanId}`;
+
+  // Found 2026-09-12: this was previously localStorage-only, meaning a
+  // report was invisible from any other browser/device even though the
+  // scan data it was built from was fine. sf-agents' /report endpoint now
+  // also persists server-side (see spiderfoot/agents/service.py), so this
+  // checks there too. localStorage still wins when present, so an
+  // in-progress local edit (saveEdit below only writes locally) is never
+  // silently clobbered by a fetch that resolves after mount.
+  const { data: storedReports } = useQuery({
+    queryKey: ['stored-reports', scanId],
+    queryFn: ({ signal }) => reportsApi.listByScan(scanId, 1, signal),
+    enabled: !!scanId,
+    retry: false, // don't hammer sf-api if this endpoint/store is unreachable
+  });
+
   useEffect(() => {
+    const serverReport = storedReports?.[0];
+    setServerReportId(serverReport?.report_id ?? null);
+
     const saved = localStorage.getItem(storageKey);
-    if (saved) setReportContent(saved);
-  }, [storageKey]);
+    if (saved) {
+      setReportContent(saved);
+      return;
+    }
+    if (!serverReport) return;
+    reportsApi.get(serverReport.report_id)
+      .then((full) => {
+        const content = full.sections?.[0]?.content ?? '';
+        if (content) {
+          setReportContent(content);
+          safeSetItem(storageKey, content);
+        }
+      })
+      .catch(() => { /* no local copy, no reachable server copy — stay empty */ });
+  }, [storedReports, storageKey]);
+
+  const deleteMut = useMutation({
+    mutationFn: async () => {
+      if (serverReportId) {
+        await reportsApi.delete(serverReportId);
+      }
+    },
+    onSuccess: () => {
+      safeRemoveItem(storageKey);
+      setReportContent('');
+      setServerReportId(null);
+      setShowDeleteConfirm(false);
+      queryClient.invalidateQueries({ queryKey: ['stored-reports', scanId] });
+    },
+    onError: () => {
+      // Best-effort: still clear the local copy so "start again" works
+      // even if the server-side delete failed (e.g. transient network).
+      safeRemoveItem(storageKey);
+      setReportContent('');
+      setServerReportId(null);
+      setShowDeleteConfirm(false);
+    },
+  });
 
   const { data: summaryData } = useQuery({
     queryKey: ['scan-summary', scanId],
@@ -442,6 +499,13 @@ ${html}
               <button className="btn-secondary" onClick={startEditing}>
                 <Edit3 className="h-4 w-4" /> Edit
               </button>
+              <button
+                className="btn-secondary text-red-400 hover:text-red-300"
+                onClick={() => setShowDeleteConfirm(true)}
+                title="Delete this report and start again"
+              >
+                <Trash2 className="h-4 w-4" /> Delete
+              </button>
             </>
           )}
           {isEditing && (
@@ -536,6 +600,16 @@ ${html}
           }
         />
       )}
+
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        title="Delete this report?"
+        message="This permanently deletes the saved report (server-side and locally). The underlying scan data is untouched — you can generate a new report immediately after."
+        confirmLabel={deleteMut.isPending ? 'Deleting…' : 'Delete'}
+        danger
+        onConfirm={() => deleteMut.mutate()}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
     </div>
   );
 }

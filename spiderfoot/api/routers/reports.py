@@ -138,6 +138,7 @@ class ReportListItem(BaseModel):
     """Summary item for report listing."""
     report_id: str
     scan_id: str
+    workspace_id: str | None = None
     title: str
     status: str
     report_type: str
@@ -212,6 +213,7 @@ def delete_stored_report(report_id: str) -> bool:
 
 def list_stored_reports(
     scan_id: str | None = None,
+    workspace_id: str | None = None,
     limit: int = 50,
     offset: int = 0,
 ) -> list[dict[str, Any]]:
@@ -220,7 +222,7 @@ def list_stored_reports(
     if store is not None:
         try:
             return store.list_reports(
-                scan_id=scan_id, limit=limit, offset=offset,
+                scan_id=scan_id, workspace_id=workspace_id, limit=limit, offset=offset,
             )
         except Exception as exc:
             log.debug("Persistent list failed: %s", exc)
@@ -229,6 +231,8 @@ def list_stored_reports(
         reports = list(_report_store.values())
     if scan_id:
         reports = [r for r in reports if r.get("scan_id") == scan_id]
+    if workspace_id:
+        reports = [r for r in reports if r.get("workspace_id") == workspace_id]
     reports.sort(key=lambda r: r.get("created_at", 0), reverse=True)
     return reports[offset: offset + limit]
 
@@ -661,16 +665,20 @@ else:
     )
     async def list_reports(
         scan_id: str | None = Query(None, description="Filter by scan ID"),
+        workspace_id: str | None = Query(None, description="Filter by workspace ID"),
         limit: int = Query(50, ge=1, le=200),
         offset: int = Query(0, ge=0),
     ) -> list[ReportListItem]:
         """List all generated reports with optional filtering."""
-        reports = list_stored_reports(scan_id=scan_id, limit=limit, offset=offset)
+        reports = list_stored_reports(
+            scan_id=scan_id, workspace_id=workspace_id, limit=limit, offset=offset,
+        )
 
         return [
             ReportListItem(
                 report_id=r["report_id"],
                 scan_id=r["scan_id"],
+                workspace_id=r.get("workspace_id"),
                 title=r.get("title", ""),
                 status=r["status"],
                 report_type=r.get("report_type", "full"),
@@ -726,10 +734,19 @@ else:
             from spiderfoot.celery_app import is_celery_available
             if is_celery_available():
                 from spiderfoot.tasks.report import generate_pdf_report as pdf_task
+                from spiderfoot.config import get_app_config
+                # BUG (found 2026-09-12): this previously passed report_id
+                # as a kwarg the task function doesn't accept, and never
+                # passed global_opts, which the task requires with no
+                # default — either would raise a TypeError the moment a
+                # worker picked the task up (silently, since apply_async
+                # returns before that happens). report_id belongs on
+                # task_id, matching the export_scan_data dispatch just
+                # below, not in kwargs.
                 pdf_task.apply_async(
                     kwargs={
                         "scan_id": request.scan_id,
-                        "report_id": report_id,
+                        "global_opts": get_app_config().get_config(),
                         "template": request.template,
                         "branding": request.branding,
                         "include_executive_summary": request.include_executive_summary,
@@ -737,6 +754,7 @@ else:
                         "include_raw_data": request.include_raw_data,
                         "llm_enhanced": request.llm_enhanced,
                     },
+                    task_id=report_id,
                     queue="report",
                 )
                 return ReportStatusResponse(

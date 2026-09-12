@@ -271,10 +271,20 @@ class VectorCorrelationEngine:
             vectors = self._embeddings.embed_texts(texts)
 
             from spiderfoot.ai.qdrant_client import VectorPoint
+            import uuid as _uuid
             points = []
             for event, vec in zip(batch, vectors):
+                # FIX: event_id is normally a SpiderFoot event hash (a raw
+                # hex string) or source_event_hash, e.g. from EventIndexer's
+                # _on_event/_index_batch — Qdrant's REST API rejects any
+                # point ID that isn't an unsigned integer or a UUID
+                # ("... is not a valid point ID"). Deterministically derive
+                # a UUID from it instead of changing the ID scheme callers
+                # rely on; same input always maps to the same UUID, so
+                # re-indexing doesn't create duplicate points.
+                point_id = str(_uuid.uuid5(_uuid.NAMESPACE_OID, str(event.event_id)))
                 points.append(VectorPoint(
-                    id=event.event_id,
+                    id=point_id,
                     vector=vec,
                     payload=event.to_payload(),
                 ))

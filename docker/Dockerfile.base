@@ -11,6 +11,19 @@
 # ── Stage 1: Compile Python deps ────────────────────────────────────────────
 FROM python:3.11-slim-bookworm AS builder
 
+# GPU_ACCEL=1 swaps the local embedding backend (spiderfoot.services.
+# embedding_service.FastEmbedBackend) from `fastembed` (onnxruntime, CPU,
+# ~67MB) to `fastembed-gpu` (onnxruntime-gpu, pulls CUDA) at build time -
+# a plain requirements.txt line can't express "install exactly one of
+# these two", hence handling it here instead. Confirmed 2026-09-12:
+# fastembed-gpu installs the identical `fastembed` importable module, just
+# backed by onnxruntime-gpu - no code change needed either side of this
+# flag, the application always just does `from fastembed import ...`.
+# Default 0 (CPU) - only set to 1 on a build that will actually run with
+# GPU passthrough configured (see stack-spiderfoot-podman.yml's
+# sf-agents for what that needs on the deploy side).
+ARG GPU_ACCEL=0
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc build-essential libxml2-dev libxslt-dev libjpeg-dev \
     zlib1g-dev libffi-dev libssl-dev python3-dev \
@@ -22,7 +35,12 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -U pip==25.0.1 && \
-    pip install --no-cache-dir -r requirements.txt
+    pip install --no-cache-dir -r requirements.txt && \
+    if [ "$GPU_ACCEL" = "1" ]; then \
+        pip install --no-cache-dir fastembed-gpu; \
+    else \
+        pip install --no-cache-dir fastembed; \
+    fi
 
 # ── Stage 2: Runtime base ───────────────────────────────────────────────────
 FROM python:3.11-slim-bookworm
@@ -87,7 +105,7 @@ RUN find / -perm -4000 -type f -exec chmod u-s {} + 2>/dev/null || true && \
 
 # Remove package managers so attackers cannot install tools in compromised containers
 RUN apt-get purge -y --auto-remove apt 2>/dev/null || true && \
-    rm -rf /var/lib/apt /var/cache/apt /var/lib/dpkg 2>/dev/null || true 
+    rm -rf /var/lib/apt /var/cache/apt /var/lib/dpkg 2>/dev/null || true
 
 # Remove unnecessary network utilities (curl kept for healthchecks)
 RUN rm -f /usr/bin/wget /usr/bin/nc /usr/bin/ncat 2>/dev/null || true

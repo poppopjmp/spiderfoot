@@ -74,3 +74,20 @@ flower>=2.0.0,<3.0.0
 # PDF report generation
 weasyprint>=62.0,<69.0.0
 jinja2>=3.1.0,<4.0.0
+
+# Local embeddings for vector correlation / RAG - NOT listed here on purpose.
+# spiderfoot.services.embedding_service's FastEmbedBackend does
+# `from fastembed import TextEmbedding` lazily and falls back to mock
+# embeddings if it isn't installed. `fastembed`/`fastembed-gpu` are
+# installed in docker/Dockerfile.base instead of here, gated behind its
+# GPU_ACCEL build arg - one or the other, never both, which a plain
+# requirements.txt line can't express. See that file for the actual
+# install step.
+#
+# This used to be `sentence-transformers` + an explicit CPU-only `torch`
+# pin (2026-09-11). Replaced entirely (2026-09-12): sentence-transformers
+# unconditionally depends on torch>=2.2 regardless of backend (confirmed
+# via PyPI's own metadata - no `extra ==` condition on it), so no backend
+# choice within it could ever drop torch. fastembed does the same job
+# (same model, same output) with zero torch anywhere in its tree -
+# onnxruntime alone is ~67MB vs. torch's ~770MB+ even CPU-only.

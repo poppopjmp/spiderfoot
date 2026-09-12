@@ -244,6 +244,7 @@ class AuthService:
         cur.execute("SELECT COUNT(*) FROM tbl_users")
         count = cur.fetchone()[0]
         if count > 0:
+            conn.commit()
             return
 
         now = time.time()
@@ -431,6 +432,11 @@ class AuthService:
             (user_id,),
         )
         row = cur.fetchone()
+        # This connection is shared for the life of the process (_get_conn()
+        # caches it) with autocommit off - every read that doesn't commit
+        # leaves it "idle in transaction" forever. See count_users() etc.
+        # below and the same fix in spiderfoot/db/db_config.py.
+        conn.commit()
         return self._row_to_user(row) if row else None
 
     def get_user_by_username(self, username: str) -> User | None:
@@ -442,6 +448,7 @@ class AuthService:
             (username,),
         )
         row = cur.fetchone()
+        conn.commit()
         return self._row_to_user(row) if row else None
 
     def get_user_by_email(self, email: str) -> User | None:
@@ -453,6 +460,7 @@ class AuthService:
             (email,),
         )
         row = cur.fetchone()
+        conn.commit()
         return self._row_to_user(row) if row else None
 
     def get_user_by_sso(self, provider_id: str, subject: str) -> User | None:
@@ -465,6 +473,7 @@ class AuthService:
             (provider_id, subject),
         )
         row = cur.fetchone()
+        conn.commit()
         return self._row_to_user(row) if row else None
 
     def list_users(self, limit: int = 100, offset: int = 0) -> list[User]:
@@ -479,14 +488,18 @@ class AuthService:
             f"ORDER BY created_at DESC LIMIT {self._ph()} OFFSET {self._ph()}",
             (limit, offset),
         )
-        return [self._row_to_user(row) for row in cur.fetchall()]
+        rows = [self._row_to_user(row) for row in cur.fetchall()]
+        conn.commit()
+        return rows
 
     def count_users(self) -> int:
         """Return total user count."""
         conn = self._get_conn()
         cur = conn.cursor()
         cur.execute("SELECT COUNT(*) FROM tbl_users")
-        return cur.fetchone()[0]
+        count = cur.fetchone()[0]
+        conn.commit()
+        return count
 
     def create_user(
         self,
@@ -796,7 +809,7 @@ class AuthService:
             f"AND is_active = {self._ph()} ORDER BY created_at DESC",
             (user_id, True),
         )
-        return [
+        rows = [
             {
                 "id": r[0],
                 "user_id": r[1],
@@ -809,6 +822,8 @@ class AuthService:
             }
             for r in cur.fetchall()
         ]
+        conn.commit()
+        return rows
 
     def revoke_session(self, session_id: str) -> bool:
         """Revoke a specific session."""
@@ -887,7 +902,9 @@ class AuthService:
         conn = self._get_conn()
         cur = conn.cursor()
         cur.execute(f"SELECT {self._SSO_COLS} FROM tbl_sso_providers ORDER BY name")
-        return [self._row_to_sso_provider(r) for r in cur.fetchall()]
+        rows = [self._row_to_sso_provider(r) for r in cur.fetchall()]
+        conn.commit()
+        return rows
 
     def get_sso_provider(self, provider_id: str) -> SSOProvider | None:
         """Fetch an SSO provider by ID."""
@@ -898,6 +915,7 @@ class AuthService:
             (provider_id,),
         )
         row = cur.fetchone()
+        conn.commit()
         return self._row_to_sso_provider(row) if row else None
 
     def create_sso_provider(self, data: dict[str, Any]) -> SSOProvider:
@@ -1574,7 +1592,9 @@ class AuthService:
             cur.execute(
                 f"SELECT {self._API_KEY_COLS} FROM tbl_api_keys ORDER BY created_at DESC"
             )
-        return [self._row_to_api_key(row) for row in cur.fetchall()]
+        rows = [self._row_to_api_key(row) for row in cur.fetchall()]
+        conn.commit()
+        return rows
 
     def get_api_key(self, key_id: str) -> ApiKey | None:
         """Fetch an API key by ID."""
@@ -1585,6 +1605,7 @@ class AuthService:
             (key_id,),
         )
         row = cur.fetchone()
+        conn.commit()
         return self._row_to_api_key(row) if row else None
 
     def update_api_key(self, key_id: str, updates: dict[str, Any]) -> ApiKey | None:

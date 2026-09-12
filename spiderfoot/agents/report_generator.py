@@ -12,9 +12,10 @@ Produces structured Markdown reports with:
   4. Risk Assessment
   5. Conclusions & Recommendations
 
-Uses Qdrant to retrieve ALL indexed scan events (scrolled) plus
-semantic similarity and infrastructure queries, ensuring every
-report is rich, evidence-driven, and data-complete.
+Uses Qdrant to retrieve indexed scan events (scrolled, up to
+SF_REPORT_MAX_EVENTS_PER_SCAN per scan - default 500) plus semantic
+similarity and infrastructure queries, ensuring every report is rich
+and evidence-driven.
 """
 
 import json
@@ -277,13 +278,84 @@ IMPORTANT INSTRUCTIONS:
 
 
 # ---------------------------------------------------------------------------
+# Qdrant backfill (EventIndexer is dead code for this fork's actual
+# Celery-based scan path — see the FIX note in _get_qdrant_context below)
+# ---------------------------------------------------------------------------
+
+def _backfill_scan_into_qdrant(scan_id: str, engine: "VectorCorrelationEngine") -> int:  # noqa: F821
+    """Read a scan's events straight from Postgres and index them into Qdrant.
+
+    EventIndexer is meant to do this in real time via EventBus subscription,
+    but spiderfoot.tasks.scan.run_scan (the task this fork's celery-worker
+    actually runs) never publishes to the EventBus and nothing ever starts
+    that indexer — confirmed by grep, zero call sites outside its own
+    definition. Reads via the same direct-SpiderFootDb pattern used to fix
+    the export endpoint (spiderfoot/api/routers/export.py's _get_dbh), since
+    ServiceRegistry's DataService factory is equally unavailable here.
+
+    Returns the number of events actually indexed (0 on any failure — never
+    raises, so a Qdrant/Postgres hiccup degrades the report rather than
+    failing report generation outright).
+    """
+    try:
+        from spiderfoot.db import SpiderFootDb
+        from spiderfoot.correlation.vector import OSINTEvent
+
+        dsn = os.environ.get("SF_POSTGRES_DSN")
+        if not dsn:
+            logger.warning("SF_POSTGRES_DSN not set — cannot backfill scan %s", scan_id)
+            return 0
+
+        dbh = SpiderFootDb({"__database": dsn, "__dbtype": "postgresql"})
+        try:
+            raw = dbh.scanResultEvent(scan_id) or []
+        finally:
+            dbh.close()
+
+        # Row schema, confirmed straight from the actual SQL in
+        # spiderfoot/db/db_event.py's scanResultEvent() (its own comment:
+        # "Legacy tuple order: generated, data, module, hash, type,
+        # source_event_hash, confidence, visibility, risk") — NOT the
+        # ordering assumed from export.py's SSE/streaming handlers, which
+        # turned out to be independently wrong too (they were trusted as a
+        # reference without ever being checked against the real query).
+        # 0=generated, 1=data, 2=module, 3=hash, 4=type, 5=source_event_hash,
+        # 6=confidence, 7=visibility, 8=risk. No separate "source_data"
+        # column exists at all.
+        events: List[Any] = []
+        for row in raw:
+            if not isinstance(row, (list, tuple)) or len(row) < 9:
+                continue
+            event_type = row[4]
+            if event_type == "ROOT":
+                continue
+            events.append(OSINTEvent(
+                event_id=str(row[3]) if row[3] else f"{scan_id}-{len(events)}",
+                event_type=str(event_type),
+                data=str(row[1]) if row[1] is not None else "",
+                source_module=str(row[2]) if row[2] is not None else "",
+                scan_id=scan_id,
+                confidence=float(row[6]) if row[6] is not None else 100.0,
+                risk=int(row[8]) if row[8] is not None else 0,
+                timestamp=float(row[0]) if row[0] else 0.0,
+            ))
+
+        if not events:
+            return 0
+        return engine.index_events(events)
+    except Exception as e:
+        logger.warning("Qdrant backfill failed for scan %s: %s", scan_id, e)
+        return 0
+
+
+# ---------------------------------------------------------------------------
 # Qdrant Context Retrieval (supports multiple scan IDs for workspace reports)
 # ---------------------------------------------------------------------------
 
 def _get_qdrant_context(
     scan_ids: List[str],
     target: str,
-    max_events_per_scan: int = 500,
+    max_events_per_scan: int | None = None,
 ) -> dict:
     """Retrieve enriched context from Qdrant vector DB for one or more scans.
 
@@ -291,6 +363,15 @@ def _get_qdrant_context(
     runs semantic and infrastructure similarity searches, and returns
     a comprehensive context dict for the LLM prompt.
     """
+    if max_events_per_scan is None:
+        # Was a hardcoded default of 500 with no way to raise it - confirmed
+        # live (2026-09-12) that a real scan (demo.testfire.net, 687 indexed
+        # events) silently truncated to the first 500, contradicting this
+        # module's own docstring claim of retrieving "ALL indexed scan
+        # events". Now configurable; default unchanged so nothing shifts
+        # unless explicitly raised.
+        max_events_per_scan = int(os.environ.get("SF_REPORT_MAX_EVENTS_PER_SCAN", "500"))
+
     context: Dict[str, Any] = {
         "scan_events": {},
         "semantic_hits": [],
@@ -314,6 +395,46 @@ def _get_qdrant_context(
         qdrant = get_qdrant_client()
         embeddings = get_embedding_service()
         config = VectorCorrelationConfig()
+
+        # FIX: EventIndexer (spiderfoot/events/event_indexer.py) is the
+        # component meant to keep Qdrant populated in real time via EventBus
+        # subscription, but nothing in this fork's actual Celery-based scan
+        # path (spiderfoot.tasks.scan.run_scan) ever publishes to the
+        # EventBus or starts that indexer — it's dead code. So the "sf_"+
+        # collection never gets created and every report ran against an
+        # empty vector store regardless of backend/embedding config being
+        # correct. Ensure the collection exists and backfill straight from
+        # Postgres (the same source the export path reads) before querying.
+        engine = VectorCorrelationEngine(qdrant=qdrant, embeddings=embeddings, config=config)
+        try:
+            embed_dim = int(os.environ.get("SF_EMBEDDING_DIMENSIONS", "384"))
+            # BUG (found by Codacy static analysis, 2026-09-12): QdrantClient
+            # has no create_collection() method - only ensure_collection(),
+            # which already does its own exists-check internally. The old
+            # code here called create_collection() directly, which raised a
+            # genuine AttributeError on any deployment where this collection
+            # didn't already exist yet - caught by this function's own
+            # except below and logged as a warning, silently skipping the
+            # entire backfill loop after it (since it's the same try block).
+            # Every one of this session's own live tests happened to dodge
+            # this: the collection was always manually pre-created first.
+            # A genuinely fresh deployment's first report would have hit it.
+            qdrant.ensure_collection(config.collection_name, vector_size=embed_dim)
+            for sid in scan_ids:
+                existing, _ = qdrant.scroll(
+                    config.collection_name, limit=1,
+                    filter_=Filter(must=[Filter.match("scan_id", sid)]),
+                )
+                if existing:
+                    continue
+                backfilled = _backfill_scan_into_qdrant(sid, engine)
+                logger.info(
+                    "Backfilled %d events for scan %s into Qdrant (real-time "
+                    "indexing is unwired for this fork's scan path)",
+                    backfilled, sid,
+                )
+        except Exception as e:
+            logger.warning("Qdrant ensure/backfill step failed: %s", e)
 
         all_events: list = []
         type_counts: Dict[str, int] = {}
@@ -430,11 +551,7 @@ def _get_qdrant_context(
         context["scan_events"] = by_type
 
         # ── 2. Semantic similarity search ──
-        engine = VectorCorrelationEngine(
-            qdrant=qdrant,
-            embeddings=embeddings,
-            config=config,
-        )
+        # (engine already constructed above, for the ensure/backfill step)
 
         for sid in scan_ids:
             try:

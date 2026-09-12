@@ -22,6 +22,7 @@ import logging
 import os
 import sys
 import time
+import uuid
 from contextlib import asynccontextmanager
 from typing import Any, Dict, List, Optional
 
@@ -33,6 +34,42 @@ from pydantic import BaseModel, Field
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 logger = logging.getLogger("sf.agents.service")
+
+# ---------------------------------------------------------------------------
+# Report persistence (found missing 2026-09-12: this /report endpoint is the
+# only path exercised by the frontend's ReportTab, but it never saved
+# anything server-side — the generated markdown only ever reached
+# localStorage in the browser that requested it. sf-api's own
+# api/routers/reports.py already has a working Postgres-backed ReportStore;
+# this just reuses it so a report survives a different browser/device too.
+# Lazily initialised and best-effort: if SF_POSTGRES_DSN isn't set (e.g. a
+# standalone/dev run of sf-agents with no DB wired up), persistence is
+# silently skipped and the endpoint behaves exactly as before.
+# ---------------------------------------------------------------------------
+_report_store: Any = None
+_report_store_init_attempted = False
+
+
+def _get_report_store() -> Any:
+    """Lazily initialise the shared ReportStore singleton, if available."""
+    global _report_store, _report_store_init_attempted
+    if _report_store is not None or _report_store_init_attempted:
+        return _report_store
+    _report_store_init_attempted = True
+    try:
+        from spiderfoot.reporting.report_storage import ReportStore, StoreConfig
+        _report_store = ReportStore(StoreConfig())
+        logger.info(
+            "Report persistence enabled (backend=%s)",
+            _report_store.config.backend.value,
+        )
+    except Exception as exc:
+        logger.info(
+            "Report persistence unavailable, generated reports will only "
+            "exist client-side (localStorage) until this is fixed: %s", exc,
+        )
+        _report_store = None
+    return _report_store
 
 # Agent registry and background execution state
 _agents: Dict[str, Any] = {}
@@ -267,6 +304,12 @@ class ReportRequest(BaseModel):
     stats: Dict[str, Any] = Field(default_factory=dict)
     agent_results: List[Dict[str, Any]] = Field(default_factory=list)
     geo_data: Dict[str, Any] = Field(default_factory=dict)
+    # Added 2026-09-12 (PR #393): a workspace report previously had no way
+    # to be found again except by guessing at scan_ids[0] - callers used to
+    # bury this in `stats.workspace_id`, which never survived the round
+    # trip through report_generator.py's AgentResult anyway. Top-level and
+    # threaded straight into _persist_report() below instead.
+    workspace_id: str = ""
 
 
 class IaCReviewRequest(BaseModel):
@@ -343,11 +386,87 @@ async def generate_report(request: ReportRequest):
         "id": f"report-{int(time.time())}",
     }
 
+    start = time.perf_counter()
     result = await agent.handle_event(event)
     if result is None:
         raise HTTPException(status_code=500, detail="Agent returned no result")
 
-    return result.to_dict()
+    result_dict = result.to_dict()
+    # store.save() uses psycopg2, which is blocking — run it off the event
+    # loop thread so a slow/contended DB write can't stall every other
+    # in-flight request this async service is handling. Everything else in
+    # this handler (the LLM call inside agent.handle_event) is already
+    # properly async; this keeps that property rather than regressing it.
+    await asyncio.to_thread(
+        _persist_report, request, result_dict, (time.perf_counter() - start) * 1000,
+    )
+    return result_dict
+
+
+def _persist_report(
+    request: "ReportRequest", result_dict: Dict[str, Any], elapsed_ms: float,
+) -> None:
+    """Best-effort save of a generated report to the shared ReportStore.
+
+    Found 2026-09-12: this endpoint is the only path the frontend's
+    ReportTab actually calls, and it never saved anything server-side —
+    the generated markdown only ever reached the requesting browser's own
+    localStorage, so a different browser/device saw no report at all even
+    though the underlying scan data was fine. sf-api's own
+    api/routers/reports.py already has a working Postgres-backed
+    ReportStore for a separate (unused-by-the-UI) report pipeline; this
+    reuses it so a report survives a different browser/device too.
+
+    Failure here must never break the response the caller already has —
+    it's logged and swallowed, matching this endpoint's existing
+    graceful-degradation style (e.g. Qdrant-unavailable handling above).
+    """
+    if result_dict.get("result_type") != "scan_report":
+        return  # generation failed (result_type == "error") — nothing to save
+    store = _get_report_store()
+    if store is None:
+        return
+    data = result_dict.get("data", {})
+    scan_id = result_dict.get("scan_id") or request.scan_id
+    title = (
+        f"Workspace AI Report: {request.scan_name or data.get('target', request.target)}"
+        if request.workspace_id
+        else f"AI Threat Intelligence Report: {data.get('target', request.target)}"
+    )
+    try:
+        store.save({
+            "report_id": str(uuid.uuid4()),
+            "scan_id": scan_id,
+            "workspace_id": request.workspace_id or None,
+            "title": title,
+            "status": "completed",
+            "report_type": "full",
+            "progress_pct": 100.0,
+            "message": "Report generation completed",
+            "executive_summary": None,
+            "recommendations": None,
+            "sections": [{
+                "title": "AI Threat Intelligence Report",
+                "content": data.get("report", ""),
+                "section_type": "full_report",
+                "source_event_count": data.get("events_analysed", 0),
+                "token_count": None,
+            }],
+            "metadata": {
+                "source": "spiderfoot.agents.report_generator",
+                "model": data.get("model"),
+                "generated_at": data.get("generated_at"),
+                "scan_ids": data.get("scan_ids", []),
+                "target": data.get("target"),
+                "qdrant_available": data.get("qdrant_available"),
+                "workspace_id": request.workspace_id or None,
+            },
+            "generation_time_ms": elapsed_ms,
+            "total_tokens_used": 0,  # not tracked by this generator yet
+            "created_at": time.time(),
+        })
+    except Exception as exc:
+        logger.warning("Failed to persist report for scan_id=%s: %s", scan_id, exc)
 
 
 @app.post("/iac/review")

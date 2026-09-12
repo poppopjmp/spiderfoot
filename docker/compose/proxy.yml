@@ -87,14 +87,8 @@ services:
     - proxy
     - full
 
-  # ---------------------------------------------------------------------------
-  # Qdrant — Vector Database for RAG / Rerank Correlations
-  # ---------------------------------------------------------------------------
-  # Provides per-scan and per-workspace vector collections for semantic
-  # similarity search, cross-scan correlation, and multi-hop analysis.
-  # Events are embedded and indexed during scans; workspace meta-collections
-  # aggregate multiple scan collections for cross-scan discovery.
-  # ---------------------------------------------------------------------------
+  # (Qdrant, the vector database backing RAG/rerank correlations, lives in
+  # docker/compose/storage.yml.)
 
 networks:
   sf-frontend:

@@ -226,14 +226,8 @@ services:
     - monitor
     - full
 
-  # ---------------------------------------------------------------------------
-  # Apache Tika — Document Text / Metadata Extraction  (new in v5.3.17)
-  # ---------------------------------------------------------------------------
-  # Full Tika image with OCR (Tesseract) — handles 1 000+ file types:
-  #   PDF, DOCX, XLSX, PPTX, RTF, HTML, images (OCR), e-mail, archives …
-  # The sfp_document_analyzer plug-in sends files here via HTTP PUT.
-  # No authentication needed — Tika is on the internal backend network only.
-  # ---------------------------------------------------------------------------
+  # (Apache Tika, for document text/metadata extraction, and MinIO and
+  # Qdrant, live in docker/compose/storage.yml.)
 
   jaeger:
     image: jaegertracing/jaeger:2.4.0
@@ -275,12 +269,8 @@ services:
     - monitor
     - full
 
-  # ---------------------------------------------------------------------------
-  # PostgreSQL Backup Sidecar — pg_dump to MinIO
-  # ---------------------------------------------------------------------------
-  # Runs pg_dump on a schedule and uploads to MinIO sf-pg-backups bucket.
-  # Default: every 6 hours. Override with SF_PG_BACKUP_SCHEDULE.
-  # ---------------------------------------------------------------------------
+  # (The pg-backup sidecar, running pg_dump to MinIO on a schedule, lives in
+  # docker/compose/storage.yml alongside MinIO itself.)
 
 networks:
   sf-frontend:

@@ -18,6 +18,7 @@ from __future__ import annotations
 import logging
 import multiprocessing as mp
 import os
+import threading
 import time
 import traceback
 from typing import Any
@@ -28,6 +29,53 @@ from celery.exceptions import SoftTimeLimitExceeded
 from spiderfoot.celery_app import celery_app
 
 logger = logging.getLogger("sf.tasks.scan")
+
+
+# ---------------------------------------------------------------------------
+# Progress polling (feeds Redis from outside the scanner — see note below)
+# ---------------------------------------------------------------------------
+#
+# SpiderFootScanner (spiderfoot.scan.scanner) blocks for the full duration of
+# the scan, and the module-level start/stop events live entirely inside that
+# call. Rather than instrument that engine, this polls externally using data
+# already visible to the DB — safe to fail without ever affecting the scan
+# itself. It calls update_scan_progress() (below) directly as a plain
+# function on this same worker, not via .delay() — no need to round-trip
+# through the Celery broker for a task already running in-process.
+_PROGRESS_POLL_INTERVAL = 3.0  # seconds
+
+
+def _poll_scan_progress(
+    scan_id: str,
+    module_list: list[str],
+    global_opts: dict[str, Any],
+    stop_event: threading.Event,
+) -> None:
+    """Background thread: periodically push real progress to Redis.
+
+    Uses SpiderFootDb.scanResultSummary(by="module") to approximate
+    progress as (modules that have produced at least one event) /
+    (modules registered for this scan) — an honest approximation, not
+    true per-module completion (which isn't observable from outside the
+    scanner without instrumenting it directly).
+    """
+    modules_total = len(module_list) or 1
+    while not stop_event.wait(_PROGRESS_POLL_INTERVAL):
+        try:
+            from spiderfoot.db import SpiderFootDb
+            dbh = SpiderFootDb(global_opts)
+            try:
+                rows = dbh.scanResultSummary(scan_id, by="module")
+            finally:
+                dbh.close()
+            modules_with_events = len(rows)
+            events_produced = sum(r[3] for r in rows) if rows else 0
+            progress = round(min(99.0, (modules_with_events / modules_total) * 100), 1)
+            update_scan_progress(
+                scan_id, progress, modules_with_events, modules_total, events_produced,
+            )
+        except Exception as poll_err:
+            logger.debug("scan.progress_poll_failed scan_id=%s: %s", scan_id, poll_err)
 
 
 # ---------------------------------------------------------------------------
@@ -206,6 +254,12 @@ def run_scan(
                 scan_id, global_opts["_stealth_level"],
             )
 
+        # ── Progress polling ─────────────────────────────────────────────
+        # Started just before the scanner runs, stopped in every exit path
+        # below (success, timeout, and error) — see _poll_scan_progress().
+        _progress_stop: threading.Event | None = None
+        _poller_thread: threading.Thread | None = None
+
         # ── Stealth context registry ──────────────────────────────────
         # Pre-create and register a StealthScanContext so that:
         # 1) SpiderFoot.fetchUrl() uses the full middleware (throttling,
@@ -238,6 +292,17 @@ def run_scan(
         from spiderfoot.observability.logger import logListenerSetup
         log_listener = logListenerSetup(log_queue, global_opts)
 
+        # Start pushing real progress to Redis while the scanner runs (see
+        # _poll_scan_progress — polls externally, never touches the scanner).
+        _progress_stop = threading.Event()
+        _poller_thread = threading.Thread(
+            target=_poll_scan_progress,
+            args=(scan_id, module_list, global_opts, _progress_stop),
+            daemon=True,
+            name=f"progress-poll-{scan_id}",
+        )
+        _poller_thread.start()
+
         # Run the scanner — this blocks until the scan completes
         scanner = startSpiderFootScanner(
             log_queue,
@@ -248,6 +313,20 @@ def run_scan(
             module_list,
             global_opts,
         )
+
+        # Stop polling and push one final 100% update with the real event count
+        _progress_stop.set()
+        try:
+            from spiderfoot.db import SpiderFootDb
+            _final_dbh = SpiderFootDb(global_opts)
+            _final_rows = _final_dbh.scanResultSummary(scan_id, by="module")
+            _final_dbh.close()
+            _final_events = sum(r[3] for r in _final_rows) if _final_rows else 0
+            update_scan_progress(
+                scan_id, 100.0, len(module_list), len(module_list), _final_events,
+            )
+        except Exception:
+            pass
 
         # Flush remaining log messages before returning
         try:
@@ -316,6 +395,9 @@ def run_scan(
         )
         # Try to gracefully stop the scan via DB status update
         _abort_scan_in_db(scan_id, global_opts)
+        # Stop progress polling
+        if _progress_stop is not None:
+            _progress_stop.set()
         # Unregister stealth context
         if _stealth_ctx is not None:
             try:
@@ -351,6 +433,10 @@ def run_scan(
 
         # Mark failed in DB
         _update_scan_status(scan_id, global_opts, "ERROR-FAILED", error_msg)
+
+        # Stop progress polling
+        if _progress_stop is not None:
+            _progress_stop.set()
 
         # Unregister stealth context
         if _stealth_ctx is not None:

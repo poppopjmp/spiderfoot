@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import { agentsApi, type Workspace } from '../../lib/api';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { agentsApi, reportsApi, type Workspace } from '../../lib/api';
 import MarkdownRenderer from '../MarkdownRenderer';
-import { safeSetItem } from '../../lib/safeStorage';
-import { Brain, Edit3, Save, Loader2, AlertTriangle, Sparkles, FileText } from 'lucide-react';
+import { safeSetItem, safeRemoveItem } from '../../lib/safeStorage';
+import { ConfirmDialog } from '../ui';
+import { Brain, Edit3, Save, Loader2, AlertTriangle, Sparkles, FileText, Trash2 } from 'lucide-react';
 
 interface WorkspaceReportCardProps {
   workspaceId: string;
@@ -16,14 +17,47 @@ export default function WorkspaceReportCard({ workspaceId, workspace, summary, s
   const [reportContent, setReportContent] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState('');
+  const [serverReportId, setServerReportId] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const editorRef = useRef<HTMLTextAreaElement>(null);
+  const queryClient = useQueryClient();
 
   const storageKey = `sf_ws_report_${workspaceId}`;
+
+  // Same fix as ReportTab.tsx (PR #393, 2026-09-12): this was
+  // localStorage-only, invisible from any other browser/device. Checks
+  // the server (keyed by workspace_id, not by a guessed-at scan id) and
+  // only falls back to localStorage when the server has nothing —
+  // localStorage still wins when already present so an unsynced local
+  // edit is never silently overwritten.
+  const { data: storedReports } = useQuery({
+    queryKey: ['stored-reports-workspace', workspaceId],
+    queryFn: ({ signal }) => reportsApi.listByWorkspace(workspaceId, 1, signal),
+    enabled: !!workspaceId,
+    retry: false,
+  });
+
   useEffect(() => {
+    const serverReport = storedReports?.[0];
+    setServerReportId(serverReport?.report_id ?? null);
+
     const saved = localStorage.getItem(storageKey);
-    if (saved) setReportContent(saved);
-    else setReportContent('');
-  }, [storageKey]);
+    if (saved) {
+      setReportContent(saved);
+      return;
+    }
+    setReportContent('');
+    if (!serverReport) return;
+    reportsApi.get(serverReport.report_id)
+      .then((full) => {
+        const content = full.sections?.[0]?.content ?? '';
+        if (content) {
+          setReportContent(content);
+          safeSetItem(storageKey, content);
+        }
+      })
+      .catch(() => { /* no local copy, no reachable server copy — stay empty */ });
+  }, [storedReports, storageKey]);
 
   const generateMut = useMutation({
     mutationFn: async () => {
@@ -31,6 +65,7 @@ export default function WorkspaceReportCard({ workspaceId, workspace, summary, s
         scan_ids: scanIds ?? [],
         target: workspace?.name ?? 'Workspace',
         scan_name: workspace?.name ?? 'Workspace Report',
+        workspace_id: workspaceId,
         stats: {
           workspace_id: workspaceId,
           workspace_name: workspace?.name,
@@ -43,9 +78,31 @@ export default function WorkspaceReportCard({ workspaceId, workspace, summary, s
       const md = reportData?.report ?? reportData?.content ?? reportData?.markdown ?? JSON.stringify(data, null, 2);
       setReportContent(md);
       safeSetItem(storageKey, md);
+      queryClient.invalidateQueries({ queryKey: ['stored-reports-workspace', workspaceId] });
     },
     onError: (err: Error) => {
       console.error('Failed to generate workspace report:', err);
+    },
+  });
+
+  const deleteMut = useMutation({
+    mutationFn: async () => {
+      if (serverReportId) {
+        await reportsApi.delete(serverReportId);
+      }
+    },
+    onSuccess: () => {
+      safeRemoveItem(storageKey);
+      setReportContent('');
+      setServerReportId(null);
+      setShowDeleteConfirm(false);
+      queryClient.invalidateQueries({ queryKey: ['stored-reports-workspace', workspaceId] });
+    },
+    onError: () => {
+      safeRemoveItem(storageKey);
+      setReportContent('');
+      setServerReportId(null);
+      setShowDeleteConfirm(false);
     },
   });
 
@@ -106,9 +163,18 @@ export default function WorkspaceReportCard({ workspaceId, workspace, summary, s
         </h2>
         <div className="flex items-center gap-2">
           {reportContent && !isEditing && (
-            <button className="btn-secondary text-xs" onClick={startEditing}>
-              <Edit3 className="h-3 w-3" /> Edit
-            </button>
+            <>
+              <button className="btn-secondary text-xs" onClick={startEditing}>
+                <Edit3 className="h-3 w-3" /> Edit
+              </button>
+              <button
+                className="btn-secondary text-xs text-red-400 hover:text-red-300"
+                onClick={() => setShowDeleteConfirm(true)}
+                title="Delete this report and start again"
+              >
+                <Trash2 className="h-3 w-3" /> Delete
+              </button>
+            </>
           )}
           {isEditing && (
             <>
@@ -153,6 +219,16 @@ export default function WorkspaceReportCard({ workspaceId, workspace, summary, s
           <p className="text-sm">No report yet. Generate one to get started.</p>
         </div>
       )}
+
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        title="Delete this report?"
+        message="This permanently deletes the saved workspace report (server-side and locally). The underlying scans are untouched — you can generate a new report immediately after."
+        confirmLabel={deleteMut.isPending ? 'Deleting…' : 'Delete'}
+        danger
+        onConfirm={() => deleteMut.mutate()}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
     </div>
   );
 }

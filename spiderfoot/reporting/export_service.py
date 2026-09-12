@@ -362,9 +362,13 @@ class ExportService:
         events = []
 
         # Try DataService first
+        # FIX: ServiceRegistry.get_instance() doesn't exist (AttributeError,
+        # silently swallowed by the except below) — the real accessor is the
+        # module-level get_registry(). This made every export come back
+        # empty regardless of how much data the scan actually collected.
         try:
-            from spiderfoot.service_registry import ServiceRegistry
-            registry = ServiceRegistry.get_instance()
+            from spiderfoot.service_registry import get_registry
+            registry = get_registry()
             data_svc = registry.get_optional("data")
             if data_svc and hasattr(data_svc, "event_get_all"):
                 raw = data_svc.event_get_all(scan_id)
@@ -387,9 +391,10 @@ class ExportService:
     def _get_scan_info(self, scan_id: str,
                        dbh=None) -> dict:
         """Get scan metadata."""
+        # Same fix as _get_events() above.
         try:
-            from spiderfoot.service_registry import ServiceRegistry
-            registry = ServiceRegistry.get_instance()
+            from spiderfoot.service_registry import get_registry
+            registry = get_registry()
             data_svc = registry.get_optional("data")
             if data_svc and hasattr(data_svc, "scan_get"):
                 info = data_svc.scan_get(scan_id)
@@ -408,16 +413,32 @@ class ExportService:
             if isinstance(event, dict):
                 events.append(event)
             elif isinstance(event, (list, tuple)):
-                # DB row format
+                # DB row format. FIX (round 2): the round-1 fix here was
+                # itself wrong — it was based on export.py's SSE/NDJSON
+                # streaming handlers (export_scan_stream / stream_scan_
+                # events_sse), trusted as a reference but never actually
+                # checked against the real query. Ground truth, straight
+                # from spiderfoot/db/db_event.py's scanResultEvent() SQL and
+                # its own comment ("Legacy tuple order: generated, data,
+                # module, hash, type, source_event_hash, confidence,
+                # visibility, risk"): idx0=generated, idx1=data, idx2=module,
+                # idx3=hash, idx4=type, idx5=source_event_hash,
+                # idx6=confidence, idx7=visibility, idx8=risk. There is no
+                # separate "source_data" column at all — that was invented
+                # in round 1. "source_event" is kept as an alias of
+                # source_event_hash since the CSV/SARIF formatters below
+                # read that exact key.
                 events.append({
-                    "hash": event[0] if len(event) > 0 else "",
-                    "type": event[1] if len(event) > 1 else "",
-                    "data": event[2] if len(event) > 2 else "",
-                    "module": event[3] if len(event) > 3 else "",
-                    "source_event": event[4] if len(event) > 4 else "",
-                    "confidence": event[5] if len(event) > 5 else 100,
-                    "visibility": event[6] if len(event) > 6 else 100,
-                    "risk": event[7] if len(event) > 7 else 0,
+                    "generated": event[0] if len(event) > 0 else None,
+                    "data": event[1] if len(event) > 1 else "",
+                    "module": event[2] if len(event) > 2 else "",
+                    "hash": event[3] if len(event) > 3 else "",
+                    "type": event[4] if len(event) > 4 else "",
+                    "source_event_hash": event[5] if len(event) > 5 else "",
+                    "source_event": event[5] if len(event) > 5 else "",
+                    "confidence": event[6] if len(event) > 6 else 100,
+                    "visibility": event[7] if len(event) > 7 else 100,
+                    "risk": event[8] if len(event) > 8 else 0,
                 })
             else:
                 events.append({"data": str(event)})

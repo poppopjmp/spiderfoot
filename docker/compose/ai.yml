@@ -1,8 +1,13 @@
 services:
   agents:
-    build:
-      context: ../../
-      dockerfile: docker/Dockerfile.base
+    # Deploys the base image directly, same as build-spiderfoot.sh's own
+    # notes describe for the production path - no separate Dockerfile of
+    # its own. Depends on `docker/compose/core.yml`'s `base` service having
+    # been built first (see that service's comment for the build order);
+    # was previously its own independent `build:` of Dockerfile.base here,
+    # which just meant building the same image twice under two different
+    # names for no benefit.
+    image: spiderfoot-base:latest
     container_name: sf-agents
     restart: unless-stopped
     security_opt:
@@ -36,6 +41,11 @@ services:
       SF_AGENTS_WORKERS: ${SF_AGENTS_WORKERS:-1}
       SF_LOG_LEVEL: ${SF_LOG_LEVEL:-INFO}
       SF_REDIS_URL: redis://redis:6379/0
+      # Needed for report_generator.py's Qdrant backfill (reads a scan's
+      # events from Postgres) - was missing entirely, which silently
+      # degraded every AI report back to empty/generic. See PR #393.
+      SF_POSTGRES_DSN:
+        postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-spiderfoot}
       # LLM via LiteLLM proxy
       SF_LLM_PROVIDER: ${SF_LLM_PROVIDER:-mock}
       SF_LLM_API_BASE: ${SF_LLM_API_BASE:-http://litellm:4000}
@@ -47,12 +57,25 @@ services:
       SF_QDRANT_PORT: "${SF_QDRANT_PORT:-}"
       SF_QDRANT_GRPC_PORT: "${SF_QDRANT_GRPC_PORT:-}"
       SF_QDRANT_PREFIX: "${SF_QDRANT_PREFIX:-sf_}"
-      # Embedding model for semantic search
-      SF_EMBEDDING_PROVIDER: ${SF_EMBEDDING_PROVIDER:-litellm}
-      SF_EMBEDDING_MODEL: ${SF_EMBEDDING_MODEL:-text-embedding-3-small}
-      SF_EMBEDDING_DIMENSIONS: ${SF_EMBEDDING_DIMENSIONS:-1536}
+      # Embedding model for semantic search (RAG context for AI reports).
+      # fastembed (onnxruntime, local, no torch/API key) is the default as
+      # of 2026-09-12 - was litellm/text-embedding-3-small (API-dependent,
+      # 1536-dim) as a leftover from before this fork shipped a working
+      # local embedding backend. Confirmed live: real embeddings, real
+      # semantic retrieval, real CTI reports, at zero added API cost.
+      # BREAKING: sentence-transformers/torch are gone from requirements.txt
+      # entirely - SF_EMBEDDING_PROVIDER=sentence_transformer silently
+      # degrades to mock (fake) embeddings, not an error. See README.md.
+      SF_EMBEDDING_PROVIDER: ${SF_EMBEDDING_PROVIDER:-fastembed}
+      SF_EMBEDDING_MODEL: ${SF_EMBEDDING_MODEL:-all-MiniLM-L6-v2}
+      SF_EMBEDDING_DIMENSIONS: ${SF_EMBEDDING_DIMENSIONS:-384}
       SF_EMBEDDING_API_KEY: ${SF_LLM_API_KEY}
       SF_EMBEDDING_API_BASE: ${SF_EMBEDDING_API_BASE:-http://litellm:4000}
+      # How many indexed events a single report will analyse per scan -
+      # confirmed live 2026-09-12 that a real active-recon scan can index
+      # 600+ events, silently truncated to the old hardcoded 500 with no
+      # way to raise it. Default kept at 500 for now; raise if needed.
+      SF_REPORT_MAX_EVENTS_PER_SCAN: ${SF_REPORT_MAX_EVENTS_PER_SCAN:-500}
       # Reranker settings
       SF_RERANKER_PROVIDER: ${SF_RERANKER_PROVIDER:-litellm}
       SF_RERANKER_MODEL: ${SF_RERANKER_MODEL:-gpt-4o-mini}
@@ -65,6 +88,8 @@ services:
     command: ["python", "-m", "spiderfoot.agents.service"]
     depends_on:
       redis:
+        condition: service_healthy
+      postgres:
         condition: service_healthy
       litellm:
         condition: service_started
@@ -87,15 +112,10 @@ services:
     - ai
     - full
 
-  # ---------------------------------------------------------------------------
-  # Celery Worker — Async Task Execution  (new in v5.4.0)
-  # ---------------------------------------------------------------------------
-  # ---------------------------------------------------------------------------
-  # Celery Worker — General Tasks  (reports, exports, agents, monitoring)
-  # ---------------------------------------------------------------------------
-  # Handles all queues EXCEPT "scan" — active scanning is delegated to the
-  # dedicated celery-worker-active container which ships additional recon tools.
-  # ---------------------------------------------------------------------------
+  # (The general-purpose celery worker - reports, exports, agents, monitoring,
+  # everything except "scan" - is docker/compose/core.yml's celery-worker.
+  # This used to describe a separate dedicated container for those queues;
+  # consolidated into that single worker, comment left stale until now.)
 
   litellm:
     image: ghcr.io/berriai/litellm:main-latest
@@ -153,13 +173,7 @@ services:
     - ai
     - full
 
-  # ---------------------------------------------------------------------------
-  # Jaeger — Distributed Tracing
-  # ---------------------------------------------------------------------------
-  # All-in-one Jaeger instance for trace collection and visualization.
-  # Services send traces via OTLP (gRPC/HTTP) through Vector.dev or directly.
-  # UI accessible via Traefik at /jaeger/ or direct port 16686.
-  # ---------------------------------------------------------------------------
+  # (Jaeger, for distributed tracing, lives in docker/compose/monitor.yml.)
 
 networks:
   sf-frontend:

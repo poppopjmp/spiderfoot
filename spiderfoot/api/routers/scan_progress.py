@@ -79,6 +79,60 @@ def list_tracked_scans() -> list[str]:
         return list(_trackers.keys())
 
 
+# -----------------------------------------------------------------------
+# Redis fallback (cross-process progress)
+# -----------------------------------------------------------------------
+#
+# _trackers above only ever gets populated in the *same process* that
+# calls register_tracker() — but scans run inside sf-celery-worker /
+# sf-celery-worker-active containers, while this router runs inside
+# sf-api. Those are separate processes, so _trackers is permanently
+# empty here regardless of what the worker does. spiderfoot.tasks.scan
+# pushes real progress into Redis (key "sf:scan:progress:{scan_id}",
+# written by update_scan_progress()) specifically because Redis is the
+# one thing both sides can actually reach. This builds a ProgressSnapshot
+# from that shared data as a fallback when no in-memory tracker exists.
+
+def _redis_snapshot(scan_id: str) -> "ProgressSnapshot | None":
+    """Build a ProgressSnapshot from Redis progress data, if any exists."""
+    if not HAS_TRACKER:
+        return None
+    import os
+    try:
+        import redis as redis_lib
+        redis_url = os.environ.get("SF_REDIS_URL", "redis://redis:6379/0")
+        r = redis_lib.from_url(redis_url, decode_responses=True)
+        data = r.hgetall(f"sf:scan:progress:{scan_id}")
+    except Exception as e:
+        log.debug("Redis progress lookup failed for %s: %s", scan_id, e)
+        return None
+
+    if not data:
+        return None
+
+    def _f(key: str, default: float = 0.0) -> float:
+        try:
+            return float(data.get(key, default))
+        except (TypeError, ValueError):
+            return default
+
+    updated_at = _f("updated_at", time.time())
+    modules_completed = int(_f("modules_completed"))
+    modules_total = int(_f("modules_total"))
+    events_total = int(_f("events_produced"))
+    progress_pct = _f("progress")
+
+    return ProgressSnapshot(
+        timestamp=updated_at,
+        overall_pct=progress_pct,
+        modules_completed=modules_completed,
+        modules_total=modules_total,
+        events_total=events_total,
+        throughput_eps=0.0,
+        eta_seconds=None,
+    )
+
+
 def clear_trackers() -> int:
     """Remove all trackers.  Returns the count removed."""
     with _lock:
@@ -111,12 +165,18 @@ async def _sse_generator(
 
     while (time.monotonic() - start) < timeout:
         tracker = get_tracker(scan_id)
-        if tracker is None:
-            # Tracker removed — scan complete or cancelled
-            yield _sse_event("complete", {"scan_id": scan_id, "reason": "tracker_removed"})
-            return
+        if tracker is not None:
+            snapshot = tracker.get_snapshot()
+        else:
+            # No in-memory tracker (the normal case — scans run in a
+            # separate worker process) — fall back to Redis, which the
+            # worker actually writes to. See _redis_snapshot() above.
+            snapshot = _redis_snapshot(scan_id)
+            if snapshot is None:
+                # Nothing in-memory, nothing in Redis - never tracked at all
+                yield _sse_event("complete", {"scan_id": scan_id, "reason": "tracker_removed"})
+                return
 
-        snapshot = tracker.get_snapshot()
         data = snapshot.to_dict()
         data["scan_id"] = scan_id
 
@@ -175,17 +235,30 @@ else:
     async def get_progress(scan_id: SafeId, _auth: str | None = _auth_dep) -> dict:
         """Return the current progress snapshot for a scan."""
         tracker = get_tracker(scan_id)
-        if tracker is None:
+        if tracker is not None:
+            snapshot = tracker.get_snapshot()
+            data = snapshot.to_dict()
+            data["scan_id"] = scan_id
+            data["running_modules"] = tracker.get_running_modules()
+            data["failed_modules"] = tracker.get_failed_modules()
+            data["pending_modules"] = tracker.get_pending_modules()
+            return data
+
+        # No in-memory tracker (normal — scans run in a separate worker
+        # process) — fall back to Redis. Per-module breakdown isn't
+        # available from Redis, so those lists come back empty rather
+        # than fabricated.
+        snapshot = _redis_snapshot(scan_id)
+        if snapshot is None:
             raise HTTPException(
                 status_code=404,
                 detail="No active tracker for this scan.",
             )
-        snapshot = tracker.get_snapshot()
         data = snapshot.to_dict()
         data["scan_id"] = scan_id
-        data["running_modules"] = tracker.get_running_modules()
-        data["failed_modules"] = tracker.get_failed_modules()
-        data["pending_modules"] = tracker.get_pending_modules()
+        data["running_modules"] = []
+        data["failed_modules"] = []
+        data["pending_modules"] = []
         return data
 
     @router.get(
@@ -278,8 +351,11 @@ else:
         _auth: str | None = _auth_dep,
     ) -> StreamingResponse:
         """Stream scan progress updates via Server-Sent Events."""
-        tracker = get_tracker(scan_id)
-        if tracker is None:
+        # Accept either an in-memory tracker (same-process, e.g. local/dev)
+        # or Redis-backed progress (the normal case in this deployment,
+        # where scans run in a separate worker process - see
+        # _redis_snapshot() above). Only reject if neither has anything.
+        if get_tracker(scan_id) is None and _redis_snapshot(scan_id) is None:
             raise HTTPException(
                 status_code=404,
                 detail="No active tracker for this scan.",

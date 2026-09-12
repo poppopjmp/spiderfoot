@@ -1,0 +1,311 @@
+# =============================================================================
+# docker-compose-podman.yml
+# Version: 1.0.0
+#
+# Summary:
+#   Purpose:
+#     Reference deployment using this fork's own pre-built, pushed images
+#     (ghcr.io/braedach/spiderfoot/spiderfoot-*) instead of building from
+#     source. This is the deployment model actually exercised in production
+#     testing for this fork - build once via docker/build.sh, push, then
+#     `podman compose` or `docker compose` up anywhere with just this file
+#     and a .env. No Traefik, no build step, no dev-mode profiles - the
+#     other docker-compose.yml (+ docker/compose/*.yml) covers that path.
+#
+#     Genuinely Podman-compatible: standard Compose syntax throughout,
+#     no Docker-only directives. Works identically under `docker compose`.
+#
+#   Usage:
+#     1. Copy this file's required env vars (no default below) into a .env
+#        file next to it - at minimum: POSTGRES_PASSWORD, SF_JWT_SECRET,
+#        SF_ADMIN_PASSWORD, SPIDERFOOT_TAG (a real tag from GHCR - see the
+#        fork's own Packages page for what's published).
+#     2. podman compose -f docker-compose-podman.yml up -d
+#        (or: docker compose -f docker-compose-podman.yml up -d)
+#     3. Frontend at http://localhost:${SF_FRONTEND_PORT:-3000}
+#
+#   Local embeddings (fastembed):
+#     SF_EMBEDDING_PROVIDER defaults to fastembed - a local, onnxruntime-
+#     backed model (~67MB, no API key, no torch). Set GPU_ACCEL=1 before
+#     building the base image (docker/build.sh or build-spiderfoot.sh) to
+#     have it use fastembed-gpu instead (~500MB, onnxruntime-gpu) - only
+#     useful if this deployment's `agents` container actually has GPU
+#     passthrough configured; a plain compose `devices:` entry alone isn't
+#     enough without the host having nvidia-container-toolkit/CDI set up.
+#     Device.AUTO (fastembed's own default) picks CPU vs GPU automatically
+#     either way - nothing else to configure here. BREAKING if you're
+#     migrating from an older sentence_transformer-based deployment:
+#     requirements.txt no longer carries sentence-transformers/torch at
+#     all, so that setting would silently degrade to mock (fake)
+#     embeddings rather than error - see README.md.
+#
+#   Warnings:
+#     - No secrets have defaults below (POSTGRES_PASSWORD, SF_JWT_SECRET,
+#       SF_ADMIN_PASSWORD, LITELLM_MASTER_KEY) - compose will substitute an
+#       empty string and every service depending on them will fail health
+#       checks rather than silently run insecurely. Set them.
+#     - litellm/agents need at least one real LLM API key (SF_LLM_API_KEY +
+#       matching SF_LLM_PROVIDER/SF_LLM_MODEL) to generate real AI reports;
+#       without one, agents fall back to mock output rather than failing.
+#     - active-scanner runs real reconnaissance tooling (nmap, nuclei,
+#       httpx, subfinder, and more) - only scan targets you're authorised
+#       to investigate.
+#     - This is a reference deployment, not a hardened production one - no
+#       Traefik/TLS termination is included; put a real reverse proxy in
+#       front of the frontend port if exposing this beyond localhost.
+#
+# =============================================================================
+
+name: spiderfoot
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: sf-postgres
+    restart: unless-stopped
+    networks:
+      - sf-net
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-spiderfoot}
+      POSTGRES_USER: ${POSTGRES_USER:-spiderfoot}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-spiderfoot}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: sf-redis
+    restart: unless-stopped
+    networks:
+      - sf-net
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  qdrant:
+    image: qdrant/qdrant:v1.12.4
+    container_name: sf-qdrant
+    restart: unless-stopped
+    networks:
+      - sf-net
+    volumes:
+      - qdrant-data:/qdrant/storage
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/6333'"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  litellm:
+    image: ghcr.io/berriai/litellm:main-latest
+    container_name: sf-litellm
+    restart: unless-stopped
+    networks:
+      - sf-net
+    environment:
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+    command: ["--config", "/dev/null", "--port", "4000"]
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:4000/health/liveliness')\" || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  api:
+    image: ghcr.io/braedach/spiderfoot/spiderfoot-api:${SPIDERFOOT_TAG}
+    container_name: sf-api
+    restart: unless-stopped
+    networks:
+      - sf-net
+    environment:
+      SF_DEPLOYMENT_MODE: microservice
+      SF_REDIS_URL: redis://redis:6379/0
+      SF_POSTGRES_DSN: postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-spiderfoot}
+      SF_JWT_SECRET: ${SF_JWT_SECRET}
+      SF_ADMIN_USERNAME: ${SF_ADMIN_USERNAME:-admin}
+      SF_ADMIN_PASSWORD: ${SF_ADMIN_PASSWORD}
+      SF_QDRANT_BACKEND: http
+      SF_QDRANT_HOST: qdrant
+      SF_QDRANT_PORT: "6333"
+      SF_QDRANT_GRPC_PORT: "6334"
+      SF_QDRANT_PREFIX: ${SF_QDRANT_PREFIX:-sf_}
+      SF_EMBEDDING_PROVIDER: ${SF_EMBEDDING_PROVIDER:-fastembed}
+      SF_EMBEDDING_MODEL: ${SF_EMBEDDING_MODEL:-all-MiniLM-L6-v2}
+      SF_EMBEDDING_DIMENSIONS: ${SF_EMBEDDING_DIMENSIONS:-384}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9001/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  frontend:
+    image: ghcr.io/braedach/spiderfoot/spiderfoot-frontend:${SPIDERFOOT_TAG}
+    container_name: sf-frontend-ui
+    restart: unless-stopped
+    networks:
+      - sf-net
+    ports:
+      - "${SF_FRONTEND_PORT:-3000}:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  agents:
+    image: ghcr.io/braedach/spiderfoot/spiderfoot-base:${SPIDERFOOT_TAG}
+    container_name: sf-agents
+    restart: unless-stopped
+    # NOT read_only - the NVIDIA CDI hook (when GPU passthrough is
+    # configured below) needs to write device nodes/driver libs into the
+    # container filesystem at startup; a read-only root breaks that with
+    # a `crun: error executing hook nvidia-cdi-hook` error. Confirmed live
+    # 2026-09-12. Leave this alone even if not using GPU passthrough.
+    networks:
+      - sf-net
+    environment:
+      SF_REDIS_URL: redis://redis:6379/0
+      SF_POSTGRES_DSN: postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-spiderfoot}
+      SF_LLM_PROVIDER: ${SF_LLM_PROVIDER:-mock}
+      SF_LLM_API_BASE: http://litellm:4000
+      SF_LLM_API_KEY: ${SF_LLM_API_KEY:-}
+      SF_LLM_MODEL: ${SF_LLM_MODEL:-gpt-4o-mini}
+      SF_QDRANT_BACKEND: http
+      SF_QDRANT_HOST: qdrant
+      SF_QDRANT_PORT: "6333"
+      SF_QDRANT_GRPC_PORT: "6334"
+      SF_QDRANT_PREFIX: ${SF_QDRANT_PREFIX:-sf_}
+      SF_EMBEDDING_PROVIDER: ${SF_EMBEDDING_PROVIDER:-fastembed}
+      SF_EMBEDDING_MODEL: ${SF_EMBEDDING_MODEL:-all-MiniLM-L6-v2}
+      SF_EMBEDDING_DIMENSIONS: ${SF_EMBEDDING_DIMENSIONS:-384}
+      SF_REPORT_MAX_EVENTS_PER_SCAN: ${SF_REPORT_MAX_EVENTS_PER_SCAN:-500}
+    command: ["python", "-m", "spiderfoot.agents.service"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      litellm:
+        condition: service_started
+      qdrant:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8100/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    # Uncomment to pass an NVIDIA GPU through (requires nvidia-container-
+    # toolkit + a CDI spec on the host, and a base image built with
+    # GPU_ACCEL=1 - see this file's header comment):
+    # devices:
+    #   - nvidia.com/gpu=all
+
+  celery-worker:
+    image: ghcr.io/braedach/spiderfoot/spiderfoot-scanner:${SPIDERFOOT_TAG}
+    container_name: sf-celery-worker
+    restart: unless-stopped
+    networks:
+      - sf-net
+    environment:
+      SF_REDIS_URL: redis://redis:6379/0
+      SF_POSTGRES_DSN: postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-spiderfoot}
+      SF_QDRANT_BACKEND: http
+      SF_QDRANT_HOST: qdrant
+      SF_QDRANT_PORT: "6333"
+      SF_QDRANT_PREFIX: ${SF_QDRANT_PREFIX:-sf_}
+      SF_EMBEDDING_PROVIDER: ${SF_EMBEDDING_PROVIDER:-fastembed}
+      SF_EMBEDDING_MODEL: ${SF_EMBEDDING_MODEL:-all-MiniLM-L6-v2}
+      SF_EMBEDDING_DIMENSIONS: ${SF_EMBEDDING_DIMENSIONS:-384}
+    # "scan" deliberately excluded - this image (Dockerfile.scanner) has no
+    # active-recon tooling. celery-worker-active below, built from
+    # Dockerfile.active-scanner, handles "scan" exclusively. Confirmed live
+    # 2026-09-12 that having both workers listen on "scan" here would let
+    # Celery hand a scan task to whichever one, silently dropping active
+    # modules if it landed on this worker instead.
+    command: ["python", "-m", "celery", "-A", "spiderfoot.celery_app:celery_app",
+      "worker", "--loglevel=info", "--queues=default,report,export,agents,monitor"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-m", "celery", "-A", "spiderfoot.celery_app:celery_app",
+        "inspect", "ping", "--timeout", "5"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  celery-worker-active:
+    image: ghcr.io/braedach/spiderfoot/spiderfoot-active-scanner:${SPIDERFOOT_TAG}
+    container_name: sf-celery-worker-active
+    restart: unless-stopped
+    networks:
+      - sf-net
+    cap_add:
+      - NET_RAW      # nmap SYN scans, naabu raw sockets
+      - NET_ADMIN    # nmap OS detection, advanced scans
+    environment:
+      SF_REDIS_URL: redis://redis:6379/0
+      SF_POSTGRES_DSN: postgresql://${POSTGRES_USER:-spiderfoot}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-spiderfoot}
+      SF_QDRANT_BACKEND: http
+      SF_QDRANT_HOST: qdrant
+      SF_QDRANT_PORT: "6333"
+      SF_QDRANT_PREFIX: ${SF_QDRANT_PREFIX:-sf_}
+      SF_EMBEDDING_PROVIDER: ${SF_EMBEDDING_PROVIDER:-fastembed}
+      SF_EMBEDDING_MODEL: ${SF_EMBEDDING_MODEL:-all-MiniLM-L6-v2}
+      SF_EMBEDDING_DIMENSIONS: ${SF_EMBEDDING_DIMENSIONS:-384}
+    command: ["python", "-m", "celery", "-A", "spiderfoot.celery_app:celery_app",
+      "worker", "--loglevel=info", "--queues=scan"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-m", "celery", "-A", "spiderfoot.celery_app:celery_app",
+        "inspect", "ping", "--timeout", "5"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+networks:
+  sf-net:
+    name: sf-net
+    driver: bridge
+
+volumes:
+  postgres-data:
+  redis-data:
+  qdrant-data:
