@@ -130,6 +130,32 @@ class VectorCollectionManager:
         """Check if a scan collection exists."""
         return self._qdrant.collection_exists(self.scan_collection_name(scan_id))
 
+    def delete_scan_events(self, scan_id: str, collection: str = "osint_events") -> bool:
+        """Delete a scan's indexed vectors from the shared events collection.
+
+        Confirmed 2026-09-12: unlike ``delete_scan_collection`` above (which
+        deletes a per-scan collection named ``scan_{scan_id}``), the real
+        indexing path (``spiderfoot.events.event_indexer.EventIndexer``) never
+        creates per-scan collections at all - it writes every scan's events
+        into one shared collection (``osint_events``, ``IndexerConfig``'s
+        hardcoded default - not currently env-overridable) with each point's
+        payload tagged by a ``scan_id`` field. Deleting a scan previously left
+        its vectors behind forever (verified live: 653 stale points survived
+        every existing scan-deletion path). This deletes by payload filter
+        instead of by collection name, matching how points are actually
+        stored.
+        """
+        try:
+            self._qdrant.delete_by_filter(
+                collection, Filter(must=[Filter.match("scan_id", scan_id)]),
+            )
+            log.info("Deleted scan %s's vectors from %s", scan_id, collection)
+            return True
+        except Exception as exc:
+            log.warning("Failed to delete scan %s's vectors from %s: %s",
+                        scan_id, collection, exc)
+            return False
+
     # ------------------------------------------------------------------
     # Indexing — scan events
     # ------------------------------------------------------------------

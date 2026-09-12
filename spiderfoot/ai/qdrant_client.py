@@ -222,6 +222,10 @@ class VectorStoreBackend:
         """Delete points by their IDs."""
         raise NotImplementedError
 
+    def delete_by_filter(self, collection: str, filter_: Filter) -> bool:
+        """Delete all points matching a payload filter (no known IDs needed)."""
+        raise NotImplementedError
+
     def search(self, collection: str, query_vector: list[float],
                limit: int = 10, score_threshold: float = 0.0,
                filter_: Filter | None = None) -> SearchResult:
@@ -368,6 +372,17 @@ class MemoryVectorBackend(VectorStoreBackend):
                     del store[i]
                     deleted += 1
             return deleted
+
+    def delete_by_filter(self, collection: str, filter_: Filter) -> bool:
+        """Delete all points matching a payload filter."""
+        with self._lock:
+            store = self._points.get(collection)
+            if store is None:
+                return False
+            matching = [i for i, p in store.items() if _matches_filter(p.payload, filter_)]
+            for i in matching:
+                del store[i]
+            return True
 
     def search(self, collection: str, query_vector: list[float],
                limit: int = 10, score_threshold: float = 0.0,
@@ -564,6 +579,27 @@ class HttpVectorBackend(VectorStoreBackend):
         body = {"points": ids}
         resp = self._request("POST", f"/collections/{collection}/points/delete", body)
         return len(ids) if resp.get("status") == "ok" else 0
+
+    def delete_by_filter(self, collection: str, filter_: Filter) -> bool:
+        """Delete all points matching a payload filter via the Qdrant REST API.
+
+        Qdrant's own ``points/delete`` endpoint accepts a ``filter`` body in
+        place of an explicit ``points`` id list - no need to scroll/collect
+        ids first, one request deletes everything matching server-side.
+
+        ``?wait=true`` matters here (confirmed empirically 2026-09-12):
+        without it, Qdrant applies the delete asynchronously and this
+        returns before it's actually done - a caller like
+        ``ScanService.delete_scan_full()`` that wants to know the cleanup
+        genuinely completed (e.g. before a scan with the same id could be
+        recreated) would otherwise get a false "success" against data
+        that's still there for a brief window after the call returns.
+        """
+        resp = self._request(
+            "POST", f"/collections/{collection}/points/delete?wait=true",
+            {"filter": filter_.to_dict()},
+        )
+        return resp.get("status") == "ok"
 
     def search(self, collection: str, query_vector: list[float],
                limit: int = 10, score_threshold: float = 0.0,
@@ -762,6 +798,10 @@ class QdrantClient:
     def delete(self, collection: str, ids: list[str]) -> int:
         """Delete points by their IDs."""
         return self._backend.delete(self._cname(collection), ids)
+
+    def delete_by_filter(self, collection: str, filter_: Filter) -> bool:
+        """Delete all points matching a payload filter (no known IDs needed)."""
+        return self._backend.delete_by_filter(self._cname(collection), filter_)
 
     # Search
     def search(self, collection: str, query_vector: list[float],
