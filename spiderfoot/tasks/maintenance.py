@@ -94,6 +94,39 @@ def service_health_check() -> dict[str, Any]:
 
 
 @celery_app.task(
+    name="spiderfoot.tasks.maintenance.cleanup_stale_ai_reports",
+    queue="default",
+    ignore_result=True,
+)
+def cleanup_stale_ai_reports() -> dict[str, Any]:
+    """Age out old rows in the shared `reports` table.
+
+    Found 2026-09-12 alongside the sf-agents /report persistence fix:
+    ReportStore.cleanup() has existed since it was introduced (see
+    reporting/report_storage.py) but nothing anywhere ever called it, for
+    either report pipeline — rows only ever accumulated. Adding a call to
+    it here doesn't retroactively fix that; it just means it now happens
+    on a schedule, same as this module's other periodic housekeeping.
+
+    Only takes effect where a celery-beat process is actually running
+    this schedule (docker/compose/scheduler.yml's `scheduler` profile).
+    Confirmed absent from baden's current live podman stack as of this
+    change, so this alone does not stop growth there — see the commit
+    message / PR #393 for the rest of that context.
+    """
+    try:
+        from spiderfoot.reporting.report_storage import ReportStore, StoreConfig
+
+        store = ReportStore(StoreConfig())
+        deleted = store.cleanup()
+        logger.info("maintenance.report_cleanup", extra={"deleted": deleted})
+        return {"deleted": deleted}
+    except Exception as e:
+        logger.error(f"maintenance.report_cleanup_failed: {e}")
+        return {"status": "failed", "error": str(e)}
+
+
+@celery_app.task(
     name="spiderfoot.tasks.maintenance.database_vacuum",
     queue="default",
     soft_time_limit=1800,

@@ -126,9 +126,18 @@ def generate_pdf_report(
 
         duration = time.time() - start
 
+        # report_id here is this task's own Celery task_id, set by the
+        # dispatching endpoint (api/routers/reports.py) via
+        # apply_async(task_id=...) — the same id it already stored a
+        # "pending" row under. Previously nothing closed that loop: this
+        # task returned a plain dict (its own Celery result, fetchable
+        # only via AsyncResult) and never touched the reports table, so
+        # GET /api/reports/{report_id}/status stayed "pending" forever
+        # even after a real success. Found and fixed alongside the
+        # apply_async kwargs bug above, 2026-09-12.
         result = {
             "scan_id": scan_id,
-            "report_id": f"rpt_{scan_id}",
+            "report_id": self.request.id,
             "status": "completed",
             "storage_url": storage_url,
             "storage_key": report_key,
@@ -138,6 +147,25 @@ def generate_pdf_report(
             "llm_enhanced": llm_enhanced,
             "duration_seconds": round(duration, 2),
         }
+
+        try:
+            from spiderfoot.api.routers.reports import update_stored_report
+            update_stored_report(self.request.id, {
+                "status": "completed",
+                "progress_pct": 100.0,
+                "message": "PDF generation completed",
+                "metadata": {
+                    "storage_url": storage_url,
+                    "storage_key": report_key,
+                    "file_size_bytes": len(pdf_bytes),
+                    "page_count": page_count,
+                },
+                "generation_time_ms": duration * 1000,
+            })
+        except Exception as exc:
+            # Must not fail the task over a bookkeeping write — the PDF
+            # itself is already generated and stored by this point.
+            logger.warning(f"report.pdf.status_update_failed: {exc}")
 
         logger.info(
             "report.pdf.completed",
@@ -151,6 +179,14 @@ def generate_pdf_report(
             "report.pdf.failed",
             extra={"scan_id": scan_id, "error": str(exc)},
         )
+        try:
+            from spiderfoot.api.routers.reports import update_stored_report
+            update_stored_report(self.request.id, {
+                "status": "failed",
+                "message": f"PDF generation failed: {exc}",
+            })
+        except Exception as update_exc:
+            logger.warning(f"report.pdf.status_update_failed: {update_exc}")
         raise self.retry(exc=exc)
 
 

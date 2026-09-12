@@ -726,10 +726,19 @@ else:
             from spiderfoot.celery_app import is_celery_available
             if is_celery_available():
                 from spiderfoot.tasks.report import generate_pdf_report as pdf_task
+                from spiderfoot.config import get_app_config
+                # BUG (found 2026-09-12): this previously passed report_id
+                # as a kwarg the task function doesn't accept, and never
+                # passed global_opts, which the task requires with no
+                # default — either would raise a TypeError the moment a
+                # worker picked the task up (silently, since apply_async
+                # returns before that happens). report_id belongs on
+                # task_id, matching the export_scan_data dispatch just
+                # below, not in kwargs.
                 pdf_task.apply_async(
                     kwargs={
                         "scan_id": request.scan_id,
-                        "report_id": report_id,
+                        "global_opts": get_app_config().get_config(),
                         "template": request.template,
                         "branding": request.branding,
                         "include_executive_summary": request.include_executive_summary,
@@ -737,6 +746,7 @@ else:
                         "include_raw_data": request.include_raw_data,
                         "llm_enhanced": request.llm_enhanced,
                     },
+                    task_id=report_id,
                     queue="report",
                 )
                 return ReportStatusResponse(

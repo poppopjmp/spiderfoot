@@ -144,6 +144,14 @@ celery_app.conf.beat_schedule = {
         "schedule": 300.0,  # Every 5 minutes
         "options": {"queue": "monitor"},
     },
+    # Age out old AI/scan reports (ReportStore.cleanup(), auto_cleanup_days
+    # default 90) — added 2026-09-12, see PR #393. Only takes effect where
+    # celery-beat is actually deployed and running this schedule.
+    "cleanup-stale-ai-reports": {
+        "task": "spiderfoot.tasks.maintenance.cleanup_stale_ai_reports",
+        "schedule": 86400.0,  # Once a day
+        "options": {"queue": "default"},
+    },
 }
 
 # ---------------------------------------------------------------------------
