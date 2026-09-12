@@ -46,8 +46,10 @@ services:
       SF_QDRANT_PORT: "${SF_QDRANT_PORT:-}"
       SF_QDRANT_GRPC_PORT: "${SF_QDRANT_GRPC_PORT:-}"
       SF_QDRANT_PREFIX: "${SF_QDRANT_PREFIX:-sf_}"
-      SF_EMBEDDING_PROVIDER: ${SF_EMBEDDING_PROVIDER:-mock}
-      SF_EMBEDDING_MODEL: ${SF_EMBEDDING_MODEL:-}
+      # fastembed (onnxruntime, local, no torch/API key) is the default as of
+      # 2026-09-12 - see docker/compose/core.yml's api service for detail.
+      SF_EMBEDDING_PROVIDER: ${SF_EMBEDDING_PROVIDER:-fastembed}
+      SF_EMBEDDING_MODEL: ${SF_EMBEDDING_MODEL:-all-MiniLM-L6-v2}
       SF_EMBEDDING_DIMENSIONS: ${SF_EMBEDDING_DIMENSIONS:-384}
       SF_EMBEDDING_API_KEY: ${SF_LLM_API_KEY:-}
       SF_EMBEDDING_API_BASE: ${SF_EMBEDDING_API_BASE:-}
@@ -98,14 +100,8 @@ services:
     - scan
     - full
 
-  # ---------------------------------------------------------------------------
-  # Celery Beat — Periodic Task Scheduler  (new in v5.4.0)
-  # ---------------------------------------------------------------------------
-  # Runs periodic tasks defined in celery_app.py beat_schedule:
-  #   - Cleanup expired results (hourly)
-  #   - Service health checks (every 5 min)
-  #   - Recurring scan triggers
-  # ---------------------------------------------------------------------------
+  # (Celery Beat, the periodic task scheduler, and Flower, its monitoring
+  # dashboard, both live in docker/compose/scheduler.yml.)
 
 networks:
   sf-frontend:

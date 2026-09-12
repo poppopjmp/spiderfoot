@@ -115,18 +115,9 @@ services:
     - scheduler
     - full
 
-  # ---------------------------------------------------------------------------
-  # LiteLLM Proxy — Unified LLM Gateway
-  # ---------------------------------------------------------------------------
-  # Routes all LLM requests through a single API endpoint with:
-  #   - Multi-provider support (OpenAI, Anthropic, Ollama, Azure)
-  #   - Cost tracking & usage analytics
-  #   - Redis-backed response caching
-  #   - Prometheus metrics for LLM operations
-  #   - Model fallback chains
-  # All SpiderFoot services connect to litellm:4000 instead of
-  # individual LLM providers.
-  # ---------------------------------------------------------------------------
+  # (LiteLLM, the unified LLM gateway that agents and litellm-backed
+  # embedding/reranker providers route through, lives in
+  # docker/compose/ai.yml alongside the agents service itself.)
 
 networks:
   sf-frontend:

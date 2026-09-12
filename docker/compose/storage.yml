@@ -132,20 +132,8 @@ services:
     - storage
     - full
 
-  # ---------------------------------------------------------------------------
-  # Vector.dev — Data Pipeline (logs, events, metrics)
-  # ---------------------------------------------------------------------------
-  # Integration point for shipping scan data to external storage/analytics:
-  #   - Loki: centralized log aggregation
-  #   - Prometheus: metrics via exporter
-  #   - S3/Minio: long-term archival of all scan events
-  #   - Webhooks: real-time high-severity alerts
-  #
-  # Vector.dev replaces Promtail + OTel Collector, serving as the unified
-  # telemetry pipeline (logs, metrics, traces).
-  #
-  # Enable sinks via env vars — see config/vector.toml for details.
-  # ---------------------------------------------------------------------------
+  # (Vector.dev, the logs/events/metrics pipeline, and Loki, Grafana, and
+  # Prometheus, all live in docker/compose/monitor.yml.)
 
   tika:
     image: apache/tika:3.1.0.0-full
@@ -178,17 +166,9 @@ services:
     - storage
     - full
 
-  # ---------------------------------------------------------------------------
-  # SpiderFoot Agents Service (AI analysis agents)
-  # ---------------------------------------------------------------------------
-  # Hosts AI-powered analysis agents that process scan events:
-  #   - FindingValidator: Validates high-risk findings via LLM
-  #   - CredentialAnalyzer: Assesses exposed credential risk
-  #   - TextSummarizer: Summarizes large content for intelligence
-  #   - ReportGenerator: Generates comprehensive scan reports
-  #   - DocumentAnalyzer: Analyzes user-uploaded documents
-  #   - ThreatIntelAnalyzer: Cross-references findings with threat intel
-  # ---------------------------------------------------------------------------
+  # (The agents service, hosting the AI analysis agents - finding_validator,
+  # credential_analyzer, text_summarizer, report_generator, document_analyzer,
+  # threat_intel, iac_advisor - lives in docker/compose/ai.yml.)
 
   pg-backup:
     image: postgres:15-alpine
@@ -235,18 +215,7 @@ services:
     - storage
     - full
 
-  # ---------------------------------------------------------------------------
-  # Keycloak — Identity Provider (SSO / OIDC / SAML testing)
-  # ---------------------------------------------------------------------------
-  # Runs Keycloak in dev mode for local SSO integration testing.
-  # Admin console:  http://localhost:9080  (admin / ${KC_ADMIN_PASSWORD})
-  # OIDC discovery: http://keycloak:8080/realms/spiderfoot/.well-known/openid-configuration
-  #
-  # After first start, run:
-  #   docker compose -f docker-compose.yml exec keycloak \
-  #     /bin/bash /opt/keycloak/scripts/setup-realm.sh
-  # to create the "spiderfoot" realm, OIDC client, and test users.
-  # ---------------------------------------------------------------------------
+  # (Keycloak, for SSO/OIDC/SAML testing, lives in docker/compose/sso.yml.)
 
 networks:
   sf-frontend:

@@ -1,4 +1,37 @@
 services:
+  # ---------------------------------------------------------------------------
+  # SpiderFoot Base Image  (shared foundation - see docker/Dockerfile.base)
+  # ---------------------------------------------------------------------------
+  # api, celery-worker, celery-worker-active, agents, celery-beat, and flower
+  # all set BASE_IMAGE's default to "spiderfoot-base:latest" in their own
+  # Dockerfiles, but nothing previously built or tagged an image with that
+  # exact name via compose - `docker compose up --build` would fail on a
+  # clean clone with no pre-existing local image. This service exists so
+  # `docker compose build base` (or the ordered build below) produces it.
+  #
+  # Build order matters: cross-Dockerfile FROM dependencies aren't something
+  # Compose tracks automatically. Build this one first, then everything else:
+  #   docker compose build base
+  #   docker compose --profile full build
+  # (docker/build.sh does the equivalent for the tagged, pushed-to-GHCR path)
+  #
+  # GPU_ACCEL=1 swaps the `agents` service's local embedding backend from
+  # fastembed (onnxruntime, CPU, ~67MB) to fastembed-gpu (onnxruntime-gpu,
+  # pulls CUDA, ~500MB) - see docker/Dockerfile.base for detail. Only
+  # meaningful for a deployment that actually has GPU passthrough configured;
+  # default 0 keeps every image CPU-only and small.
+  # ---------------------------------------------------------------------------
+
+  base:
+    build:
+      context: ../../
+      dockerfile: docker/Dockerfile.base
+      args:
+        GPU_ACCEL: ${GPU_ACCEL:-0}
+    image: spiderfoot-base:latest
+    profiles:
+    - donotstart   # build-only - never actually run this as a container
+
   redis:
     image: redis:7-alpine
     container_name: sf-redis
@@ -125,9 +158,13 @@ services:
       SF_QDRANT_PORT: "${SF_QDRANT_PORT:-}"
       SF_QDRANT_GRPC_PORT: "${SF_QDRANT_GRPC_PORT:-}"
       SF_QDRANT_PREFIX: "${SF_QDRANT_PREFIX:-sf_}"
-      # Embedding model settings
-      SF_EMBEDDING_PROVIDER: ${SF_EMBEDDING_PROVIDER:-mock}
-      SF_EMBEDDING_MODEL: ${SF_EMBEDDING_MODEL:-}
+      # Embedding model settings - fastembed (onnxruntime-backed local model,
+      # no torch, no API key needed) is the default as of 2026-09-12; was
+      # sentence-transformers+torch (~1GB+, mandatory regardless of backend
+      # choice per PyPI's own metadata), replaced entirely. See
+      # spiderfoot/services/embedding_service.py for the full backend list.
+      SF_EMBEDDING_PROVIDER: ${SF_EMBEDDING_PROVIDER:-fastembed}
+      SF_EMBEDDING_MODEL: ${SF_EMBEDDING_MODEL:-all-MiniLM-L6-v2}
       SF_EMBEDDING_DIMENSIONS: ${SF_EMBEDDING_DIMENSIONS:-384}
       SF_EMBEDDING_API_KEY: ${SF_LLM_API_KEY:-}
       SF_EMBEDDING_API_BASE: ${SF_EMBEDDING_API_BASE:-}
@@ -249,10 +286,10 @@ services:
           memory: "${FRONTEND_MEMORY:-128M}"
 
   # ---------------------------------------------------------------------------
-  # Docker Socket Proxy — Secure Docker API access for Traefik
+  # Celery Worker — Passive/General Queues
   # ---------------------------------------------------------------------------
-  # Required on Docker Desktop (Windows/macOS) where the Docker socket may
-  # not work directly.  Also improves security by limiting API access.
+  # (Docker Socket Proxy - the service that used to sit here - now lives in
+  # docker/compose/proxy.yml, alongside Traefik.)
   # ---------------------------------------------------------------------------
 
   celery-worker:
@@ -297,9 +334,9 @@ services:
       SF_QDRANT_PORT: "${SF_QDRANT_PORT:-}"
       SF_QDRANT_GRPC_PORT: "${SF_QDRANT_GRPC_PORT:-}"
       SF_QDRANT_PREFIX: "${SF_QDRANT_PREFIX:-sf_}"
-      # Embedding model settings
-      SF_EMBEDDING_PROVIDER: ${SF_EMBEDDING_PROVIDER:-mock}
-      SF_EMBEDDING_MODEL: ${SF_EMBEDDING_MODEL:-}
+      # Embedding model settings - see api service above for why fastembed
+      SF_EMBEDDING_PROVIDER: ${SF_EMBEDDING_PROVIDER:-fastembed}
+      SF_EMBEDDING_MODEL: ${SF_EMBEDDING_MODEL:-all-MiniLM-L6-v2}
       SF_EMBEDDING_DIMENSIONS: ${SF_EMBEDDING_DIMENSIONS:-384}
       SF_EMBEDDING_API_KEY: ${SF_LLM_API_KEY:-}
       SF_EMBEDDING_API_BASE: ${SF_EMBEDDING_API_BASE:-}
@@ -325,7 +362,14 @@ services:
     - "spiderfoot.celery_app:celery_app"
     - "worker"
     - "--loglevel=info"
-    - "--queues=scan,default,report,export,agents,monitor"
+    # "scan" deliberately excluded - confirmed 2026-09-12 this worker (built
+    # from Dockerfile.scanner) has none of the active-recon tools
+    # (nmap/nuclei/httpx/etc.) that docker/compose/scan.yml's dedicated
+    # celery-worker-active (Dockerfile.active-scanner) ships. Both workers
+    # listening on "scan" meant Celery could hand a scan task to whichever
+    # one, non-deterministically dropping active modules depending on which
+    # one won - not an error, just silently incomplete results.
+    - "--queues=default,report,export,agents,monitor"
     - "--concurrency=${CELERY_WORKER_CONCURRENCY:-4}"
     - "--hostname=worker@%h"
     - "--without-heartbeat"
@@ -348,18 +392,11 @@ services:
           cpus: "${CELERY_WORKER_CPUS:-2.0}"
           memory: "${CELERY_WORKER_MEMORY:-2G}"
 
-  # ---------------------------------------------------------------------------
-  # Celery Worker — Active Scan  (dedicated scanning container)
-  # ---------------------------------------------------------------------------
-  # Subscribes ONLY to the "scan" queue.  Ships all active reconnaissance
-  # tools: nmap, nuclei, httpx, subfinder, gobuster, dnsx, naabu, katana,
-  # tlsx, ffuf, massdns, testssl.sh, CMSeeK, retire.js, wafw00f, and more.
-  #
-  # Build order: the base image (spiderfoot-micro:latest) must be built first.
-  #   docker compose build api && docker compose build celery-worker-active
-  # Or simply:
-  #   docker compose up --build -d
-  # ---------------------------------------------------------------------------
+  # (The dedicated active-scan worker - nmap, nuclei, httpx, subfinder,
+  # gobuster, dnsx, naabu, katana, tlsx, ffuf, massdns, testssl.sh, CMSeeK,
+  # retire.js, wafw00f, and more, subscribed ONLY to the "scan" queue - lives
+  # in docker/compose/scan.yml as celery-worker-active. See the `base`
+  # service comment above this file for the correct build order.)
 
 networks:
   sf-frontend:
