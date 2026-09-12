@@ -408,12 +408,18 @@ def _get_qdrant_context(
         engine = VectorCorrelationEngine(qdrant=qdrant, embeddings=embeddings, config=config)
         try:
             embed_dim = int(os.environ.get("SF_EMBEDDING_DIMENSIONS", "384"))
-            if not qdrant.collection_exists(config.collection_name):
-                qdrant.create_collection(config.collection_name, vector_size=embed_dim)
-                logger.info(
-                    "Created missing Qdrant collection '%s' (dim=%d)",
-                    config.collection_name, embed_dim,
-                )
+            # BUG (found by Codacy static analysis, 2026-09-12): QdrantClient
+            # has no create_collection() method - only ensure_collection(),
+            # which already does its own exists-check internally. The old
+            # code here called create_collection() directly, which raised a
+            # genuine AttributeError on any deployment where this collection
+            # didn't already exist yet - caught by this function's own
+            # except below and logged as a warning, silently skipping the
+            # entire backfill loop after it (since it's the same try block).
+            # Every one of this session's own live tests happened to dodge
+            # this: the collection was always manually pre-created first.
+            # A genuinely fresh deployment's first report would have hit it.
+            qdrant.ensure_collection(config.collection_name, vector_size=embed_dim)
             for sid in scan_ids:
                 existing, _ = qdrant.scroll(
                     config.collection_name, limit=1,
