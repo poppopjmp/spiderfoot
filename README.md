@@ -6,6 +6,24 @@ This is a fork of [poppopjmp/spiderfoot](https://github.com/poppopjmp/spiderfoot
 
 **Pending PR:** [poppopjmp/spiderfoot#393](https://github.com/poppopjmp/spiderfoot/pull/393)
 
+## ✅ Known good build
+
+**`6.1.0-g4b0231b2`** (commit `4b0231b2`) — fully tested end-to-end on both
+Podman and Docker deployments, **2026-09-13**: all services healthy, AI
+report generation confirmed working, reports correctly persisted
+server-side (scan-level and workspace-level) rather than only in the
+requesting browser's `localStorage`, delete confirmed working, and the
+scanner/active-scanner queue split confirmed correct on the Docker side
+after a real bug was found and fixed there (a stale locally-cached base
+image had silently been feeding 10-day-old code to three services despite
+every build reporting success with zero errors — caught only by the
+verification tests themselves, not by anything failing loudly). Tested via
+this fork's own `Dev/spiderfoot-dev` stack files
+(`stack-spiderfoot-podman.yml` on Podman, `stack-spiderfoot-docker.yml` on
+Docker) — the reference `docker-compose.yml`/`docker-compose-podman.yml`
+below build/pull this same commit but were not themselves the vehicles for
+this round of testing.
+
 ## ⚠️ Breaking change
 
 `requirements.txt` no longer installs `sentence-transformers`/`torch` **at all**, as
