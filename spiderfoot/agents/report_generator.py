@@ -12,9 +12,10 @@ Produces structured Markdown reports with:
   4. Risk Assessment
   5. Conclusions & Recommendations
 
-Uses Qdrant to retrieve ALL indexed scan events (scrolled) plus
-semantic similarity and infrastructure queries, ensuring every
-report is rich, evidence-driven, and data-complete.
+Uses Qdrant to retrieve indexed scan events (scrolled, up to
+SF_REPORT_MAX_EVENTS_PER_SCAN per scan - default 500) plus semantic
+similarity and infrastructure queries, ensuring every report is rich
+and evidence-driven.
 """
 
 import json
@@ -354,7 +355,7 @@ def _backfill_scan_into_qdrant(scan_id: str, engine: "VectorCorrelationEngine") 
 def _get_qdrant_context(
     scan_ids: List[str],
     target: str,
-    max_events_per_scan: int = 500,
+    max_events_per_scan: int | None = None,
 ) -> dict:
     """Retrieve enriched context from Qdrant vector DB for one or more scans.
 
@@ -362,6 +363,15 @@ def _get_qdrant_context(
     runs semantic and infrastructure similarity searches, and returns
     a comprehensive context dict for the LLM prompt.
     """
+    if max_events_per_scan is None:
+        # Was a hardcoded default of 500 with no way to raise it - confirmed
+        # live (2026-09-12) that a real scan (demo.testfire.net, 687 indexed
+        # events) silently truncated to the first 500, contradicting this
+        # module's own docstring claim of retrieving "ALL indexed scan
+        # events". Now configurable; default unchanged so nothing shifts
+        # unless explicitly raised.
+        max_events_per_scan = int(os.environ.get("SF_REPORT_MAX_EVENTS_PER_SCAN", "500"))
+
     context: Dict[str, Any] = {
         "scan_events": {},
         "semantic_hits": [],
