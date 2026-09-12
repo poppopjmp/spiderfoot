@@ -48,6 +48,9 @@ services:
       SF_QDRANT_PREFIX: "${SF_QDRANT_PREFIX:-sf_}"
       # fastembed (onnxruntime, local, no torch/API key) is the default as of
       # 2026-09-12 - see docker/compose/core.yml's api service for detail.
+      # BREAKING: sentence-transformers/torch are gone from requirements.txt
+      # entirely - SF_EMBEDDING_PROVIDER=sentence_transformer silently
+      # degrades to mock (fake) embeddings, not an error. See README.md.
       SF_EMBEDDING_PROVIDER: ${SF_EMBEDDING_PROVIDER:-fastembed}
       SF_EMBEDDING_MODEL: ${SF_EMBEDDING_MODEL:-all-MiniLM-L6-v2}
       SF_EMBEDDING_DIMENSIONS: ${SF_EMBEDDING_DIMENSIONS:-384}

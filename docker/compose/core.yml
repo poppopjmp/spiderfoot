@@ -163,6 +163,9 @@ services:
       # sentence-transformers+torch (~1GB+, mandatory regardless of backend
       # choice per PyPI's own metadata), replaced entirely. See
       # spiderfoot/services/embedding_service.py for the full backend list.
+      # BREAKING: sentence-transformers/torch are gone from requirements.txt
+      # entirely - SF_EMBEDDING_PROVIDER=sentence_transformer silently
+      # degrades to mock (fake) embeddings, not an error. See README.md.
       SF_EMBEDDING_PROVIDER: ${SF_EMBEDDING_PROVIDER:-fastembed}
       SF_EMBEDDING_MODEL: ${SF_EMBEDDING_MODEL:-all-MiniLM-L6-v2}
       SF_EMBEDDING_DIMENSIONS: ${SF_EMBEDDING_DIMENSIONS:-384}

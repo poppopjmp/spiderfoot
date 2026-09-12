@@ -6,6 +6,16 @@ This is a fork of [poppopjmp/spiderfoot](https://github.com/poppopjmp/spiderfoot
 
 **Pending PR:** [poppopjmp/spiderfoot#393](https://github.com/poppopjmp/spiderfoot/pull/393)
 
+## ⚠️ Breaking change
+
+`requirements.txt` no longer installs `sentence-transformers`/`torch` **at all**, as
+of image tag `6.1.0-g529d9da2` and every commit/build after it. If you have
+`SF_EMBEDDING_PROVIDER=sentence_transformer` set anywhere, it will **silently**
+degrade to mock (fake, hash-derived) embeddings via that backend's existing
+`ImportError` fallback — no error, no warning, just quietly wrong report content.
+Set `SF_EMBEDDING_PROVIDER=fastembed` instead (the new default in both compose
+files below) — same job, no torch, ~67MB instead of ~1GB+.
+
 ## What's fixed here
 
 - AI report generation returning empty/generic output (nine stacked bugs — service registry access, DB wiring, event-column mapping, Qdrant never populated, timeouts too short)

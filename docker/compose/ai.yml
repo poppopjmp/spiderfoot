@@ -63,6 +63,9 @@ services:
       # 1536-dim) as a leftover from before this fork shipped a working
       # local embedding backend. Confirmed live: real embeddings, real
       # semantic retrieval, real CTI reports, at zero added API cost.
+      # BREAKING: sentence-transformers/torch are gone from requirements.txt
+      # entirely - SF_EMBEDDING_PROVIDER=sentence_transformer silently
+      # degrades to mock (fake) embeddings, not an error. See README.md.
       SF_EMBEDDING_PROVIDER: ${SF_EMBEDDING_PROVIDER:-fastembed}
       SF_EMBEDDING_MODEL: ${SF_EMBEDDING_MODEL:-all-MiniLM-L6-v2}
       SF_EMBEDDING_DIMENSIONS: ${SF_EMBEDDING_DIMENSIONS:-384}

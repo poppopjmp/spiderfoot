@@ -33,7 +33,11 @@
 #     passthrough configured; a plain compose `devices:` entry alone isn't
 #     enough without the host having nvidia-container-toolkit/CDI set up.
 #     Device.AUTO (fastembed's own default) picks CPU vs GPU automatically
-#     either way - nothing else to configure here.
+#     either way - nothing else to configure here. BREAKING if you're
+#     migrating from an older sentence_transformer-based deployment:
+#     requirements.txt no longer carries sentence-transformers/torch at
+#     all, so that setting would silently degrade to mock (fake)
+#     embeddings rather than error - see README.md.
 #
 #   Warnings:
 #     - No secrets have defaults below (POSTGRES_PASSWORD, SF_JWT_SECRET,
