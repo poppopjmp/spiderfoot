@@ -14,6 +14,9 @@
 #   ./docker/build.sh --tag v6.0.1             # build all, tag :v6.0.1
 #   ./docker/build.sh --push --tag v6.0.1      # build + push to registry
 #   REGISTRY=ghcr.io/org/ ./docker/build.sh    # custom registry prefix
+#   GPU_ACCEL=1 ./docker/build.sh              # base installs fastembed-gpu
+#                                               # instead of fastembed (local
+#                                               # embedding backend, default 0)
 # =============================================================================
 
 set -euo pipefail
@@ -23,6 +26,9 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 TAG="latest"
 PUSH=false
 REGISTRY="${REGISTRY:-}"
+# Passed through to Dockerfile.base's GPU_ACCEL build-arg - see that file
+# for what it actually does (fastembed vs fastembed-gpu package choice).
+GPU_ACCEL="${GPU_ACCEL:-0}"
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -39,9 +45,10 @@ echo "=== Building SpiderFoot microservice images (tag: $TAG) ==="
 echo ""
 
 # 1. Base image
-echo "[1/5] Building base image..."
+echo "[1/5] Building base image (GPU_ACCEL=$GPU_ACCEL)..."
 docker build \
     -f docker/Dockerfile.base \
+    --build-arg "GPU_ACCEL=${GPU_ACCEL}" \
     -t "${REGISTRY}spiderfoot-base:latest" \
     -t "${REGISTRY}spiderfoot-base:$TAG" \
     .

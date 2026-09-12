@@ -3,7 +3,11 @@
 Provides a unified interface for generating dense vector embeddings
 from text, supporting multiple embedding backends:
 
-* **SentenceTransformer** — local models via ``sentence-transformers``
+* **fastembed** — local models via Qdrant's ``fastembed`` (onnxruntime-backed;
+  default as of 2026-09-12 - no torch, ~67MB vs. torch's 1GB+)
+* **SentenceTransformer** — local models via ``sentence-transformers``, kept
+  as a fallback path only; not in requirements.txt any more (see the
+  backend's own docstring for why)
 * **OpenAI** — ``text-embedding-3-small/large`` via API
 * **HuggingFace API** — inference endpoints
 * **LiteLLM** — unified gateway routing to any configured provider
@@ -47,6 +51,7 @@ class EmbeddingProvider(Enum):
     """Enumeration of supported embedding backends."""
     MOCK = "mock"
     SENTENCE_TRANSFORMER = "sentence_transformer"
+    FASTEMBED = "fastembed"
     OPENAI = "openai"
     HUGGINGFACE = "huggingface"
     LITELLM = "litellm"
@@ -190,7 +195,20 @@ class MockEmbeddingBackend(EmbeddingBackend):
 # ---------------------------------------------------------------------------
 
 class SentenceTransformerBackend(EmbeddingBackend):
-    """Local embedding via sentence-transformers library."""
+    """Local embedding via sentence-transformers library.
+
+    Not the default as of 2026-09-12 - sentence-transformers unconditionally
+    depends on torch (confirmed via PyPI's own metadata: torch>=2.2 has no
+    `extra ==` condition, so it installs regardless of which backend you
+    ask for), which pulls in the CUDA build by default and is ~1GB+ even
+    with the CPU-only wheel pinned. See FastEmbedBackend below, which does
+    the same job with no torch anywhere in its dependency tree. Neither
+    sentence-transformers nor torch are in requirements.txt any more, so
+    this backend's import will fail and gracefully fall back to mock -
+    kept rather than deleted as a safety net for anyone who still sets
+    SF_EMBEDDING_PROVIDER=sentence_transformer and adds the dependency
+    back themselves, not because it's the recommended path.
+    """
 
     def __init__(self, model_name: str = "all-MiniLM-L6-v2",
                  dims: int = 384) -> None:
@@ -237,6 +255,96 @@ class SentenceTransformerBackend(EmbeddingBackend):
     def model_name(self) -> str:
         """Return the model name."""
         return self._model_name
+
+
+# ---------------------------------------------------------------------------
+# fastembed (local, default) - same job as SentenceTransformerBackend above,
+# no torch anywhere in its dependency tree. Confirmed empirically
+# (2026-09-12): onnxruntime alone is ~67MB vs. torch's ~1GB+ even CPU-only.
+# ---------------------------------------------------------------------------
+
+# fastembed only recognises models by their full Hub identifier
+# ("sentence-transformers/all-MiniLM-L6-v2") and raises ValueError on the
+# short form - but SF_EMBEDDING_MODEL's default, and everyone's existing
+# deployment config, uses the short form ("all-MiniLM-L6-v2"), matching
+# what the old SentenceTransformer backend accepted. Normalize the
+# well-known short names here so existing config keeps working unchanged,
+# rather than pushing this onto every deployment's env vars.
+_FASTEMBED_MODEL_ALIASES: dict[str, str] = {
+    "all-MiniLM-L6-v2": "sentence-transformers/all-MiniLM-L6-v2",
+}
+
+
+class FastEmbedBackend(EmbeddingBackend):
+    """Local embedding via Qdrant's fastembed library (onnxruntime-backed).
+
+    Default local embedding backend as of 2026-09-12. GPU use, if any, is
+    entirely a build-time choice of which package gets installed -
+    `fastembed` (onnxruntime, CPU) or `fastembed-gpu` (onnxruntime-gpu) -
+    see docker/Dockerfile.base's GPU_ACCEL build arg. Either way this
+    class's own code never changes: fastembed's `cuda` parameter defaults
+    to `Device.AUTO`, which already picks whichever execution provider is
+    actually available and falls back to CPU on its own - deliberately not
+    overridden here, so there's nothing for this class to configure.
+    """
+
+    def __init__(self, model_name: str = "all-MiniLM-L6-v2",
+                 dims: int = 384) -> None:
+        """Initialize the fastembed backend."""
+        self._requested_name = model_name
+        self._model_name = _FASTEMBED_MODEL_ALIASES.get(model_name, model_name)
+        self._dims = dims
+        self._model = None
+        self._lock = threading.Lock()
+
+    def _get_model(self) -> Any:
+        if self._model is None:
+            with self._lock:
+                if self._model is None:
+                    try:
+                        from fastembed import TextEmbedding
+                        self._model = TextEmbedding(model_name=self._model_name)
+                    except ImportError:
+                        log.error("fastembed not installed, falling back to mock")
+                        self._model = "UNAVAILABLE"
+                    except ValueError as e:
+                        # Unrecognised model name (not in fastembed's
+                        # registry, and not one of our known aliases above)
+                        log.error(
+                            "fastembed does not support model '%s' (requested "
+                            "as '%s'): %s - falling back to mock",
+                            self._model_name, self._requested_name, e,
+                        )
+                        self._model = "UNAVAILABLE"
+        return self._model
+
+    def embed(self, texts: list[str]) -> EmbeddingResult:
+        """Embed texts using the local fastembed model."""
+        start = time.time()
+        model = self._get_model()
+        if model == "UNAVAILABLE":
+            return MockEmbeddingBackend(self._dims).embed(texts)
+
+        embeddings = list(model.embed(texts))
+        vectors = [emb.tolist() for emb in embeddings]
+        if vectors:
+            self._dims = len(vectors[0])
+        elapsed = (time.time() - start) * 1000
+        return EmbeddingResult(
+            vectors=vectors, model=self._requested_name,
+            dimensions=self._dims, elapsed_ms=elapsed,
+            token_count=sum(len(t.split()) for t in texts),
+        )
+
+    def dimensions(self) -> int:
+        """Return the embedding dimensionality."""
+        return self._dims
+
+    def model_name(self) -> str:
+        """Return the model name (as originally requested, not the
+        normalized Hub identifier - keeps cache keys/logging consistent
+        with whatever SF_EMBEDDING_MODEL is actually set to)."""
+        return self._requested_name
 
 
 # ---------------------------------------------------------------------------
@@ -623,6 +731,8 @@ class EmbeddingService:
             return MockEmbeddingBackend(cfg.dimensions)
         elif cfg.provider == EmbeddingProvider.SENTENCE_TRANSFORMER:
             return SentenceTransformerBackend(cfg.model_name, cfg.dimensions)
+        elif cfg.provider == EmbeddingProvider.FASTEMBED:
+            return FastEmbedBackend(cfg.model_name, cfg.dimensions)
         elif cfg.provider == EmbeddingProvider.OPENAI:
             return OpenAIEmbeddingBackend(
                 cfg.model_name, cfg.api_key, cfg.api_base,

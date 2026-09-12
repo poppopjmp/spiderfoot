@@ -1,15 +1,3 @@
-# CPU-only PyTorch (see the torch pin further down, next to
-# sentence-transformers). Without this, `pip install torch` from plain
-# PyPI resolves to the CUDA build, which pulls in the full nvidia/*
-# runtime (cuDNN, NCCL, cuSPARSE, ...) and triton as separate pip
-# dependencies - ~5.3GB of GPU support this deployment never uses (no
-# GPU anywhere, all-MiniLM-L6-v2 runs on CPU). Confirmed empirically
-# (2026-09-11): with this extra index + an explicit torch version below,
-# pip resolves the +cpu build correctly and installs zero nvidia
-# packages - torch alone drops from ~1.2GB (CUDA build) to ~770MB, with
-# the entire ~3.2GB nvidia/ and ~900MB triton/ directories gone.
---extra-index-url https://download.pytorch.org/whl/cpu
-
 # Core dependencies
 adblockparser==0.7
 beautifulsoup4==4.14.3
@@ -87,13 +75,19 @@ flower>=2.0.0,<3.0.0
 weasyprint>=62.0,<69.0.0
 jinja2>=3.1.0,<4.0.0
 
-# Local embeddings for vector correlation / RAG (spiderfoot.services.embedding_service's
-# SentenceTransformer backend does `from sentence_transformers import SentenceTransformer`
-# lazily and silently falls back to mock embeddings if this isn't installed — it never
-# was. This pulls in torch transitively - explicitly pinned below (with the CPU-only
-# index above) rather than left to resolve on its own, which is what silently pulled
-# in ~5.3GB of unused CUDA/nvidia support in every image before this was caught. An
-# earlier version of this comment claimed "CPU-only torch is pulled in transitively" -
-# it wasn't; that claim was never actually verified against a real build.
-sentence-transformers>=3.0.0,<4.0.0
-torch>=2.14.0,<3.0.0
+# Local embeddings for vector correlation / RAG - NOT listed here on purpose.
+# spiderfoot.services.embedding_service's FastEmbedBackend does
+# `from fastembed import TextEmbedding` lazily and falls back to mock
+# embeddings if it isn't installed. `fastembed`/`fastembed-gpu` are
+# installed in docker/Dockerfile.base instead of here, gated behind its
+# GPU_ACCEL build arg - one or the other, never both, which a plain
+# requirements.txt line can't express. See that file for the actual
+# install step.
+#
+# This used to be `sentence-transformers` + an explicit CPU-only `torch`
+# pin (2026-09-11). Replaced entirely (2026-09-12): sentence-transformers
+# unconditionally depends on torch>=2.2 regardless of backend (confirmed
+# via PyPI's own metadata - no `extra ==` condition on it), so no backend
+# choice within it could ever drop torch. fastembed does the same job
+# (same model, same output) with zero torch anywhere in its tree -
+# onnxruntime alone is ~67MB vs. torch's ~770MB+ even CPU-only.
