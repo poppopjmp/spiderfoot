@@ -186,6 +186,7 @@ class MemoryBackend:
     def list_reports(
         self,
         scan_id: str | None = None,
+        workspace_id: str | None = None,
         status: str | None = None,
         limit: int = 50,
         offset: int = 0,
@@ -196,18 +197,23 @@ class MemoryBackend:
 
         if scan_id:
             reports = [r for r in reports if r.get("scan_id") == scan_id]
+        if workspace_id:
+            reports = [r for r in reports if r.get("workspace_id") == workspace_id]
         if status:
             reports = [r for r in reports if r.get("status") == status]
 
         reports.sort(key=lambda r: r.get("created_at", 0), reverse=True)
         return [r.copy() for r in reports[offset: offset + limit]]
 
-    def count(self, scan_id: str | None = None) -> int:
+    def count(self, scan_id: str | None = None, workspace_id: str | None = None) -> int:
         """Count stored reports."""
         with self._lock:
-            if scan_id:
-                return sum(1 for r in self._store.values() if r.get("scan_id") == scan_id)
-            return len(self._store)
+            reports = list(self._store.values())
+        if scan_id:
+            reports = [r for r in reports if r.get("scan_id") == scan_id]
+        if workspace_id:
+            reports = [r for r in reports if r.get("workspace_id") == workspace_id]
+        return len(reports)
 
     def cleanup_old(self, max_age_days: int) -> int:
         """Delete reports older than max_age_days."""
@@ -251,7 +257,16 @@ CREATE TABLE IF NOT EXISTS reports (
     updated_at DOUBLE PRECISION NOT NULL
 );
 
+-- workspace_id added 2026-09-12 (PR #393) so a workspace-level report can
+-- be looked up/deleted by workspace rather than guessed at via the first
+-- constituent scan_id. CREATE TABLE IF NOT EXISTS above is a no-op on any
+-- deployment where `reports` already exists (confirmed the case on baden
+-- at the time of this change) - this ALTER is what actually lands the
+-- column there instead of only on a fresh table.
+ALTER TABLE reports ADD COLUMN IF NOT EXISTS workspace_id TEXT;
+
 CREATE INDEX IF NOT EXISTS idx_reports_scan_id ON reports(scan_id);
+CREATE INDEX IF NOT EXISTS idx_reports_workspace_id ON reports(workspace_id);
 CREATE INDEX IF NOT EXISTS idx_reports_status ON reports(status);
 CREATE INDEX IF NOT EXISTS idx_reports_created_at ON reports(created_at);
 """
@@ -289,13 +304,14 @@ class PostgreSQLBackend:
         with conn.cursor() as cur:
             cur.execute(
                 """INSERT INTO reports
-                (report_id, scan_id, title, status, report_type, progress_pct,
-                 message, executive_summary, recommendations, sections_json,
-                 metadata_json, generation_time_ms, total_tokens_used,
-                 created_at, updated_at)
-                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                (report_id, scan_id, workspace_id, title, status, report_type,
+                 progress_pct, message, executive_summary, recommendations,
+                 sections_json, metadata_json, generation_time_ms,
+                 total_tokens_used, created_at, updated_at)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
                 ON CONFLICT (report_id) DO UPDATE SET
                     scan_id = EXCLUDED.scan_id,
+                    workspace_id = EXCLUDED.workspace_id,
                     title = EXCLUDED.title,
                     status = EXCLUDED.status,
                     report_type = EXCLUDED.report_type,
@@ -311,6 +327,7 @@ class PostgreSQLBackend:
                 (
                     data["report_id"],
                     data.get("scan_id", ""),
+                    data.get("workspace_id"),
                     data.get("title", ""),
                     data.get("status", "pending"),
                     data.get("report_type", "full"),
@@ -351,6 +368,7 @@ class PostgreSQLBackend:
     def list_reports(
         self,
         scan_id: str | None = None,
+        workspace_id: str | None = None,
         status: str | None = None,
         limit: int = 50,
         offset: int = 0,
@@ -366,6 +384,9 @@ class PostgreSQLBackend:
         if scan_id:
             conditions.append("scan_id = %s")
             params.append(scan_id)
+        if workspace_id:
+            conditions.append("workspace_id = %s")
+            params.append(workspace_id)
         if status:
             conditions.append("status = %s")
             params.append(status)
@@ -381,14 +402,22 @@ class PostgreSQLBackend:
             cols = [desc[0] for desc in cur.description]
             return [self._row_to_dict(dict(zip(cols, row))) for row in cur.fetchall()]
 
-    def count(self, scan_id: str | None = None) -> int:
-        """Count reports, optionally filtered by scan_id."""
+    def count(self, scan_id: str | None = None, workspace_id: str | None = None) -> int:
+        """Count reports, optionally filtered by scan_id and/or workspace_id."""
         conn = self._get_conn()
+        query = "SELECT COUNT(*) FROM reports"
+        params: list[Any] = []
+        conditions = []
+        if scan_id:
+            conditions.append("scan_id = %s")
+            params.append(scan_id)
+        if workspace_id:
+            conditions.append("workspace_id = %s")
+            params.append(workspace_id)
+        if conditions:
+            query += " WHERE " + " AND ".join(conditions)
         with conn.cursor() as cur:
-            if scan_id:
-                cur.execute("SELECT COUNT(*) FROM reports WHERE scan_id = %s", (scan_id,))
-            else:
-                cur.execute("SELECT COUNT(*) FROM reports")
+            cur.execute(query, params)
             row = cur.fetchone()
             return row[0] if row else 0
 
@@ -505,18 +534,20 @@ class ReportStore:
     def list_reports(
         self,
         scan_id: str | None = None,
+        workspace_id: str | None = None,
         status: str | None = None,
         limit: int = 50,
         offset: int = 0,
     ) -> list[dict[str, Any]]:
         """List reports with optional filters."""
         return self._backend.list_reports(
-            scan_id=scan_id, status=status, limit=limit, offset=offset
+            scan_id=scan_id, workspace_id=workspace_id, status=status,
+            limit=limit, offset=offset,
         )
 
-    def count(self, scan_id: str | None = None) -> int:
+    def count(self, scan_id: str | None = None, workspace_id: str | None = None) -> int:
         """Count reports."""
-        return self._backend.count(scan_id=scan_id)
+        return self._backend.count(scan_id=scan_id, workspace_id=workspace_id)
 
     def cleanup(self) -> int:
         """Run cleanup of old reports based on config."""

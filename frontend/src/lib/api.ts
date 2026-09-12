@@ -660,19 +660,20 @@ export const agentApi = {
 
 // ── Agents Report API (used by ReportTab & WorkspaceReportCard) ──
 export const agentsApi = {
-  report: (data: { scan_id?: string; scan_ids?: string[]; target: string; scan_name?: string; findings?: Array<Record<string, unknown>>; correlations?: Array<Record<string, unknown>>; stats?: Record<string, unknown>; agent_results?: Array<Record<string, unknown>>; geo_data?: Record<string, unknown> }, signal?: AbortSignal) =>
+  report: (data: { scan_id?: string; scan_ids?: string[]; target: string; scan_name?: string; findings?: Array<Record<string, unknown>>; correlations?: Array<Record<string, unknown>>; stats?: Record<string, unknown>; agent_results?: Array<Record<string, unknown>>; geo_data?: Record<string, unknown>; workspace_id?: string }, signal?: AbortSignal) =>
     api.post('/api/agents/report', data, { signal }).then((r) => r.data),
 };
 
 // ── Stored Reports API (sf-api's Postgres-backed ReportStore) ────
 // The agents /report call above now also persists into this same store
 // server-side (see spiderfoot/agents/service.py::_persist_report), so
-// ReportTab checks here first before falling back to its localStorage
-// cache — otherwise a report only ever existed in the browser that
-// generated it. See PR #393 discussion, 2026-09-12.
+// ReportTab/WorkspaceReportCard check here first before falling back to
+// their localStorage cache — otherwise a report only ever existed in the
+// browser that generated it. See PR #393 discussion, 2026-09-12.
 export interface StoredReportListItem {
   report_id: string;
   scan_id: string;
+  workspace_id?: string | null;
   title: string;
   status: string;
   report_type: string;
@@ -692,6 +693,10 @@ export const reportsApi = {
   /** Most recent stored reports for a scan (newest first). */
   listByScan: (scanId: string, limit = 1, signal?: AbortSignal) =>
     api.get<StoredReportListItem[]>('/api/reports', { params: { scan_id: scanId, limit }, signal }).then((r) => r.data),
+
+  /** Most recent stored reports for a workspace (newest first). */
+  listByWorkspace: (workspaceId: string, limit = 1, signal?: AbortSignal) =>
+    api.get<StoredReportListItem[]>('/api/reports', { params: { workspace_id: workspaceId, limit }, signal }).then((r) => r.data),
 
   /** Fetch a stored report's full content. */
   get: (reportId: string, signal?: AbortSignal) =>

@@ -304,6 +304,12 @@ class ReportRequest(BaseModel):
     stats: Dict[str, Any] = Field(default_factory=dict)
     agent_results: List[Dict[str, Any]] = Field(default_factory=list)
     geo_data: Dict[str, Any] = Field(default_factory=dict)
+    # Added 2026-09-12 (PR #393): a workspace report previously had no way
+    # to be found again except by guessing at scan_ids[0] - callers used to
+    # bury this in `stats.workspace_id`, which never survived the round
+    # trip through report_generator.py's AgentResult anyway. Top-level and
+    # threaded straight into _persist_report() below instead.
+    workspace_id: str = ""
 
 
 class IaCReviewRequest(BaseModel):
@@ -422,11 +428,17 @@ def _persist_report(
         return
     data = result_dict.get("data", {})
     scan_id = result_dict.get("scan_id") or request.scan_id
+    title = (
+        f"Workspace AI Report: {request.scan_name or data.get('target', request.target)}"
+        if request.workspace_id
+        else f"AI Threat Intelligence Report: {data.get('target', request.target)}"
+    )
     try:
         store.save({
             "report_id": str(uuid.uuid4()),
             "scan_id": scan_id,
-            "title": f"AI Threat Intelligence Report: {data.get('target', request.target)}",
+            "workspace_id": request.workspace_id or None,
+            "title": title,
             "status": "completed",
             "report_type": "full",
             "progress_pct": 100.0,
@@ -447,6 +459,7 @@ def _persist_report(
                 "scan_ids": data.get("scan_ids", []),
                 "target": data.get("target"),
                 "qdrant_available": data.get("qdrant_available"),
+                "workspace_id": request.workspace_id or None,
             },
             "generation_time_ms": elapsed_ms,
             "total_tokens_used": 0,  # not tracked by this generator yet
