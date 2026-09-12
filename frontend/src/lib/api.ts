@@ -664,6 +664,44 @@ export const agentsApi = {
     api.post('/api/agents/report', data, { signal }).then((r) => r.data),
 };
 
+// ── Stored Reports API (sf-api's Postgres-backed ReportStore) ────
+// The agents /report call above now also persists into this same store
+// server-side (see spiderfoot/agents/service.py::_persist_report), so
+// ReportTab checks here first before falling back to its localStorage
+// cache — otherwise a report only ever existed in the browser that
+// generated it. See PR #393 discussion, 2026-09-12.
+export interface StoredReportListItem {
+  report_id: string;
+  scan_id: string;
+  title: string;
+  status: string;
+  report_type: string;
+  generation_time_ms: number;
+  created_at: number;
+}
+
+export interface StoredReport extends StoredReportListItem {
+  executive_summary?: string | null;
+  recommendations?: string | null;
+  sections: Array<{ title: string; content: string; section_type: string }>;
+  metadata: Record<string, unknown>;
+  total_tokens_used: number;
+}
+
+export const reportsApi = {
+  /** Most recent stored reports for a scan (newest first). */
+  listByScan: (scanId: string, limit = 1, signal?: AbortSignal) =>
+    api.get<StoredReportListItem[]>('/api/reports', { params: { scan_id: scanId, limit }, signal }).then((r) => r.data),
+
+  /** Fetch a stored report's full content. */
+  get: (reportId: string, signal?: AbortSignal) =>
+    api.get<StoredReport>(`/api/reports/${reportId}`, { signal }).then((r) => r.data),
+
+  /** Permanently delete a stored report. */
+  delete: (reportId: string, signal?: AbortSignal) =>
+    api.delete(`/api/reports/${reportId}`, { signal }).then((r) => r.data),
+};
+
 // ── IaC Generation API ────────────────────────────────────────
 
 export interface IaCRequest {
